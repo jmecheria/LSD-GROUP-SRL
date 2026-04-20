@@ -1,1 +1,0 @@
-# LSD-GROUP-SRL
