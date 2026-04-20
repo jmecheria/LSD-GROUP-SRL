@@ -1,1975 +1,282 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transport Persoane - LSD Group</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <style>
-        /* CSS Global */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-            min-height: 100vh;
-        }
-
-        /* Ticker Bar */
-        .ticker-bar {
-            background: linear-gradient(90deg, #1a237e, #283593);
-            color: white;
-            padding: 12px 0;
-            overflow: hidden;
-            position: relative;
-            height: 40px;
-        }
-
-        .ticker-content {
-            display: flex;
-            animation: ticker-scroll 20s linear infinite;
-            white-space: nowrap;
-        }
-
-        .ticker-item {
-            margin-right: 50px;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-        }
-
-        .ticker-icon {
-            margin-right: 10px;
-            color: #ffd600;
-        }
-
-        @keyframes ticker-scroll {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
-
-        /* Navbar */
-        .navbar {
-            background-color: white;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            padding: 0 20px;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 70px;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1a237e;
-            display: flex;
-            align-items: center;
-        }
-
-        .logo-icon {
-            margin-right: 10px;
-            color: #283593;
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-        }
-
-        .nav-link {
-            margin: 0 15px;
-            cursor: pointer;
-            font-weight: 600;
-            color: #555;
-            padding: 10px 15px;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background-color: #e8eaf6;
-            color: #1a237e;
-        }
-
-        .auth-section {
-            display: flex;
-            align-items: center;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            margin-right: 15px;
-            color: #555;
-        }
-
-        .auth-btn {
-            background-color: #1a237e;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.3s;
-        }
-
-        .auth-btn:hover {
-            background-color: #283593;
-        }
-
-        /* Main Container */
-        .container {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 20px;
-        }
-
-        /* Section Titles */
-        .section-title {
-            font-size: 28px;
-            color: #1a237e;
-            margin-bottom: 20px;
-            border-bottom: 3px solid #ffd600;
-            padding-bottom: 10px;
-        }
-
-        /* Cards */
-        .card {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
-            padding: 20px;
-            margin-bottom: 25px;
-            transition: transform 0.3s;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        /* Hero Section */
-        .hero {
-            background: linear-gradient(135deg, #1a237e, #283593);
-            color: white;
-            padding: 60px 40px;
-            border-radius: 16px;
-            margin-bottom: 40px;
-            text-align: center;
-        }
-
-        .hero-title {
-            font-size: 42px;
-            margin-bottom: 20px;
-        }
-
-        .hero-subtitle {
-            font-size: 20px;
-            margin-bottom: 30px;
-            opacity: 0.9;
-        }
-
-        .hero-btn {
-            background-color: #ffd600;
-            color: #1a237e;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 18px;
-            transition: all 0.3s;
-        }
-
-        .hero-btn:hover {
-            background-color: #ffea00;
-            transform: scale(1.05);
-        }
-
-        /* Fleet Grid */
-        .fleet-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-        }
-
-        .vehicle-card {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .vehicle-name {
-            font-size: 22px;
-            color: #1a237e;
-            margin-bottom: 10px;
-        }
-
-        .vehicle-details {
-            margin-bottom: 15px;
-            color: #666;
-        }
-
-        .vehicle-detail-item {
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-        }
-
-        .detail-icon {
-            margin-right: 10px;
-            color: #283593;
-        }
-
-        /* Availability */
-        .availability-section {
-            background-color: #e8eaf6;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-        }
-
-        .date-input {
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            margin-bottom: 15px;
-            width: 100%;
-            font-size: 16px;
-        }
-
-        .availability-status {
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: 600;
-            text-align: center;
-        }
-
-        .available {
-            background-color: #c8e6c9;
-            color: #2e7d32;
-        }
-
-        .unavailable {
-            background-color: #ffcdd2;
-            color: #c62828;
-        }
-
-        /* Recommendations */
-        .recommendations-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
-        }
-
-        .recommendation-card {
-            border: 2px solid #ffd600;
-        }
-
-        .recommended-badge {
-            background-color: #ffd600;
-            color: #1a237e;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: 700;
-            position: absolute;
-            top: 15px;
-            right: 15px;
-        }
-
-        /* Forms */
-        .form-container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #555;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-            transition: border 0.3s;
-        }
-
-        .form-input:focus {
-            border-color: #1a237e;
-            outline: none;
-        }
-
-        .form-btn {
-            background-color: #1a237e;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 18px;
-            width: 100%;
-            transition: background-color 0.3s;
-        }
-
-        .form-btn:hover {
-            background-color: #283593;
-        }
-
-        /* Admin Panel */
-        .admin-section {
-            background-color: #f1f3f9;
-            padding: 30px;
-            border-radius: 16px;
-            margin-top: 30px;
-        }
-
-        .admin-tabs {
-            display: flex;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #ddd;
-        }
-
-        .admin-tab {
-            padding: 15px 25px;
-            cursor: pointer;
-            font-weight: 600;
-            color: #555;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .admin-tab:hover, .admin-tab.active {
-            color: #1a237e;
-            border-bottom: 3px solid #1a237e;
-        }
-
-        .admin-content {
-            padding: 20px;
-        }
-
-        /* Tables */
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .admin-table th {
-            background-color: #1a237e;
-            color: white;
-            padding: 15px;
-            text-align: left;
-        }
-
-        .admin-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .admin-table tr:hover {
-            background-color: #f5f5f5;
-        }
-
-        /* Action Buttons */
-        .action-btn {
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-right: 10px;
-            transition: all 0.3s;
-        }
-
-        .edit-btn {
-            background-color: #4caf50;
-            color: white;
-        }
-
-        .delete-btn {
-            background-color: #f44336;
-            color: white;
-        }
-
-        .confirm-btn {
-            background-color: #2196f3;
-            color: white;
-        }
-
-        /* Badges */
-        .badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .status-confirmed {
-            background-color: #4caf50;
-            color: white;
-        }
-
-        .status-pending {
-            background-color: #ff9800;
-            color: white;
-        }
-
-        .status-cancelled {
-            background-color: #f44336;
-            color: white;
-        }
-
-        /* Authentication Modal */
-        .auth-modal {
-            position: fixed;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            z-index: 2000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: left 0.5s;
-        }
-
-        .auth-modal.active {
-            left: 0;
-        }
-
-        .auth-modal-content {
-            background-color: white;
-            padding: 40px;
-            border-radius: 16px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .auth-modal-title {
-            font-size: 28px;
-            color: #1a237e;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        .auth-modal-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 30px;
-            cursor: pointer;
-            color: white;
-        }
-
-        /* Loading */
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 30px;
-        }
-
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #1a237e;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Footer */
-        .footer {
-            background-color: #1a237e;
-            color: white;
-            padding: 40px;
-            text-align: center;
-            margin-top: 50px;
-        }
-
-        /* Utility Classes */
-        .hidden {
-            display: none !important;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .mt-20 {
-            margin-top: 20px;
-        }
-
-        .mb-20 {
-            margin-bottom: 20px;
-        }
-
-        .error-message {
-            color: #f44336;
-            padding: 10px;
-            border-radius: 8px;
-            background-color: #ffebee;
-            margin-bottom: 15px;
-        }
-
-        .success-message {
-            color: #4caf50;
-            padding: 10px;
-            border-radius: 8px;
-            background-color: #e8f5e8;
-            margin-bottom: 15px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transport Persoane</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<style>
+body { margin:0; font-family:Arial; background:#f5f7fa;}
+.navbar { position:fixed; top:40px; width:100%; background:#111; color:white; display:flex; justify-content:space-around; padding:10px; z-index:1000;}
+.navbar a { color:white; cursor:pointer;}
+.ticker { position:fixed; top:0; width:100%; background:#ff9800; color:white; padding:10px; overflow:hidden; white-space:nowrap;}
+.ticker span { display:inline-block; padding-left:100%; animation:scroll 15s linear infinite;}
+@keyframes scroll { from{transform:translateX(0);} to{transform:translateX(-100%);} }
+
+.section { padding:120px 20px;}
+.card { background:white; padding:15px; margin:10px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+.btn { background:#007bff; color:white; padding:10px; border:none; cursor:pointer; margin-top:5px;}
+.badge { padding:5px 10px; border-radius:5px; color:white;}
+.ok { background:green;}
+.no { background:red;}
+.rec { background:orange;}
+.hidden { display:none;}
+</style>
 </head>
+
 <body>
-    <!-- Ticker Bar -->
-    <div class="ticker-bar">
-        <div class="ticker-content">
-            <!-- Ticker items will be populated by JavaScript -->
-        </div>
-    </2>
-
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="logo">
-            <i class="fas fa-bus logo-icon"></i>
-            LSD Group Transport
-        </div>
-        <ul class="nav-links">
-            <li class="nav-link active" data-page="home">Home</li>
-            <li class="nav-link" data-page="flota">Flotă</li>
-            <li class="nav-link" data-page="rezervari">Rezervări</li>
-            <li class="nav-link" data-page="admin" id="admin-link">Admin</li>
-        </ul>
-        <div class="auth-section">
-            <div class="user-info" id="user-info">
-                <!-- User info will be populated -->
-            </div>
-            <div class="auth-btn" id="auth-btn">Login</div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="container">
-        <!-- Home Page -->
-        <div id="home-page">
-            <div class="hero">
-                <h1 class="hero-title">Transport Persoane de Încredere</h1>
-                <p class="hero-subtitle">Servicii de curse ocazionale și gestionare flotă pentru nevoile dumneavoastră</p>
-                <div class="hero-btn" data-page="rezervari">Rezervă acum</div>
-            </div>
-
-            <h2 class="section-title">Următoarea cursă</h2>
-            <div class="card" id="next-route">
-                <!-- Next route will be populated -->
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                </div>
-            </div>
-
-            <h2 class="section-title">Flota noastră</h2>
-            <div class="fleet-grid" id="fleet-preview">
-                <!-- Fleet preview will be populated -->
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Fleet Page -->
-        <div id="flota-page" class="hidden">
-            <h2 class="section-title">Flota completă</h2>
-            <div class="fleet-grid" id="full-fleet">
-                <!-- Full fleet will be populated -->
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Reservations Page -->
-        <div id="rezervari-page" class="hidden">
-            <h2 class="section-title">Rezervare cursă</h2>
-            <div class="form-container">
-                <div class="card">
-                    <form id="reservation-form">
-                        <div class="form-group">
-                            <label class="form-label">Plecare</label>
-                            <input type="text" class="form-input" id="plecare" placeholder="Introduceți locul de plecare" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Destinație</label>
-                            <input type="text" class="form-input" id="destinatie" placeholder="Introduceți destinația" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Dată</label>
-                            <input type="date" class="form-input" id="data" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Număr persoane</label>
-                            <input type="number" class="form-input" id="persoane" min="1" required>
-                        </div>
-                        <button type="submit" class="form-btn" id="calculate-btn">Verifică disponibilitate</button>
-                    </form>
-                </div>
-
-                <div id="recommendations-section" class="hidden">
-                    <h2 class="section-title mt-20">Recomandări</h2>
-                    <div class="recommendations-grid" id="recommendations">
-                        <!-- Recommendations will be populated -->
-                    </div>
-                    
-                    <div class="card mt-20 hidden" id="final-reservation">
-                        <h3>Confirmare rezervare</h3>
-                        <div id="selected-recommendation"></div>
-                        <button class="form-btn mt-20" id="confirm-reservation-btn">Confirmă rezervare</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Admin Page -->
-        <div id="admin-page" class="hidden">
-            <h2 class="section-title">Panou Administrator</h2>
-            <div class="admin-section">
-                <div class="admin-tabs">
-                    <div class="admin-tab active" data-tab="flota-admin">Flotă</div>
-                    <div class="admin-tab" data-tab="rezervari-admin">Rezervări</div>
-                    <div class="admin-tab" data-tab="status-admin">Status Live</div>
-                    <div class="admin-tab" data-tab="distante-admin">Distanțe</div>
-                    <div class="admin-tab" data-tab="disponibilitate-admin">Disponibilitate</div>
-                </div>
-
-                <div class="admin-content">
-                    <!-- Fleet Management -->
-                    <div id="flota-admin-content">
-                        <h3>Gestionare Flotă</h3>
-                        <div class="card">
-                            <form id="add-vehicle-form">
-                                <div class="form-group">
-                                    <label class="form-label">Nume vehicul</label>
-                                    <input type="text" class="form-input" id="vehicle-name" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Capacitate</label>
-                                    <input type="number" class="form-input" id="vehicle-capacity" min="1" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Preț/km</label>
-                                    <input type="number" class="form-input" id="vehicle-price" step="0.01" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Dotări</label>
-                                    <input type="text" class="form-input" id="vehicle-features" placeholder="Separate prin virgulă">
-                                </div>
-                                <button type="submit" class="form-btn">Adaugă vehicul</button>
-                            </form>
-                        </div>
-                        
-                        <h3 class="mt-20">Vehicule existente</h3>
-                        <table class="admin-table" id="vehicle-table">
-                            <thead>
-                                <tr>
-                                    <th>Nume</th>
-                                    <th>Capacitate</th>
-                                    <th>Preț/km</th>
-                                    <th>Dotări</th>
-                                    <th>Acțiuni</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Vehicles will be populated -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Reservations Management -->
-                    <div id="rezervari-admin-content" class="hidden">
-                        <h3>Gestionare Rezervări</h3>
-                        <table class="admin-table" id="reservation-table">
-                            <thead>
-                                <tr>
-                                    <th>Client</th>
-                                    <th>Plecare</th>
-                                    <th>Destinație</th>
-                                    <th>Dată</th>
-                                    <th>Persoane</th>
-                                    <th>Vehicule</th>
-                                    <th>Preț</th>
-                                    <th>Status</th>
-                                    <th>Acțiuni</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Reservations will be populated -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Live Status Management -->
-                    <div id="status-admin-content" class="hidden">
-                        <h3>Gestionare Status Live</h3>
-                        <div class="card">
-                            <form id="add-status-form">
-                                <div class="form-group">
-                                    <label class="form-label">Nume vehicul</label>
-                                    <input type="text" class="form-input" id="status-vehicle" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Traseu</label>
-                                    <input type="text" class="form-input" id="status-route" placeholder="ex: Iași → București" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Mesaj afișat</label>
-                                    <input type="text" class="form-input" id="status-message" required>
-                                </div>
-                                <button type="submit" class="form-btn">Adaugă status</button>
-                            </form>
-                        </div>
-                        
-                        <h3 class="mt-20">Statusuri active</h3>
-                        <table class="admin-table" id="status-table">
-                            <thead>
-                                <tr>
-                                    <th>Vehicul</th>
-                                    <th>Traseu</th>
-                                    <th>Mesaj</th>
-                                    <th>Acțiuni</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Statuses will be populated -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Distance Management -->
-                    <div id="distante-admin-content" class="hidden">
-                        <h3>Gestionare Distanțe</h3>
-                        <div class="card">
-                            <form id="add-distance-form">
-                                <div class="form-group">
-                                    <label class="form-label">Plecare</label>
-                                    <input type="text" class="form-input" id="distance-from" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Destinație</label>
-                                    <input type="text" class="form-input" id="distance-to" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Distanță (km)</label>
-                                    <input type="number" class="form-input" id="distance-value" required>
-                                </div>
-                                <button type="submit" class="form-btn">Adaugă distanță</button>
-                            </form>
-                        </div>
-                        
-                        <h3 class="mt-20">Distanțe existente</h3>
-                        <table class="admin-table" id="distance-table">
-                            <thead>
-                                <tr>
-                                    <th>Plecare</th>
-                                    <th>Destinație</th>
-                                    <th>Distanță (km)</th>
-                                    <th>Acțiuni</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Distances will be populated -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Availability Management -->
-                    <div id="disponibilitate-admin-content" class="hidden">
-                        <h3>Control Disponibilitate</h3>
-                        <div class="card">
-                            <p>Administratorul poate marca manual vehicule ca ocupate pentru anumite date.</p>
-                            <div class="form-group">
-                                <label class="form-label">Selectează vehicul</label>
-                                <select class="form-input" id="manual-vehicle">
-                                    <!-- Vehicles will be populated -->
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Dată</label>
-                                <input type="date" class="form-input" id="manual-date">
-                            </div>
-                            <button class="form-btn" id="mark-unavailable-btn">Marcă ca ocupat</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Authentication Modal -->
-    <div class="auth-modal" id="auth-modal">
-        <div class="auth-modal-close" id="auth-modal-close">&times;</div>
-        <div class="auth-modal-content">
-            <h2 class="auth-modal-title" id="auth-modal-title">Login</h2>
-            <div id="auth-error" class="error-message hidden"></div>
-            <form id="auth-form">
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-input" id="auth-email" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Parola</label>
-                    <input type="password" class="form-input" id="auth-password" required>
-                </div>
-                <button type="submit" class="form-btn" id="auth-submit-btn">Login</button>
-                <div class="text-center mt-20">
-                    <a href="#" id="auth-switch">Nu ai cont? Înregistrează-te</a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-        <p>© 2023 LSD Group - Transport Persoane. Toate drepturile rezervate.</p>
-        <p>Contact: office@lsdgroup.ro | Tel: 0723 456 789</p>
-    </div>
-
-    <!-- JavaScript -->
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",
-            authDomain: "lsd-group-srl.firebaseapp.com",
-            projectId: "lsd-group-srl",
-            storageBucket: "lsd-group-srl.firebasestorage.app",
-            messagingSenderId: "487152601925",
-            appId: "1:487152601925:web:8aa97c1581b6624598cc2c"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        // State variables
-        let currentUser = null;
-        let isAdmin = false;
-        let currentPage = 'home';
-        let vehicles = [];
-        let reservations = [];
-        let statuses = [];
-        let distances = [];
-        let selectedRecommendation = null;
-
-        // DOM Elements
-        const tickerContent = document.querySelector('.ticker-content');
-        const userInfo = document.getElementById('user-info');
-        const authBtn = document.getElementById('auth-btn');
-        const adminLink = document.getElementById('admin-link');
-        const authModal = document.getElementById('auth-modal');
-        const authModalClose = document.getElementById('auth-modal-close');
-        const authModalTitle = document.getElementById('auth-modal-title');
-        const authForm = document.getElementById('auth-form');
-        const authEmail = document.getElementById('auth-email');
-        const authPassword = document.getElementById('auth-password');
-        const authSubmitBtn = document.getElementById('auth-submit-btn');
-        const authSwitch = document.getElementById('auth-switch');
-        const authError = document.getElementById('auth-error');
-        
-        const pages = {
-            home: document.getElementById('home-page'),
-            flota: document.getElementById('flota-page'),
-            rezervari: document.getElementById('rezervari-page'),
-            admin: document.getElementById('admin-page')
-        };
-
-        const navLinks = document.querySelectorAll('.nav-link');
-
-        // Initialize
-        function init() {
-            // Set up navigation
-            navLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    const page = link.getAttribute('data-page');
-                    switchPage(page);
-                });
-            });
-
-            // Auth button
-            authBtn.addEventListener('click', () => {
-                if (currentUser) {
-                    logout();
-                } else {
-                    openAuthModal('login1');
-                }
-            });
-
-            // Auth modal close
-            authModalClose.addEventListener('click', () => {
-                authModal.classList.remove('active');
-            });
-
-            // Auth form submit
-            authForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                handleAuth();
-            });
-
-            // Auth switch
-            authSwitch.addEventListener('click', () => {
-                const isLogin = authModalTitle.textContent === 'Login';
-                openAuthModal(isLogin ? 'register' : 'login');
-            });
-
-            // Reservation form
-            document.getElementById('reservation-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                calculateRecommendations();
-            });
-
-            // Confirm reservation
-            document.getElementById('confirm-reservation-btn').addEventListener('click', confirmReservation);
-
-            // Admin tabs
-            document.querySelectorAll('.admin-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabName = tab.getAttribute('data-tab');
-                    switchAdminTab(tabName);
-                });
-            });
-
-            // Add vehicle form
-            document.getElementById('add-vehicle-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                addVehicle();
-            });
-
-            // Add status form
-            document.getElementById('add-status-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                addStatus();
-            });
-
-            // Add distance form
-            document.getElementById('add-distance-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                addDistance();
-            });
-
-            // Mark unavailable
-            document.getElementById('mark-unavailable-btn').addEventListener('click', markUnavailable);
-
-            // Check auth state
-            auth.onAuthStateChanged(user => {
-                currentUser = user;
-                updateAuthUI();
-                if (user) {
-                    checkAdminStatus(user.email);
-                    loadData();
-                } else {
-                    isAdmin = false;
-                    adminLink.classList.add('hidden');
-                }
-            });
-
-            // Load initial data
-            loadTickerData();
-            loadNextRoute();
-        }
-
-        // Navigation
-        function switchPage(page) {
-            currentPage = page;
-            
-            // Update nav links
-            navLinks.forEach(link => {
-                if (link.getAttribute('data-page') === page) {
-                    link.classList.add('active');
-                } else {
-                    link.classList.remove('active');
-                }
-            });
-
-            // Show/hide pages
-            Object.keys(pages).forEach(key => {
-                if (key === page) {
-                    pages[key].classList.remove('hidden');
-                } else {
-                    pages[key].classList.add('hidden');
-                }
-            });
-
-            // Load data for page
-            if (page === 'flota') {
-                loadFullFleet();
-            } else if (page === 'rezervari') {
-                // Reset reservation form
-                document.getElementById('recommendations-section').classList.add('hidden');
-                document.getElementById('final-reservation').classList.add('hidden');
-            } else if (page === 'admin' && isAdmin) {
-                loadAdminData();
-            }
-        }
-
-        // Authentication
-        function openAuthModal(type) {
-            authModal.classList.add('active');
-            if (type === 'login') {
-                authModalTitle.textContent = 'Login';
-                authSubmitBtn.textContent = 'Login';
-                authSwitch.textContent = 'Nu ai cont? Înregistrează-te';
-            } else {
-                authModalTitle.textContent = 'Înregistrare';
-                authSubmitBtn.textContent = 'Înregistrează-te';
-                authSwitch.textContent = 'Ai deja cont? Login';
-            }
-            authError.classList.add('hidden');
-        }
-
-        function handleAuth() {
-            const email = authEmail.value;
-            const password = authPassword.value;
-            const isLogin = authModalTitle.textContent === 'Login';
-
-            authError.classList.add('hidden');
-
-            if (isLogin) {
-                auth.signInWithEmailAndPassword(email, password)
-                    .then(() => {
-                        authModal.classList.remove('active');
-                        showSuccess('Login successful!');
-                    })
-                    .catch(error => {
-                        authError.textContent = error.message;
-                        authError.classList.remove('hidden');
-                    });
-            } else {
-                auth.createUserWithEmailAndPassword(email, password)
-                    .then(() => {
-                        authModal.classList.remove('active');
-                        showSuccess('Înregistrare successful!');
-                    })
-                    .catch(error => {
-                        authError.textContent = error.message;
-                        authError.classList.remove('hidden');
-                    });
-            }
-        }
-
-        function logout() {
-            auth.signOut()
-                .then(() => {
-                    showSuccess('Logout successful!');
-                })
-                .catch(error => {
-                    showError(error.message);
-                });
-        }
-
-        function updateAuthUI() {
-            if (currentUser) {
-                userInfo.textContent = `Bun venit, ${currentUser.email}`;
-                authBtn.textContent = 'Logout';
-                
-                // Show admin link if admin
-                if (isAdmin) {
-                    adminLink.classList.remove('hidden');
-                }
-            } else {
-                userInfo.textContent = '';
-                authBtn.textContent = 'Login';
-                adminLink.classList.add('hidden');
-            }
-        }
-
-        function checkAdminStatus(email) {
-            isAdmin = email === 'admin@firma.ro';
-            updateAuthUI();
-        }
-
-        // Data Loading
-        function loadTickerData() {
-            db.collection('status').where('activ', '==', true).get()
-                .then(snapshot => {
-                    tickerContent.innerHTML = '';
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const item = document.createElement('div');
-                        item.className = 'ticker-item';
-                        item.innerHTML = `
-                            <i class="fas fa-bus ticker-icon"></i>
-                            ${data.mesaj}
-                        `;
-                        tickerContent.appendChild(item);
-                    });
-                    
-                    // Add more items if empty
-                    if (snapshot.size === 0) {
-                        const item = document.createElement('div');
-                        item.className = 'ticker-item';
-                        item.innerHTML = `
-                            <i class="fas fa-bus ticker-icon"></i>
-                            Nu există curse active momentan
-                        `;
-                        tickerContent.appendChild(item);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading ticker:', error);
-                });
-        }
-
-        function loadNextRoute() {
-            db.collection('curse').orderBy('data', 'asc').limit(1).get()
-                .then(snapshot => {
-                    const nextRouteElement = document.getElementById('next-route');
-                    if (snapshot.empty) {
-                        nextRouteElement.innerHTML = `
-                            <h3>Nu există curse programate</h3>
-                            <p>Contactați-ne pentru mai multe informații</p>
-                        `;
-                    } else {
-                        snapshot.forEach(doc => {
-                            const data = doc.data();
-                            nextRouteElement.innerHTML = `
-                                <h3>${data.nume}</h3>
-                                <p><i class="fas fa-map-marker-alt detail-icon"></i> ${data.traseu}</p>
-                                <p><i class="fas fa-calendar detail-icon"></i> ${formatDate(data.data)}</p>
-                                <p><i class="fas fa-users detail-icon"></i> Capacitate: ${data.capacitate} persoane</p>
-                            `;
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading next route:', error);
-                    document.getElementById('next-route').innerHTML = `
-                        <div class="error-message">Eroare la încărcarea cursei</div>
-                    `;
-                });
-        }
-
-        function loadFleetPreview() {
-            db.collection('flota').limit(3).get()
-                .then(snapshot => {
-                    const fleetPreview = document.getElementById('fleet-preview');
-                    fleetPreview.innerHTML = '';
-                    
-                    snapshot.forEach(doc => {
-                        const vehicle = doc.data();
-                        fleetPreview.appendChild(createVehicleCard(vehicle, doc.id));
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading fleet preview:', error);
-                });
-        }
-
-        function loadFullFleet() {
-            db.collection('flota').get()
-                .then(snapshot => {
-                    const fullFleet = document.getElementById('full-fleet');
-                    fullFleet.innerHTML = '';
-                    vehicles = [];
-                    
-                    snapshot.forEach(doc => {
-                        const vehicle = doc.data();
-                        vehicle.id = doc.id;
-                        vehicles.push(vehicle);
-                        fullFleet.appendChild(createVehicleCard(vehicle, doc.id, true));
-                    });
-                    
-                    // Update admin vehicle select
-                    updateVehicleSelect();
-                })
-                .catch(error => {
-                    console.error('Error loading full fleet:', error);
-                    document.getElementById('full-fleet').innerHTML = `
-                        <div class="error-message">Eroare la încărcarea flotei</div>
-                    `;
-                });
-        }
-
-        function createVehicleCard(vehicle, id, showAvailability = false) {
-            const card = document.createElement('div');
-            card.className = 'vehicle-card card';
-            card.id = `vehicle-${id}`;
-            
-            let availabilityHTML = '';
-            if (showAvailability) {
-                availabilityHTML = `
-                    <div class="availability-section">
-                        <input type="date" class="date-input" id="date-${id}" onchange="checkAvailability('${id}')">
-                        <div class="availability-status unavailable" id="availability-${id}">
-                            Selectează o dată pentru verificare
-                        </div>
-                    </div>
-                `;
-            }
-            
-            card.innerHTML = `
-                <h3 class="vehicle-name">${vehicle.nume}</h3>
-                <div class="vehicle-details">
-                    <div class="vehicle-detail-item">
-                        <i class="fas fa-users detail-icon"></i>
-                        Capacitate: ${vehicle.capacitate} persoane
-                    </div>
-                    <div class="vehicle-detail-item">
-                        <i class="fas fa-euro-sign detail-icon"></i>
-                        Preț/km: ${vehicle.pretPerKm} €
-                    </div>
-                    <div class="vehicle-detail-item">
-                        <i class="fas fa-star detail-icon"></i>
-                        Dotări: ${vehicle.dotari || 'Standard'}
-                    </div>
-                </div>
-                ${availabilityHTML}
-            `;
-            
-            return card;
-        }
-
-        function checkAvailability(vehicleId) {
-            const dateInput = document.getElementById(`date-${vehicleId}`);
-            const date = dateInput.value;
-            const availabilityElement = document.getElementById(`availability-${vehicleId}`);
-            
-            if (!date) {
-                availabilityElement.textContent = 'Selectează o dată pentru verificare';
-                availabilityElement.className = 'availability-status unavailable';
-                return;
-            }
-            
-            // Check reservations for this vehicle on this date
-            db.collection('rezervari')
-                .where('data', '==', date)
-                .get()
-                .then(snapshot => {
-                    let isAvailable = true;
-                    let nextAvailableDate = null;
-                    
-                    snapshot.forEach(doc => {
-                        const reservation = doc.data();
-                        if (reservation.vehiculeSelectate && reservation.vehiculeSelectate.includes(vehicleId)) {
-                            isAvailable = false;
-                        }
-                    });
-                    
-                    if (isAvailable) {
-                        availabilityElement.textContent = 'Disponibil';
-                        availabilityElement.className = 'availability-status available';
-                    } else {
-                        // Find next available date
-                        db.collection('rezervari')
-                            .where('vehiculeSelectate', 'array-contains', vehicleId)
-                            .orderBy('data', 'asc')
-                            .get()
-                            .then(resSnapshot => {
-                                const dates = [];
-                                resSnapshot.forEach(doc => {
-                                    dates.push(doc.data().data);
-                                });
-                                
-                                // Find first date after selected date where vehicle is not reserved
-                                const futureDates = dates.filter(d => d > date);
-                                if (futureDates.length > 0) {
-                                    nextAvailableDate = futureDates[0];
-                                }
-                                
-                                availabilityElement.textContent = `Indisponibil. Disponibil începând cu: ${nextAvailableDate || 'Nu există date disponibile în viitor'}`;
-                                availabilityElement.className = 'availability-status unavailable';
-                            });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error checking availability:', error);
-                    availabilityElement.textContent = 'Eroare la verificare';
-                    availabilityElement.className = 'availability-status unavailable';
-                });
-        }
-
-        // Recommendations System
-        async function calculateRecommendations() {
-            if (!currentUser) {
-                showError('Trebuie să fi autentificat pentru rezervare');
-                openAuthModal('login');
-                return;
-            }
-            
-            const plecare = document.getElementById('plecare').value;
-            const destinatie = document.getElementById('destinatie').value;
-            const data = document.getElementById('data').value;
-            const persoane = parseInt(document.getElementById('persoane').value);
-            
-            if (!plecare || !destinatie || !data || !persoane) {
-                showError('Completează toate câmpurile');
-                return;
-            }
-            
-            // Calculate distance
-            const distance = await getDistance(plecare, destinatie);
-            
-            // Load vehicles and reservations
-            db.collection('flota').get()
-                .then(vehicleSnapshot => {
-                    const allVehicles = [];
-                    vehicleSnapshot.forEach(doc => {
-                        const vehicle = doc.data();
-                        vehicle.id = doc.id;
-                        allVehicles.push(vehicle);
-                    });
-                    
-                    db.collection('rezervari').where('data', '==', data).get()
-                        .then(reservationSnapshot => {
-                            const reservedVehicles = [];
-                            reservationSnapshot.forEach(doc => {
-                                const reservation = doc.data();
-                                if (reservation.vehiculeSelectate) {
-                                    reservedVehicles.push(...reservation.vehiculeSelectate);
-                                }
-                            });
-                            
-                            // Filter available vehicles
-                            const availableVehicles = allVehicles.filter(v => !reservedVehicles.includes(v.id));
-                            
-                            // Generate recommendations
-                            const recommendations = generateRecommendations(availableVehicles, persoane, distance);
-                            
-                            // Display recommendations
-                            displayRecommendations(recommendations, plecare, destinatie, data, persoane, distance);
-                        })
-                        .catch(error => {
-                            console.error('Error loading reservations:', error);
-                            showError('Eroare la verificarea disponibilității');
-                        });
-                })
-                .catch(error => {
-                    console.error('Error loading vehicles:', error);
-                    showError('Eroare la încărcarea flotei');
-                });
-        }
-
-        async function getDistance(from, to) {
-            // Check in Firestore for distance
-            try {
-                const snapshot = await db.collection('distante')
-                    .where('plecare', '==', from)
-                    .where('destinatie', '==', to)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    snapshot.forEach(doc => {
-                        return doc.data().distanta;
-                    });
-                }
-                
-                // Check reverse combination
-                const reverseSnapshot = await db.collection('distante')
-                    .where('plecare', '==', to)
-                    .where('destinatie', '==', from)
-                    .get();
-                
-                if (!reverseSnapshot.empty) {
-                    reverseSnapshot.forEach(doc => {
-                        return doc.data().distanta;
-                    });
-                }
-                
-                // Default distance if not found
-                return 200;
-            } catch (error) {
-                console.error('Error loading distance:', error);
-                return 200;
-            }
-        }
-
-        function generateRecommendations(vehicles, persons, distance) {
-            const recommendations = [];
-            
-            // Sort vehicles by capacity
-            vehicles.sort((a, b) => b.capacitate - a.capacitate);
-            
-            // Case 1: One large vehicle
-            for (const vehicle of vehicles) {
-                if (vehicle.capacitate >= persons) {
-                    recommendations.push({
-                        vehicles: [vehicle],
-                        totalCapacity: vehicle.capacitate,
-                        price: distance * vehicle.pretPerKm,
-                        efficiency: 'optimal'
-                    });
-                    break;
-                }
-            }
-            
-            // Case 2: Two smaller vehicles (if more efficient)
-            for (let i = 0; i < vehicles.length; i++) {
-                for (let j = i + 1; j < vehicles.length; j++) {
-                    const totalCapacity = vehicles[i].capacitate + vehicles[j].capacitate;
-                    if (totalCapacity >= persons) {
-                        const totalPrice = distance * vehicles[i].pretPerKm + distance * vehicles[j].pretPerKm;
-                        recommendations.push({
-                            vehicles: [vehicles[i], vehicles[j]],
-                            totalCapacity: totalCapacity,
-                            price: totalPrice,
-                            efficiency: totalCapacity - persons <= 20 ? 'good' : 'acceptable'
-                        });
-                    }
-                }
-            }
-            
-            // Sort by efficiency and price
-            recommendations.sort((a, b) => {
-                if (a.efficiency === 'optimal' && b.efficiency !== 'optimal') return -1;
-                if (b.efficiency === 'optimal' && a.efficiency !== 'optimal') return 1;
-                if (a.efficiency === 'good' && b.efficiency === 'acceptable') return -1;
-                if (b.efficiency === 'good' && a.efficiency === 'acceptable') return 1;
-                return a.price - b.price;
-            });
-            
-            return recommendations.slice(0, 3);
-        }
-
-        function displayRecommendations(recommendations, plecare, destinatie, data, persoane, distance) {
-            const recommendationsElement = document.getElementById('recommendations');
-            recommendationsElement.innerHTML = '';
-            
-            if (recommendations.length === 0) {
-                recommendationsElement.innerHTML = `
-                    <div class="card">
-                        <h3>Nu există vehicule disponibile pentru data selectată</h3>
-                        <p>Încercați o altă dată sau contactați-ne pentru mai multe opțiuni</p>
-                    </div>
-                `;
-                document.getElementById('recommendations-section').classList.remove('hidden');
-                return;
-            }
-            
-            recommendations.forEach((rec, index) => {
-                const card = document.createElement('div');
-                card.className = 'recommendation-card card';
-                card.dataset.index = index;
-                
-                let vehiclesHTML = '';
-                rec.vehicles.forEach(vehicle => {
-                    vehiclesHTML += `
-                        <div class="vehicle-detail-item">
-                            <i class="fas fa-bus detail-icon"></i>
-                            ${vehicle.nume} (${vehicle.capacitate} persoane)
-                        </div>
-                    `;
-                });
-                
-                card.innerHTML = `
-                    <div class="recommended-badge">Recomandat</div>
-                    <h3>${rec.vehicles.length === 1 ? '1 autobuz mare' : '2 autobuze mai mici'}</h3>
-                    <div class="vehicle-details">
-                        ${vehiclesHTML}
-                        <div class="vehicle-detail-item">
-                            <i class="fas fa-users detail-icon"></i>
-                            Capacitate totală: ${rec.totalCapacity} persoane
-                        </div>
-                        <div class="vehicle-detail-item">
-                            <i class="fas fa-euro-sign detail-icon"></i>
-                            Preț estimativ: ${rec.price.toFixed(2)} €
-                        </div>
-                        <div class="vehicle-detail-item">
-                            <i class="fas fa-road detail-icon"></i>
-                            Distanță estimată: ${distance} km
-                        </div>
-                    </div>
-                    <button class="form-btn mt-20" onclick="selectRecommendation(${index})">Selectează această opțiune</button>
-                `;
-                
-                recommendationsElement.appendChild(card);
-            });
-            
-            document.getElementById('recommendations-section').classList.remove('hidden');
-            document.getElementById('final-reservation').classList.add('hidden');
-        }
-
-        function selectRecommendation(index) {
-            const recommendationsElement = document.getElementById('recommendations');
-            const cards = recommendationsElement.querySelectorAll('.card');
-            
-            // Highlight selected card
-            cards.forEach(card => {
-                card.style.borderColor = '#ddd';
-            });
-            cards[index].style.borderColor = '#1a237e';
-            
-            // Store selected recommendation
-            const plecare = document.getElementById('plecare').value;
-            const destinatie = document.getElementById('destinatie').value;
-            const data = document.getElementById('data').value;
-            const persoane = parseInt(document.getElementById('persoane').value);
-            
-            selectedRecommendation = {
-                plecare,
-                destinatie,
-                data,
-                persoane,
-                recommendationIndex: index
-            };
-            
-            // Show final reservation section
-            document.getElementById('final-reservation').classList.remove('hidden');
-        }
-
-        function confirmReservation() {
-            if (!selectedRecommendation) {
-                showError('Selectează mai întâi o recomandare');
-                return;
-            }
-            
-            // For simplicity, we'll create a reservation with basic info
-            const reservation = {
-                uid: currentUser.uid,
-                plecare: selectedRecommendation.plecare,
-                destinatie: selectedRecommendation.destinatie,
-                data: selectedRecommendation.data,
-                persoane: selectedRecommendation.persoane,
-                vehiculeSelectate: ['vehicle-id-1'], // This should be actual vehicle IDs
-                pretEstimativ: 500, // Example price
-                status: 'pending',
-                createdAt: firebase.firestore.Timestamp.now()
-            };
-            
-            db.collection('rezervari').add(reservation)
-                .then(() => {
-                    showSuccess('Rezervare confirmată!');
-                    document.getElementById('final-reservation').classList.add('hidden');
-                    document.getElementById('recommendations-section').classList.add('hidden');
-                    document.getElementById('reservation-form').reset();
-                    selectedRecommendation = null;
-                    
-                    // If admin, reload reservations
-                    if (isAdmin && currentPage === 'admin') {
-                        loadReservationsAdmin();
-                    }
-                })
-                .catch(error => {
-                    showError('Eroare la confirmarea rezervării: ' + error.message);
-                });
-        }
-
-        // Admin Functions
-        function switchAdminTab(tab) {
-            document.querySelectorAll('.admin-tab').forEach(t => {
-                if (t.getAttribute('data-tab') === tab) {
-                    t.classList.add('active');
-                } else {
-                    t.classList.remove('active');
-                }
-            });
-            
-            document.querySelectorAll('.admin-content > div').forEach(content => {
-                if (content.id === `${tab}-content`) {
-                    content.classList.remove('hidden');
-                } else {
-                    content.classList.add('hidden');
-                }
-            });
-        }
-
-        function loadAdminData() {
-            if (!isAdmin) return;
-            
-            loadVehiclesAdmin();
-            loadReservationsAdmin();
-            loadStatusAdmin();
-            loadDistancesAdmin();
-        }
-
-        function loadVehiclesAdmin() {
-            db.collection('flota').get()
-                .then(snapshot => {
-                    const tableBody = document.getElementById('vehicle-table').querySelector('tbody');
-                    tableBody.innerHTML = '';
-                    
-                    snapshot.forEach(doc => {
-                        const vehicle = doc.data();
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${vehicle.nume}</td>
-                            <td>${vehicle.capacitate}</td>
-                            <td>${vehicle.pretPerKm} €</td>
-                            <td>${vehicle.dotari || 'Standard'}</td>
-                            <td>
-                                <button class="action-btn edit-btn" onclick="editVehicle('${doc.id}')">Edit</button>
-                                <button class="action-btn delete-btn" onclick="deleteVehicle('${doc.id}')">Delete</button>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading vehicles for admin:', error);
-                });
-        }
-
-        function addVehicle() {
-            const name = document.getElementById('vehicle-name').value;
-            const capacity = parseInt(document.getElementById('vehicle-capacity').value);
-            const price = parseFloat(document.getElementById('vehicle-price').value);
-            const features = document.getElementById('vehicle-features').value;
-            
-            db.collection('flota').add({
-                nume: name,
-                capacitate: capacity,
-                pretPerKm: price,
-                dotari: features
-            })
-            .then(() => {
-                showSuccess('Vehicul adăugat!');
-                document.getElementById('add-vehicle-form').reset();
-                loadVehiclesAdmin();
-                loadFullFleet();
-            })
-            .catch(error => {
-                showError('Eroare la adăugarea vehiculului: ' + error.message);
-            });
-        }
-
-        function editVehicle(id) {
-            // In a full implementation, you would create an edit form
-            showSuccess('Funcția de editare va fi implementată în versiunea completă');
-        }
-
-        function deleteVehicle(id) {
-            db.collection('flota').doc(id).delete()
-                .then(() => {
-                    showSuccess('Vehicul eliminat!');
-                    loadVehiclesAdmin();
-                    loadFullFleet();
-                })
-                .catch(error => {
-                    showError('Eroare la eliminarea vehiculului: ' + error.message);
-                });
-        }
-
-        function loadReservationsAdmin() {
-            db.collection('rezervari').get()
-                .then(snapshot => {
-                    const tableBody = document.getElementById('reservation-table').querySelector('tbody');
-                    tableBody.innerHTML = '';
-                    
-                    snapshot.forEach(doc => {
-                        const reservation = doc.data();
-                        const row = document.createElement('tr');
-                        
-                        // Get user email
-                        let userEmail = 'Unknown';
-                        if (reservation.uid) {
-                            // In a full implementation, you would fetch user data
-                            userEmail = reservation.uid;
-                        }
-                        
-                        row.innerHTML = `
-                            <td>${userEmail}</td>
-                            <td>${reservation.plecare}</td>
-                            <td>${reservation.destinatie}</td>
-                            <td>${formatDate(reservation.data)}</td>
-                            <td>${reservation.persoane}</td>
-                            <td>${reservation.vehiculeSelectate ? reservation.vehiculeSelectate.length : 0}</td>
-                            <td>${reservation.pretEstimativ ? reservation.pretEstimativ.toFixed(2) + ' €' : 'N/A'}</td>
-                            <td><span class="badge status-${reservation.status}">${reservation.status}</span></td>
-                            <td>
-                                <button class="action-btn confirm-btn" onclick="confirmReservationAdmin('${doc.id}')">Confirm</button>
-                                <button class="action-btn delete-btn" onclick="deleteReservationAdmin('${doc.id}')">Delete</button>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading reservations for admin:', error);
-                });
-        }
-
-        function confirmReservationAdmin(id) {
-            db.collection('rezervari').doc(id).update({
-                status: 'confirmed'
-            })
-            .then(() => {
-                showSuccess('Rezervare confirmată!');
-                loadReservationsAdmin();
-            })
-            .catch(error => {
-                showError('Eroare la confirmarea rezervării: ' + error.message);
-            });
-        }
-
-        function deleteReservationAdmin(id) {
-            db.collection('rezervari').doc(id).delete()
-                .then(() => {
-                    showSuccess('Rezervare eliminată!');
-                    loadReservationsAdmin();
-                })
-                .catch(error => {
-                    showError('Eroare la eliminarea rezervării: ' + error.message);
-                });
-        }
-
-        function loadStatusAdmin() {
-            db.collection('status').get()
-                .then(snapshot => {
-                    const tableBody = document.getElementById('status-table').querySelector('tbody');
-                    tableBody.innerHTML = '';
-                    
-                    snapshot.forEach(doc => {
-                        const status = doc.data();
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${status.vehicul || 'N/A'}</td>
-                            <td>${status.traseu || 'N/A'}</td>
-                            <td>${status.mesaj}</td>
-                            <td>
-                                <button class="action-btn edit-btn" onclick="editStatus('${doc.id}')">Edit</button>
-                                <button class="action-btn delete-btn" onclick="deleteStatus('${doc.id}')">Delete</button>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading status for admin:', error);
-                });
-        }
-
-        function addStatus() {
-            const vehicle = document.getElementById('status-vehicle').value;
-            const route = document.getElementById('status-route').value;
-            const message = document.getElementById('status-message').value;
-            
-            db.collection('status').add({
-                vehicul: vehicle,
-                traseu: route,
-                mesaj: message,
-                activ: true
-            })
-            .then(() => {
-                showSuccess('Status adăugat!');
-                document.getElementById('add-status-form').reset();
-                loadStatusAdmin();
-                loadTickerData();
-            })
-            .catch(error => {
-                showError('Eroare la adăugarea statusului: ' + error.message);
-            });
-        }
-
-        function editStatus(id) {
-            // In a full implementation, you would create an edit form
-            showSuccess('Funcția de editare va fi implementată în versiunea completă');
-        }
-
-        function deleteStatus(id) {
-            db.collection('status').doc(id).delete()
-                .then(() => {
-                    showSuccess('Status eliminat!');
-                    loadStatusAdmin();
-                    loadTickerData();
-                })
-                .catch(error => {
-                    showError('Eroare la eliminarea statusului: ' + error.message);
-                });
-        }
-
-        function loadDistancesAdmin() {
-            db.collection('distante').get()
-                .then(snapshot => {
-                    const tableBody = document.getElementById('distance-table').querySelector('tbody');
-                    tableBody.innerHTML = '';
-                    
-                    snapshot.forEach(doc => {
-                        const distance = doc.data();
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${distance.plecare}</td>
-                            <td>${distance.destinatie}</td>
-                            <td>${distance.distanta} km</td>
-                            <td>
-                                <button class="action-btn edit-btn" onclick="editDistance('${doc.id}')">Edit</button>
-                                <button class="action-btn delete-btn" onclick="deleteDistance('${doc.id}')">Delete</button>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading distances for admin:', error);
-                });
-        }
-
-        function addDistance() {
-            const from = document.getElementById('distance-from').value;
-            const to = document.getElementById('distance-to').value;
-            const value = parseInt(document.getElementById('distance-value').value);
-            
-            db.collection('distante').add({
-                plecare: from,
-                destinatie: to,
-                distanta: value
-            })
-            .then(() => {
-                showSuccess('Distanță adăugată!');
-                document.getElementById('add-distance-form').reset();
-                loadDistancesAdmin();
-            })
-            .catch(error => {
-                showError('Eroare la adăugarea distanței: ' + error.message);
-            });
-        }
-
-        function editDistance(id) {
-            // Simple edit with prompt
-            const newDistance = prompt('Introdu noua distanță (km):');
-            if (newDistance && !isNaN(newDistance)) {
-                db.collection('distante').doc(id).update({
-                    distanta: parseInt(newDistance)
-                })
-                .then(() => {
-                    showSuccess('Distanță actualizată!');
-                    loadDistancesAdmin();
-                })
-                .catch(error => {
-                    showError('Eroare la actualizarea distanței: ' + error.message);
-                });
-            }
-        }
-
-        function deleteDistance(id) {
-            if (confirm('Șterge această distanță?')) {
-                db.collection('distante').doc(id).delete()
-                    .then(() => {
-                        showSuccess('Distanță eliminată!');
-                        loadDistancesAdmin();
-                    })
-                    .catch(error => {
-                        showError('Eroare la eliminarea distanței: ' + error.message);
-                    });
-            }
-        }
-
-        function updateVehicleSelect() {
-            const select = document.getElementById('manual-vehicle');
-            select.innerHTML = '';
-            
-            vehicles.forEach(vehicle => {
-                const option = document.createElement('option');
-                option.value = vehicle.id;
-                option.textContent = vehicle.nume;
-                select.appendChild(option);
-            });
-        }
-
-        function markUnavailable() {
-            const vehicleId = document.getElementById('manual-vehicle').value;
-            const date = document.getElementById('manual-date').value;
-            
-            if (!vehicleId || !date) {
-                showError('Selectează vehiculul și data');
-                return;
-            }
-            
-            // Create a reservation to mark as unavailable
-            db.collection('rezervari').add({
-                uid: 'admin',
-                plecare: 'Manual block',
-                destinatie: 'Manual block',
-                data: date,
-                persoane: 0,
-                vehiculeSelectate: [vehicleId],
-                pretEstimativ: 0,
-                status: 'confirmed',
-                createdAt: firebase.firestore.Timestamp.now()
-            })
-            .then(() => {
-                showSuccess('Vehicul marcat ca ocupat pentru data selectată!');
-                document.getElementById('manual-date').value = '';
-            })
-            .catch(error => {
-                showError('Eroare la marcarea vehiculului: ' + error.message);
-            });
-        }
-
-        function loadData() {
-            loadTickerData();
-            loadNextRoute();
-            loadFleetPreview();
-            
-            if (currentPage === 'flota') {
-                loadFullFleet();
-            }
-            
-            if (currentPage === 'admin' && isAdmin) {
-                loadAdminData();
-            }
-        }
-
-        // Utility Functions
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('ro-RO');
-        }
-
-        function showError(message) {
-            // Create a temporary error message
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = message;
-            errorDiv.style.position = 'fixed';
-            errorDiv.style.top = '20px';
-            errorDiv.style.right = '20px';
-            errorDiv.style.zIndex = '3000';
-            document.body.appendChild(errorDiv);
-            
-            setTimeout(() => {
-                errorDiv.remove();
-            }, 5000);
-        }
-
-        function showSuccess(message) {
-            // Create a temporary success message
-            const successDiv = document.createElement('div');
-            successDiv.className = 'success-message';
-            successDiv.textContent = message;
-            successDiv.style.position = 'fixed';
-            successDiv.style.top = '20px';
-            successDiv.style.right = '20px';
-            successDiv.style.zIndex = '3000';
-            document.body.appendChild(successDiv);
-            
-            setTimeout(() => {
-                successDiv.remove();
-            }, 5000);
-        }
-
-        // Initialize the application
-        init();
-    </script>
+
+<div class="ticker"><span id="tickerText">Se încarcă...</span></div>
+
+<div class="navbar">
+<a onclick="showPage('home')">Home</a>
+<a onclick="showPage('flota')">Flotă</a>
+<a onclick="showPage('rezervari')">Rezervări</a>
+<a onclick="logout()">Logout</a>
+<a id="adminBtn" onclick="showPage('admin')" class="hidden">Admin</a>
+</div>
+
+<div id="home" class="section">
+<h1>Transport Persoane</h1>
+<h3 id="nextTrip"></h3>
+<button class="btn" onclick="showPage('rezervari')">Rezervă rapid</button>
+<div id="previewFlota"></div>
+</div>
+
+<div id="flota" class="section hidden">
+<h2>Flotă</h2>
+<div id="flotaList"></div>
+</div>
+
+<div id="rezervari" class="section hidden">
+<h2>Rezervare</h2>
+<input id="plecare" placeholder="Plecare"><br>
+<input id="destinatie" placeholder="Destinație"><br>
+<input type="date" id="data"><br>
+<input id="persoane" type="number" placeholder="Persoane"><br>
+<button class="btn" onclick="genereaza()">Caută</button>
+<div id="recomandari"></div>
+</div>
+
+<div id="admin" class="section hidden">
+<h2>Admin Panel</h2>
+
+<h3>Adaugă autobuz</h3>
+<input id="nume" placeholder="Nume"><br>
+<input id="cap" placeholder="Capacitate"><br>
+<input id="pret" placeholder="Preț/km"><br>
+<input id="dotari" placeholder="Dotări"><br>
+<button class="btn" onclick="addBus()">Adaugă</button>
+
+<h3>Adaugă status</h3>
+<input id="msg" placeholder="Mesaj"><br>
+<button class="btn" onclick="addStatus()">Adaugă</button>
+
+<div id="adminRez"></div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",
+  authDomain: "lsd-group-srl.firebaseapp.com",
+  projectId: "lsd-group-srl"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+let user=null;
+
+auth.onAuthStateChanged(u=>{
+user=u;
+if(u && u.email==="irimia.teodor.17@gmail.com"){
+document.getElementById("adminBtn").classList.remove("hidden");
+}
+loadAll();
+});
+
+function showPage(p){
+document.querySelectorAll('.section').forEach(s=>s.classList.add('hidden'));
+document.getElementById(p).classList.remove('hidden');
+}
+
+function logout(){ auth.signOut(); }
+
+async function loadAll(){
+loadFlota();
+loadTicker();
+loadNext();
+loadAdminRez();
+}
+
+async function loadTicker(){
+let snap=await db.collection("status").get();
+let txt="";
+snap.forEach(d=>{ if(d.data().activ) txt+=d.data().mesaj+" 🔴 ";});
+document.getElementById("tickerText").innerText=txt||"Niciun autobuz activ";
+}
+
+async function loadNext(){
+let snap=await db.collection("curse").limit(1).get();
+snap.forEach(d=>{
+document.getElementById("nextTrip").innerText="Următoarea cursă: "+d.data().mesaj;
+});
+}
+
+async function loadFlota(){
+let snap=await db.collection("flota").get();
+let html="";
+snap.forEach(doc=>{
+let b=doc.data();
+html+=`
+<div class="card">
+<h3>${b.nume}</h3>
+<p>Capacitate: ${b.capacitate}</p>
+<p>${b.dotari}</p>
+<p>${b.pretPerKm} lei/km</p>
+<input type="date" onchange="check('${doc.id}',this.value,this)">
+<div></div>
+</div>`;
+});
+document.getElementById("flotaList").innerHTML=html;
+document.getElementById("previewFlota").innerHTML=html;
+}
+
+async function check(id,data,input){
+let res=await db.collection("rezervari")
+.where("data","==",data).get();
+
+let ocupat=false;
+res.forEach(r=>{
+if(r.data().vehiculeSelectate.includes(id)) ocupat=true;
+});
+
+let el=input.nextElementSibling;
+if(ocupat){
+el.innerHTML='<span class="badge no">Indisponibil</span>';
+}else{
+el.innerHTML='<span class="badge ok">Disponibil</span>';
+}
+}
+
+async function genereaza(){
+let persoane=parseInt(document.getElementById("persoane").value);
+let data=document.getElementById("data").value;
+
+let flota=await db.collection("flota").get();
+let rez=await db.collection("rezervari").where("data","==",data).get();
+
+let ocupate=[];
+rez.forEach(r=>ocupate.push(...r.data().vehiculeSelectate));
+
+let libere=[];
+flota.forEach(doc=>{
+if(!ocupate.includes(doc.id)) libere.push({...doc.data(), id:doc.id});
+});
+
+let recomandari=[];
+
+libere.forEach(b=>{
+if(b.capacitate>=persoane){
+recomandari.push({tip:"1",bus:[b],cap:b.capacitate,pret:b.pretPerKm*100});
+}
+});
+
+for(let i=0;i<libere.length;i++){
+for(let j=i+1;j<libere.length;j++){
+let cap=libere[i].capacitate+libere[j].capacitate;
+if(cap>=persoane){
+recomandari.push({
+tip:"2",
+bus:[libere[i],libere[j]],
+cap,
+pret:(libere[i].pretPerKm+libere[j].pretPerKm)*100
+});
+}
+}
+}
+
+recomandari.sort((a,b)=>a.pret-b.pret);
+
+let html="";
+recomandari.forEach((r,i)=>{
+html+=`
+<div class="card">
+<h3>${r.bus.map(b=>b.nume).join(" + ")}</h3>
+<p>Capacitate: ${r.cap}</p>
+<p>Preț: ${r.pret} lei</p>
+${i===0?'<span class="badge rec">Recomandat</span>':''}
+<button class="btn" onclick='rezerva(${JSON.stringify(r)})'>Alege</button>
+</div>`;
+});
+
+document.getElementById("recomandari").innerHTML=html;
+}
+
+async function rezerva(r){
+if(!user) return alert("Login necesar");
+
+await db.collection("rezervari").add({
+uid:user.uid,
+data:document.getElementById("data").value,
+vehiculeSelectate:r.bus.map(b=>b.id),
+persoane:parseInt(document.getElementById("persoane").value),
+pretEstimativ:r.pret,
+status:"nou",
+createdAt:new Date()
+});
+
+alert("Rezervare trimisă!");
+}
+
+async function addBus(){
+await db.collection("flota").add({
+nume:nume.value,
+capacitate:parseInt(cap.value),
+pretPerKm:parseFloat(pret.value),
+dotari:dotari.value
+});
+loadFlota();
+}
+
+async function addStatus(){
+await db.collection("status").add({
+mesaj:msg.value,
+activ:true
+});
+loadTicker();
+}
+
+async function loadAdminRez(){
+let snap=await db.collection("rezervari").get();
+let html="";
+snap.forEach(doc=>{
+let r=doc.data();
+html+=`
+<div class="card">
+<p>${r.data} | ${r.persoane} pers</p>
+<button onclick="confirmRez('${doc.id}')">Confirmă</button>
+<button onclick="delRez('${doc.id}')">Șterge</button>
+</div>`;
+});
+document.getElementById("adminRez").innerHTML=html;
+}
+
+async function confirmRez(id){
+await db.collection("rezervari").doc(id).update({status:"confirmat"});
+loadAdminRez();
+}
+
+async function delRez(id){
+await db.collection("rezervari").doc(id).delete();
+loadAdminRez();
+}
+</script>
+
 </body>
 </html>
