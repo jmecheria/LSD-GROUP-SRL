@@ -1,282 +1,1260 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transport Persoane</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LSD Group | Transport persoane</title>
+  <meta name="theme-color" content="#0f172a" />
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-<style>
-body { margin:0; font-family:Arial; background:#f5f7fa;}
-.navbar { position:fixed; top:40px; width:100%; background:#111; color:white; display:flex; justify-content:space-around; padding:10px; z-index:1000;}
-.navbar a { color:white; cursor:pointer;}
-.ticker { position:fixed; top:0; width:100%; background:#ff9800; color:white; padding:10px; overflow:hidden; white-space:nowrap;}
-.ticker span { display:inline-block; padding-left:100%; animation:scroll 15s linear infinite;}
-@keyframes scroll { from{transform:translateX(0);} to{transform:translateX(-100%);} }
-
-.section { padding:120px 20px;}
-.card { background:white; padding:15px; margin:10px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1);}
-.btn { background:#007bff; color:white; padding:10px; border:none; cursor:pointer; margin-top:5px;}
-.badge { padding:5px 10px; border-radius:5px; color:white;}
-.ok { background:green;}
-.no { background:red;}
-.rec { background:orange;}
-.hidden { display:none;}
-</style>
+  <style>
+    :root{
+      --bg:#07111f;
+      --bg2:#0b1630;
+      --card:rgba(15, 23, 42, .68);
+      --card2:rgba(255,255,255,.06);
+      --text:#e5eefb;
+      --muted:#9fb3d1;
+      --line:rgba(255,255,255,.10);
+      --brand:#5dd6ff;
+      --brand2:#7c5cff;
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+      --shadow:0 20px 60px rgba(0,0,0,.35);
+      --radius:24px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% 10%, rgba(93,214,255,.18), transparent 40%),
+        radial-gradient(900px 500px at 90% 0%, rgba(124,92,255,.18), transparent 35%),
+        linear-gradient(180deg, #050b14 0%, #0a1220 60%, #050b14 100%);
+      min-height:100vh;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1280px;margin:0 auto;padding:0 18px}
+    .ticker{
+      position:fixed; inset:0 0 auto 0; z-index:1000;
+      height:40px; display:flex; align-items:center; overflow:hidden;
+      background:linear-gradient(90deg, #06101f, #122042);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .ticker__label{
+      flex:0 0 auto; height:100%; display:flex; align-items:center; gap:8px;
+      padding:0 14px; font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+      color:#9cdcff; border-right:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      white-space:nowrap;
+    }
+    .ticker__track{position:relative; flex:1; overflow:hidden; height:100%}
+    .ticker__content{
+      position:absolute; top:0; left:100%; white-space:nowrap; height:100%;
+      display:flex; align-items:center; gap:14px; padding-left:18px;
+      animation:marquee 24s linear infinite;
+      font-weight:600; color:#f8fbff;
+    }
+    .ticker__pill{
+      display:inline-flex; align-items:center; gap:8px; padding:7px 12px;
+      border-radius:999px; background:rgba(255,255,255,.08); color:#f2f7ff;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    @keyframes marquee { from{ transform:translateX(0);} to{ transform:translateX(-100%);} }
+    .nav{
+      position:sticky; top:40px; z-index:999;
+      backdrop-filter:blur(18px);
+      background:rgba(6,12,22,.68);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .nav__inner{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:76px}
+    .brand{display:flex; align-items:center; gap:12px; min-width:210px}
+    .brand__logo{
+      width:44px; height:44px; border-radius:14px;
+      background:linear-gradient(135deg, var(--brand), var(--brand2));
+      box-shadow:0 10px 30px rgba(93,214,255,.24);
+      display:grid; place-items:center; font-size:22px;
+    }
+    .brand__title{font-weight:800; font-size:18px; line-height:1.1}
+    .brand__sub{font-size:12px; color:var(--muted)}
+    .nav__links{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+    .nav__btn{
+      border:1px solid transparent; background:transparent; color:var(--text);
+      padding:11px 14px; border-radius:999px; cursor:pointer; font-weight:700;
+      transition:.2s ease; display:inline-flex; align-items:center; gap:8px;
+    }
+    .nav__btn:hover,.nav__btn.active{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.10)}
+    .nav__right{display:flex; align-items:center; gap:10px; justify-content:flex-end; min-width:260px}
+    .chip{
+      display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:10px 12px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); color:var(--muted);
+      font-size:13px; white-space:nowrap;
+    }
+    .btn{
+      border:0; cursor:pointer; font-weight:800; color:#08111d;
+      background:linear-gradient(135deg, #95e7ff, #8e7bff);
+      padding:12px 16px; border-radius:14px; box-shadow:0 16px 30px rgba(93,214,255,.18);
+      transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn.secondary{background:rgba(255,255,255,.08); color:var(--text); border:1px solid rgba(255,255,255,.08); box-shadow:none}
+    .btn.ghost{background:transparent; color:var(--text); border:1px solid rgba(255,255,255,.10); box-shadow:none}
+    .btn.danger{background:linear-gradient(135deg,#ff8a8a,#ff5e5e); color:#fff}
+    .main{padding:26px 0 40px}
+    .section{display:none; animation:fade .25s ease}
+    .section.active{display:block}
+    @keyframes fade{from{opacity:.35; transform:translateY(8px)} to{opacity:1; transform:none}}
+    .hero{
+      display:grid; grid-template-columns:1.15fr .85fr; gap:18px; align-items:stretch;
+      padding:22px 0 8px;
+    }
+    .hero__panel,.panel{
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:var(--radius); box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .hero__panel{padding:28px}
+    .eyebrow{
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid rgba(93,214,255,.25); color:#b5f0ff; background:rgba(93,214,255,.08);
+      padding:8px 12px; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+    }
+    h1,h2,h3,p{margin:0}
+    h1{font-size:clamp(34px,4.6vw,64px); line-height:1.02; letter-spacing:-.04em; margin:16px 0 12px}
+    .lead{max-width:62ch; color:#c6d5ea; font-size:16px; line-height:1.7}
+    .hero__actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:22px}
+    .hero__stats{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:22px}
+    .stat{
+      padding:16px; border-radius:20px; background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08)
+    }
+    .stat b{display:block; font-size:24px; margin-bottom:6px}
+    .stat span{color:var(--muted); font-size:13px}
+    .sidegrid{display:grid; gap:18px}
+    .sidecard{padding:20px}
+    .kpi{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:14px}
+    .mini{
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:14px
+    }
+    .mini span{display:block; color:var(--muted); font-size:12px; margin-bottom:6px}
+    .mini b{font-size:18px}
+    .toolbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin:0 0 16px}
+    .toolbar__left,.toolbar__right{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+    .search, input, select, textarea{
+      width:100%; padding:13px 14px; color:var(--text); background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10); border-radius:14px; outline:none;
+    }
+    input::placeholder, textarea::placeholder{color:#7f93b6}
+    .grid{display:grid; gap:14px}
+    .fleet-grid{grid-template-columns:repeat(3, minmax(0,1fr))}
+    .book-grid{grid-template-columns:1fr 1fr}
+    .admin-grid{grid-template-columns:1.05fr .95fr}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border:1px solid rgba(255,255,255,.09); border-radius:24px; box-shadow:var(--shadow); overflow:hidden;
+    }
+    .card__body{padding:18px}
+    .card__head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:12px}
+    .card__title{font-size:20px; line-height:1.2; font-weight:800}
+    .muted{color:var(--muted)}
+    .meta{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0}
+    .badge{
+      display:inline-flex; align-items:center; gap:7px; border-radius:999px; padding:7px 10px; font-size:12px; font-weight:800;
+      border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.06)
+    }
+    .badge.ok{background:rgba(34,197,94,.16); color:#b7ffd0; border-color:rgba(34,197,94,.20)}
+    .badge.bad{background:rgba(239,68,68,.16); color:#ffd0d0; border-color:rgba(239,68,68,.20)}
+    .badge.warn{background:rgba(245,158,11,.16); color:#ffe1aa; border-color:rgba(245,158,11,.20)}
+    .badge.rec{background:linear-gradient(135deg, rgba(93,214,255,.18), rgba(124,92,255,.18)); color:#d8fbff}
+    .split{display:grid; grid-template-columns:1fr auto; gap:12px; align-items:end}
+    .stack{display:grid; gap:10px}
+    .small{font-size:13px}
+    .divider{height:1px; background:rgba(255,255,255,.08); margin:14px 0}
+    .section-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px}
+    .section-head h2{font-size:28px; letter-spacing:-.03em}
+    .table{display:grid; gap:10px}
+    .row{
+      display:grid; grid-template-columns:1.2fr .7fr .7fr .9fr auto; gap:10px; align-items:center;
+      padding:14px; border-radius:18px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08)
+    }
+    .row--compact{grid-template-columns:1.2fr .9fr .9fr auto}
+    .row--status{grid-template-columns:1.2fr 1fr .8fr auto}
+    .row--booking{grid-template-columns:1.2fr .8fr .8fr .8fr auto}
+    .row strong{display:block}
+    .row .actions{display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap}
+    .footer-note{color:var(--muted); font-size:13px; margin-top:10px}
+    .auth-box{display:grid; gap:12px}
+    .auth-tabs{display:flex; gap:8px; flex-wrap:wrap}
+    .auth-tabs .btn{padding:10px 14px; border-radius:12px}
+    .hidden{display:none !important}
+    .toast{
+      position:fixed; right:18px; bottom:18px; z-index:2000;
+      background:rgba(7,17,31,.92); border:1px solid rgba(255,255,255,.10); box-shadow:var(--shadow);
+      border-radius:18px; padding:14px 16px; min-width:280px; max-width:360px; transform:translateY(24px); opacity:0; pointer-events:none;
+      transition:.25s ease;
+    }
+    .toast.show{transform:none; opacity:1}
+    .toast b{display:block; margin-bottom:4px}
+    .copybar{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    pre{
+      white-space:pre-wrap; word-break:break-word; margin:0; padding:16px; border-radius:18px;
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); color:#dbe9ff;
+      overflow:auto;
+    }
+    .hero-right{
+      display:grid; gap:18px; grid-template-rows:auto 1fr;
+    }
+    .mapmock{
+      height:100%; min-height:260px; border-radius:24px; position:relative; overflow:hidden;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(93,214,255,.18), transparent 26%),
+        radial-gradient(circle at 70% 40%, rgba(124,92,255,.16), transparent 24%),
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.09);
+    }
+    .mapmock::before,.mapmock::after{
+      content:""; position:absolute; inset:auto;
+      background:rgba(255,255,255,.08); border-radius:999px;
+    }
+    .mapmock::before{width:72%; height:2px; left:14%; top:42%}
+    .mapmock::after{width:2px; height:70%; left:62%; top:16%}
+    .maptag{
+      position:absolute; padding:10px 12px; border-radius:999px; font-size:12px; font-weight:800;
+      background:rgba(6,12,22,.72); border:1px solid rgba(255,255,255,.10)
+    }
+    .maptag.one{left:12%; top:24%}
+    .maptag.two{left:58%; top:18%}
+    .maptag.three{left:68%; top:60%}
+    .form-grid{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px}
+    .form-grid .full{grid-column:1 / -1}
+    .suggestions{display:grid; gap:12px; margin-top:16px}
+    .note{padding:12px 14px; border-radius:16px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08)}
+    .auth-layout{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+    .subtle{font-size:12px; color:var(--muted)}
+    .tagline{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
+    .tagline .badge{padding:9px 12px}
+    @media (max-width: 1080px){
+      .hero,.fleet-grid,.admin-grid,.book-grid,.auth-layout{grid-template-columns:1fr}
+      .nav__inner{flex-wrap:wrap; padding:12px 0}
+      .nav__right,.brand{min-width:unset}
+      .nav__links{justify-content:flex-start}
+      .row,.row--compact,.row--status,.row--booking{grid-template-columns:1fr}
+      .actions{justify-content:flex-start}
+      .hero__stats{grid-template-columns:1fr}
+    }
+    @media (max-width: 640px){
+      .wrap{padding:0 12px}
+      .hero__panel{padding:20px}
+      .section-head{align-items:flex-start; flex-direction:column}
+      .toolbar{align-items:stretch}
+      .toolbar__left,.toolbar__right,.nav__links,.nav__right{width:100%}
+      .nav__links{justify-content:flex-start}
+      .auth-tabs{display:grid; grid-template-columns:1fr 1fr}
+    }
+  </style>
 </head>
-
 <body>
+  <div class="ticker">
+    <div class="ticker__label">LIVE STATUS</div>
+    <div class="ticker__track"><div id="tickerContent" class="ticker__content">Se încarcă statusurile...</div></div>
+  </div>
 
-<div class="ticker"><span id="tickerText">Se încarcă...</span></div>
+  <div class="nav">
+    <div class="wrap nav__inner">
+      <div class="brand">
+        <div class="brand__logo">🚌</div>
+        <div>
+          <div class="brand__title">LSD Group</div>
+          <div class="brand__sub">Transport persoane · curse ocazionale · flotă</div>
+        </div>
+      </div>
 
-<div class="navbar">
-<a onclick="showPage('home')">Home</a>
-<a onclick="showPage('flota')">Flotă</a>
-<a onclick="showPage('rezervari')">Rezervări</a>
-<a onclick="logout()">Logout</a>
-<a id="adminBtn" onclick="showPage('admin')" class="hidden">Admin</a>
-</div>
+      <div class="nav__links">
+        <button class="nav__btn active" data-page="home">🏠 Home</button>
+        <button class="nav__btn" data-page="flota">🚐 Flotă</button>
+        <button class="nav__btn" data-page="rezervari">🧾 Rezervări</button>
+        <button class="nav__btn hidden" id="adminNavBtn" data-page="admin">👑 Admin</button>
+      </div>
 
-<div id="home" class="section">
-<h1>Transport Persoane</h1>
-<h3 id="nextTrip"></h3>
-<button class="btn" onclick="showPage('rezervari')">Rezervă rapid</button>
-<div id="previewFlota"></div>
-</div>
+      <div class="nav__right">
+        <div class="chip" id="userChip">Neautentificat</div>
+        <button class="btn secondary" id="logoutBtn" style="display:none">Logout</button>
+      </div>
+    </div>
+  </div>
 
-<div id="flota" class="section hidden">
-<h2>Flotă</h2>
-<div id="flotaList"></div>
-</div>
+  <main class="wrap main">
+    <section id="home" class="section active">
+      <div class="hero">
+        <div class="hero__panel">
+          <span class="eyebrow">Platformă modernă pentru transport persoane</span>
+          <h1>Rezervări inteligente, flotă controlată și disponibilitate în timp real.</h1>
+          <p class="lead">
+            Clienții văd rapid autobuzele disponibile, primesc recomandări automate în funcție de număr de persoane și dată,
+            iar administratorul gestionează totul dintr-un singur panou.
+          </p>
+          <div class="hero__actions">
+            <button class="btn" data-go="rezervari">Rezervă acum</button>
+            <button class="btn secondary" data-go="flota">Vezi flota</button>
+            <button class="btn ghost" id="seedBtnHero">Încarcă demo</button>
+          </div>
 
-<div id="rezervari" class="section hidden">
-<h2>Rezervare</h2>
-<input id="plecare" placeholder="Plecare"><br>
-<input id="destinatie" placeholder="Destinație"><br>
-<input type="date" id="data"><br>
-<input id="persoane" type="number" placeholder="Persoane"><br>
-<button class="btn" onclick="genereaza()">Caută</button>
-<div id="recomandari"></div>
-</div>
+          <div class="tagline">
+            <span class="badge ok">Disponibilitate live</span>
+            <span class="badge rec">Recomandări inteligente</span>
+            <span class="badge warn">Admin complet</span>
+          </div>
 
-<div id="admin" class="section hidden">
-<h2>Admin Panel</h2>
+          <div class="hero__stats">
+            <div class="stat"><b id="statFleet">0</b><span>vehicule în flotă</span></div>
+            <div class="stat"><b id="statBookings">0</b><span>rezervări active</span></div>
+            <div class="stat"><b id="statTrips">0</b><span>curse active în ticker</span></div>
+          </div>
+        </div>
 
-<h3>Adaugă autobuz</h3>
-<input id="nume" placeholder="Nume"><br>
-<input id="cap" placeholder="Capacitate"><br>
-<input id="pret" placeholder="Preț/km"><br>
-<input id="dotari" placeholder="Dotări"><br>
-<button class="btn" onclick="addBus()">Adaugă</button>
+        <div class="hero-right">
+          <div class="card sidecard">
+            <div class="card__body">
+              <div class="section-head" style="margin-bottom:8px">
+                <div>
+                  <h3>Următoarea cursă</h3>
+                  <div class="subtle">Se actualizează din Firestore</div>
+                </div>
+                <span class="badge rec">Live</span>
+              </div>
+              <div id="nextTrip" style="font-size:20px; font-weight:800; line-height:1.25">Se încarcă...</div>
+              <div class="divider"></div>
+              <div id="nextTripMeta" class="muted small">—</div>
+            </div>
+          </div>
+          <div class="mapmock card">
+            <div class="maptag one">Iași</div>
+            <div class="maptag two">București</div>
+            <div class="maptag three">Cluj-Napoca</div>
+          </div>
+        </div>
+      </div>
 
-<h3>Adaugă status</h3>
-<input id="msg" placeholder="Mesaj"><br>
-<button class="btn" onclick="addStatus()">Adaugă</button>
+      <div class="section-head" style="margin-top:20px">
+        <h2>Previzualizare flotă</h2>
+        <div class="copybar">
+          <button class="btn secondary" data-go="flota">Deschide flotă</button>
+          <button class="btn secondary" data-go="rezervari">Caută rezervare</button>
+        </div>
+      </div>
+      <div id="previewFleet" class="grid fleet-grid"></div>
+    </section>
 
-<div id="adminRez"></div>
-</div>
+    <section id="flota" class="section">
+      <div class="section-head">
+        <div>
+          <h2>Flotă</h2>
+          <div class="subtle">Afișare vehicule + verificare disponibilitate pentru o dată selectată.</div>
+        </div>
+        <div class="toolbar__right">
+          <input id="fleetSearch" class="search" placeholder="Caută vehicul, dotări sau capacitate..." style="min-width:min(420px,100%)" />
+        </div>
+      </div>
+      <div id="fleetList" class="grid fleet-grid"></div>
+    </section>
+
+    <section id="rezervari" class="section">
+      <div class="section-head">
+        <div>
+          <h2>Rezervări</h2>
+          <div class="subtle">Completezi ruta, data și numărul de persoane. Sistemul recomandă una sau două mașini disponibile.</div>
+        </div>
+      </div>
+
+      <div class="panel" style="padding:18px">
+        <div class="auth-layout">
+          <div>
+            <div class="form-grid">
+              <div><input id="formPlecare" placeholder="Plecare (ex: Iași)" /></div>
+              <div><input id="formDestinatie" placeholder="Destinație (ex: București)" /></div>
+              <div><input id="formData" type="date" /></div>
+              <div><input id="formPersoane" type="number" min="1" placeholder="Număr persoane" /></div>
+              <div class="full"><button class="btn" id="findRecommendationsBtn">Caută recomandări</button></div>
+            </div>
+            <div class="note" style="margin-top:14px">
+              <b>Logică estimare:</b> prețul se calculează din distanța aproximată × preț/km. Pentru combinații, se compară și 2 vehicule mai mici, pentru a obține cost mai bun.
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card__body">
+                <div class="section-head" style="margin-bottom:10px">
+                  <h3 style="font-size:20px">Autentificare</h3>
+                  <span class="badge">Firebase Auth</span>
+                </div>
+                <div class="auth-box">
+                  <div class="auth-tabs">
+                    <button class="btn secondary" id="loginTabBtn">Login</button>
+                    <button class="btn ghost" id="registerTabBtn">Register</button>
+                  </div>
+                  <input id="authEmail" type="email" placeholder="Email" />
+                  <input id="authPassword" type="password" placeholder="Parolă" />
+                  <div class="split">
+                    <button class="btn" id="authSubmitBtn">Autentificare</button>
+                    <button class="btn secondary" id="authDemoFillBtn">Completează demo</button>
+                  </div>
+                  <div class="subtle">Doar utilizatorii logați pot salva rezervări.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="recommendations" class="suggestions"></div>
+
+      <div class="section-head" style="margin-top:18px">
+        <h3>Rezervările mele</h3>
+        <button class="btn secondary" id="refreshMyBookingsBtn">Reîncarcă</button>
+      </div>
+      <div id="myBookings" class="grid"></div>
+    </section>
+
+    <section id="admin" class="section">
+      <div class="section-head">
+        <div>
+          <h2>Admin</h2>
+          <div class="subtle">Vizibil doar pentru emailul de admin: <b>irimia.teodor.17@gmail.com</b></div>
+        </div>
+        <div class="copybar">
+          <button class="btn" id="seedBtnAdmin">Încarcă demo complet</button>
+          <button class="btn secondary" id="copyRulesBtn">Copiază regulile Firestore</button>
+        </div>
+      </div>
+
+      <div class="grid admin-grid">
+        <div class="stack">
+          <div class="card">
+            <div class="card__body">
+              <div class="section-head" style="margin-bottom:12px"><h3>Gestionează flotă</h3><span class="badge">CRUD</span></div>
+              <div class="form-grid">
+                <input id="fleetId" class="hidden" />
+                <input id="fleetName" placeholder="Nume vehicul" />
+                <input id="fleetCapacity" type="number" placeholder="Capacitate" />
+                <input id="fleetPrice" type="number" step="0.01" placeholder="Preț/km" />
+                <input id="fleetLicense" placeholder="Nr. garaj / înmatriculare" />
+                <input id="fleetDotari" class="full" placeholder="Dotări (AC, Wi-Fi, prize, toaletă...)" />
+                <div class="full split"><button class="btn" id="saveFleetBtn">Salvează vehicul</button><button class="btn secondary" id="resetFleetBtn">Reset</button></div>
+              </div>
+              <div class="divider"></div>
+              <div id="adminFleetList" class="table"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__body">
+              <div class="section-head" style="margin-bottom:12px"><h3>Bara live / Status</h3><span class="badge rec">Ticker</span></div>
+              <div class="form-grid">
+                <input id="statusId" class="hidden" />
+                <input id="statusMesaj" class="full" placeholder="Ex: Mercedes Intouro – nr. garaj 12 – Iași → București" />
+                <select id="statusActiv" class="full">
+                  <option value="true">Activ</option>
+                  <option value="false">Inactiv</option>
+                </select>
+                <div class="full split"><button class="btn" id="saveStatusBtn">Salvează status</button><button class="btn secondary" id="resetStatusBtn">Reset</button></div>
+              </div>
+              <div class="divider"></div>
+              <div id="adminStatusList" class="table"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <div class="card__body">
+              <div class="section-head" style="margin-bottom:12px"><h3>Rezervări</h3><span class="badge">Administrare</span></div>
+              <div id="adminBookings" class="table"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__body">
+              <div class="section-head" style="margin-bottom:12px"><h3>Reguli Firestore</h3><span class="badge ok">Copy / Paste</span></div>
+              <pre id="firestoreRules">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == "irimia.teodor.17@gmail.com";
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    match /flota/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /status/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /curse/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /rezervari/{docId} {
+      allow create: if isSignedIn();
+      allow read: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+    }
+  }
+}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"><b id="toastTitle">Info</b><div id="toastText" class="muted small"></div></div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",
-  authDomain: "lsd-group-srl.firebaseapp.com",
-  projectId: "lsd-group-srl"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",
+    authDomain: "lsd-group-srl.firebaseapp.com",
+    projectId: "lsd-group-srl",
+    storageBucket: "lsd-group-srl.firebasestorage.app",
+    messagingSenderId: "487152601925",
+    appId: "1:487152601925:web:8aa97c1581b6624598cc2c"
+  };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const ADMIN_EMAIL = "irimia.teodor.17@gmail.com";
 
-let user=null;
+  const state = {
+    user: null,
+    isAdmin: false,
+    authMode: 'login',
+    flota: [],
+    status: [],
+    curse: [],
+    rezervari: []
+  };
 
-auth.onAuthStateChanged(u=>{
-user=u;
-if(u && u.email==="irimia.teodor.17@gmail.com"){
-document.getElementById("adminBtn").classList.remove("hidden");
-}
-loadAll();
-});
+  const demo = {
+    flota: [
+      { id: 'mercedes-intouro', nume: 'Mercedes Intouro', capacitate: 49, pretPerKm: 7.5, dotari: 'AC, Wi‑Fi, prize, scaune rabatabile, portbagaj mare', garaj: '12' },
+      { id: 'man-lions-coach', nume: 'MAN Lion\'s Coach', capacitate: 53, pretPerKm: 8.1, dotari: 'AC, Wi‑Fi, toaletă, USB, multimedia', garaj: '07' },
+      { id: 'setra-515hd', nume: 'Setra S 515 HD', capacitate: 51, pretPerKm: 8.8, dotari: 'AC, Wi‑Fi, prize, toaletă, comfort plus', garaj: '04' },
+      { id: 'vdl-futura', nume: 'VDL Futura', capacitate: 59, pretPerKm: 7.9, dotari: 'AC, Wi‑Fi, USB, spațiu extra bagaje', garaj: '18' },
+      { id: 'temsa-safari', nume: 'TEMSA Safari HD', capacitate: 46, pretPerKm: 6.9, dotari: 'AC, Wi‑Fi, audio, scaune premium', garaj: '22' }
+    ],
+    status: [
+      { id: 's1', mesaj: 'Mercedes Intouro – nr. garaj 12 – Iași → București', activ: true },
+      { id: 's2', mesaj: 'MAN Lion\'s Coach – nr. garaj 07 – Cluj-Napoca → Constanța', activ: true },
+      { id: 's3', mesaj: 'Setra S 515 HD – nr. garaj 04 – Brașov → Timișoara', activ: true }
+    ],
+    curse: [
+      { id: 'c1', mesaj: '19 aprilie 2026 · Iași → București · plecare 07:30', activ: true, data: '2026-04-19' },
+      { id: 'c2', mesaj: '20 aprilie 2026 · Cluj-Napoca → Brașov · plecare 09:00', activ: true, data: '2026-04-20' }
+    ],
+    rezervari: [
+      { id: 'r1', uid: 'demo-uid-1', plecare: 'Iași', destinatie: 'București', data: futureDate(2), persoane: 38, vehiculeSelectate: ['mercedes-intouro'], pretEstimativ: 2115, status: 'confirmat', createdAt: new Date().toISOString() },
+      { id: 'r2', uid: 'demo-uid-2', plecare: 'Cluj-Napoca', destinatie: 'Constanța', data: futureDate(4), persoane: 82, vehiculeSelectate: ['man-lions-coach','temsa-safari'], pretEstimativ: 5620, status: 'nou', createdAt: new Date().toISOString() },
+      { id: 'r3', uid: 'demo-uid-3', plecare: 'Brașov', destinatie: 'Timișoara', data: futureDate(1), persoane: 51, vehiculeSelectate: ['setra-515hd'], pretEstimativ: 2360, status: 'în curs', createdAt: new Date().toISOString() }
+    ]
+  };
 
-function showPage(p){
-document.querySelectorAll('.section').forEach(s=>s.classList.add('hidden'));
-document.getElementById(p).classList.remove('hidden');
-}
+  const routeDistances = {
+    'Iași|București': 396,
+    'București|Iași': 396,
+    'Cluj-Napoca|Brașov': 321,
+    'Brașov|Cluj-Napoca': 321,
+    'Cluj-Napoca|Constanța': 650,
+    'Constanța|Cluj-Napoca': 650,
+    'Brașov|Timișoara': 385,
+    'Timișoara|Brașov': 385,
+    'Iași|Cluj-Napoca': 322,
+    'Cluj-Napoca|Iași': 322,
+    'București|Constanța': 225,
+    'Constanța|București': 225
+  };
 
-function logout(){ auth.signOut(); }
+  const els = {
+    pages: [...document.querySelectorAll('.section')],
+    navBtns: [...document.querySelectorAll('.nav__btn')],
+    tickerContent: document.getElementById('tickerContent'),
+    nextTrip: document.getElementById('nextTrip'),
+    nextTripMeta: document.getElementById('nextTripMeta'),
+    previewFleet: document.getElementById('previewFleet'),
+    fleetList: document.getElementById('fleetList'),
+    fleetSearch: document.getElementById('fleetSearch'),
+    recommendations: document.getElementById('recommendations'),
+    myBookings: document.getElementById('myBookings'),
+    adminFleetList: document.getElementById('adminFleetList'),
+    adminStatusList: document.getElementById('adminStatusList'),
+    adminBookings: document.getElementById('adminBookings'),
+    userChip: document.getElementById('userChip'),
+    logoutBtn: document.getElementById('logoutBtn'),
+    adminNavBtn: document.getElementById('adminNavBtn'),
+    toast: document.getElementById('toast'),
+    toastTitle: document.getElementById('toastTitle'),
+    toastText: document.getElementById('toastText'),
+    authEmail: document.getElementById('authEmail'),
+    authPassword: document.getElementById('authPassword'),
+    authSubmitBtn: document.getElementById('authSubmitBtn'),
+    loginTabBtn: document.getElementById('loginTabBtn'),
+    registerTabBtn: document.getElementById('registerTabBtn'),
+    seedBtnHero: document.getElementById('seedBtnHero'),
+    seedBtnAdmin: document.getElementById('seedBtnAdmin'),
+    copyRulesBtn: document.getElementById('copyRulesBtn'),
+    saveFleetBtn: document.getElementById('saveFleetBtn'),
+    resetFleetBtn: document.getElementById('resetFleetBtn'),
+    saveStatusBtn: document.getElementById('saveStatusBtn'),
+    resetStatusBtn: document.getElementById('resetStatusBtn'),
+    findRecommendationsBtn: document.getElementById('findRecommendationsBtn'),
+    refreshMyBookingsBtn: document.getElementById('refreshMyBookingsBtn'),
+    authDemoFillBtn: document.getElementById('authDemoFillBtn')
+  };
 
-async function loadAll(){
-loadFlota();
-loadTicker();
-loadNext();
-loadAdminRez();
-}
+  function futureDate(days = 0) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().split('T')[0];
+  }
 
-async function loadTicker(){
-let snap=await db.collection("status").get();
-let txt="";
-snap.forEach(d=>{ if(d.data().activ) txt+=d.data().mesaj+" 🔴 ";});
-document.getElementById("tickerText").innerText=txt||"Niciun autobuz activ";
-}
+  function showToast(title, text) {
+    els.toastTitle.textContent = title;
+    els.toastText.textContent = text;
+    els.toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => els.toast.classList.remove('show'), 2800);
+  }
 
-async function loadNext(){
-let snap=await db.collection("curse").limit(1).get();
-snap.forEach(d=>{
-document.getElementById("nextTrip").innerText="Următoarea cursă: "+d.data().mesaj;
-});
-}
+  function capitalize(v) { return (v || '').toString().trim(); }
+  function money(v) { return new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 0 }).format(Math.round(Number(v || 0))) + ' lei'; }
+  function kmsText(v) { return new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 0 }).format(Math.round(v)) + ' km'; }
 
-async function loadFlota(){
-let snap=await db.collection("flota").get();
-let html="";
-snap.forEach(doc=>{
-let b=doc.data();
-html+=`
-<div class="card">
-<h3>${b.nume}</h3>
-<p>Capacitate: ${b.capacitate}</p>
-<p>${b.dotari}</p>
-<p>${b.pretPerKm} lei/km</p>
-<input type="date" onchange="check('${doc.id}',this.value,this)">
-<div></div>
-</div>`;
-});
-document.getElementById("flotaList").innerHTML=html;
-document.getElementById("previewFlota").innerHTML=html;
-}
+  function routeDistance(plecare, destinatie) {
+    const key = `${capitalize(plecare)}|${capitalize(destinatie)}`;
+    if (routeDistances[key]) return routeDistances[key];
+    const a = (plecare || '').length;
+    const b = (destinatie || '').length;
+    return Math.max(70, Math.round((a * 37 + b * 29 + Math.abs(a - b) * 13) / 2));
+  }
 
-async function check(id,data,input){
-let res=await db.collection("rezervari")
-.where("data","==",data).get();
+  function isAdminEmail(email) {
+    return email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  }
 
-let ocupat=false;
-res.forEach(r=>{
-if(r.data().vehiculeSelectate.includes(id)) ocupat=true;
-});
+  function setPage(page) {
+    els.pages.forEach(p => p.classList.toggle('active', p.id === page));
+    els.navBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.page === page));
+    if (page === 'home') window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
-let el=input.nextElementSibling;
-if(ocupat){
-el.innerHTML='<span class="badge no">Indisponibil</span>';
-}else{
-el.innerHTML='<span class="badge ok">Disponibil</span>';
-}
-}
+  function getCollectionMap(items) { return Object.fromEntries(items.map(x => [x.id, x])); }
 
-async function genereaza(){
-let persoane=parseInt(document.getElementById("persoane").value);
-let data=document.getElementById("data").value;
+  async function fetchCollections() {
+    const [flotaSnap, statusSnap, curseSnap, rezSnap] = await Promise.all([
+      db.collection('flota').get(),
+      db.collection('status').get(),
+      db.collection('curse').get(),
+      db.collection('rezervari').get()
+    ]);
 
-let flota=await db.collection("flota").get();
-let rez=await db.collection("rezervari").where("data","==",data).get();
+    state.flota = flotaSnap.empty ? demo.flota : flotaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    state.status = statusSnap.empty ? demo.status : statusSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    state.curse = curseSnap.empty ? demo.curse : curseSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    state.rezervari = rezSnap.empty ? demo.rezervari : rezSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
 
-let ocupate=[];
-rez.forEach(r=>ocupate.push(...r.data().vehiculeSelectate));
+  function activeBookingsForDate(date) {
+    return state.rezervari.filter(r => r.data === date && !['anulat', 'șters'].includes((r.status || '').toLowerCase()));
+  }
 
-let libere=[];
-flota.forEach(doc=>{
-if(!ocupate.includes(doc.id)) libere.push({...doc.data(), id:doc.id});
-});
+  function occupiedVehicleIds(date) {
+    const bookings = activeBookingsForDate(date);
+    const occupied = new Set();
+    bookings.forEach(r => (r.vehiculeSelectate || []).forEach(id => occupied.add(id)));
+    return occupied;
+  }
 
-let recomandari=[];
+  function availabilityForVehicle(vehicle, date) {
+    if (!date) return { state: 'unknown', label: 'Alege o dată', next: null };
+    const occupied = occupiedVehicleIds(date);
+    if (!occupied.has(vehicle.id)) return { state: 'free', label: 'Disponibil', next: null };
+    const laterDates = state.rezervari
+      .filter(r => (r.vehiculeSelectate || []).includes(vehicle.id) && r.data >= date)
+      .map(r => r.data)
+      .sort();
+    const next = laterDates[0] || null;
+    return { state: 'busy', label: 'Indisponibil', next };
+  }
 
-libere.forEach(b=>{
-if(b.capacitate>=persoane){
-recomandari.push({tip:"1",bus:[b],cap:b.capacitate,pret:b.pretPerKm*100});
-}
-});
+  function renderTicker() {
+    const active = state.status.filter(x => x.activ);
+    const content = active.length
+      ? active.map(x => `<span class="ticker__pill">🚌 ${escapeHtml(x.mesaj)}</span>`).join('<span style="display:inline-block;width:14px"></span>')
+      : `<span class="ticker__pill">Niciun autobuz activ în momentul acesta</span>`;
+    els.tickerContent.innerHTML = content + content;
+    document.documentElement.style.setProperty('--ticker-duration', `${Math.max(18, active.length * 7)}s`);
+    els.tickerContent.style.animationDuration = `${Math.max(18, active.length * 7)}s`;
+  }
 
-for(let i=0;i<libere.length;i++){
-for(let j=i+1;j<libere.length;j++){
-let cap=libere[i].capacitate+libere[j].capacitate;
-if(cap>=persoane){
-recomandari.push({
-tip:"2",
-bus:[libere[i],libere[j]],
-cap,
-pret:(libere[i].pretPerKm+libere[j].pretPerKm)*100
-});
-}
-}
-}
+  function renderNextTrip() {
+    const next = [...state.curse].sort((a, b) => String(a.data || '').localeCompare(String(b.data || '')))[0];
+    if (!next) {
+      els.nextTrip.textContent = 'Nu există curse programate.';
+      els.nextTripMeta.textContent = 'Adaugă una din Admin → Status / Curse.';
+      return;
+    }
+    els.nextTrip.textContent = next.mesaj || '—';
+    els.nextTripMeta.textContent = next.data ? `Data: ${next.data}` : '—';
+  }
 
-recomandari.sort((a,b)=>a.pret-b.pret);
+  function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"]'/g, s => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[s]));
+  }
 
-let html="";
-recomandari.forEach((r,i)=>{
-html+=`
-<div class="card">
-<h3>${r.bus.map(b=>b.nume).join(" + ")}</h3>
-<p>Capacitate: ${r.cap}</p>
-<p>Preț: ${r.pret} lei</p>
-${i===0?'<span class="badge rec">Recomandat</span>':''}
-<button class="btn" onclick='rezerva(${JSON.stringify(r)})'>Alege</button>
-</div>`;
-});
+  function fleetSearchFilter(item, q) {
+    q = q.trim().toLowerCase();
+    if (!q) return true;
+    const hay = `${item.nume} ${item.dotari || ''} ${item.capacitate} ${item.pretPerKm} ${item.garaj || ''}`.toLowerCase();
+    return hay.includes(q);
+  }
 
-document.getElementById("recomandari").innerHTML=html;
-}
+  function fleetCard(vehicle, context = 'fleet') {
+    const date = document.getElementById('formData').value || futureDate(1);
+    const avail = availabilityForVehicle(vehicle, date);
+    const busyText = avail.next ? `Disponibil începând cu data: ${avail.next}` : 'Rezervat în ziua selectată';
+    const showActions = context === 'admin';
+    return `
+      <div class="card">
+        <div class="card__body">
+          <div class="card__head">
+            <div>
+              <div class="card__title">${escapeHtml(vehicle.nume)}</div>
+              <div class="muted small">Nr. garaj / înmatriculare: ${escapeHtml(vehicle.garaj || '—')}</div>
+            </div>
+            <span class="badge ${avail.state === 'free' ? 'ok' : avail.state === 'busy' ? 'bad' : 'warn'}">${avail.label}</span>
+          </div>
+          <div class="meta">
+            <span class="badge">👥 ${escapeHtml(vehicle.capacitate)} locuri</span>
+            <span class="badge">💶 ${escapeHtml(String(vehicle.pretPerKm))} lei/km</span>
+          </div>
+          <div class="muted small" style="line-height:1.7">${escapeHtml(vehicle.dotari || '—')}</div>
+          <div class="divider"></div>
+          <div class="split">
+            <div class="stack">
+              <label class="subtle">Verifică disponibilitatea la o dată</label>
+              <input type="date" value="${escapeHtml(date)}" data-avail-date="${escapeHtml(vehicle.id)}" />
+            </div>
+            <div class="actions">
+              <button class="btn secondary" data-pick-vehicle="${escapeHtml(vehicle.id)}">Alege pentru rezervare</button>
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <span class="badge ${avail.state === 'free' ? 'ok' : 'bad'}">${avail.state === 'free' ? 'Disponibil' : 'Indisponibil'}</span>
+            ${avail.state === 'busy' ? `<span class="badge warn" style="margin-left:8px">${escapeHtml(busyText)}</span>` : ''}
+          </div>
+          ${showActions ? `<div class="divider"></div><div class="actions"><button class="btn ghost" data-edit-fleet="${vehicle.id}">Editează</button><button class="btn danger" data-delete-fleet="${vehicle.id}">Șterge</button></div>` : ''}
+        </div>
+      </div>
+    `;
+  }
 
-async function rezerva(r){
-if(!user) return alert("Login necesar");
+  function renderFleet() {
+    const q = els.fleetSearch.value || '';
+    const filtered = state.flota.filter(x => fleetSearchFilter(x, q));
+    const html = filtered.map(x => fleetCard(x, 'fleet')).join('') || `<div class="note">Nu există vehicule care să corespundă filtrului.</div>`;
+    els.fleetList.innerHTML = html;
+    els.previewFleet.innerHTML = state.flota.slice(0, 3).map(x => fleetCard(x, 'fleet')).join('') || `<div class="note">Încarcă demo din Home sau Admin.</div>`;
+  }
 
-await db.collection("rezervari").add({
-uid:user.uid,
-data:document.getElementById("data").value,
-vehiculeSelectate:r.bus.map(b=>b.id),
-persoane:parseInt(document.getElementById("persoane").value),
-pretEstimativ:r.pret,
-status:"nou",
-createdAt:new Date()
-});
+  function renderAdminFleet() {
+    els.adminFleetList.innerHTML = state.flota.map(v => `
+      <div class="row row--compact">
+        <div>
+          <strong>${escapeHtml(v.nume)}</strong>
+          <span class="muted small">${escapeHtml(v.dotari || '—')}</span>
+        </div>
+        <div>${escapeHtml(String(v.capacitate))} locuri</div>
+        <div>${money(v.pretPerKm)}/km</div>
+        <div class="actions">
+          <button class="btn ghost" data-edit-fleet="${v.id}">Editează</button>
+          <button class="btn danger" data-delete-fleet="${v.id}">Șterge</button>
+        </div>
+      </div>
+    `).join('') || `<div class="note">Niciun vehicul încă.</div>`;
+  }
 
-alert("Rezervare trimisă!");
-}
+  function renderAdminStatus() {
+    els.adminStatusList.innerHTML = state.status.map(s => `
+      <div class="row row--status">
+        <div>
+          <strong>${escapeHtml(s.mesaj)}</strong>
+          <span class="muted small">${s.activ ? 'Activ' : 'Inactiv'}</span>
+        </div>
+        <div><span class="badge ${s.activ ? 'ok' : 'bad'}">${s.activ ? 'Activ' : 'Inactiv'}</span></div>
+        <div class="actions">
+          <button class="btn ghost" data-edit-status="${s.id}">Editează</button>
+          <button class="btn danger" data-delete-status="${s.id}">Șterge</button>
+        </div>
+      </div>
+    `).join('') || `<div class="note">Niciun status încă.</div>`;
+  }
 
-async function addBus(){
-await db.collection("flota").add({
-nume:nume.value,
-capacitate:parseInt(cap.value),
-pretPerKm:parseFloat(pret.value),
-dotari:dotari.value
-});
-loadFlota();
-}
+  function renderAdminBookings() {
+    const rows = [...state.rezervari].sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    els.adminBookings.innerHTML = rows.map(r => `
+      <div class="row row--booking">
+        <div>
+          <strong>${escapeHtml(r.plecare || '—')} → ${escapeHtml(r.destinatie || '—')}</strong>
+          <span class="muted small">${escapeHtml(r.data || '—')} · ${escapeHtml(String(r.persoane || 0))} persoane</span>
+        </div>
+        <div><span class="badge">${escapeHtml(r.status || 'nou')}</span></div>
+        <div>${money(r.pretEstimativ)}</div>
+        <div class="muted small">${(r.vehiculeSelectate || []).map(id => state.flota.find(v => v.id === id)?.nume || id).join('<br>') || '—'}</div>
+        <div class="actions">
+          <button class="btn ghost" data-edit-booking="${r.id}">Editează</button>
+          <button class="btn secondary" data-confirm-booking="${r.id}">Confirmă</button>
+          <button class="btn danger" data-delete-booking="${r.id}">Șterge</button>
+        </div>
+      </div>
+    `).join('') || `<div class="note">Nicio rezervare încă.</div>`;
+  }
 
-async function addStatus(){
-await db.collection("status").add({
-mesaj:msg.value,
-activ:true
-});
-loadTicker();
-}
+  function renderMyBookings() {
+    if (!state.user) {
+      els.myBookings.innerHTML = `<div class="note">Autentifică-te pentru a vedea rezervările tale.</div>`;
+      return;
+    }
+    const my = state.rezervari.filter(r => r.uid === state.user.uid).sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    els.myBookings.innerHTML = my.map(r => `
+      <div class="row row--booking">
+        <div>
+          <strong>${escapeHtml(r.plecare || '—')} → ${escapeHtml(r.destinatie || '—')}</strong>
+          <span class="muted small">${escapeHtml(r.data || '—')} · ${escapeHtml(String(r.persoane || 0))} persoane</span>
+        </div>
+        <div><span class="badge">${escapeHtml(r.status || 'nou')}</span></div>
+        <div>${money(r.pretEstimativ)}</div>
+        <div class="muted small">${(r.vehiculeSelectate || []).map(id => state.flota.find(v => v.id === id)?.nume || id).join('<br>') || '—'}</div>
+        <div class="actions">
+          <button class="btn ghost" data-copy-booking="${r.id}">Copie rezervare</button>
+        </div>
+      </div>
+    `).join('') || `<div class="note">Nu ai rezervări încă.</div>`;
+  }
 
-async function loadAdminRez(){
-let snap=await db.collection("rezervari").get();
-let html="";
-snap.forEach(doc=>{
-let r=doc.data();
-html+=`
-<div class="card">
-<p>${r.data} | ${r.persoane} pers</p>
-<button onclick="confirmRez('${doc.id}')">Confirmă</button>
-<button onclick="delRez('${doc.id}')">Șterge</button>
-</div>`;
-});
-document.getElementById("adminRez").innerHTML=html;
-}
+  function renderSummaryStats() {
+    els.statFleet.textContent = String(state.flota.length);
+    els.statBookings.textContent = String(state.rezervari.length);
+    els.statTrips.textContent = String(state.status.filter(x => x.activ).length);
+  }
 
-async function confirmRez(id){
-await db.collection("rezervari").doc(id).update({status:"confirmat"});
-loadAdminRez();
-}
+  function showAuthState() {
+    els.userChip.textContent = state.user ? `${state.user.email}${state.isAdmin ? ' · admin' : ''}` : 'Neautentificat';
+    els.logoutBtn.style.display = state.user ? 'inline-flex' : 'none';
+    els.adminNavBtn.classList.toggle('hidden', !state.isAdmin);
+    document.getElementById('admin').classList.toggle('hidden', !state.isAdmin);
+  }
 
-async function delRez(id){
-await db.collection("rezervari").doc(id).delete();
-loadAdminRez();
-}
+  async function saveFleet() {
+    const payload = {
+      nume: capitalize(document.getElementById('fleetName').value),
+      capacitate: Number(document.getElementById('fleetCapacity').value || 0),
+      pretPerKm: Number(document.getElementById('fleetPrice').value || 0),
+      dotari: capitalize(document.getElementById('fleetDotari').value),
+      garaj: capitalize(document.getElementById('fleetLicense').value)
+    };
+    const id = document.getElementById('fleetId').value.trim();
+    if (!payload.nume || !payload.capacitate || !payload.pretPerKm) return showToast('Eroare', 'Completează numele, capacitatea și prețul/km.');
+    if (id) await db.collection('flota').doc(id).set(payload, { merge: true });
+    else await db.collection('flota').add(payload);
+    resetFleetForm();
+    await refreshAll();
+    showToast('Salvat', 'Vehiculul a fost actualizat.');
+  }
+
+  async function saveStatus() {
+    const payload = {
+      mesaj: capitalize(document.getElementById('statusMesaj').value),
+      activ: document.getElementById('statusActiv').value === 'true'
+    };
+    const id = document.getElementById('statusId').value.trim();
+    if (!payload.mesaj) return showToast('Eroare', 'Scrie mesajul statusului.');
+    if (id) await db.collection('status').doc(id).set(payload, { merge: true });
+    else await db.collection('status').add(payload);
+    resetStatusForm();
+    await refreshAll();
+    showToast('Salvat', 'Statusul a fost actualizat.');
+  }
+
+  function resetFleetForm(v = {}) {
+    document.getElementById('fleetId').value = v.id || '';
+    document.getElementById('fleetName').value = v.nume || '';
+    document.getElementById('fleetCapacity').value = v.capacitate || '';
+    document.getElementById('fleetPrice').value = v.pretPerKm || '';
+    document.getElementById('fleetLicense').value = v.garaj || '';
+    document.getElementById('fleetDotari').value = v.dotari || '';
+  }
+
+  function resetStatusForm(v = {}) {
+    document.getElementById('statusId').value = v.id || '';
+    document.getElementById('statusMesaj').value = v.mesaj || '';
+    document.getElementById('statusActiv').value = String(v.activ ?? true);
+  }
+
+  function bestDistanceForForm() {
+    return routeDistance(document.getElementById('formPlecare').value, document.getElementById('formDestinatie').value);
+  }
+
+  function availabilityLabel(vehicle, date) {
+    const av = availabilityForVehicle(vehicle, date);
+    return av.state === 'free' ? `<span class="badge ok">Disponibil</span>` : `<span class="badge bad">Indisponibil</span>${av.next ? `<span class="badge warn" style="margin-left:8px">Disponibil începând cu: ${escapeHtml(av.next)}</span>` : ''}`;
+  }
+
+  function getFreeVehicles(date) {
+    const occupied = occupiedVehicleIds(date);
+    return state.flota.filter(v => !occupied.has(v.id));
+  }
+
+  function generateRecommendations() {
+    const plecare = capitalize(document.getElementById('formPlecare').value);
+    const destinatie = capitalize(document.getElementById('formDestinatie').value);
+    const date = document.getElementById('formData').value;
+    const persons = Number(document.getElementById('formPersoane').value || 0);
+
+    if (!plecare || !destinatie || !date || !persons) {
+      showToast('Completează formularul', 'Ai nevoie de plecare, destinație, dată și număr de persoane.');
+      return;
+    }
+
+    const dist = bestDistanceForForm();
+    const free = getFreeVehicles(date).sort((a, b) => a.capacitate - b.capacitate);
+    const combos = [];
+
+    free.forEach(v => {
+      if (v.capacitate >= persons) {
+        combos.push({
+          type: 'single',
+          vehicles: [v],
+          capacity: v.capacitate,
+          price: dist * Number(v.pretPerKm || 0),
+          score: dist * Number(v.pretPerKm || 0) - (v.capacitate - persons) * 6
+        });
+      }
+    });
+
+    for (let i = 0; i < free.length; i++) {
+      for (let j = i + 1; j < free.length; j++) {
+        const a = free[i], b = free[j];
+        const cap = Number(a.capacitate || 0) + Number(b.capacitate || 0);
+        if (cap >= persons) {
+          const price = dist * (Number(a.pretPerKm || 0) + Number(b.pretPerKm || 0));
+          combos.push({
+            type: 'pair',
+            vehicles: [a, b],
+            capacity: cap,
+            price,
+            score: price + 120 - (cap - persons) * 4
+          });
+        }
+      }
+    }
+
+    combos.sort((x, y) => x.score - y.score || x.price - y.price);
+
+    const html = combos.length ? combos.slice(0, 6).map((c, idx) => `
+      <div class="card">
+        <div class="card__body">
+          <div class="card__head">
+            <div>
+              <div class="card__title">${c.vehicles.map(v => escapeHtml(v.nume)).join(' + ')}</div>
+              <div class="muted small">${c.type === 'single' ? '1 autobuz mare' : '2 autobuze mai mici'} · ${c.capacity} locuri</div>
+            </div>
+            ${idx === 0 ? '<span class="badge rec">Recomandat</span>' : '<span class="badge">Opțiune</span>'}
+          </div>
+          <div class="meta">
+            ${c.vehicles.map(v => `<span class="badge">${escapeHtml(v.nume)} · ${escapeHtml(String(v.capacitate))} loc</span>`).join('')}
+          </div>
+          <div class="split">
+            <div>
+              <div class="muted small">Distanță estimată</div>
+              <div style="font-size:20px; font-weight:800">${kmsText(dist)}</div>
+            </div>
+            <div>
+              <div class="muted small">Preț estimativ</div>
+              <div style="font-size:20px; font-weight:800">${money(c.price)}</div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <button class="btn" data-book-combo='${JSON.stringify({ vehicles: c.vehicles.map(v => v.id), price: Math.round(c.price) })}'>Rezervă această opțiune</button>
+        </div>
+      </div>
+    `).join('') : `<div class="note">Nu există vehicule libere suficiente pentru data selectată. Încearcă altă zi.</div>`;
+
+    els.recommendations.innerHTML = `
+      <div class="section-head" style="margin-top:8px">
+        <h3>Recomandări pentru ${escapeHtml(plecare)} → ${escapeHtml(destinatie)}</h3>
+        <span class="badge">${escapeHtml(date)}</span>
+      </div>
+      <div class="grid fleet-grid">${html}</div>
+    `;
+  }
+
+  async function createReservation(vehicleIds, priceOverride) {
+    if (!state.user) return showToast('Login necesar', 'Autentifică-te înainte de a salva rezervarea.');
+
+    const plecare = capitalize(document.getElementById('formPlecare').value);
+    const destinatie = capitalize(document.getElementById('formDestinatie').value);
+    const date = document.getElementById('formData').value;
+    const persons = Number(document.getElementById('formPersoane').value || 0);
+    if (!plecare || !destinatie || !date || !persons) return showToast('Eroare', 'Completează toate câmpurile rezervării.');
+
+    const price = typeof priceOverride === 'number' ? priceOverride : routeDistance(plecare, destinatie) * Math.max(...vehicleIds.map(id => Number(state.flota.find(v => v.id === id)?.pretPerKm || 0)));
+
+    await db.collection('rezervari').add({
+      uid: state.user.uid,
+      plecare,
+      destinatie,
+      data: date,
+      persoane: persons,
+      vehiculeSelectate: vehicleIds,
+      pretEstimativ: Math.round(price),
+      status: 'nou',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    await refreshAll();
+    showToast('Rezervare trimisă', 'Rezervarea a fost salvată în Firestore.');
+    setPage('rezervari');
+  }
+
+  async function seedDemoToFirestore() {
+    if (!state.isAdmin) return showToast('Acces restricționat', 'Trebuie să fii autentificat ca admin.');
+
+    const batch = db.batch();
+    demo.flota.forEach(v => batch.set(db.collection('flota').doc(v.id), {
+      nume: v.nume,
+      capacitate: v.capacitate,
+      pretPerKm: v.pretPerKm,
+      dotari: v.dotari,
+      garaj: v.garaj
+    }, { merge: true }));
+
+    demo.status.forEach(s => batch.set(db.collection('status').doc(s.id), {
+      mesaj: s.mesaj,
+      activ: s.activ
+    }, { merge: true }));
+
+    demo.curse.forEach(c => batch.set(db.collection('curse').doc(c.id), {
+      mesaj: c.mesaj,
+      activ: c.activ,
+      data: c.data
+    }, { merge: true }));
+
+    demo.rezervari.forEach(r => batch.set(db.collection('rezervari').doc(r.id), {
+      uid: r.uid,
+      plecare: r.plecare,
+      destinatie: r.destinatie,
+      data: r.data,
+      persoane: r.persoane,
+      vehiculeSelectate: r.vehiculeSelectate,
+      pretEstimativ: r.pretEstimativ,
+      status: r.status,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }));
+
+    await batch.commit();
+    await refreshAll(true);
+    showToast('Demo încărcat', 'Datele demo au fost salvate în Firestore.');
+  }
+
+  async function refreshAll(forceRender = false) {
+    await fetchCollections();
+    renderTicker();
+    renderNextTrip();
+    renderFleet();
+    renderAdminFleet();
+    renderAdminStatus();
+    renderAdminBookings();
+    renderMyBookings();
+    renderSummaryStats();
+    showAuthState();
+    if (forceRender) setPage(state.isAdmin ? 'admin' : 'home');
+  }
+
+  async function saveAuthAction() {
+    const email = els.authEmail.value.trim();
+    const password = els.authPassword.value;
+    if (!email || !password) return showToast('Eroare', 'Completează emailul și parola.');
+    if (state.authMode === 'login') {
+      await auth.signInWithEmailAndPassword(email, password);
+    } else {
+      await auth.createUserWithEmailAndPassword(email, password);
+    }
+  }
+
+  function fillAuthDemo() {
+    els.authEmail.value = ADMIN_EMAIL;
+    els.authPassword.value = 'demo123456';
+    showToast('Demo', 'Am completat datele. Creează contul sau loghează-te cu ele.');
+  }
+
+  async function copyRules() {
+    const text = document.getElementById('firestoreRules').innerText;
+    await navigator.clipboard.writeText(text);
+    showToast('Copiat', 'Regulile Firestore au fost copiate.');
+  }
+
+  function bindEvents() {
+    els.navBtns.forEach(btn => btn.addEventListener('click', () => setPage(btn.dataset.page)));
+    document.querySelectorAll('[data-go]').forEach(btn => btn.addEventListener('click', () => setPage(btn.dataset.go)));
+    els.logoutBtn.addEventListener('click', () => auth.signOut());
+    els.loginTabBtn.addEventListener('click', () => {
+      state.authMode = 'login';
+      els.authSubmitBtn.textContent = 'Autentificare';
+      showToast('Login', 'Poți să te autentifici acum.');
+    });
+    els.registerTabBtn.addEventListener('click', () => {
+      state.authMode = 'register';
+      els.authSubmitBtn.textContent = 'Creează cont';
+      showToast('Register', 'Poți crea un cont nou.');
+    });
+    els.authSubmitBtn.addEventListener('click', saveAuthAction);
+    els.authDemoFillBtn.addEventListener('click', fillAuthDemo);
+    els.seedBtnHero.addEventListener('click', seedDemoToFirestore);
+    els.seedBtnAdmin.addEventListener('click', seedDemoToFirestore);
+    els.copyRulesBtn.addEventListener('click', copyRules);
+    els.saveFleetBtn.addEventListener('click', saveFleet);
+    els.resetFleetBtn.addEventListener('click', () => resetFleetForm());
+    els.saveStatusBtn.addEventListener('click', saveStatus);
+    els.resetStatusBtn.addEventListener('click', () => resetStatusForm());
+    els.findRecommendationsBtn.addEventListener('click', generateRecommendations);
+    els.refreshMyBookingsBtn.addEventListener('click', renderMyBookings);
+    els.fleetSearch.addEventListener('input', renderFleet);
+
+    document.addEventListener('click', async (e) => {
+      const editFleet = e.target.closest('[data-edit-fleet]');
+      const deleteFleet = e.target.closest('[data-delete-fleet]');
+      const editStatus = e.target.closest('[data-edit-status]');
+      const deleteStatus = e.target.closest('[data-delete-status]');
+      const confirmBooking = e.target.closest('[data-confirm-booking]');
+      const deleteBooking = e.target.closest('[data-delete-booking]');
+      const editBooking = e.target.closest('[data-edit-booking]');
+      const pickVehicle = e.target.closest('[data-pick-vehicle]');
+      const bookCombo = e.target.closest('[data-book-combo]');
+      const copyBooking = e.target.closest('[data-copy-booking]');
+
+      if (editFleet) {
+        const item = state.flota.find(v => v.id === editFleet.dataset.editFleet);
+        if (item) { resetFleetForm(item); setPage('admin'); }
+      }
+      if (deleteFleet) {
+        if (!confirm('Ștergi vehiculul?')) return;
+        await db.collection('flota').doc(deleteFleet.dataset.deleteFleet).delete();
+        await refreshAll();
+      }
+      if (editStatus) {
+        const item = state.status.find(v => v.id === editStatus.dataset.editStatus);
+        if (item) { resetStatusForm(item); setPage('admin'); }
+      }
+      if (deleteStatus) {
+        if (!confirm('Ștergi statusul?')) return;
+        await db.collection('status').doc(deleteStatus.dataset.deleteStatus).delete();
+        await refreshAll();
+      }
+      if (confirmBooking) {
+        await db.collection('rezervari').doc(confirmBooking.dataset.confirmBooking).set({ status: 'confirmat' }, { merge: true });
+        await refreshAll();
+      }
+      if (deleteBooking) {
+        if (!confirm('Ștergi rezervarea?')) return;
+        await db.collection('rezervari').doc(deleteBooking.dataset.deleteBooking).delete();
+        await refreshAll();
+      }
+      if (editBooking) {
+        const item = state.rezervari.find(v => v.id === editBooking.dataset.editBooking);
+        if (!item) return;
+        document.getElementById('formPlecare').value = item.plecare || '';
+        document.getElementById('formDestinatie').value = item.destinatie || '';
+        document.getElementById('formData').value = item.data || '';
+        document.getElementById('formPersoane').value = item.persoane || '';
+        setPage('rezervari');
+      }
+      if (pickVehicle) {
+        document.getElementById('formData').value = document.getElementById('formData').value || futureDate(1);
+        document.getElementById('formPlecare').focus();
+        showToast('Vehicul selectat', 'Acum completează ruta și apasă Caută recomandări.');
+        setPage('rezervari');
+      }
+      if (bookCombo) {
+        const payload = JSON.parse(bookCombo.dataset.bookCombo);
+        await createReservation(payload.vehicles, payload.price);
+      }
+      if (copyBooking) {
+        const item = state.rezervari.find(v => v.id === copyBooking.dataset.copyBooking);
+        if (item) {
+          await navigator.clipboard.writeText(JSON.stringify(item, null, 2));
+          showToast('Copiat', 'Rezervarea a fost copiată în clipboard.');
+        }
+      }
+    });
+
+    document.addEventListener('change', async (e) => {
+      const picker = e.target.closest('input[type="date"][data-avail-date]');
+      if (picker) {
+        const id = picker.dataset.availDate;
+        const v = state.flota.find(x => x.id === id);
+        if (!v) return;
+        const card = picker.closest('.card');
+        const status = availabilityForVehicle(v, picker.value);
+        const target = card.querySelector('.badge.ok, .badge.bad');
+        if (target) {
+          target.className = `badge ${status.state === 'free' ? 'ok' : 'bad'}`;
+          target.textContent = status.state === 'free' ? 'Disponibil' : 'Indisponibil';
+        }
+        const extra = card.querySelectorAll('.badge.warn');
+        extra.forEach(x => x.remove());
+        if (status.state === 'busy' && status.next) {
+          const warn = document.createElement('span');
+          warn.className = 'badge warn';
+          warn.style.marginLeft = '8px';
+          warn.textContent = `Disponibil începând cu: ${status.next}`;
+          target.insertAdjacentElement('afterend', warn);
+        }
+      }
+    });
+  }
+
+  auth.onAuthStateChanged(async (u) => {
+    state.user = u || null;
+    state.isAdmin = !!(u && isAdminEmail(u.email));
+    showAuthState();
+    await refreshAll();
+    if (u) showToast('Autentificat', state.isAdmin ? 'Ai acces la Admin.' : 'Te-ai logat cu succes.');
+  });
+
+  async function boot() {
+    bindEvents();
+    state.authMode = 'login';
+    els.authSubmitBtn.textContent = 'Autentificare';
+    document.getElementById('formData').value = futureDate(2);
+    document.getElementById('fleetSearch').value = '';
+    await refreshAll();
+  }
+
+  boot();
 </script>
-
 </body>
 </html>
