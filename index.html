@@ -3,238 +3,1262 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transport Persoane</title>
-
+<title>LSD Group SRL – Transport Persoane</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-body{margin:0;font-family:Arial;background:#0f172a;color:#fff}
-.hidden{display:none}
-.nav{position:fixed;top:40px;width:100%;background:#111;padding:10px;display:flex;justify-content:space-between;z-index:10}
-.ticker{position:fixed;top:0;width:100%;background:#1e293b;padding:5px;overflow:hidden;white-space:nowrap}
-.container{padding:100px 20px}
-.card{background:#1e293b;padding:15px;margin:10px;border-radius:10px}
-.btn{padding:8px 12px;border:none;border-radius:6px;cursor:pointer}
-.primary{background:#3b82f6;color:#fff}
-.danger{background:#ef4444;color:#fff}
-.ghost{background:#334155;color:#fff}
-.badge{background:#22c55e;padding:3px 6px;border-radius:5px}
+  :root {
+    --bg: #0a0d14;
+    --bg2: #0f1320;
+    --bg3: #151b2e;
+    --card: #131929;
+    --border: rgba(255,255,255,0.07);
+    --accent: #e8a020;
+    --accent2: #f0c050;
+    --blue: #2563eb;
+    --green: #22c55e;
+    --red: #ef4444;
+    --text: #f0f2f8;
+    --muted: #7a8299;
+    --radius: 14px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.6; overflow-x: hidden; }
+
+  /* TICKER */
+  #ticker-bar {
+    background: linear-gradient(90deg, #1a0a00, #2a1400, #1a0a00);
+    border-bottom: 1px solid var(--accent);
+    height: 38px; overflow: hidden; display: flex; align-items: center;
+    position: relative; z-index: 1000;
+  }
+  .ticker-label {
+    background: var(--accent); color: #000; font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 0 14px;
+    height: 100%; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0;
+  }
+  .ticker-track { display: flex; align-items: center; overflow: hidden; flex: 1; }
+  .ticker-inner {
+    display: flex; gap: 60px; animation: ticker 30s linear infinite;
+    white-space: nowrap; padding-left: 40px;
+  }
+  .ticker-inner span { color: var(--accent2); font-size: 13px; font-weight: 500; }
+  .ticker-inner span .dot { color: var(--muted); margin: 0 8px; }
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* NAVBAR */
+  nav {
+    position: sticky; top: 0; z-index: 999;
+    background: rgba(10,13,20,0.92); backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 64px;
+  }
+  .nav-logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; align-items: center; gap: 6px; }
+  .nav-link {
+    background: none; border: none; color: var(--muted); font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 8px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .nav-link:hover, .nav-link.active { color: var(--text); background: var(--bg3); }
+  .nav-link.admin-link { color: var(--accent); }
+  .btn-nav-login {
+    background: var(--accent); color: #000; border: none; border-radius: 8px;
+    padding: 8px 20px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-nav-login:hover { background: var(--accent2); }
+
+  /* PAGES */
+  .page { display: none; min-height: calc(100vh - 102px); }
+  .page.active { display: block; }
+
+  /* ───── HOME ───── */
+  .hero {
+    min-height: 88vh; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,160,32,0.12) 0%, transparent 70%),
+                linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+    text-align: center; padding: 80px 24px; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e8a020' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero-content { position: relative; max-width: 780px; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(232,160,32,0.1); border: 1px solid rgba(232,160,32,0.3);
+    border-radius: 50px; padding: 6px 16px; margin-bottom: 28px;
+    font-size: 12px; font-weight: 600; letter-spacing: 1px; color: var(--accent); text-transform: uppercase;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif; font-size: clamp(38px, 7vw, 80px);
+    font-weight: 800; line-height: 1.05; margin-bottom: 22px;
+    background: linear-gradient(135deg, #fff 30%, var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero p { font-size: 18px; color: var(--muted); max-width: 560px; margin: 0 auto 40px; line-height: 1.7; }
+  .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--accent); color: #000; border: none; border-radius: 10px;
+    padding: 14px 32px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,160,32,0.35); }
+  .btn-secondary {
+    background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 32px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all 0.25s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .section { padding: 80px 40px; max-width: 1200px; margin: 0 auto; }
+  .section-title {
+    font-family: 'Syne', sans-serif; font-size: clamp(26px, 4vw, 42px); font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .section-sub { color: var(--muted); margin-bottom: 48px; font-size: 16px; }
+
+  .next-trip-card {
+    background: linear-gradient(135deg, var(--card), var(--bg3));
+    border: 1px solid rgba(232,160,32,0.25); border-radius: var(--radius);
+    padding: 28px 32px; margin-bottom: 56px; display: flex; align-items: center;
+    gap: 24px; flex-wrap: wrap;
+  }
+  .next-trip-icon { font-size: 36px; }
+  .next-trip-label { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .next-trip-info { font-size: 20px; font-weight: 600; font-family: 'Syne', sans-serif; }
+  .next-trip-meta { font-size: 13px; color: var(--muted); }
+
+  /* CARDS GRID */
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+  .fleet-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; transition: all 0.25s;
+  }
+  .fleet-card:hover { border-color: rgba(232,160,32,0.4); transform: translateY(-3px); box-shadow: var(--shadow); }
+  .fleet-card-img {
+    height: 160px; background: linear-gradient(135deg, var(--bg3), var(--bg2));
+    display: flex; align-items: center; justify-content: center; font-size: 64px;
+    border-bottom: 1px solid var(--border); position: relative; overflow: hidden;
+  }
+  .fleet-card-img::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(232,160,32,0.06) 0%, transparent 60%);
+  }
+  .fleet-card-body { padding: 20px; }
+  .fleet-card-name { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .fleet-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 600;
+  }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-accent { background: rgba(232,160,32,0.15); color: var(--accent); }
+  .badge-blue { background: rgba(37,99,235,0.15); color: #60a5fa; }
+  .dotari { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .dotare-tag {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 5px;
+    font-size: 11px; padding: 3px 8px; color: var(--muted);
+  }
+  .avail-input { margin-top: 16px; }
+  .avail-input label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .avail-input input[type="date"] {
+    width: 100%; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); padding: 9px 12px; font-size: 13px;
+    font-family: 'Inter', sans-serif; cursor: pointer;
+  }
+  .avail-input input[type="date"]:focus { outline: none; border-color: var(--accent); }
+  .avail-result { margin-top: 10px; font-size: 13px; min-height: 20px; }
+
+  /* REZERVARI */
+  .rez-container { max-width: 900px; margin: 0 auto; padding: 60px 24px; }
+  .form-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 36px; margin-bottom: 32px;
+  }
+  .form-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 24px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .form-group { display: flex; flex-direction: column; gap: 7px; }
+  .form-group label { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .form-group input, .form-group select, .form-group textarea {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 9px;
+    color: var(--text); padding: 11px 14px; font-size: 14px; font-family: 'Inter', sans-serif;
+    transition: border 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .form-group.full { grid-column: 1 / -1; }
+  .btn-search {
+    margin-top: 20px; width: 100%; background: var(--accent); color: #000; border: none;
+    border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; font-family: 'Inter', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-search:hover { background: var(--accent2); }
+  .recommendations { margin-top: 28px; }
+  .rec-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+  .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .rec-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px; position: relative; transition: all 0.25s; cursor: pointer;
+  }
+  .rec-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .rec-card.selected { border-color: var(--accent); background: rgba(232,160,32,0.05); }
+  .rec-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .rec-vehicle-name { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+  .rec-price { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--accent); }
+  .rec-price span { font-size: 13px; font-weight: 400; color: var(--muted); }
+  .rec-details { font-size: 13px; color: var(--muted); line-height: 1.8; }
+  .rec-badge-row { margin-top: 14px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn-book {
+    width: 100%; margin-top: 14px; background: var(--accent); color: #000; border: none;
+    border-radius: 9px; padding: 12px; font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-book:hover { background: var(--accent2); }
+
+  /* AUTH */
+  .auth-container {
+    max-width: 420px; margin: 60px auto; padding: 0 24px;
+  }
+  .auth-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 40px;
+  }
+  .auth-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .auth-sub { color: var(--muted); margin-bottom: 28px; font-size: 14px; }
+  .auth-tabs { display: flex; gap: 0; margin-bottom: 28px; background: var(--bg2); border-radius: 10px; padding: 4px; }
+  .auth-tab {
+    flex: 1; background: none; border: none; color: var(--muted); padding: 10px;
+    border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .auth-tab.active { background: var(--bg3); color: var(--text); }
+  .auth-form { display: flex; flex-direction: column; gap: 16px; }
+  .auth-error { color: var(--red); font-size: 13px; margin-top: -8px; }
+  .auth-success { color: var(--green); font-size: 13px; }
+  .btn-auth {
+    background: var(--accent); color: #000; border: none; border-radius: 10px;
+    padding: 14px; font-size: 15px; font-weight: 700; font-family: 'Inter', sans-serif;
+    cursor: pointer; transition: all 0.2s; margin-top: 4px;
+  }
+  .btn-auth:hover { background: var(--accent2); }
+
+  /* ADMIN */
+  .admin-container { padding: 40px; max-width: 1200px; margin: 0 auto; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
+  .admin-title { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; }
+  .admin-tabs { display: flex; gap: 4px; background: var(--bg2); border-radius: 12px; padding: 6px; margin-bottom: 36px; flex-wrap: wrap; }
+  .admin-tab {
+    background: none; border: none; color: var(--muted); padding: 10px 20px;
+    border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+  }
+  .admin-tab.active { background: var(--card); color: var(--text); }
+  .admin-section { display: none; }
+  .admin-section.active { display: block; }
+  .admin-toolbar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+  .btn-add {
+    background: var(--accent); color: #000; border: none; border-radius: 8px;
+    padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-add:hover { background: var(--accent2); }
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    background: var(--bg3); text-align: left; padding: 12px 16px;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted);
+    font-weight: 600;
+  }
+  .data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+  .data-table tr:hover td { background: var(--bg3); }
+  .btn-icon {
+    background: none; border: 1px solid var(--border); border-radius: 6px;
+    color: var(--muted); padding: 6px 10px; cursor: pointer; transition: all 0.2s; font-size: 13px;
+  }
+  .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-icon.del:hover { border-color: var(--red); color: var(--red); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px); z-index: 2000; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 18px;
+    padding: 36px; max-width: 540px; width: 100%; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 24px; }
+  .modal-btns { display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end; }
+  .btn-cancel {
+    background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: 9px;
+    padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-save {
+    background: var(--accent); color: #000; border: none; border-radius: 9px;
+    padding: 10px 22px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-save:hover { background: var(--accent2); }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 32px; right: 32px; z-index: 3000;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 22px; font-size: 14px; font-weight: 500;
+    box-shadow: var(--shadow); transform: translateY(20px); opacity: 0;
+    transition: all 0.3s; max-width: 340px;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.error { border-color: var(--red); color: var(--red); }
+
+  /* LOADING */
+  .spinner {
+    width: 28px; height: 28px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;
+    margin: 40px auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state { text-align: center; padding: 60px 24px; color: var(--muted); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state h3 { font-family: 'Syne', sans-serif; font-size: 20px; color: var(--text); margin-bottom: 8px; }
+
+  /* STATS ROW */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 36px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px 24px;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .stat-val { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--accent); }
+
+  /* Toggle switch */
+  .toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0; background: var(--bg3); border-radius: 11px;
+    cursor: pointer; transition: 0.2s; border: 1px solid var(--border);
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute; height: 16px; width: 16px;
+    left: 2px; bottom: 2px; background: var(--muted); border-radius: 50%; transition: 0.2s;
+  }
+  .toggle input:checked + .toggle-slider { background: rgba(232,160,32,0.2); border-color: var(--accent); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(18px); background: var(--accent); }
+
+  /* REZERVARILE MELE */
+  .my-rez-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px; margin-bottom: 14px;
+  }
+  .my-rez-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .my-rez-route { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
+  .my-rez-details { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 12px; }
+  .my-rez-detail-item { font-size: 13px; }
+  .my-rez-detail-label { color: var(--muted); margin-bottom: 2px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* FOOTER */
+  footer {
+    background: var(--bg2); border-top: 1px solid var(--border);
+    text-align: center; padding: 32px; color: var(--muted); font-size: 13px;
+    margin-top: 40px;
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .section { padding: 50px 20px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .admin-container { padding: 20px; }
+    .modal { padding: 24px; }
+  }
 </style>
 </head>
-
 <body>
 
-<div class="ticker" id="ticker">Se încarcă...</div>
-
-<div class="nav">
-  <div>
-    <button onclick="nav('home')">Home</button>
-    <button onclick="nav('flota')">Flotă</button>
-    <button onclick="nav('rezervari')">Rezervări</button>
-    <button id="adminBtn" class="hidden" onclick="nav('admin')">Admin</button>
-  </div>
-  <div>
-    <button id="loginBtn">Login</button>
-    <button id="logoutBtn" class="hidden">Logout</button>
+<!-- TICKER BAR -->
+<div id="ticker-bar">
+  <div class="ticker-label">🚍 LIVE STATUS</div>
+  <div class="ticker-track">
+    <div class="ticker-inner" id="ticker-inner">
+      <span>Se încarcă...</span>
+    </div>
   </div>
 </div>
 
-<div class="container">
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-logo" onclick="showPage('home')">🚌 <span>LSD</span> Group</div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showPage('home')">Acasă</button>
+    <button class="nav-link" onclick="showPage('flota')">Flotă</button>
+    <button class="nav-link" onclick="showPage('rezervari')">Rezervări</button>
+    <button class="nav-link" id="nav-my-rez" style="display:none" onclick="showPage('my-rez')">Rezervările mele</button>
+    <button class="nav-link admin-link" id="nav-admin" style="display:none" onclick="showPage('admin')">⚙ Admin</button>
+    <button class="btn-nav-login" id="nav-auth-btn" onclick="showPage('auth')">Login</button>
+  </div>
+</nav>
 
-<div id="home">
-  <h1>Transport Persoane</h1>
-  <p>Curse moderne și rapide</p>
-  <div id="nextCurse"></div>
-</div>
+<!-- ──────── HOME ──────── -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">🏆 Transport Premium din 2008</div>
+      <h1>Călătorii Sigure,<br>Confortabile,<br>La Timp</h1>
+      <p>Curse ocazionale pentru grupuri, companii și evenimente. Flotă modernă, șoferi profesioniști, prețuri transparente.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="showPage('rezervari')">🔍 Rezervă acum</button>
+        <button class="btn-secondary" onclick="showPage('flota')">Vezi flota</button>
+      </div>
+    </div>
+  </div>
 
-<div id="flota" class="hidden"></div>
+  <div class="section">
+    <!-- Next trip -->
+    <div id="next-trip-section"></div>
 
-<div id="rezervari" class="hidden">
-  <h2>Rezervare</h2>
-
-  <input id="plecare" placeholder="Plecare">
-  <input id="dest" placeholder="Destinație">
-  <input id="data" type="date">
-  <input id="pers" type="number" placeholder="Persoane">
-
-  <button class="btn primary" onclick="calc()">Caută</button>
-
-  <div id="recomandari"></div>
-</div>
-
-<div id="admin" class="hidden">
-  <h2>Admin</h2>
-
-  <button onclick="loadDemo()">Încarcă demo</button>
-
-  <h3>Reguli Firestore</h3>
-  <textarea style="width:100%;height:200px">
-rules_version = '2';
-service cloud.firestore {
- match /databases/{database}/documents {
-
-  function isAdmin() {
-    return request.auth.token.email == "irimia.teodor.17@gmail.com";
-  }
-
-  match /flota/{id} {
-    allow read: if true;
-    allow write: if isAdmin();
-  }
-
-  match /rezervari/{id} {
-    allow create: if request.auth != null;
-    allow read: if isAdmin() || request.auth.uid == resource.data.uid;
-    allow write: if isAdmin();
-  }
-
-  match /status/{id} {
-    allow read: if true;
-    allow write: if isAdmin();
-  }
-
- }
-}
-  </textarea>
-</div>
-
-</div>
-
-<!-- LOGIN -->
-<div id="loginModal" class="hidden">
-  <div class="card">
-    <input id="email" placeholder="Email">
-    <input id="pass" type="password" placeholder="Parola">
-    <button onclick="login()">Login</button>
-    <button onclick="register()">Register</button>
+    <div class="section-title">Flota noastră</div>
+    <p class="section-sub">Vehicule moderne, întreținute și verificate periodic</p>
+    <div class="cards-grid" id="home-flota-preview">
+      <div class="spinner"></div>
+    </div>
   </div>
 </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<!-- ──────── FLOTĂ ──────── -->
+<div id="page-flota" class="page">
+  <div class="section">
+    <div class="section-title">🚐 Flota noastră</div>
+    <p class="section-sub">Verifică disponibilitatea pentru data dorită</p>
+    <div class="cards-grid" id="flota-list">
+      <div class="spinner"></div>
+    </div>
+  </div>
+</div>
 
-<script>
+<!-- ──────── REZERVĂRI ──────── -->
+<div id="page-rezervari" class="page">
+  <div class="rez-container">
+    <h2 class="section-title" style="margin-bottom:8px">📋 Rezervare cursă</h2>
+    <p class="section-sub">Completează detaliile și primești recomandări inteligente</p>
+
+    <div class="form-card">
+      <div class="form-title">Detalii cursă</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Oraș plecare</label>
+          <input type="text" id="rez-plecare" placeholder="ex: Iași">
+        </div>
+        <div class="form-group">
+          <label>Destinație</label>
+          <input type="text" id="rez-dest" placeholder="ex: București">
+        </div>
+        <div class="form-group">
+          <label>Data cursei</label>
+          <input type="date" id="rez-data">
+        </div>
+        <div class="form-group">
+          <label>Număr persoane</label>
+          <input type="number" id="rez-persoane" min="1" max="200" placeholder="ex: 45">
+        </div>
+        <div class="form-group">
+          <label>Distanță estimată (km)</label>
+          <input type="number" id="rez-km" min="1" placeholder="ex: 380">
+        </div>
+        <div class="form-group">
+          <label>Observații</label>
+          <input type="text" id="rez-obs" placeholder="opțional">
+        </div>
+      </div>
+      <button class="btn-search" onclick="cautaVehicule()">🔍 Caută vehicule disponibile</button>
+    </div>
+
+    <div id="rec-section" style="display:none">
+      <div class="rec-title">💡 Recomandări pentru tine</div>
+      <div class="rec-grid" id="rec-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────── REZERVĂRILE MELE ──────── -->
+<div id="page-my-rez" class="page">
+  <div class="section" style="max-width:800px">
+    <div class="section-title">📂 Rezervările mele</div>
+    <p class="section-sub">Istoricul și statusul rezervărilor tale</p>
+    <div id="my-rez-list"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- ──────── AUTH ──────── -->
+<div id="page-auth" class="page">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-title">Bun venit 👋</div>
+      <div class="auth-sub">Autentifică-te pentru a putea rezerva</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Login</button>
+        <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Înregistrare</button>
+      </div>
+
+      <div id="auth-login-form" class="auth-form">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="email@exemplu.com">
+        </div>
+        <div class="form-group">
+          <label>Parolă</label>
+          <input type="password" id="login-pass" placeholder="••••••••">
+        </div>
+        <div class="auth-error" id="login-err"></div>
+        <button class="btn-auth" onclick="doLogin()">Intră în cont</button>
+      </div>
+
+      <div id="auth-register-form" class="auth-form" style="display:none">
+        <div class="form-group">
+          <label>Nume complet</label>
+          <input type="text" id="reg-name" placeholder="Ion Popescu">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="email@exemplu.com">
+        </div>
+        <div class="form-group">
+          <label>Parolă</label>
+          <input type="password" id="reg-pass" placeholder="minim 6 caractere">
+        </div>
+        <div class="auth-error" id="reg-err"></div>
+        <button class="btn-auth" onclick="doRegister()">Creează cont</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────── ADMIN ──────── -->
+<div id="page-admin" class="page">
+  <div class="admin-container">
+    <div class="admin-header">
+      <div class="admin-title">⚙ Panou Admin</div>
+      <div id="admin-stats" class="stats-row"></div>
+    </div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchAdminTab('flota')">🚐 Flotă</button>
+      <button class="admin-tab" onclick="switchAdminTab('rez')">📋 Rezervări</button>
+      <button class="admin-tab" onclick="switchAdminTab('status')">📢 Bara live</button>
+      <button class="admin-tab" onclick="switchAdminTab('curse')">🗓 Curse</button>
+    </div>
+
+    <!-- FLOTĂ ADMIN -->
+    <div id="admin-flota" class="admin-section active">
+      <div class="admin-toolbar">
+        <button class="btn-add" onclick="openModal('vehicle')">+ Adaugă vehicul</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="data-table" id="admin-flota-table">
+          <thead><tr><th>Vehicul</th><th>Capacitate</th><th>Preț/km</th><th>Dotări</th><th>Acțiuni</th></tr></thead>
+          <tbody id="admin-flota-body"><tr><td colspan="5"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REZERVĂRI ADMIN -->
+    <div id="admin-rez" class="admin-section">
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr><th>Data</th><th>Rută</th><th>Persoane</th><th>Vehicule</th><th>Preț</th><th>Status</th><th>Acțiuni</th></tr></thead>
+          <tbody id="admin-rez-body"><tr><td colspan="7"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STATUS ADMIN -->
+    <div id="admin-status" class="admin-section">
+      <div class="admin-toolbar">
+        <button class="btn-add" onclick="openModal('status')">+ Adaugă mesaj</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr><th>Mesaj</th><th>Activ</th><th>Acțiuni</th></tr></thead>
+          <tbody id="admin-status-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CURSE ADMIN -->
+    <div id="admin-curse" class="admin-section">
+      <div class="admin-toolbar">
+        <button class="btn-add" onclick="openModal('cursa')">+ Adaugă cursă</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr><th>Rută</th><th>Data</th><th>Vehicul</th><th>Acțiuni</th></tr></thead>
+          <tbody id="admin-curse-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ──────── MODALS ──────── -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-title" id="modal-title">Modal</div>
+    <div id="modal-body"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Anulează</button>
+      <button class="btn-save" id="modal-save-btn" onclick="saveModal()">Salvează</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<footer>
+  © 2025 LSD Group SRL · Transport persoane · CUI: RO12345678 · Iași
+</footer>
+
+<!-- FIREBASE CDN -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc,
+  doc, query, where, onSnapshot, serverTimestamp, orderBy }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ─── FIREBASE CONFIG ─────────────────────────────────────
 const firebaseConfig = {
-  apiKey: "AIzaSyDx...",
+  apiKey: "AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",
   authDomain: "lsd-group-srl.firebaseapp.com",
-  projectId: "lsd-group-srl"
+  projectId: "lsd-group-srl",
+  storageBucket: "lsd-group-srl.firebasestorage.app",
+  messagingSenderId: "487152601925",
+  appId: "1:487152601925:web:8aa97c1581b6624598cc2c"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const ADMIN_EMAIL = "irimia.teodor.17@gmail.com";
+
+// ─── STATE ────────────────────────────────────────────────
+let currentUser = null;
+let isAdmin = false;
+let flotaCache = [];
+let rezCache = [];
+let statusCache = [];
+let curseCache = [];
+let modalType = '';
+let editingId = null;
+
+// ─── EXPOSE GLOBALS ───────────────────────────────────────
+window.showPage = showPage;
+window.switchAuthTab = switchAuthTab;
+window.doLogin = doLogin;
+window.doRegister = doRegister;
+window.doLogout = doLogout;
+window.cautaVehicule = cautaVehicule;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.closeModalOutside = closeModalOutside;
+window.saveModal = saveModal;
+window.switchAdminTab = switchAdminTab;
+window.checkAvailability = checkAvailability;
+window.bookVehicle = bookVehicle;
+window.deleteAdminItem = deleteAdminItem;
+window.editAdminItem = editAdminItem;
+window.confirmRez = confirmRez;
+
+// ─── AUTH STATE ───────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  isAdmin = user?.email === ADMIN_EMAIL;
+  const authBtn = document.getElementById('nav-auth-btn');
+  const navAdmin = document.getElementById('nav-admin');
+  const navMyRez = document.getElementById('nav-my-rez');
+  if (user) {
+    authBtn.textContent = 'Logout';
+    authBtn.onclick = doLogout;
+    navAdmin.style.display = isAdmin ? 'inline-flex' : 'none';
+    navMyRez.style.display = 'inline-flex';
+  } else {
+    authBtn.textContent = 'Login';
+    authBtn.onclick = () => showPage('auth');
+    navAdmin.style.display = 'none';
+    navMyRez.style.display = 'none';
+  }
+});
+
+// ─── SHOW PAGE ────────────────────────────────────────────
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active'));
+  const pg = document.getElementById('page-' + p);
+  if (pg) pg.classList.add('active');
+  if (p === 'home') { document.querySelectorAll('.nav-link')[0].classList.add('active'); loadHome(); }
+  if (p === 'flota') { document.querySelectorAll('.nav-link')[1].classList.add('active'); loadFlota(); }
+  if (p === 'rezervari') { document.querySelectorAll('.nav-link')[2].classList.add('active'); }
+  if (p === 'admin') loadAdmin();
+  if (p === 'my-rez') loadMyRez();
+  window.scrollTo(0, 0);
+}
+
+// ─── TICKER ───────────────────────────────────────────────
+function loadTicker() {
+  onSnapshot(collection(db, 'status'), snap => {
+    const msgs = [];
+    snap.forEach(d => { const dat = d.data(); if (dat.activ !== false) msgs.push(dat.mesaj || ''); });
+    const inner = document.getElementById('ticker-inner');
+    if (msgs.length === 0) {
+      inner.innerHTML = '<span>Nicio cursă activă momentan</span>';
+      return;
+    }
+    // Duplicate for seamless loop
+    const all = [...msgs, ...msgs];
+    inner.innerHTML = all.map(m => `<span>🚍 ${m}</span>`).join('<span class="dot">•</span>');
+    const duration = Math.max(20, msgs.length * 8);
+    inner.style.animationDuration = duration + 's';
+  });
+}
+loadTicker();
+
+// ─── LOAD FLOTA ───────────────────────────────────────────
+async function loadFlotaData() {
+  const snap = await getDocs(collection(db, 'flota'));
+  flotaCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (flotaCache.length === 0) await seedFlota();
+  else return;
+}
+
+async function seedFlota() {
+  const demo = [
+    { nume: 'Mercedes Intouro', capacitate: 53, pretPerKm: 4.5, dotari: ['AC', 'WiFi', 'TV', 'Toaletă', 'USB'], icon: '🚌' },
+    { nume: 'Setra S 515', capacitate: 49, pretPerKm: 4.2, dotari: ['AC', 'WiFi', 'TV', 'Toaletă'], icon: '🚌' },
+    { nume: 'MAN Lions Coach', capacitate: 57, pretPerKm: 4.8, dotari: ['AC', 'WiFi', 'TV', 'Toaletă', 'Mini-bar'], icon: '🚌' },
+    { nume: 'Neoplan Cityliner', capacitate: 48, pretPerKm: 4.0, dotari: ['AC', 'WiFi', 'TV'], icon: '🚌' },
+    { nume: 'Mercedes Sprinter', capacitate: 19, pretPerKm: 2.8, dotari: ['AC', 'WiFi'], icon: '🚐' },
+    { nume: 'Ford Transit', capacitate: 16, pretPerKm: 2.5, dotari: ['AC'], icon: '🚐' },
+  ];
+  for (const v of demo) await addDoc(collection(db, 'flota'), v);
+  const snap = await getDocs(collection(db, 'flota'));
+  flotaCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+async function seedStatus() {
+  const snap = await getDocs(collection(db, 'status'));
+  if (snap.empty) {
+    const msgs = [
+      { mesaj: 'Mercedes Intouro – nr. garaj 12 – Iași → București', activ: true },
+      { mesaj: 'Setra S515 – nr. garaj 07 – Cluj → Timișoara', activ: true },
+      { mesaj: 'MAN Lions Coach – nr. garaj 03 – Suceava → Constanța', activ: true },
+    ];
+    for (const m of msgs) await addDoc(collection(db, 'status'), m);
+  }
+}
+
+async function seedCurse() {
+  const snap = await getDocs(collection(db, 'curse'));
+  if (snap.empty) {
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    await addDoc(collection(db, 'curse'), {
+      ruta: 'Iași → București', data: tomorrow.toISOString().split('T')[0],
+      vehicul: 'Mercedes Intouro', locuri: 53
+    });
+  }
+}
+
+// ─── HOME ─────────────────────────────────────────────────
+async function loadHome() {
+  await loadFlotaData();
+  // Next trip
+  await seedCurse();
+  const cs = await getDocs(collection(db, 'curse'));
+  const curse = cs.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.data > b.data ? 1 : -1);
+  const nextSec = document.getElementById('next-trip-section');
+  if (curse.length > 0) {
+    const c = curse[0];
+    nextSec.innerHTML = `
+      <div class="next-trip-card">
+        <div class="next-trip-icon">🗓</div>
+        <div>
+          <div class="next-trip-label">Următoarea cursă</div>
+          <div class="next-trip-info">${c.ruta}</div>
+          <div class="next-trip-meta">${c.data} · ${c.vehicul} · ${c.locuri} locuri</div>
+        </div>
+        <button class="btn-primary" style="margin-left:auto" onclick="showPage('rezervari')">Rezervă</button>
+      </div>`;
+  }
+  // Fleet preview (first 3)
+  const preview = flotaCache.slice(0, 3);
+  document.getElementById('home-flota-preview').innerHTML = preview.map(v => vehicleCardHtml(v, false)).join('');
+}
+
+// ─── FLOTA ────────────────────────────────────────────────
+async function loadFlota() {
+  await loadFlotaData();
+  document.getElementById('flota-list').innerHTML = flotaCache.map(v => vehicleCardHtml(v, true)).join('');
+}
+
+function vehicleCardHtml(v, showAvail) {
+  const dotariHtml = (v.dotari || []).map(d => `<span class="dotare-tag">${d}</span>`).join('');
+  const availHtml = showAvail ? `
+    <div class="avail-input">
+      <label>Verifică disponibilitate</label>
+      <input type="date" id="avail-${v.id}" onchange="checkAvailability('${v.id}', this.value)">
+      <div class="avail-result" id="avail-res-${v.id}"></div>
+    </div>` : '';
+  return `
+    <div class="fleet-card">
+      <div class="fleet-card-img">${v.icon || '🚌'}</div>
+      <div class="fleet-card-body">
+        <div class="fleet-card-name">${v.nume}</div>
+        <div class="fleet-card-row">
+          <span class="badge badge-blue">👥 ${v.capacitate} locuri</span>
+          <span class="badge badge-accent">💰 ${v.pretPerKm} RON/km</span>
+        </div>
+        <div class="dotari">${dotariHtml}</div>
+        ${availHtml}
+      </div>
+    </div>`;
+}
+
+async function checkAvailability(vehicleId, data) {
+  const el = document.getElementById('avail-res-' + vehicleId);
+  if (!data) { el.innerHTML = ''; return; }
+  el.innerHTML = '<span style="color:var(--muted)">Se verifică...</span>';
+  const q = query(collection(db, 'rezervari'), where('data', '==', data), where('status', '!=', 'anulat'));
+  const snap = await getDocs(q);
+  let occupied = false;
+  snap.forEach(d => {
+    const r = d.data();
+    if ((r.vehiculeSelectate || []).includes(vehicleId)) occupied = true;
+  });
+  if (occupied) {
+    // find next available
+    let nextDate = new Date(data);
+    let found = null;
+    for (let i = 1; i <= 30; i++) {
+      nextDate.setDate(nextDate.getDate() + 1);
+      const nd = nextDate.toISOString().split('T')[0];
+      const q2 = query(collection(db, 'rezervari'), where('data', '==', nd), where('status', '!=', 'anulat'));
+      const s2 = await getDocs(q2);
+      let occ2 = false;
+      s2.forEach(d2 => { if ((d2.data().vehiculeSelectate || []).includes(vehicleId)) occ2 = true; });
+      if (!occ2) { found = nd; break; }
+    }
+    el.innerHTML = `<span class="badge badge-red">❌ Indisponibil</span>${found ? `<br><small style="color:var(--muted)">Disponibil din: ${found}</small>` : ''}`;
+  } else {
+    el.innerHTML = `<span class="badge badge-green">✅ Disponibil</span>`;
+  }
+}
+
+// ─── REZERVĂRI ────────────────────────────────────────────
+async function cautaVehicule() {
+  const plecare = document.getElementById('rez-plecare').value.trim();
+  const dest = document.getElementById('rez-dest').value.trim();
+  const data = document.getElementById('rez-data').value;
+  const persoane = parseInt(document.getElementById('rez-persoane').value) || 0;
+  const km = parseInt(document.getElementById('rez-km').value) || 100;
+
+  if (!plecare || !dest || !data || !persoane) { showToast('Completează toate câmpurile!', 'error'); return; }
+
+  await loadFlotaData();
+
+  // Get occupied vehicles for that date
+  const q = query(collection(db, 'rezervari'), where('data', '==', data), where('status', '!=', 'anulat'));
+  const snap = await getDocs(q);
+  const occupiedIds = new Set();
+  snap.forEach(d => (d.data().vehiculeSelectate || []).forEach(id => occupiedIds.add(id)));
+
+  const available = flotaCache.filter(v => !occupiedIds.has(v.id));
+
+  // Build recommendations
+  const recs = [];
+
+  // Case 1: Single vehicle with enough capacity
+  const singles = available.filter(v => v.capacitate >= persoane).sort((a, b) => (a.pretPerKm * km) - (b.pretPerKm * km));
+  if (singles.length > 0) {
+    const best = singles[0];
+    recs.push({
+      vehicles: [best],
+      totalCap: best.capacitate,
+      totalPrice: Math.round(best.pretPerKm * km),
+      label: '🏆 Recomandat',
+      type: 'single'
+    });
+    if (singles.length > 1) recs.push({
+      vehicles: [singles[1]],
+      totalCap: singles[1].capacitate,
+      totalPrice: Math.round(singles[1].pretPerKm * km),
+      label: '💎 Premium',
+      type: 'single'
+    });
+  }
+
+  // Case 2: Combination of 2 vehicles
+  for (let i = 0; i < available.length; i++) {
+    for (let j = i + 1; j < available.length; j++) {
+      const v1 = available[i], v2 = available[j];
+      if (v1.capacitate + v2.capacitate >= persoane) {
+        const price = Math.round((v1.pretPerKm + v2.pretPerKm) * km);
+        if (recs.length < 4) recs.push({
+          vehicles: [v1, v2],
+          totalCap: v1.capacitate + v2.capacitate,
+          totalPrice: price,
+          label: '🔄 Combinație',
+          type: 'combo'
+        });
+      }
+    }
+  }
+
+  if (recs.length === 0) {
+    document.getElementById('rec-section').style.display = 'block';
+    document.getElementById('rec-grid').innerHTML = `
+      <div class="empty-state"><div class="icon">😔</div>
+      <h3>Nicio opțiune disponibilă</h3><p>Nu am găsit vehicule disponibile pentru data și numărul de persoane selectat.</p></div>`;
+    return;
+  }
+
+  document.getElementById('rec-section').style.display = 'block';
+  document.getElementById('rec-grid').innerHTML = recs.map((r, idx) => {
+    const vehicleNames = r.vehicles.map(v => v.nume).join(' + ');
+    const icons = r.vehicles.map(v => v.icon || '🚌').join(' ');
+    const dotariAll = [...new Set(r.vehicles.flatMap(v => v.dotari || []))];
+    return `
+      <div class="rec-card" id="rec-${idx}">
+        <div class="rec-card-top">
+          <div>
+            <div style="font-size:28px;margin-bottom:6px">${icons}</div>
+            <div class="rec-vehicle-name">${vehicleNames}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="rec-price">${r.totalPrice} RON <span>total</span></div>
+            <div style="font-size:11px;color:var(--muted)">${km} km × ${r.vehicles.map(v=>v.pretPerKm).join('+')} RON/km</div>
+          </div>
+        </div>
+        <div class="rec-details">
+          👥 Capacitate: <strong>${r.totalCap} locuri</strong><br>
+          ✅ Persoane: ${persoane} / ${r.totalCap} locuri folosite
+        </div>
+        <div class="rec-badge-row">
+          <span class="badge badge-accent">${r.label}</span>
+          ${dotariAll.slice(0,3).map(d => `<span class="badge badge-blue">${d}</span>`).join('')}
+        </div>
+        <button class="btn-book" onclick="bookVehicle(${JSON.stringify({ids: r.vehicles.map(v=>v.id), price: r.totalPrice, names: vehicleNames}).replace(/"/g,'&quot;')})">
+          Rezervă această opțiune
+        </button>
+      </div>`;
+  }).join('');
+}
+
+async function bookVehicle(opts) {
+  if (!currentUser) {
+    showToast('Trebuie să fii autentificat pentru a rezerva!', 'error');
+    setTimeout(() => showPage('auth'), 1000);
+    return;
+  }
+  const plecare = document.getElementById('rez-plecare').value.trim();
+  const dest = document.getElementById('rez-dest').value.trim();
+  const data = document.getElementById('rez-data').value;
+  const persoane = parseInt(document.getElementById('rez-persoane').value) || 0;
+  const obs = document.getElementById('rez-obs').value;
+
+  try {
+    await addDoc(collection(db, 'rezervari'), {
+      uid: currentUser.uid,
+      email: currentUser.email,
+      plecare, destinatie: dest, data, persoane,
+      vehiculeSelectate: opts.ids,
+      vehiculeNume: opts.names,
+      pretEstimativ: opts.price,
+      observatii: obs,
+      status: 'in_asteptare',
+      createdAt: serverTimestamp()
+    });
+    showToast('✅ Rezervare trimisă cu succes!', 'success');
+    document.getElementById('rec-section').style.display = 'none';
+    // clear form
+    ['rez-plecare','rez-dest','rez-data','rez-persoane','rez-km','rez-obs'].forEach(id => document.getElementById(id).value = '');
+  } catch(e) { showToast('Eroare: ' + e.message, 'error'); }
+}
+
+// ─── MY RESERVATIONS ────────────────────────────────────────
+async function loadMyRez() {
+  if (!currentUser) { showPage('auth'); return; }
+  const el = document.getElementById('my-rez-list');
+  el.innerHTML = '<div class="spinner"></div>';
+  const q = query(collection(db, 'rezervari'), where('uid', '==', currentUser.uid));
+  const snap = await getDocs(q);
+  const items = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  if (items.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📭</div><h3>Nicio rezervare</h3><p>Nu ai rezervări încă.</p></div>`;
+    return;
+  }
+  const statusMap = { in_asteptare: { label: 'În așteptare', cls: 'badge-accent' }, confirmata: { label: 'Confirmată', cls: 'badge-green' }, anulat: { label: 'Anulată', cls: 'badge-red' } };
+  el.innerHTML = items.map(r => {
+    const st = statusMap[r.status] || { label: r.status, cls: 'badge-accent' };
+    return `
+      <div class="my-rez-card">
+        <div class="my-rez-header">
+          <div class="my-rez-route">${r.plecare} → ${r.destinatie}</div>
+          <span class="badge ${st.cls}">${st.label}</span>
+        </div>
+        <div class="my-rez-details">
+          <div class="my-rez-detail-item"><div class="my-rez-detail-label">Data</div>${r.data}</div>
+          <div class="my-rez-detail-item"><div class="my-rez-detail-label">Persoane</div>${r.persoane}</div>
+          <div class="my-rez-detail-item"><div class="my-rez-detail-label">Vehicule</div>${r.vehiculeNume || r.vehiculeSelectate?.join(', ')}</div>
+          <div class="my-rez-detail-item"><div class="my-rez-detail-label">Preț estimat</div>${r.pretEstimativ} RON</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ─── AUTH ─────────────────────────────────────────────────
+function switchAuthTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  document.getElementById('auth-login-form').style.display = tab === 'login' ? 'flex' : 'none';
+  document.getElementById('auth-register-form').style.display = tab === 'register' ? 'flex' : 'none';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  document.getElementById('login-err').textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    showToast('Bun venit! 👋', 'success');
+    showPage('home');
+  } catch(e) { document.getElementById('login-err').textContent = e.message; }
+}
+
+async function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  document.getElementById('reg-err').textContent = '';
+  try {
+    await createUserWithEmailAndPassword(auth, email, pass);
+    showToast('Cont creat cu succes! 🎉', 'success');
+    showPage('home');
+  } catch(e) { document.getElementById('reg-err').textContent = e.message; }
+}
+
+async function doLogout() {
+  await signOut(auth);
+  showToast('Te-ai deconectat.', 'success');
+  showPage('home');
+}
+
+// ─── ADMIN ────────────────────────────────────────────────
+async function loadAdmin() {
+  if (!isAdmin) { showPage('home'); showToast('Acces interzis!', 'error'); return; }
+  await seedStatus(); await seedCurse();
+  loadAdminFlota();
+  loadAdminRez();
+  loadAdminStatus();
+  loadAdminCurse();
+}
+
+async function loadAdminFlota() {
+  await loadFlotaData();
+  document.getElementById('admin-flota-body').innerHTML = flotaCache.map(v => `
+    <tr>
+      <td>${v.icon || '🚌'} ${v.nume}</td>
+      <td>${v.capacitate} locuri</td>
+      <td>${v.pretPerKm} RON/km</td>
+      <td>${(v.dotari || []).join(', ')}</td>
+      <td>
+        <button class="btn-icon" onclick="editAdminItem('vehicle','${v.id}')">✏</button>
+        <button class="btn-icon del" onclick="deleteAdminItem('flota','${v.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function loadAdminRez() {
+  const snap = await getDocs(query(collection(db, 'rezervari'), orderBy('createdAt', 'desc')));
+  rezCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const statusMap = { in_asteptare: 'badge-accent', confirmata: 'badge-green', anulat: 'badge-red' };
+  document.getElementById('admin-rez-body').innerHTML = rezCache.map(r => `
+    <tr>
+      <td>${r.data}</td>
+      <td>${r.plecare} → ${r.destinatie}</td>
+      <td>${r.persoane}</td>
+      <td style="font-size:12px">${r.vehiculeNume || ''}</td>
+      <td>${r.pretEstimativ} RON</td>
+      <td><span class="badge ${statusMap[r.status] || 'badge-accent'}">${r.status}</span></td>
+      <td>
+        <button class="btn-icon" onclick="confirmRez('${r.id}')">✅</button>
+        <button class="btn-icon del" onclick="deleteAdminItem('rezervari','${r.id}')">🗑</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted)">Nicio rezervare</td></tr>';
+  // Stats
+  document.getElementById('admin-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Vehicule</div><div class="stat-val">${flotaCache.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Rezervări</div><div class="stat-val">${rezCache.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Confirmate</div><div class="stat-val">${rezCache.filter(r=>r.status==='confirmata').length}</div></div>`;
+}
+
+async function loadAdminStatus() {
+  const snap = await getDocs(collection(db, 'status'));
+  statusCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  document.getElementById('admin-status-body').innerHTML = statusCache.map(s => `
+    <tr>
+      <td>${s.mesaj}</td>
+      <td><label class="toggle"><input type="checkbox" ${s.activ ? 'checked' : ''} onchange="toggleStatus('${s.id}', this.checked)"><span class="toggle-slider"></span></label></td>
+      <td>
+        <button class="btn-icon" onclick="editAdminItem('status','${s.id}')">✏</button>
+        <button class="btn-icon del" onclick="deleteAdminItem('status','${s.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function loadAdminCurse() {
+  const snap = await getDocs(collection(db, 'curse'));
+  curseCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  document.getElementById('admin-curse-body').innerHTML = curseCache.map(c => `
+    <tr>
+      <td>${c.ruta}</td><td>${c.data}</td><td>${c.vehicul}</td>
+      <td>
+        <button class="btn-icon" onclick="editAdminItem('cursa','${c.id}')">✏</button>
+        <button class="btn-icon del" onclick="deleteAdminItem('curse','${c.id}')">🗑</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted)">Nicio cursă</td></tr>';
+}
+
+async function confirmRez(id) {
+  await updateDoc(doc(db, 'rezervari', id), { status: 'confirmata' });
+  showToast('Rezervare confirmată!', 'success'); loadAdminRez();
+}
+
+window.toggleStatus = async (id, val) => {
+  await updateDoc(doc(db, 'status', id), { activ: val });
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
-
-let state={user:null,flota:[],rezervari:[],status:[]};
-
-function nav(x){
-  document.querySelectorAll('.container > div').forEach(d=>d.classList.add('hidden'));
-  document.getElementById(x).classList.remove('hidden');
+async function deleteAdminItem(col, id) {
+  if (!confirm('Sigur ștergi?')) return;
+  await deleteDoc(doc(db, col, id));
+  showToast('Șters!', 'success');
+  if (col === 'flota') loadAdminFlota();
+  if (col === 'rezervari') loadAdminRez();
+  if (col === 'status') loadAdminStatus();
+  if (col === 'curse') loadAdminCurse();
 }
 
-auth.onAuthStateChanged(u=>{
-  state.user=u;
-  loginBtn.classList.toggle('hidden',!!u);
-  logoutBtn.classList.toggle('hidden',!u);
+function switchAdminTab(t) {
+  document.querySelectorAll('.admin-tab').forEach((b, i) => b.classList.remove('active'));
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  const map = { flota: 0, rez: 1, status: 2, curse: 3 };
+  document.querySelectorAll('.admin-tab')[map[t]].classList.add('active');
+  document.getElementById('admin-' + (t === 'rez' ? 'rez' : t === 'status' ? 'status' : t === 'curse' ? 'curse' : 'flota')).classList.add('active');
+}
 
-  if(u && u.email==="irimia.teodor.17@gmail.com"){
-    adminBtn.classList.remove('hidden');
-  } else {
-    adminBtn.classList.add('hidden');
+// ─── MODAL ────────────────────────────────────────────────
+function openModal(type, id) {
+  modalType = type; editingId = id || null;
+  const titles = { vehicle: 'Vehicul', status: 'Mesaj bară live', cursa: 'Cursă' };
+  document.getElementById('modal-title').textContent = (id ? 'Editează' : 'Adaugă') + ' ' + titles[type];
+  let body = '';
+
+  if (type === 'vehicle') {
+    const v = id ? flotaCache.find(x => x.id === id) || {} : {};
+    body = `
+      <div class="form-group"><label>Nume vehicul</label><input type="text" id="m-name" value="${v.nume||''}" placeholder="Mercedes Intouro"></div>
+      <div style="height:12px"></div>
+      <div class="form-group"><label>Capacitate (locuri)</label><input type="number" id="m-cap" value="${v.capacitate||''}" placeholder="53"></div>
+      <div style="height:12px"></div>
+      <div class="form-group"><label>Preț per km (RON)</label><input type="number" step="0.1" id="m-pret" value="${v.pretPerKm||''}" placeholder="4.5"></div>
+      <div style="height:12px"></div>
+      <div class="form-group"><label>Dotări (separate prin virgulă)</label><input type="text" id="m-dotari" value="${(v.dotari||[]).join(', ')}" placeholder="AC, WiFi, TV"></div>
+      <div style="height:12px"></div>
+      <div class="form-group"><label>Emoji vehicul</label><input type="text" id="m-icon" value="${v.icon||'🚌'}" placeholder="🚌"></div>`;
+  } else if (type === 'status') {
+    const s = id ? statusCache.find(x => x.id === id) || {} : {};
+    body = `
+      <div class="form-group"><label>Mesaj afișat</label><input type="text" id="m-mesaj" value="${s.mesaj||''}" placeholder="Mercedes Intouro – Iași → București"></div>
+      <div style="height:12px"></div>
+      <div class="form-group" style="flex-direction:row;align-items:center;gap:12px">
+        <label style="margin:0">Activ</label>
+        <label class="toggle"><input type="checkbox" id="m-activ" ${s.activ !== false ? 'checked' : ''}><span class="toggle-slider"></span></label>
+      </div>`;
+  } else if (type === 'cursa') {
+    const c = id ? curseCache.find(x => x.id === id) || {} : {};
+    const vehicleOpts = flotaCache.map(v => `<option value="${v.nume}" ${c.vehicul===v.nume?'selected':''}>${v.nume}</option>`).join('');
+    body = `
+      <div class="form-group"><label>Rută</label><input type="text" id="m-ruta" value="${c.ruta||''}" placeholder="Iași → București"></div>
+      <div style="height:12px"></div>
+      <div class="form-group"><label>Data</label><input type="date" id="m-data" value="${c.data||''}"></div>
+      <div style="height:12px"></div>
+      <div class="form-group"><label>Vehicul</label><select id="m-vehicul"><option value="">Selectează...</option>${vehicleOpts}</select></div>
+      <div style="height:12px"></div>
+      <div class="form-group"><label>Locuri disponibile</label><input type="number" id="m-locuri" value="${c.locuri||''}"></div>`;
   }
-});
-
-loginBtn.onclick=()=>loginModal.classList.remove('hidden');
-logoutBtn.onclick=()=>auth.signOut();
-
-function login(){
-  auth.signInWithEmailAndPassword(email.value,pass.value);
-}
-function register(){
-  auth.createUserWithEmailAndPassword(email.value,pass.value);
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-overlay').classList.add('open');
 }
 
-// 🔥 LOAD DATA
-db.collection("flota").onSnapshot(s=>{
-  state.flota=s.docs.map(d=>({id:d.id,...d.data()}));
-  renderFlota();
-});
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
 
-db.collection("status").onSnapshot(s=>{
-  state.status=s.docs.map(d=>d.data());
-  ticker.innerText=state.status.map(x=>x.mesaj).join(" | ");
-});
-
-function renderFlota(){
-  flota.innerHTML=state.flota.map(v=>`
-    <div class="card">
-      <h3>${v.nume}</h3>
-      <p>${v.capacitate} locuri</p>
-      <p>${v.pretPerKm} lei/km</p>
-    </div>
-  `).join('');
+async function saveModal() {
+  try {
+    if (modalType === 'vehicle') {
+      const data = {
+        nume: document.getElementById('m-name').value,
+        capacitate: parseInt(document.getElementById('m-cap').value) || 0,
+        pretPerKm: parseFloat(document.getElementById('m-pret').value) || 0,
+        dotari: document.getElementById('m-dotari').value.split(',').map(s => s.trim()).filter(Boolean),
+        icon: document.getElementById('m-icon').value || '🚌'
+      };
+      if (editingId) await updateDoc(doc(db, 'flota', editingId), data);
+      else await addDoc(collection(db, 'flota'), data);
+      flotaCache = [];
+      await loadFlotaData();
+      loadAdminFlota();
+    } else if (modalType === 'status') {
+      const data = { mesaj: document.getElementById('m-mesaj').value, activ: document.getElementById('m-activ').checked };
+      if (editingId) await updateDoc(doc(db, 'status', editingId), data);
+      else await addDoc(collection(db, 'status'), data);
+      loadAdminStatus();
+    } else if (modalType === 'cursa') {
+      const data = {
+        ruta: document.getElementById('m-ruta').value,
+        data: document.getElementById('m-data').value,
+        vehicul: document.getElementById('m-vehicul').value,
+        locuri: parseInt(document.getElementById('m-locuri').value) || 0
+      };
+      if (editingId) await updateDoc(doc(db, 'curse', editingId), data);
+      else await addDoc(collection(db, 'curse'), data);
+      loadAdminCurse();
+    }
+    closeModal();
+    showToast('Salvat cu succes!', 'success');
+  } catch(e) { showToast('Eroare: ' + e.message, 'error'); }
 }
 
-// 🧠 DISTANȚĂ SIMULATĂ
-function distance(a,b){
-  return Math.floor(Math.random()*300+50);
+function editAdminItem(type, id) { openModal(type, id); }
+
+// ─── TOAST ────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = ''; }, 3000);
 }
 
-// 🧠 RECOMANDARE
-function calc(){
-  const persoane=parseInt(pers.value);
-  const d=distance();
-
-  let libere=state.flota;
-
-  let recomandari=libere.filter(v=>v.capacitate>=persoane);
-
-  recomandariDiv.innerHTML=recomandari.map(v=>`
-    <div class="card">
-      <h3>${v.nume}</h3>
-      <p>Preț estimat: ${v.pretPerKm*d} lei</p>
-      <button onclick="rezerva('${v.id}',${v.pretPerKm*d})">Rezervă</button>
-    </div>
-  `).join('');
-}
-
-// 📅 REZERVARE
-function rezerva(id,pret){
-  if(!state.user){alert("Login necesar");return;}
-
-  db.collection("rezervari").add({
-    uid:state.user.uid,
-    plecare:plecare.value,
-    destinatie:dest.value,
-    data:data.value,
-    persoane:parseInt(pers.value),
-    vehiculeSelectate:[id],
-    pretEstimativ:pret,
-    status:"nou",
-    createdAt:new Date().toISOString()
-  });
-
-  sendEmail();
-}
-
-// 📧 EMAIL (EmailJS)
-function sendEmail(){
-  console.log("Email trimis (simulare)");
-}
-
-// 🧪 DEMO
-async function loadDemo(){
-  await db.collection("flota").add({
-    nume:"Mercedes Intouro",
-    capacitate:50,
-    pretPerKm:5
-  });
-
-  await db.collection("status").add({
-    mesaj:"Iași → București în cursă"
-  });
-}
+// ─── INIT ─────────────────────────────────────────────────
+loadHome();
 
 </script>
-
 </body>
 </html>
