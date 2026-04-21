@@ -2,411 +2,270 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>LSD Group SRL – Transport Persoane</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0d14;
-    --bg2: #0f1320;
-    --bg3: #151b2e;
-    --card: #131929;
-    --border: rgba(255,255,255,0.07);
-    --accent: #e8a020;
-    --accent2: #f0c050;
-    --blue: #2563eb;
-    --green: #22c55e;
-    --red: #ef4444;
-    --text: #f0f2f8;
-    --muted: #7a8299;
-    --radius: 14px;
-    --shadow: 0 8px 32px rgba(0,0,0,0.4);
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.6; overflow-x: hidden; }
+:root{--bg:#0a0d14;--bg2:#0f1320;--bg3:#151b2e;--card:#131929;--border:rgba(255,255,255,0.07);--accent:#e8a020;--accent2:#f0c050;--green:#22c55e;--red:#ef4444;--blue:#60a5fa;--text:#f0f2f8;--muted:#7a8299;--radius:14px;--shadow:0 8px 32px rgba(0,0,0,0.4)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:15px;line-height:1.6;overflow-x:hidden}
 
-  /* TICKER */
-  #ticker-bar {
-    background: linear-gradient(90deg, #1a0a00, #2a1400, #1a0a00);
-    border-bottom: 1px solid var(--accent);
-    height: 38px; overflow: hidden; display: flex; align-items: center;
-    position: relative; z-index: 1000;
-  }
-  .ticker-label {
-    background: var(--accent); color: #000; font-family: 'Syne', sans-serif;
-    font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 0 14px;
-    height: 100%; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0;
-  }
-  .ticker-track { display: flex; align-items: center; overflow: hidden; flex: 1; }
-  .ticker-inner {
-    display: flex; gap: 60px; animation: ticker 30s linear infinite;
-    white-space: nowrap; padding-left: 40px;
-  }
-  .ticker-inner span { color: var(--accent2); font-size: 13px; font-weight: 500; }
-  .ticker-inner span .dot { color: var(--muted); margin: 0 8px; }
-  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+/* TICKER */
+#ticker-bar{background:linear-gradient(90deg,#1a0a00,#2a1400,#1a0a00);border-bottom:1px solid var(--accent);height:38px;overflow:hidden;display:flex;align-items:center;position:relative;z-index:1000}
+.ticker-label{background:var(--accent);color:#000;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0}
+.ticker-track{display:flex;align-items:center;overflow:hidden;flex:1}
+.ticker-inner{display:flex;gap:60px;animation:ticker 35s linear infinite;white-space:nowrap;padding-left:40px}
+.ticker-inner span{color:var(--accent2);font-size:13px;font-weight:500}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-  /* NAVBAR */
-  nav {
-    position: sticky; top: 0; z-index: 999;
-    background: rgba(10,13,20,0.92); backdrop-filter: blur(18px);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 40px; height: 64px;
-  }
-  .nav-logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer; }
-  .nav-logo span { color: var(--accent); }
-  .nav-links { display: flex; align-items: center; gap: 6px; }
-  .nav-link {
-    background: none; border: none; color: var(--muted); font-family: 'Inter', sans-serif;
-    font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 8px;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .nav-link:hover, .nav-link.active { color: var(--text); background: var(--bg3); }
-  .nav-link.admin-link { color: var(--accent); }
-  .btn-nav-login {
-    background: var(--accent); color: #000; border: none; border-radius: 8px;
-    padding: 8px 20px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .btn-nav-login:hover { background: var(--accent2); }
+/* NAVBAR */
+nav{position:sticky;top:0;z-index:999;background:rgba(10,13,20,0.96);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:60px}
+.nav-logo{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;align-items:center;gap:3px}
+.nav-link{background:none;border:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;padding:7px 11px;border-radius:8px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.nav-link:hover,.nav-link.active{color:var(--text);background:var(--bg3)}
+.nav-link.al{color:var(--accent)}
+.btn-nl{background:var(--accent);color:#000;border:none;border-radius:8px;padding:8px 16px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.btn-nl:hover{background:var(--accent2)}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px}
+.hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px}
+.mob-menu{display:none;flex-direction:column;background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 12px 12px}
+.mob-menu.open{display:flex}
+.mob-menu .nav-link{font-size:15px;padding:12px 14px;text-align:left}
+.mob-menu .btn-nl{width:100%;text-align:center;margin-top:4px;padding:12px}
 
-  /* PAGES */
-  .page { display: none; min-height: calc(100vh - 102px); }
-  .page.active { display: block; }
+/* PAGES */
+.page{display:none;min-height:calc(100vh - 98px)}
+.page.active{display:block}
 
-  /* ───── HOME ───── */
-  .hero {
-    min-height: 88vh; display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,160,32,0.12) 0%, transparent 70%),
-                linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
-    text-align: center; padding: 80px 24px; position: relative; overflow: hidden;
-  }
-  .hero::before {
-    content: ''; position: absolute; inset: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e8a020' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  }
-  .hero-content { position: relative; max-width: 780px; }
-  .hero-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(232,160,32,0.1); border: 1px solid rgba(232,160,32,0.3);
-    border-radius: 50px; padding: 6px 16px; margin-bottom: 28px;
-    font-size: 12px; font-weight: 600; letter-spacing: 1px; color: var(--accent); text-transform: uppercase;
-  }
-  .hero h1 {
-    font-family: 'Syne', sans-serif; font-size: clamp(38px, 7vw, 80px);
-    font-weight: 800; line-height: 1.05; margin-bottom: 22px;
-    background: linear-gradient(135deg, #fff 30%, var(--accent2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .hero p { font-size: 18px; color: var(--muted); max-width: 560px; margin: 0 auto 40px; line-height: 1.7; }
-  .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-  .btn-primary {
-    background: var(--accent); color: #000; border: none; border-radius: 10px;
-    padding: 14px 32px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
-    cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
-  }
-  .btn-primary:hover { background: var(--accent2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,160,32,0.35); }
-  .btn-secondary {
-    background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: 10px;
-    padding: 14px 32px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600;
-    cursor: pointer; transition: all 0.25s;
-  }
-  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+/* HERO */
+.hero{min-height:80vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(232,160,32,.12) 0%,transparent 70%),linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);text-align:center;padding:60px 20px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e8a020' fill-opacity='.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")}
+.hero-content{position:relative;max-width:760px;width:100%}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(232,160,32,.1);border:1px solid rgba(232,160,32,.3);border-radius:50px;padding:6px 16px;margin-bottom:24px;font-size:11px;font-weight:600;letter-spacing:1px;color:var(--accent);text-transform:uppercase}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(30px,7vw,76px);font-weight:800;line-height:1.05;margin-bottom:20px;background:linear-gradient(135deg,#fff 30%,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:clamp(14px,2.5vw,18px);color:var(--muted);max-width:540px;margin:0 auto 36px;line-height:1.7}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--accent);color:#000;border:none;border-radius:10px;padding:13px 28px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(232,160,32,.35)}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:13px 28px;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
 
-  .section { padding: 80px 40px; max-width: 1200px; margin: 0 auto; }
-  .section-title {
-    font-family: 'Syne', sans-serif; font-size: clamp(26px, 4vw, 42px); font-weight: 800;
-    margin-bottom: 8px;
-  }
-  .section-sub { color: var(--muted); margin-bottom: 48px; font-size: 16px; }
+.section{padding:50px 16px;max-width:1200px;margin:0 auto}
+.section-title{font-family:'Syne',sans-serif;font-size:clamp(22px,4vw,38px);font-weight:800;margin-bottom:8px}
+.section-sub{color:var(--muted);margin-bottom:36px;font-size:15px}
 
-  .next-trip-card {
-    background: linear-gradient(135deg, var(--card), var(--bg3));
-    border: 1px solid rgba(232,160,32,0.25); border-radius: var(--radius);
-    padding: 28px 32px; margin-bottom: 56px; display: flex; align-items: center;
-    gap: 24px; flex-wrap: wrap;
-  }
-  .next-trip-icon { font-size: 36px; }
-  .next-trip-label { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-  .next-trip-info { font-size: 20px; font-weight: 600; font-family: 'Syne', sans-serif; }
-  .next-trip-meta { font-size: 13px; color: var(--muted); }
+/* NEXT TRIP */
+.nxt{background:linear-gradient(135deg,var(--card),var(--bg3));border:1px solid rgba(232,160,32,.25);border-radius:var(--radius);padding:20px 22px;margin-bottom:40px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.nxt-icon{font-size:30px;flex-shrink:0}
+.nxt-lbl{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.nxt-info{font-size:17px;font-weight:600;font-family:'Syne',sans-serif}
+.nxt-meta{font-size:13px;color:var(--muted)}
 
-  /* CARDS GRID */
-  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+/* FLEET CARDS */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.fleet-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all .25s}
+.fleet-card:hover{border-color:rgba(232,160,32,.4);transform:translateY(-3px);box-shadow:var(--shadow)}
+.fc-img{height:175px;background:linear-gradient(135deg,var(--bg3),var(--bg2));display:flex;align-items:center;justify-content:center;font-size:58px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.fc-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;cursor:zoom-in}
+.fc-emoji{position:relative;z-index:1}
+.fc-body{padding:16px}
+.fc-name{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:8px}
+.fc-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:6px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:6px;padding:4px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-red{background:rgba(239,68,68,.15);color:var(--red)}
+.badge-accent{background:rgba(232,160,32,.15);color:var(--accent)}
+.badge-blue{background:rgba(96,165,250,.12);color:var(--blue)}
+.dotari{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.dtag{background:var(--bg3);border:1px solid var(--border);border-radius:5px;font-size:11px;padding:3px 7px;color:var(--muted)}
+.avail-inp{margin-top:13px}
+.avail-inp label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.avail-inp input[type=date]{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 12px;font-size:13px;font-family:'Inter',sans-serif}
+.avail-inp input[type=date]:focus{outline:none;border-color:var(--accent)}
+.avail-res{margin-top:8px;font-size:13px;min-height:20px}
+.btn-fleet-book{width:100%;margin-top:12px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:11px;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s}
+.btn-fleet-book:hover{background:var(--accent);color:#000;border-color:var(--accent)}
 
-  .fleet-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    overflow: hidden; transition: all 0.25s;
-  }
-  .fleet-card:hover { border-color: rgba(232,160,32,0.4); transform: translateY(-3px); box-shadow: var(--shadow); }
-  .fleet-card-img {
-    height: 160px; background: linear-gradient(135deg, var(--bg3), var(--bg2));
-    display: flex; align-items: center; justify-content: center; font-size: 64px;
-    border-bottom: 1px solid var(--border); position: relative; overflow: hidden;
-  }
-  .fleet-card-img::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(232,160,32,0.06) 0%, transparent 60%);
-  }
-  .fleet-card-body { padding: 20px; }
-  .fleet-card-name { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-  .fleet-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 600;
-  }
-  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
-  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
-  .badge-accent { background: rgba(232,160,32,0.15); color: var(--accent); }
-  .badge-blue { background: rgba(37,99,235,0.15); color: #60a5fa; }
-  .dotari { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-  .dotare-tag {
-    background: var(--bg3); border: 1px solid var(--border); border-radius: 5px;
-    font-size: 11px; padding: 3px 8px; color: var(--muted);
-  }
-  .avail-input { margin-top: 16px; }
-  .avail-input label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-  .avail-input input[type="date"] {
-    width: 100%; background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text); padding: 9px 12px; font-size: 13px;
-    font-family: 'Inter', sans-serif; cursor: pointer;
-  }
-  .avail-input input[type="date"]:focus { outline: none; border-color: var(--accent); }
-  .avail-result { margin-top: 10px; font-size: 13px; min-height: 20px; }
+/* REZ FORM */
+.rez-wrap{max-width:860px;margin:0 auto;padding:40px 16px}
+.form-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px 20px;margin-bottom:24px}
+.form-ttl{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:18px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fg label{font-size:13px;color:var(--muted);font-weight:500}
+.fg input,.fg select,.fg textarea{background:var(--bg2);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:11px 13px;font-size:14px;font-family:'Inter',sans-serif;transition:border .2s;width:100%}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--accent)}
+.fg.full{grid-column:1/-1}
+.btn-search{margin-top:16px;width:100%;background:var(--accent);color:#000;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s}
+.btn-search:hover{background:var(--accent2)}
+.rec-ttl{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:16px}
+.rec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:14px}
+.rec-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .25s}
+.rec-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.rec-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:8px}
+.rec-nm{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.rec-pr{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent);text-align:right;flex-shrink:0}
+.rec-pr small{font-size:11px;font-weight:400;color:var(--muted);display:block}
+.rec-det{font-size:13px;color:var(--muted);line-height:1.9}
+.rec-brow{margin-top:11px;display:flex;gap:5px;flex-wrap:wrap}
+.btn-book{width:100%;margin-top:12px;background:var(--accent);color:#000;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s}
+.btn-book:hover{background:var(--accent2)}
+.btn-book:disabled{background:var(--bg3);color:var(--muted);cursor:not-allowed}
 
-  /* REZERVARI */
-  .rez-container { max-width: 900px; margin: 0 auto; padding: 60px 24px; }
-  .form-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 36px; margin-bottom: 32px;
-  }
-  .form-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 24px; }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-  .form-group { display: flex; flex-direction: column; gap: 7px; }
-  .form-group label { font-size: 13px; color: var(--muted); font-weight: 500; }
-  .form-group input, .form-group select, .form-group textarea {
-    background: var(--bg2); border: 1px solid var(--border); border-radius: 9px;
-    color: var(--text); padding: 11px 14px; font-size: 14px; font-family: 'Inter', sans-serif;
-    transition: border 0.2s;
-  }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    outline: none; border-color: var(--accent);
-  }
-  .form-group.full { grid-column: 1 / -1; }
-  .btn-search {
-    margin-top: 20px; width: 100%; background: var(--accent); color: #000; border: none;
-    border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; font-family: 'Inter', sans-serif;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .btn-search:hover { background: var(--accent2); }
-  .recommendations { margin-top: 28px; }
-  .rec-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 20px; }
-  .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-  .rec-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 22px; position: relative; transition: all 0.25s; cursor: pointer;
-  }
-  .rec-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .rec-card.selected { border-color: var(--accent); background: rgba(232,160,32,0.05); }
-  .rec-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
-  .rec-vehicle-name { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
-  .rec-price { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--accent); }
-  .rec-price span { font-size: 13px; font-weight: 400; color: var(--muted); }
-  .rec-details { font-size: 13px; color: var(--muted); line-height: 1.8; }
-  .rec-badge-row { margin-top: 14px; display: flex; gap: 6px; flex-wrap: wrap; }
-  .btn-book {
-    width: 100%; margin-top: 14px; background: var(--accent); color: #000; border: none;
-    border-radius: 9px; padding: 12px; font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .btn-book:hover { background: var(--accent2); }
+/* AUTH */
+.auth-wrap{max-width:400px;margin:50px auto;padding:0 16px}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px 24px}
+.auth-ttl{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:5px}
+.auth-sub{color:var(--muted);margin-bottom:22px;font-size:14px}
+.auth-tabs{display:flex;margin-bottom:22px;background:var(--bg2);border-radius:10px;padding:4px}
+.auth-tab{flex:1;background:none;border:none;color:var(--muted);padding:10px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.auth-tab.active{background:var(--bg3);color:var(--text)}
+.auth-form{display:flex;flex-direction:column;gap:14px}
+.auth-err{color:var(--red);font-size:13px}
+.btn-auth{background:var(--accent);color:#000;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;margin-top:4px}
+.btn-auth:hover{background:var(--accent2)}
 
-  /* AUTH */
-  .auth-container {
-    max-width: 420px; margin: 60px auto; padding: 0 24px;
-  }
-  .auth-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 40px;
-  }
-  .auth-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 6px; }
-  .auth-sub { color: var(--muted); margin-bottom: 28px; font-size: 14px; }
-  .auth-tabs { display: flex; gap: 0; margin-bottom: 28px; background: var(--bg2); border-radius: 10px; padding: 4px; }
-  .auth-tab {
-    flex: 1; background: none; border: none; color: var(--muted); padding: 10px;
-    border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-  }
-  .auth-tab.active { background: var(--bg3); color: var(--text); }
-  .auth-form { display: flex; flex-direction: column; gap: 16px; }
-  .auth-error { color: var(--red); font-size: 13px; margin-top: -8px; }
-  .auth-success { color: var(--green); font-size: 13px; }
-  .btn-auth {
-    background: var(--accent); color: #000; border: none; border-radius: 10px;
-    padding: 14px; font-size: 15px; font-weight: 700; font-family: 'Inter', sans-serif;
-    cursor: pointer; transition: all 0.2s; margin-top: 4px;
-  }
-  .btn-auth:hover { background: var(--accent2); }
+/* ADMIN */
+.adm-wrap{padding:28px 16px;max-width:1200px;margin:0 auto}
+.adm-ttl{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:22px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:24px}
+.stat-c{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.stat-l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.stat-v{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--accent)}
+.adm-tabs{display:flex;gap:3px;background:var(--bg2);border-radius:12px;padding:4px;margin-bottom:24px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.adm-tab{background:none;border:none;color:var(--muted);padding:9px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.adm-tab.active{background:var(--card);color:var(--text)}
+.adm-sec{display:none}
+.adm-sec.active{display:block}
+.adm-tb{display:flex;justify-content:flex-end;margin-bottom:14px}
+.btn-add{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-add:hover{background:var(--accent2)}
+.twrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius);border:1px solid var(--border)}
+.dt{width:100%;border-collapse:collapse;min-width:480px}
+.dt th{background:var(--bg3);text-align:left;padding:11px 13px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;white-space:nowrap}
+.dt td{padding:12px 13px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:var(--bg3)}
+.bi{background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:6px 10px;cursor:pointer;transition:all .2s;font-size:13px}
+.bi:hover{border-color:var(--accent);color:var(--accent)}
+.bi.del:hover{border-color:var(--red);color:var(--red)}
 
-  /* ADMIN */
-  .admin-container { padding: 40px; max-width: 1200px; margin: 0 auto; }
-  .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
-  .admin-title { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; }
-  .admin-tabs { display: flex; gap: 4px; background: var(--bg2); border-radius: 12px; padding: 6px; margin-bottom: 36px; flex-wrap: wrap; }
-  .admin-tab {
-    background: none; border: none; color: var(--muted); padding: 10px 20px;
-    border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;
-  }
-  .admin-tab.active { background: var(--card); color: var(--text); }
-  .admin-section { display: none; }
-  .admin-section.active { display: block; }
-  .admin-toolbar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
-  .btn-add {
-    background: var(--accent); color: #000; border: none; border-radius: 8px;
-    padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .btn-add:hover { background: var(--accent2); }
-  .data-table { width: 100%; border-collapse: collapse; }
-  .data-table th {
-    background: var(--bg3); text-align: left; padding: 12px 16px;
-    font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted);
-    font-weight: 600;
-  }
-  .data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
-  .data-table tr:hover td { background: var(--bg3); }
-  .btn-icon {
-    background: none; border: 1px solid var(--border); border-radius: 6px;
-    color: var(--muted); padding: 6px 10px; cursor: pointer; transition: all 0.2s; font-size: 13px;
-  }
-  .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-icon.del:hover { border-color: var(--red); color: var(--red); }
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);z-index:2000;align-items:center;justify-content:center;padding:14px}
+.modal-ov.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:26px 22px;max-width:520px;width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.65)}
+.modal-ttl{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:18px}
+.modal-btns{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;flex-wrap:wrap}
+.btn-cancel{background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-save{background:var(--accent);color:#000;border:none;border-radius:9px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer}
+.btn-save:hover{background:var(--accent2)}
+.modal .fg{margin-bottom:13px}
 
-  /* MODAL */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(6px); z-index: 2000; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--bg2); border: 1px solid var(--border); border-radius: 18px;
-    padding: 36px; max-width: 540px; width: 100%; max-height: 90vh; overflow-y: auto;
-    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
-  }
-  .modal-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 24px; }
-  .modal-btns { display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end; }
-  .btn-cancel {
-    background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: 9px;
-    padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-  }
-  .btn-save {
-    background: var(--accent); color: #000; border: none; border-radius: 9px;
-    padding: 10px 22px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;
-  }
-  .btn-save:hover { background: var(--accent2); }
+/* DRAG DROP */
+.dropzone{border:2px dashed rgba(255,255,255,.15);border-radius:12px;padding:24px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--bg3);margin-top:8px}
+.dropzone.dov{border-color:var(--accent);background:rgba(232,160,32,.06)}
+.dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-lbl{color:var(--muted);font-size:13px;pointer-events:none}
+.dz-prev{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+.img-wrap{position:relative;display:inline-block}
+.img-wrap img{width:68px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:zoom-in}
+.img-wrap .rm{position:absolute;top:-5px;right:-5px;background:var(--red);border:none;color:#fff;border-radius:50%;width:17px;height:17px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
 
-  /* TOAST */
-  #toast {
-    position: fixed; bottom: 32px; right: 32px; z-index: 3000;
-    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-    padding: 14px 22px; font-size: 14px; font-weight: 500;
-    box-shadow: var(--shadow); transform: translateY(20px); opacity: 0;
-    transition: all 0.3s; max-width: 340px;
-  }
-  #toast.show { transform: translateY(0); opacity: 1; }
-  #toast.success { border-color: var(--green); color: var(--green); }
-  #toast.error { border-color: var(--red); color: var(--red); }
+/* TOGGLE */
+.toggle{position:relative;display:inline-block;width:40px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-sl{position:absolute;inset:0;background:var(--bg3);border-radius:11px;cursor:pointer;transition:.2s;border:1px solid var(--border)}
+.toggle-sl::before{content:'';position:absolute;height:16px;width:16px;left:2px;bottom:2px;background:var(--muted);border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-sl{background:rgba(232,160,32,.2);border-color:var(--accent)}
+.toggle input:checked+.toggle-sl::before{transform:translateX(18px);background:var(--accent)}
 
-  /* LOADING */
-  .spinner {
-    width: 28px; height: 28px; border: 3px solid var(--border);
-    border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;
-    margin: 40px auto;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* MY REZ */
+.myrc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px}
+.myrc-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;gap:10px;flex-wrap:wrap}
+.myrc-rt{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+.myrc-det{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:10px}
+.myrc-di{font-size:13px}
+.myrc-dl{color:var(--muted);margin-bottom:2px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
 
-  .empty-state { text-align: center; padding: 60px 24px; color: var(--muted); }
-  .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
-  .empty-state h3 { font-family: 'Syne', sans-serif; font-size: 20px; color: var(--text); margin-bottom: 8px; }
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:16px;left:16px;max-width:360px;margin:0 auto;z-index:3000;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 18px;font-size:14px;font-weight:500;box-shadow:var(--shadow);transform:translateY(20px);opacity:0;transition:all .3s;text-align:center}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.success{border-color:var(--green);color:var(--green)}
+#toast.error{border-color:var(--red);color:var(--red)}
+#toast.info{border-color:var(--blue);color:var(--blue)}
 
-  /* STATS ROW */
-  .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 36px; }
-  .stat-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 20px 24px;
-  }
-  .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .stat-val { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--accent); }
+.spinner{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-st{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty-st .icon{font-size:42px;margin-bottom:12px}
+.empty-st h3{font-family:'Syne',sans-serif;font-size:18px;color:var(--text);margin-bottom:6px}
 
-  /* Toggle switch */
-  .toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider {
-    position: absolute; inset: 0; background: var(--bg3); border-radius: 11px;
-    cursor: pointer; transition: 0.2s; border: 1px solid var(--border);
-  }
-  .toggle-slider::before {
-    content: ''; position: absolute; height: 16px; width: 16px;
-    left: 2px; bottom: 2px; background: var(--muted); border-radius: 50%; transition: 0.2s;
-  }
-  .toggle input:checked + .toggle-slider { background: rgba(232,160,32,0.2); border-color: var(--accent); }
-  .toggle input:checked + .toggle-slider::before { transform: translateX(18px); background: var(--accent); }
+/* LIGHTBOX */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:4000;align-items:center;justify-content:center;cursor:zoom-out;padding:16px}
+.lightbox.open{display:flex}
+.lightbox img{max-width:95vw;max-height:90vh;object-fit:contain;border-radius:10px}
 
-  /* REZERVARILE MELE */
-  .my-rez-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 22px; margin-bottom: 14px;
-  }
-  .my-rez-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-  .my-rez-route { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
-  .my-rez-details { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 12px; }
-  .my-rez-detail-item { font-size: 13px; }
-  .my-rez-detail-label { color: var(--muted); margin-bottom: 2px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+footer{background:var(--bg2);border-top:1px solid var(--border);text-align:center;padding:26px 16px;color:var(--muted);font-size:13px;margin-top:40px}
 
-  /* FOOTER */
-  footer {
-    background: var(--bg2); border-top: 1px solid var(--border);
-    text-align: center; padding: 32px; color: var(--muted); font-size: 13px;
-    margin-top: 40px;
-  }
-
-  @media (max-width: 768px) {
-    nav { padding: 0 20px; }
-    .section { padding: 50px 20px; }
-    .form-grid { grid-template-columns: 1fr; }
-    .admin-container { padding: 20px; }
-    .modal { padding: 24px; }
-  }
+/* MOBILE */
+@media(max-width:700px){
+  .nav-links{display:none}
+  .hamburger{display:flex}
+  .form-grid{grid-template-columns:1fr}
+  .fg.full{grid-column:1}
+  .hero{min-height:70vh;padding:50px 16px}
+  .nxt{flex-direction:column;align-items:flex-start;gap:12px}
+  .nxt .btn-primary{width:100%;justify-content:center}
+  .cards-grid{grid-template-columns:1fr}
+  .rec-grid{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .modal{padding:20px 16px;border-radius:14px}
+}
+@media(max-width:380px){
+  .stats-row{grid-template-columns:1fr}
+  .hero h1{font-size:27px}
+  .adm-tab{padding:8px 10px;font-size:11px}
+}
 </style>
 </head>
 <body>
 
-<!-- TICKER BAR -->
+<!-- TICKER -->
 <div id="ticker-bar">
-  <div class="ticker-label">🚍 LIVE STATUS</div>
+  <div class="ticker-label">🚍 LIVE</div>
   <div class="ticker-track">
-    <div class="ticker-inner" id="ticker-inner">
-      <span>Se încarcă...</span>
-    </div>
+    <div class="ticker-inner" id="ticker-inner"><span>Se încarcă...</span></div>
   </div>
 </div>
 
-<!-- NAVBAR -->
+<!-- NAVBAR desktop -->
 <nav>
   <div class="nav-logo" onclick="showPage('home')">🚌 <span>LSD</span> Group</div>
-  <div class="nav-links">
+  <div class="nav-links" id="dnav">
     <button class="nav-link active" onclick="showPage('home')">Acasă</button>
     <button class="nav-link" onclick="showPage('flota')">Flotă</button>
     <button class="nav-link" onclick="showPage('rezervari')">Rezervări</button>
-    <button class="nav-link" id="nav-my-rez" style="display:none" onclick="showPage('my-rez')">Rezervările mele</button>
-    <button class="nav-link admin-link" id="nav-admin" style="display:none" onclick="showPage('admin')">⚙ Admin</button>
-    <button class="btn-nav-login" id="nav-auth-btn" onclick="showPage('auth')">Login</button>
+    <button class="nav-link" id="d-myrez" style="display:none" onclick="showPage('my-rez')">Ale mele</button>
+    <button class="nav-link al" id="d-admin" style="display:none" onclick="showPage('admin')">⚙ Admin</button>
+    <button class="btn-nl" id="d-auth" onclick="showPage('auth')">Login</button>
   </div>
+  <button class="hamburger" id="hbg" onclick="toggleMob()"><span></span><span></span><span></span></button>
 </nav>
 
-<!-- ──────── HOME ──────── -->
+<!-- NAVBAR mobile -->
+<div class="mob-menu" id="mob-menu">
+  <button class="nav-link" onclick="sp('home')">🏠 Acasă</button>
+  <button class="nav-link" onclick="sp('flota')">🚐 Flotă</button>
+  <button class="nav-link" onclick="sp('rezervari')">📋 Rezervări</button>
+  <button class="nav-link" id="m-myrez" style="display:none" onclick="sp('my-rez')">📂 Ale mele</button>
+  <button class="nav-link al" id="m-admin" style="display:none" onclick="sp('admin')">⚙ Admin</button>
+  <button class="btn-nl" id="m-auth" onclick="sp('auth')">👤 Login</button>
+</div>
+
+<!-- ═ HOME ═ -->
 <div id="page-home" class="page active">
   <div class="hero">
     <div class="hero-content">
@@ -419,846 +278,697 @@
       </div>
     </div>
   </div>
-
   <div class="section">
-    <!-- Next trip -->
-    <div id="next-trip-section"></div>
-
-    <div class="section-title">Flota noastră</div>
+    <div id="nxt-sec"></div>
+    <div class="section-title">🚐 Flota noastră</div>
     <p class="section-sub">Vehicule moderne, întreținute și verificate periodic</p>
-    <div class="cards-grid" id="home-flota-preview">
-      <div class="spinner"></div>
-    </div>
+    <div class="cards-grid" id="home-prev"><div class="spinner"></div></div>
   </div>
 </div>
 
-<!-- ──────── FLOTĂ ──────── -->
+<!-- ═ FLOTĂ ═ -->
 <div id="page-flota" class="page">
   <div class="section">
-    <div class="section-title">🚐 Flota noastră</div>
-    <p class="section-sub">Verifică disponibilitatea pentru data dorită</p>
-    <div class="cards-grid" id="flota-list">
-      <div class="spinner"></div>
-    </div>
+    <div class="section-title">🚐 Flota completă</div>
+    <p class="section-sub">Verifică disponibilitatea și rezervă direct</p>
+    <div class="cards-grid" id="flota-list"><div class="spinner"></div></div>
   </div>
 </div>
 
-<!-- ──────── REZERVĂRI ──────── -->
+<!-- ═ REZERVĂRI ═ -->
 <div id="page-rezervari" class="page">
-  <div class="rez-container">
-    <h2 class="section-title" style="margin-bottom:8px">📋 Rezervare cursă</h2>
-    <p class="section-sub">Completează detaliile și primești recomandări inteligente</p>
-
+  <div class="rez-wrap">
+    <div class="section-title" style="margin-bottom:6px">📋 Rezervare cursă</div>
+    <p class="section-sub">Completează și primești recomandări inteligente</p>
     <div class="form-card">
-      <div class="form-title">Detalii cursă</div>
+      <div class="form-ttl">Detalii cursă</div>
       <div class="form-grid">
-        <div class="form-group">
-          <label>Oraș plecare</label>
-          <input type="text" id="rez-plecare" placeholder="ex: Iași">
-        </div>
-        <div class="form-group">
-          <label>Destinație</label>
-          <input type="text" id="rez-dest" placeholder="ex: București">
-        </div>
-        <div class="form-group">
-          <label>Data cursei</label>
-          <input type="date" id="rez-data">
-        </div>
-        <div class="form-group">
-          <label>Număr persoane</label>
-          <input type="number" id="rez-persoane" min="1" max="200" placeholder="ex: 45">
-        </div>
-        <div class="form-group">
-          <label>Distanță estimată (km)</label>
-          <input type="number" id="rez-km" min="1" placeholder="ex: 380">
-        </div>
-        <div class="form-group">
-          <label>Observații</label>
-          <input type="text" id="rez-obs" placeholder="opțional">
-        </div>
+        <div class="fg"><label>Oraș plecare</label><input type="text" id="rp" placeholder="ex: Iași"></div>
+        <div class="fg"><label>Destinație</label><input type="text" id="rd" placeholder="ex: București"></div>
+        <div class="fg"><label>Data cursei</label><input type="date" id="rdata"></div>
+        <div class="fg"><label>Număr persoane</label><input type="number" id="rpers" min="1" max="400" placeholder="ex: 45"></div>
+        <div class="fg"><label>Distanță estimată (km)</label><input type="number" id="rkm" min="1" placeholder="ex: 380"></div>
+        <div class="fg"><label>Telefon contact</label><input type="tel" id="rtel" placeholder="+40 7xx xxx xxx"></div>
+        <div class="fg full"><label>Observații (opțional)</label><input type="text" id="robs" placeholder="ex: Nevoi speciale, opriri"></div>
       </div>
-      <button class="btn-search" onclick="cautaVehicule()">🔍 Caută vehicule disponibile</button>
+      <button class="btn-search" id="btn-cauta" onclick="cautaVehicule()">🔍 Caută vehicule disponibile</button>
     </div>
-
-    <div id="rec-section" style="display:none">
-      <div class="rec-title">💡 Recomandări pentru tine</div>
+    <div id="rec-sec" style="display:none">
+      <div class="rec-ttl">💡 Recomandări pentru tine</div>
       <div class="rec-grid" id="rec-grid"></div>
     </div>
   </div>
 </div>
 
-<!-- ──────── REZERVĂRILE MELE ──────── -->
+<!-- ═ ALE MELE ═ -->
 <div id="page-my-rez" class="page">
   <div class="section" style="max-width:800px">
     <div class="section-title">📂 Rezervările mele</div>
-    <p class="section-sub">Istoricul și statusul rezervărilor tale</p>
-    <div id="my-rez-list"><div class="spinner"></div></div>
+    <p class="section-sub">Statusul rezervărilor tale</p>
+    <div id="myrez-list"><div class="spinner"></div></div>
   </div>
 </div>
 
-<!-- ──────── AUTH ──────── -->
+<!-- ═ AUTH ═ -->
 <div id="page-auth" class="page">
-  <div class="auth-container">
+  <div class="auth-wrap">
     <div class="auth-card">
-      <div class="auth-title">Bun venit 👋</div>
-      <div class="auth-sub">Autentifică-te pentru a putea rezerva</div>
+      <div class="auth-ttl">Bun venit 👋</div>
+      <div class="auth-sub">Autentifică-te pentru a rezerva</div>
       <div class="auth-tabs">
-        <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Login</button>
-        <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Înregistrare</button>
+        <button class="auth-tab active" id="tab-li" onclick="swTab('login')">Login</button>
+        <button class="auth-tab" id="tab-re" onclick="swTab('reg')">Înregistrare</button>
       </div>
-
-      <div id="auth-login-form" class="auth-form">
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="login-email" placeholder="email@exemplu.com">
-        </div>
-        <div class="form-group">
-          <label>Parolă</label>
-          <input type="password" id="login-pass" placeholder="••••••••">
-        </div>
-        <div class="auth-error" id="login-err"></div>
+      <div id="frm-li" class="auth-form">
+        <div class="fg"><label>Email</label><input type="email" id="li-em" placeholder="email@exemplu.com"></div>
+        <div class="fg"><label>Parolă</label><input type="password" id="li-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <div class="auth-err" id="li-err"></div>
         <button class="btn-auth" onclick="doLogin()">Intră în cont</button>
       </div>
-
-      <div id="auth-register-form" class="auth-form" style="display:none">
-        <div class="form-group">
-          <label>Nume complet</label>
-          <input type="text" id="reg-name" placeholder="Ion Popescu">
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="reg-email" placeholder="email@exemplu.com">
-        </div>
-        <div class="form-group">
-          <label>Parolă</label>
-          <input type="password" id="reg-pass" placeholder="minim 6 caractere">
-        </div>
-        <div class="auth-error" id="reg-err"></div>
+      <div id="frm-re" class="auth-form" style="display:none">
+        <div class="fg"><label>Nume complet</label><input type="text" id="re-nm" placeholder="Ion Popescu"></div>
+        <div class="fg"><label>Email</label><input type="email" id="re-em" placeholder="email@exemplu.com"></div>
+        <div class="fg"><label>Telefon</label><input type="tel" id="re-ph" placeholder="+40 7xx xxx xxx"></div>
+        <div class="fg"><label>Parolă (min 6 caractere)</label><input type="password" id="re-pw" placeholder="••••••••"></div>
+        <div class="auth-err" id="re-err"></div>
         <button class="btn-auth" onclick="doRegister()">Creează cont</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ──────── ADMIN ──────── -->
+<!-- ═ ADMIN ═ -->
 <div id="page-admin" class="page">
-  <div class="admin-container">
-    <div class="admin-header">
-      <div class="admin-title">⚙ Panou Admin</div>
-      <div id="admin-stats" class="stats-row"></div>
+  <div class="adm-wrap">
+    <div class="adm-ttl">⚙ Panou Admin</div>
+    <div class="stats-row" id="adm-stats"></div>
+    <div class="adm-tabs">
+      <button class="adm-tab active" onclick="swAdm('flota')">🚐 Flotă</button>
+      <button class="adm-tab" onclick="swAdm('rez')">📋 Rezervări</button>
+      <button class="adm-tab" onclick="swAdm('status')">📢 Bara live</button>
+      <button class="adm-tab" onclick="swAdm('curse')">🗓 Curse</button>
     </div>
-    <div class="admin-tabs">
-      <button class="admin-tab active" onclick="switchAdminTab('flota')">🚐 Flotă</button>
-      <button class="admin-tab" onclick="switchAdminTab('rez')">📋 Rezervări</button>
-      <button class="admin-tab" onclick="switchAdminTab('status')">📢 Bara live</button>
-      <button class="admin-tab" onclick="switchAdminTab('curse')">🗓 Curse</button>
+    <!-- Flotă -->
+    <div id="adm-flota" class="adm-sec active">
+      <div class="adm-tb"><button class="btn-add" onclick="openModal('vehicle')">+ Vehicul nou</button></div>
+      <div class="twrap"><table class="dt"><thead><tr><th>Vehicul</th><th>Cap.</th><th>RON/km</th><th>Dotări</th><th>Acțiuni</th></tr></thead><tbody id="tb-flota"><tr><td colspan="5"><div class="spinner"></div></td></tr></tbody></table></div>
     </div>
-
-    <!-- FLOTĂ ADMIN -->
-    <div id="admin-flota" class="admin-section active">
-      <div class="admin-toolbar">
-        <button class="btn-add" onclick="openModal('vehicle')">+ Adaugă vehicul</button>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="data-table" id="admin-flota-table">
-          <thead><tr><th>Vehicul</th><th>Capacitate</th><th>Preț/km</th><th>Dotări</th><th>Acțiuni</th></tr></thead>
-          <tbody id="admin-flota-body"><tr><td colspan="5"><div class="spinner"></div></td></tr></tbody>
-        </table>
-      </div>
+    <!-- Rezervări -->
+    <div id="adm-rez" class="adm-sec">
+      <div class="twrap"><table class="dt"><thead><tr><th>Data</th><th>Rută</th><th>Pers.</th><th>Vehicule</th><th>Preț</th><th>Contact</th><th>Status</th><th>Acțiuni</th></tr></thead><tbody id="tb-rez"></tbody></table></div>
     </div>
-
-    <!-- REZERVĂRI ADMIN -->
-    <div id="admin-rez" class="admin-section">
-      <div style="overflow-x:auto">
-        <table class="data-table">
-          <thead><tr><th>Data</th><th>Rută</th><th>Persoane</th><th>Vehicule</th><th>Preț</th><th>Status</th><th>Acțiuni</th></tr></thead>
-          <tbody id="admin-rez-body"><tr><td colspan="7"><div class="spinner"></div></td></tr></tbody>
-        </table>
-      </div>
+    <!-- Status -->
+    <div id="adm-status" class="adm-sec">
+      <div class="adm-tb"><button class="btn-add" onclick="openModal('status')">+ Mesaj nou</button></div>
+      <div class="twrap"><table class="dt"><thead><tr><th>Mesaj</th><th>Activ</th><th>Acțiuni</th></tr></thead><tbody id="tb-status"></tbody></table></div>
     </div>
-
-    <!-- STATUS ADMIN -->
-    <div id="admin-status" class="admin-section">
-      <div class="admin-toolbar">
-        <button class="btn-add" onclick="openModal('status')">+ Adaugă mesaj</button>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="data-table">
-          <thead><tr><th>Mesaj</th><th>Activ</th><th>Acțiuni</th></tr></thead>
-          <tbody id="admin-status-body"></tbody>
-        </table>
-      </div>
+    <!-- Curse -->
+    <div id="adm-curse" class="adm-sec">
+      <div class="adm-tb"><button class="btn-add" onclick="openModal('cursa')">+ Cursă nouă</button></div>
+      <div class="twrap"><table class="dt"><thead><tr><th>Rută</th><th>Data</th><th>Vehicul</th><th>Locuri</th><th>Acțiuni</th></tr></thead><tbody id="tb-curse"></tbody></table></div>
     </div>
-
-    <!-- CURSE ADMIN -->
-    <div id="admin-curse" class="admin-section">
-      <div class="admin-toolbar">
-        <button class="btn-add" onclick="openModal('cursa')">+ Adaugă cursă</button>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="data-table">
-          <thead><tr><th>Rută</th><th>Data</th><th>Vehicul</th><th>Acțiuni</th></tr></thead>
-          <tbody id="admin-curse-body"></tbody>
-        </table>
-      </div>
-    </div>
-
   </div>
 </div>
 
-<!-- ──────── MODALS ──────── -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
-  <div class="modal" id="modal-box">
-    <div class="modal-title" id="modal-title">Modal</div>
+<!-- MODAL -->
+<div class="modal-ov" id="modal-ov" onclick="ovClick(event)">
+  <div class="modal">
+    <div class="modal-ttl" id="modal-ttl">Modal</div>
     <div id="modal-body"></div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal()">Anulează</button>
-      <button class="btn-save" id="modal-save-btn" onclick="saveModal()">Salvează</button>
+      <button class="btn-save" id="btn-save" onclick="saveModal()">Salvează</button>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="document.getElementById('lightbox').classList.remove('open')">
+  <img id="lb-img" src="" alt="">
+</div>
+
 <div id="toast"></div>
+<footer>© 2025 LSD Group SRL · Transport Persoane · Iași · <a href="tel:+40700000000" style="color:var(--accent);text-decoration:none">+40 700 000 000</a></footer>
 
-<footer>
-  © 2025 LSD Group SRL · Transport persoane · CUI: RO12345678 · Iași
-</footer>
-
-<!-- FIREBASE CDN -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc,
-  doc, query, where, onSnapshot, serverTimestamp, orderBy }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ─── FIREBASE CONFIG ─────────────────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",
-  authDomain: "lsd-group-srl.firebaseapp.com",
-  projectId: "lsd-group-srl",
-  storageBucket: "lsd-group-srl.firebasestorage.app",
-  messagingSenderId: "487152601925",
-  appId: "1:487152601925:web:8aa97c1581b6624598cc2c"
-};
-const app = initializeApp(firebaseConfig);
+const FC = {apiKey:"AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",authDomain:"lsd-group-srl.firebaseapp.com",projectId:"lsd-group-srl",storageBucket:"lsd-group-srl.firebasestorage.app",messagingSenderId:"487152601925",appId:"1:487152601925:web:8aa97c1581b6624598cc2c"};
+const app = initializeApp(FC);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const ADMIN_EMAIL = "irimia.teodor.17@gmail.com";
+// ════════════════════════════════════════
+// ▶ EMAILJS CONFIG
+// Setup la https://www.emailjs.com (gratuit 200 emailuri/lună)
+// 1. Creezi cont, conectezi Gmail
+// 2. Creezi template cu variabilele: {{ruta}}, {{data_cursa}}, {{persoane}}, {{vehicule}}, {{pret}}, {{client_email}}, {{client_phone}}, {{observatii}}
+// 3. Pui ID-urile mai jos
+const EJS_SVC  = 'service_lsdgroup';   // Service ID din EmailJS
+const EJS_TPL  = 'template_rezervare'; // Template ID din EmailJS
+const EJS_KEY  = 'EMAILJS_PUBLIC_KEY'; // Public Key din EmailJS → Account → General
+// ════════════════════════════════════════
 
-// ─── STATE ────────────────────────────────────────────────
-let currentUser = null;
-let isAdmin = false;
-let flotaCache = [];
-let rezCache = [];
-let statusCache = [];
-let curseCache = [];
-let modalType = '';
-let editingId = null;
+const ADMIN = 'irimia.teodor.17@gmail.com';
 
-// ─── EXPOSE GLOBALS ───────────────────────────────────────
-window.showPage = showPage;
-window.switchAuthTab = switchAuthTab;
-window.doLogin = doLogin;
-window.doRegister = doRegister;
-window.doLogout = doLogout;
-window.cautaVehicule = cautaVehicule;
-window.openModal = openModal;
-window.closeModal = closeModal;
-window.closeModalOutside = closeModalOutside;
-window.saveModal = saveModal;
-window.switchAdminTab = switchAdminTab;
-window.checkAvailability = checkAvailability;
-window.bookVehicle = bookVehicle;
-window.deleteAdminItem = deleteAdminItem;
-window.editAdminItem = editAdminItem;
-window.confirmRez = confirmRez;
+// STATE
+let user=null, isAdm=false, flota=[], rezs=[], statuses=[], curse=[];
+let mType='', mId=null, mImgs=[], mExisting=[];
 
-// ─── AUTH STATE ───────────────────────────────────────────
-onAuthStateChanged(auth, user => {
-  currentUser = user;
-  isAdmin = user?.email === ADMIN_EMAIL;
-  const authBtn = document.getElementById('nav-auth-btn');
-  const navAdmin = document.getElementById('nav-admin');
-  const navMyRez = document.getElementById('nav-my-rez');
-  if (user) {
-    authBtn.textContent = 'Logout';
-    authBtn.onclick = doLogout;
-    navAdmin.style.display = isAdmin ? 'inline-flex' : 'none';
-    navMyRez.style.display = 'inline-flex';
-  } else {
-    authBtn.textContent = 'Login';
-    authBtn.onclick = () => showPage('auth');
-    navAdmin.style.display = 'none';
-    navMyRez.style.display = 'none';
-  }
+// GLOBALS
+const G = {showPage,toggleMob,swTab,doLogin,doRegister,doLogout,cautaVehicule,bookVehicle,bookFromFleet,checkAvail,openModal,closeModal,ovClick,saveModal,swAdm,confirmRez,delItem,editItem,toggleSt,rmImg,rmNewImg};
+Object.assign(window, G);
+window.sp = (p) => { showPage(p); toggleMob(true); };
+
+// ─── MOBILE MENU ────────────────────────────────────────────────
+function toggleMob(forceClose=false) {
+  const m = document.getElementById('mob-menu');
+  if (forceClose) m.classList.remove('open');
+  else m.classList.toggle('open');
+}
+
+// ─── AUTH STATE ─────────────────────────────────────────────────
+onAuthStateChanged(auth, u => {
+  user = u; isAdm = u?.email === ADMIN;
+  const name = u ? ('👤 '+(u.displayName||u.email.split('@')[0]).slice(0,14)) : 'Login';
+  const authClick = u ? doLogout : ()=>showPage('auth');
+  ['d-auth','m-auth'].forEach(id => { const el=document.getElementById(id); if(!el)return; el.textContent=name; el.onclick=authClick; });
+  ['d-admin','m-admin'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display=isAdm?'inline-flex':'none'; });
+  ['d-myrez','m-myrez'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display=u?'inline-flex':'none'; });
 });
 
-// ─── SHOW PAGE ────────────────────────────────────────────
-function showPage(p) {
-  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
-  document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active'));
-  const pg = document.getElementById('page-' + p);
-  if (pg) pg.classList.add('active');
-  if (p === 'home') { document.querySelectorAll('.nav-link')[0].classList.add('active'); loadHome(); }
-  if (p === 'flota') { document.querySelectorAll('.nav-link')[1].classList.add('active'); loadFlota(); }
-  if (p === 'rezervari') { document.querySelectorAll('.nav-link')[2].classList.add('active'); }
-  if (p === 'admin') loadAdmin();
-  if (p === 'my-rez') loadMyRez();
-  window.scrollTo(0, 0);
-}
+// ─── TICKER ─────────────────────────────────────────────────────
+onSnapshot(collection(db,'status'), snap => {
+  const msgs=[]; snap.forEach(d=>{ const x=d.data(); if(x.activ!==false&&x.mesaj) msgs.push(x.mesaj); });
+  const el = document.getElementById('ticker-inner');
+  if (!msgs.length) { el.innerHTML='<span>Nicio cursă activă momentan</span>'; return; }
+  const all=[...msgs,...msgs];
+  el.innerHTML=all.map(m=>`<span>🚍 ${m} &nbsp;•&nbsp; </span>`).join('');
+  el.style.animationDuration=Math.max(20,msgs.length*10)+'s';
+});
 
-// ─── TICKER ───────────────────────────────────────────────
-function loadTicker() {
-  onSnapshot(collection(db, 'status'), snap => {
-    const msgs = [];
-    snap.forEach(d => { const dat = d.data(); if (dat.activ !== false) msgs.push(dat.mesaj || ''); });
-    const inner = document.getElementById('ticker-inner');
-    if (msgs.length === 0) {
-      inner.innerHTML = '<span>Nicio cursă activă momentan</span>';
-      return;
-    }
-    // Duplicate for seamless loop
-    const all = [...msgs, ...msgs];
-    inner.innerHTML = all.map(m => `<span>🚍 ${m}</span>`).join('<span class="dot">•</span>');
-    const duration = Math.max(20, msgs.length * 8);
-    inner.style.animationDuration = duration + 's';
-  });
-}
-loadTicker();
-
-// ─── LOAD FLOTA ───────────────────────────────────────────
-async function loadFlotaData() {
-  const snap = await getDocs(collection(db, 'flota'));
-  flotaCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  if (flotaCache.length === 0) await seedFlota();
-  else return;
-}
-
-async function seedFlota() {
-  const demo = [
-    { nume: 'Mercedes Intouro', capacitate: 53, pretPerKm: 4.5, dotari: ['AC', 'WiFi', 'TV', 'Toaletă', 'USB'], icon: '🚌' },
-    { nume: 'Setra S 515', capacitate: 49, pretPerKm: 4.2, dotari: ['AC', 'WiFi', 'TV', 'Toaletă'], icon: '🚌' },
-    { nume: 'MAN Lions Coach', capacitate: 57, pretPerKm: 4.8, dotari: ['AC', 'WiFi', 'TV', 'Toaletă', 'Mini-bar'], icon: '🚌' },
-    { nume: 'Neoplan Cityliner', capacitate: 48, pretPerKm: 4.0, dotari: ['AC', 'WiFi', 'TV'], icon: '🚌' },
-    { nume: 'Mercedes Sprinter', capacitate: 19, pretPerKm: 2.8, dotari: ['AC', 'WiFi'], icon: '🚐' },
-    { nume: 'Ford Transit', capacitate: 16, pretPerKm: 2.5, dotari: ['AC'], icon: '🚐' },
-  ];
-  for (const v of demo) await addDoc(collection(db, 'flota'), v);
-  const snap = await getDocs(collection(db, 'flota'));
-  flotaCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-async function seedStatus() {
-  const snap = await getDocs(collection(db, 'status'));
+// ─── SEEDS ──────────────────────────────────────────────────────
+async function ensureFlota() {
+  if (flota.length) return;
+  const snap=await getDocs(collection(db,'flota'));
   if (snap.empty) {
-    const msgs = [
-      { mesaj: 'Mercedes Intouro – nr. garaj 12 – Iași → București', activ: true },
-      { mesaj: 'Setra S515 – nr. garaj 07 – Cluj → Timișoara', activ: true },
-      { mesaj: 'MAN Lions Coach – nr. garaj 03 – Suceava → Constanța', activ: true },
+    const demo=[
+      {nume:'Mercedes Intouro',capacitate:53,pretPerKm:4.5,dotari:['AC','WiFi','TV','Toaletă','USB'],icon:'🚌',imagini:[]},
+      {nume:'Setra S 515 HD',capacitate:49,pretPerKm:4.2,dotari:['AC','WiFi','TV','Toaletă'],icon:'🚌',imagini:[]},
+      {nume:'MAN Lions Coach',capacitate:57,pretPerKm:4.8,dotari:['AC','WiFi','TV','Toaletă','Mini-bar'],icon:'🚌',imagini:[]},
+      {nume:'Neoplan Cityliner',capacitate:48,pretPerKm:4.0,dotari:['AC','WiFi','TV'],icon:'🚌',imagini:[]},
+      {nume:'Mercedes Sprinter',capacitate:19,pretPerKm:2.8,dotari:['AC','WiFi'],icon:'🚐',imagini:[]},
+      {nume:'Ford Transit',capacitate:16,pretPerKm:2.5,dotari:['AC'],icon:'🚐',imagini:[]},
     ];
-    for (const m of msgs) await addDoc(collection(db, 'status'), m);
+    for(const v of demo) await addDoc(collection(db,'flota'),v);
   }
+  const s2=await getDocs(collection(db,'flota'));
+  flota=s2.docs.map(d=>({id:d.id,...d.data()}));
+}
+async function ensureStatus() {
+  const snap=await getDocs(collection(db,'status'));
+  if(snap.empty) {
+    const m=[
+      {mesaj:'Mercedes Intouro – nr. 12 – Iași → București',activ:true},
+      {mesaj:'Setra S515 – nr. 07 – Cluj → Timișoara',activ:true},
+      {mesaj:'MAN Lions Coach – nr. 03 – Suceava → Constanța',activ:true},
+    ];
+    for(const x of m) await addDoc(collection(db,'status'),x);
+  }
+  const s2=await getDocs(collection(db,'status'));
+  statuses=s2.docs.map(d=>({id:d.id,...d.data()}));
+}
+async function ensureCurse() {
+  const snap=await getDocs(collection(db,'curse'));
+  if(snap.empty) {
+    const t=new Date(); t.setDate(t.getDate()+1);
+    await addDoc(collection(db,'curse'),{ruta:'Iași → București',data:t.toISOString().split('T')[0],vehicul:'Mercedes Intouro',locuri:53});
+  }
+  const s2=await getDocs(collection(db,'curse'));
+  curse=s2.docs.map(d=>({id:d.id,...d.data()}));
 }
 
-async function seedCurse() {
-  const snap = await getDocs(collection(db, 'curse'));
-  if (snap.empty) {
-    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-    await addDoc(collection(db, 'curse'), {
-      ruta: 'Iași → București', data: tomorrow.toISOString().split('T')[0],
-      vehicul: 'Mercedes Intouro', locuri: 53
-    });
-  }
+// ─── PAGE ROUTER ────────────────────────────────────────────────
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p)?.classList.add('active');
+  document.querySelectorAll('#dnav .nav-link').forEach(b=>b.classList.remove('active'));
+  const nm={home:0,flota:1,rezervari:2};
+  if(nm[p]!==undefined) document.querySelectorAll('#dnav .nav-link')[nm[p]]?.classList.add('active');
+  window.scrollTo(0,0);
+  if(p==='home') loadHome();
+  if(p==='flota') loadFlota();
+  if(p==='admin') loadAdmin();
+  if(p==='my-rez') loadMyRez();
+  document.getElementById('mob-menu').classList.remove('open');
 }
 
-// ─── HOME ─────────────────────────────────────────────────
+// ─── HOME ───────────────────────────────────────────────────────
 async function loadHome() {
-  await loadFlotaData();
-  // Next trip
-  await seedCurse();
-  const cs = await getDocs(collection(db, 'curse'));
-  const curse = cs.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.data > b.data ? 1 : -1);
-  const nextSec = document.getElementById('next-trip-section');
-  if (curse.length > 0) {
-    const c = curse[0];
-    nextSec.innerHTML = `
-      <div class="next-trip-card">
-        <div class="next-trip-icon">🗓</div>
-        <div>
-          <div class="next-trip-label">Următoarea cursă</div>
-          <div class="next-trip-info">${c.ruta}</div>
-          <div class="next-trip-meta">${c.data} · ${c.vehicul} · ${c.locuri} locuri</div>
-        </div>
-        <button class="btn-primary" style="margin-left:auto" onclick="showPage('rezervari')">Rezervă</button>
-      </div>`;
-  }
-  // Fleet preview (first 3)
-  const preview = flotaCache.slice(0, 3);
-  document.getElementById('home-flota-preview').innerHTML = preview.map(v => vehicleCardHtml(v, false)).join('');
+  await ensureFlota(); await ensureCurse();
+  const sorted=[...curse].sort((a,b)=>a.data>b.data?1:-1);
+  const sec=document.getElementById('nxt-sec');
+  sec.innerHTML = sorted.length ? `<div class="nxt">
+    <div class="nxt-icon">🗓</div>
+    <div style="flex:1"><div class="nxt-lbl">Următoarea cursă</div><div class="nxt-info">${sorted[0].ruta}</div><div class="nxt-meta">${sorted[0].data} · ${sorted[0].vehicul} · ${sorted[0].locuri} locuri</div></div>
+    <button class="btn-primary" onclick="showPage('rezervari')">Rezervă</button>
+  </div>` : '';
+  document.getElementById('home-prev').innerHTML=flota.slice(0,3).map(v=>cardHtml(v,false)).join('');
 }
 
-// ─── FLOTA ────────────────────────────────────────────────
+// ─── FLOTĂ ──────────────────────────────────────────────────────
 async function loadFlota() {
-  await loadFlotaData();
-  document.getElementById('flota-list').innerHTML = flotaCache.map(v => vehicleCardHtml(v, true)).join('');
+  await ensureFlota();
+  document.getElementById('flota-list').innerHTML=flota.map(v=>cardHtml(v,true)).join('');
 }
 
-function vehicleCardHtml(v, showAvail) {
-  const dotariHtml = (v.dotari || []).map(d => `<span class="dotare-tag">${d}</span>`).join('');
-  const availHtml = showAvail ? `
-    <div class="avail-input">
-      <label>Verifică disponibilitate</label>
-      <input type="date" id="avail-${v.id}" onchange="checkAvailability('${v.id}', this.value)">
-      <div class="avail-result" id="avail-res-${v.id}"></div>
-    </div>` : '';
-  return `
-    <div class="fleet-card">
-      <div class="fleet-card-img">${v.icon || '🚌'}</div>
-      <div class="fleet-card-body">
-        <div class="fleet-card-name">${v.nume}</div>
-        <div class="fleet-card-row">
-          <span class="badge badge-blue">👥 ${v.capacitate} locuri</span>
-          <span class="badge badge-accent">💰 ${v.pretPerKm} RON/km</span>
-        </div>
-        <div class="dotari">${dotariHtml}</div>
-        ${availHtml}
+function cardHtml(v,full) {
+  const imgs=v.imagini||[];
+  const imgEl = imgs.length
+    ? `<img src="${imgs[0]}" alt="${v.nume}" onclick="document.getElementById('lb-img').src='${imgs[0]}';document.getElementById('lightbox').classList.add('open')">`
+    : `<div class="fc-emoji">${v.icon||'🚌'}</div>`;
+  const tags=(v.dotari||[]).map(d=>`<span class="dtag">${d}</span>`).join('');
+  const extra=full?`
+    <div class="avail-inp">
+      <label>📅 Verifică disponibilitate</label>
+      <input type="date" id="av-${v.id}" onchange="checkAvail('${v.id}',this.value)">
+      <div class="avail-res" id="avr-${v.id}"></div>
+    </div>
+    <button class="btn-fleet-book" onclick="bookFromFleet('${v.id}')">🚌 Rezervă acest vehicul</button>`:'';
+  return `<div class="fleet-card">
+    <div class="fc-img">${imgEl}</div>
+    <div class="fc-body">
+      <div class="fc-name">${v.nume}</div>
+      <div class="fc-row">
+        <span class="badge badge-blue">👥 ${v.capacitate} locuri</span>
+        <span class="badge badge-accent">💰 ${v.pretPerKm} RON/km</span>
       </div>
-    </div>`;
+      <div class="dotari">${tags}</div>
+      ${extra}
+    </div>
+  </div>`;
 }
 
-async function checkAvailability(vehicleId, data) {
-  const el = document.getElementById('avail-res-' + vehicleId);
-  if (!data) { el.innerHTML = ''; return; }
-  el.innerHTML = '<span style="color:var(--muted)">Se verifică...</span>';
-  const q = query(collection(db, 'rezervari'), where('data', '==', data), where('status', '!=', 'anulat'));
-  const snap = await getDocs(q);
-  let occupied = false;
-  snap.forEach(d => {
-    const r = d.data();
-    if ((r.vehiculeSelectate || []).includes(vehicleId)) occupied = true;
-  });
-  if (occupied) {
-    // find next available
-    let nextDate = new Date(data);
-    let found = null;
-    for (let i = 1; i <= 30; i++) {
-      nextDate.setDate(nextDate.getDate() + 1);
-      const nd = nextDate.toISOString().split('T')[0];
-      const q2 = query(collection(db, 'rezervari'), where('data', '==', nd), where('status', '!=', 'anulat'));
-      const s2 = await getDocs(q2);
-      let occ2 = false;
-      s2.forEach(d2 => { if ((d2.data().vehiculeSelectate || []).includes(vehicleId)) occ2 = true; });
-      if (!occ2) { found = nd; break; }
-    }
-    el.innerHTML = `<span class="badge badge-red">❌ Indisponibil</span>${found ? `<br><small style="color:var(--muted)">Disponibil din: ${found}</small>` : ''}`;
-  } else {
-    el.innerHTML = `<span class="badge badge-green">✅ Disponibil</span>`;
-  }
+// ─── AVAIL CHECK ────────────────────────────────────────────────
+async function checkAvail(vid,data) {
+  const el=document.getElementById('avr-'+vid); if(!data){el.innerHTML='';return;}
+  el.innerHTML='<span style="color:var(--muted);font-size:12px">⏳ Se verifică...</span>';
+  const occ=await isOcc(vid,data);
+  if(occ) {
+    let next=null; const d=new Date(data);
+    for(let i=1;i<=30;i++){d.setDate(d.getDate()+1);const nd=d.toISOString().split('T')[0];if(!await isOcc(vid,nd)){next=nd;break;}}
+    el.innerHTML=`<span class="badge badge-red">❌ Indisponibil</span>${next?`<br><small style="color:var(--muted)">Disponibil din: <strong>${next}</strong></small>`:''}`;
+  } else el.innerHTML=`<span class="badge badge-green">✅ Disponibil</span>`;
+}
+async function isOcc(vid,data) {
+  const q=query(collection(db,'rezervari'),where('data','==',data),where('status','!=','anulat'));
+  const snap=await getDocs(q);
+  let ok=false; snap.forEach(d=>{if((d.data().vehiculeSelectate||[]).includes(vid))ok=true;}); return ok;
 }
 
-// ─── REZERVĂRI ────────────────────────────────────────────
+// ─── BOOK FROM FLEET ────────────────────────────────────────────
+function bookFromFleet(vid) {
+  if(!user){toast('Autentifică-te mai întâi pentru a rezerva!','error');setTimeout(()=>showPage('auth'),900);return;}
+  window._preV=vid;
+  showPage('rezervari');
+  setTimeout(()=>{
+    const v=flota.find(x=>x.id===vid);
+    if(v) toast(`Vehicul pre-selectat: ${v.nume}. Completează detaliile.`,'info');
+  },400);
+}
+
+// ─── REZERVĂRI SEARCH ───────────────────────────────────────────
 async function cautaVehicule() {
-  const plecare = document.getElementById('rez-plecare').value.trim();
-  const dest = document.getElementById('rez-dest').value.trim();
-  const data = document.getElementById('rez-data').value;
-  const persoane = parseInt(document.getElementById('rez-persoane').value) || 0;
-  const km = parseInt(document.getElementById('rez-km').value) || 100;
+  const pl=document.getElementById('rp').value.trim();
+  const ds=document.getElementById('rd').value.trim();
+  const dt=document.getElementById('rdata').value;
+  const pe=parseInt(document.getElementById('rpers').value)||0;
+  const km=parseInt(document.getElementById('rkm').value)||100;
+  if(!pl||!ds||!dt||!pe){toast('Completează: plecare, destinație, dată și persoane!','error');return;}
+  if(!user){toast('Trebuie să fii autentificat!','error');setTimeout(()=>showPage('auth'),900);return;}
+  const btn=document.getElementById('btn-cauta');
+  btn.textContent='⏳ Se caută...'; btn.disabled=true;
+  await ensureFlota();
+  const q=query(collection(db,'rezervari'),where('data','==',dt),where('status','!=','anulat'));
+  const snap=await getDocs(q);
+  const occ=new Set();
+  snap.forEach(d=>(d.data().vehiculeSelectate||[]).forEach(id=>occ.add(id)));
+  let avail=flota.filter(v=>!occ.has(v.id));
+  btn.textContent='🔍 Caută vehicule disponibile'; btn.disabled=false;
+  const recs=[];
 
-  if (!plecare || !dest || !data || !persoane) { showToast('Completează toate câmpurile!', 'error'); return; }
-
-  await loadFlotaData();
-
-  // Get occupied vehicles for that date
-  const q = query(collection(db, 'rezervari'), where('data', '==', data), where('status', '!=', 'anulat'));
-  const snap = await getDocs(q);
-  const occupiedIds = new Set();
-  snap.forEach(d => (d.data().vehiculeSelectate || []).forEach(id => occupiedIds.add(id)));
-
-  const available = flotaCache.filter(v => !occupiedIds.has(v.id));
-
-  // Build recommendations
-  const recs = [];
-
-  // Case 1: Single vehicle with enough capacity
-  const singles = available.filter(v => v.capacitate >= persoane).sort((a, b) => (a.pretPerKm * km) - (b.pretPerKm * km));
-  if (singles.length > 0) {
-    const best = singles[0];
-    recs.push({
-      vehicles: [best],
-      totalCap: best.capacitate,
-      totalPrice: Math.round(best.pretPerKm * km),
-      label: '🏆 Recomandat',
-      type: 'single'
-    });
-    if (singles.length > 1) recs.push({
-      vehicles: [singles[1]],
-      totalCap: singles[1].capacitate,
-      totalPrice: Math.round(singles[1].pretPerKm * km),
-      label: '💎 Premium',
-      type: 'single'
-    });
+  // Pre-selected vehicle
+  if(window._preV) {
+    const pv=avail.find(v=>v.id===window._preV);
+    if(pv) recs.push({vs:[pv],cap:pv.capacitate,price:Math.round(pv.pretPerKm*km),lbl:'⭐ Vehicul selectat'});
+    window._preV=null;
   }
 
-  // Case 2: Combination of 2 vehicles
-  for (let i = 0; i < available.length; i++) {
-    for (let j = i + 1; j < available.length; j++) {
-      const v1 = available[i], v2 = available[j];
-      if (v1.capacitate + v2.capacitate >= persoane) {
-        const price = Math.round((v1.pretPerKm + v2.pretPerKm) * km);
-        if (recs.length < 4) recs.push({
-          vehicles: [v1, v2],
-          totalCap: v1.capacitate + v2.capacitate,
-          totalPrice: price,
-          label: '🔄 Combinație',
-          type: 'combo'
-        });
+  // Singles
+  const singles=avail.filter(v=>v.capacitate>=pe).sort((a,b)=>a.pretPerKm-b.pretPerKm);
+  if(singles[0]&&!recs.find(r=>r.vs[0]?.id===singles[0].id))
+    recs.push({vs:[singles[0]],cap:singles[0].capacitate,price:Math.round(singles[0].pretPerKm*km),lbl:'🏆 Recomandat'});
+  if(singles[1])
+    recs.push({vs:[singles[1]],cap:singles[1].capacitate,price:Math.round(singles[1].pretPerKm*km),lbl:'💎 Alternativă'});
+
+  // Combos of 2
+  outer: for(let i=0;i<avail.length&&recs.length<5;i++) {
+    for(let j=i+1;j<avail.length&&recs.length<5;j++) {
+      const v1=avail[i],v2=avail[j];
+      if(v1.capacitate+v2.capacitate>=pe) {
+        recs.push({vs:[v1,v2],cap:v1.capacitate+v2.capacitate,price:Math.round((v1.pretPerKm+v2.pretPerKm)*km),lbl:'🔄 Combinație 2 vehicule'});
       }
     }
   }
 
-  if (recs.length === 0) {
-    document.getElementById('rec-section').style.display = 'block';
-    document.getElementById('rec-grid').innerHTML = `
-      <div class="empty-state"><div class="icon">😔</div>
-      <h3>Nicio opțiune disponibilă</h3><p>Nu am găsit vehicule disponibile pentru data și numărul de persoane selectat.</p></div>`;
+  if(!recs.length) {
+    document.getElementById('rec-sec').style.display='block';
+    document.getElementById('rec-grid').innerHTML=`<div class="empty-st"><div class="icon">😔</div><h3>Nicio opțiune disponibilă</h3><p>Nu am găsit vehicule libere pentru ${dt}. Încearcă altă dată.</p></div>`;
     return;
   }
-
-  document.getElementById('rec-section').style.display = 'block';
-  document.getElementById('rec-grid').innerHTML = recs.map((r, idx) => {
-    const vehicleNames = r.vehicles.map(v => v.nume).join(' + ');
-    const icons = r.vehicles.map(v => v.icon || '🚌').join(' ');
-    const dotariAll = [...new Set(r.vehicles.flatMap(v => v.dotari || []))];
-    return `
-      <div class="rec-card" id="rec-${idx}">
-        <div class="rec-card-top">
-          <div>
-            <div style="font-size:28px;margin-bottom:6px">${icons}</div>
-            <div class="rec-vehicle-name">${vehicleNames}</div>
-          </div>
-          <div style="text-align:right">
-            <div class="rec-price">${r.totalPrice} RON <span>total</span></div>
-            <div style="font-size:11px;color:var(--muted)">${km} km × ${r.vehicles.map(v=>v.pretPerKm).join('+')} RON/km</div>
-          </div>
-        </div>
-        <div class="rec-details">
-          👥 Capacitate: <strong>${r.totalCap} locuri</strong><br>
-          ✅ Persoane: ${persoane} / ${r.totalCap} locuri folosite
-        </div>
-        <div class="rec-badge-row">
-          <span class="badge badge-accent">${r.label}</span>
-          ${dotariAll.slice(0,3).map(d => `<span class="badge badge-blue">${d}</span>`).join('')}
-        </div>
-        <button class="btn-book" onclick="bookVehicle(${JSON.stringify({ids: r.vehicles.map(v=>v.id), price: r.totalPrice, names: vehicleNames}).replace(/"/g,'&quot;')})">
-          Rezervă această opțiune
-        </button>
-      </div>`;
+  document.getElementById('rec-sec').style.display='block';
+  document.getElementById('rec-grid').innerHTML=recs.map(r=>{
+    const nm=r.vs.map(v=>v.nume).join(' + ');
+    const ic=r.vs.map(v=>v.icon||'🚌').join(' ');
+    const dt2=[...new Set(r.vs.flatMap(v=>v.dotari||[]))].slice(0,4);
+    const ids=JSON.stringify(r.vs.map(v=>v.id));
+    const pct=Math.min(100,Math.round(pe/r.cap*100));
+    return `<div class="rec-card">
+      <div class="rec-top">
+        <div><div style="font-size:26px;margin-bottom:5px">${ic}</div><div class="rec-nm">${nm}</div></div>
+        <div class="rec-pr">${r.price}<small>RON total</small></div>
+      </div>
+      <div class="rec-det">👥 Capacitate: <strong>${r.cap} locuri</strong><br>👤 Ocupare: ${pe}/${r.cap} (${pct}%)<br>📏 ${km} km × ${r.vs.map(v=>v.pretPerKm).join('+')} RON/km</div>
+      <div class="rec-brow"><span class="badge badge-accent">${r.lbl}</span>${dt2.map(d=>`<span class="badge badge-blue">${d}</span>`).join('')}</div>
+      <button class="btn-book" onclick="bookVehicle(this,'${encodeURIComponent(JSON.stringify({ids:r.vs.map(v=>v.id),price:r.price,names:nm}))}')">✅ Rezervă această opțiune</button>
+    </div>`;
   }).join('');
 }
 
-async function bookVehicle(opts) {
-  if (!currentUser) {
-    showToast('Trebuie să fii autentificat pentru a rezerva!', 'error');
-    setTimeout(() => showPage('auth'), 1000);
-    return;
-  }
-  const plecare = document.getElementById('rez-plecare').value.trim();
-  const dest = document.getElementById('rez-dest').value.trim();
-  const data = document.getElementById('rez-data').value;
-  const persoane = parseInt(document.getElementById('rez-persoane').value) || 0;
-  const obs = document.getElementById('rez-obs').value;
-
+async function bookVehicle(btn,encoded) {
+  if(!user){toast('Autentifică-te mai întâi!','error');setTimeout(()=>showPage('auth'),900);return;}
+  const pl=document.getElementById('rp').value.trim();
+  const ds=document.getElementById('rd').value.trim();
+  const dt=document.getElementById('rdata').value;
+  const pe=parseInt(document.getElementById('rpers').value)||0;
+  const km=parseInt(document.getElementById('rkm').value)||0;
+  const tel=document.getElementById('rtel').value;
+  const obs=document.getElementById('robs').value;
+  if(!pl||!ds||!dt||!pe){toast('Completează toate câmpurile obligatorii!','error');return;}
+  const opt=JSON.parse(decodeURIComponent(encoded));
+  btn.textContent='⏳ Se rezervă...'; btn.disabled=true;
   try {
-    await addDoc(collection(db, 'rezervari'), {
-      uid: currentUser.uid,
-      email: currentUser.email,
-      plecare, destinatie: dest, data, persoane,
-      vehiculeSelectate: opts.ids,
-      vehiculeNume: opts.names,
-      pretEstimativ: opts.price,
-      observatii: obs,
-      status: 'in_asteptare',
-      createdAt: serverTimestamp()
+    await addDoc(collection(db,'rezervari'),{
+      uid:user.uid,email:user.email,
+      plecare:pl,destinatie:ds,data:dt,persoane:pe,
+      vehiculeSelectate:opt.ids,vehiculeNume:opt.names,
+      pretEstimativ:opt.price,distantaKm:km,
+      observatii:obs,telefon:tel,
+      status:'in_asteptare',createdAt:serverTimestamp()
     });
-    showToast('✅ Rezervare trimisă cu succes!', 'success');
-    document.getElementById('rec-section').style.display = 'none';
-    // clear form
-    ['rez-plecare','rez-dest','rez-data','rez-persoane','rez-km','rez-obs'].forEach(id => document.getElementById(id).value = '');
-  } catch(e) { showToast('Eroare: ' + e.message, 'error'); }
+    await sendEmail({pl,ds,dt,pe,names:opt.names,price:opt.price,email:user.email,tel,obs});
+    toast('✅ Rezervare trimisă! Vei fi contactat în curând.','success');
+    ['rp','rd','rdata','rpers','rkm','rtel','robs'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('rec-sec').style.display='none';
+  } catch(e) {
+    toast('Eroare: '+e.message,'error');
+    btn.textContent='✅ Rezervă această opțiune'; btn.disabled=false;
+  }
 }
 
-// ─── MY RESERVATIONS ────────────────────────────────────────
+// ─── EMAIL ──────────────────────────────────────────────────────
+async function sendEmail(d) {
+  try {
+    if(!window.emailjs) {
+      await new Promise((ok,err)=>{
+        const s=document.createElement('script');
+        s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+        s.onload=ok; s.onerror=err; document.head.appendChild(s);
+      });
+      emailjs.init(EJS_KEY);
+    }
+    await emailjs.send(EJS_SVC,EJS_TPL,{
+      to_email:ADMIN, client_email:d.email, client_phone:d.tel||'-',
+      ruta:`${d.pl} → ${d.ds}`, data_cursa:d.dt, persoane:d.pe,
+      vehicule:d.names, pret:d.price+' RON', observatii:d.obs||'-', reply_to:d.email
+    });
+  } catch(e){ console.warn('[EmailJS] Notificare email eșuată. Configurează Service/Template ID în cod.',e.text||e.message); }
+}
+
+// ─── MY REZ ─────────────────────────────────────────────────────
 async function loadMyRez() {
-  if (!currentUser) { showPage('auth'); return; }
-  const el = document.getElementById('my-rez-list');
-  el.innerHTML = '<div class="spinner"></div>';
-  const q = query(collection(db, 'rezervari'), where('uid', '==', currentUser.uid));
-  const snap = await getDocs(q);
-  const items = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-  if (items.length === 0) {
-    el.innerHTML = `<div class="empty-state"><div class="icon">📭</div><h3>Nicio rezervare</h3><p>Nu ai rezervări încă.</p></div>`;
-    return;
-  }
-  const statusMap = { in_asteptare: { label: 'În așteptare', cls: 'badge-accent' }, confirmata: { label: 'Confirmată', cls: 'badge-green' }, anulat: { label: 'Anulată', cls: 'badge-red' } };
-  el.innerHTML = items.map(r => {
-    const st = statusMap[r.status] || { label: r.status, cls: 'badge-accent' };
-    return `
-      <div class="my-rez-card">
-        <div class="my-rez-header">
-          <div class="my-rez-route">${r.plecare} → ${r.destinatie}</div>
-          <span class="badge ${st.cls}">${st.label}</span>
-        </div>
-        <div class="my-rez-details">
-          <div class="my-rez-detail-item"><div class="my-rez-detail-label">Data</div>${r.data}</div>
-          <div class="my-rez-detail-item"><div class="my-rez-detail-label">Persoane</div>${r.persoane}</div>
-          <div class="my-rez-detail-item"><div class="my-rez-detail-label">Vehicule</div>${r.vehiculeNume || r.vehiculeSelectate?.join(', ')}</div>
-          <div class="my-rez-detail-item"><div class="my-rez-detail-label">Preț estimat</div>${r.pretEstimativ} RON</div>
-        </div>
-      </div>`;
+  if(!user){showPage('auth');return;}
+  const el=document.getElementById('myrez-list'); el.innerHTML='<div class="spinner"></div>';
+  const q=query(collection(db,'rezervari'),where('uid','==',user.uid));
+  const snap=await getDocs(q);
+  const items=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  if(!items.length){el.innerHTML=`<div class="empty-st"><div class="icon">📭</div><h3>Nicio rezervare</h3><p>Nu ai rezervări încă.</p><button class="btn-primary" style="margin-top:16px" onclick="showPage('rezervari')">Rezervă acum</button></div>`;return;}
+  const sm={in_asteptare:{l:'În așteptare',c:'badge-accent'},confirmata:{l:'Confirmată',c:'badge-green'},anulat:{l:'Anulată',c:'badge-red'}};
+  el.innerHTML=items.map(r=>{
+    const st=sm[r.status]||{l:r.status,c:'badge-accent'};
+    return `<div class="myrc">
+      <div class="myrc-hd"><div class="myrc-rt">${r.plecare} → ${r.destinatie}</div><span class="badge ${st.c}">${st.l}</span></div>
+      <div class="myrc-det">
+        <div class="myrc-di"><div class="myrc-dl">Data</div>${r.data}</div>
+        <div class="myrc-di"><div class="myrc-dl">Persoane</div>${r.persoane}</div>
+        <div class="myrc-di"><div class="myrc-dl">Vehicule</div>${r.vehiculeNume||'-'}</div>
+        <div class="myrc-di"><div class="myrc-dl">Preț</div>${r.pretEstimativ} RON</div>
+        ${r.telefon?`<div class="myrc-di"><div class="myrc-dl">Telefon</div>${r.telefon}</div>`:''}
+        ${r.observatii?`<div class="myrc-di" style="grid-column:1/-1"><div class="myrc-dl">Obs.</div>${r.observatii}</div>`:''}
+      </div>
+    </div>`;
   }).join('');
 }
 
-// ─── AUTH ─────────────────────────────────────────────────
-function switchAuthTab(tab) {
-  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
-  document.getElementById('auth-login-form').style.display = tab === 'login' ? 'flex' : 'none';
-  document.getElementById('auth-register-form').style.display = tab === 'register' ? 'flex' : 'none';
+// ─── AUTH ───────────────────────────────────────────────────────
+function swTab(t) {
+  document.getElementById('tab-li').classList.toggle('active',t==='login');
+  document.getElementById('tab-re').classList.toggle('active',t==='reg');
+  document.getElementById('frm-li').style.display=t==='login'?'flex':'none';
+  document.getElementById('frm-re').style.display=t==='reg'?'flex':'none';
 }
-
 async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  document.getElementById('login-err').textContent = '';
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-    showToast('Bun venit! 👋', 'success');
-    showPage('home');
-  } catch(e) { document.getElementById('login-err').textContent = e.message; }
+  const em=document.getElementById('li-em').value.trim();
+  const pw=document.getElementById('li-pw').value;
+  document.getElementById('li-err').textContent='';
+  try{await signInWithEmailAndPassword(auth,em,pw);toast('Bun venit! 👋','success');showPage('home');}
+  catch(e){document.getElementById('li-err').textContent=authErr(e.code);}
 }
-
 async function doRegister() {
-  const name = document.getElementById('reg-name').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-  document.getElementById('reg-err').textContent = '';
-  try {
-    await createUserWithEmailAndPassword(auth, email, pass);
-    showToast('Cont creat cu succes! 🎉', 'success');
-    showPage('home');
-  } catch(e) { document.getElementById('reg-err').textContent = e.message; }
+  const nm=document.getElementById('re-nm').value.trim();
+  const em=document.getElementById('re-em').value.trim();
+  const pw=document.getElementById('re-pw').value;
+  document.getElementById('re-err').textContent='';
+  if(!nm||!em||!pw){document.getElementById('re-err').textContent='Completează toate câmpurile.';return;}
+  try{const c=await createUserWithEmailAndPassword(auth,em,pw);await updateProfile(c.user,{displayName:nm});toast('Cont creat! 🎉','success');showPage('home');}
+  catch(e){document.getElementById('re-err').textContent=authErr(e.code);}
 }
+async function doLogout(){await signOut(auth);toast('Te-ai deconectat.','success');showPage('home');}
+function authErr(c){return{'auth/invalid-email':'Email invalid.','auth/user-not-found':'Cont negăsit.','auth/wrong-password':'Parolă incorectă.','auth/email-already-in-use':'Email deja înregistrat.','auth/weak-password':'Parola prea slabă (min 6 caractere).','auth/invalid-credential':'Email sau parolă incorectă.','auth/too-many-requests':'Prea multe încercări, încearcă mai târziu.'}[c]||'Eroare: '+c;}
 
-async function doLogout() {
-  await signOut(auth);
-  showToast('Te-ai deconectat.', 'success');
-  showPage('home');
-}
-
-// ─── ADMIN ────────────────────────────────────────────────
+// ─── ADMIN ──────────────────────────────────────────────────────
 async function loadAdmin() {
-  if (!isAdmin) { showPage('home'); showToast('Acces interzis!', 'error'); return; }
-  await seedStatus(); await seedCurse();
-  loadAdminFlota();
-  loadAdminRez();
-  loadAdminStatus();
-  loadAdminCurse();
+  if(!isAdm){showPage('home');toast('Acces interzis!','error');return;}
+  await ensureFlota();await ensureStatus();await ensureCurse();
+  admFlota();admRez();admStatus();admCurse();
+}
+function admFlota() {
+  document.getElementById('tb-flota').innerHTML=flota.map(v=>`<tr>
+    <td>${v.icon||'🚌'} <strong>${v.nume}</strong></td><td>${v.capacitate}</td><td>${v.pretPerKm}</td>
+    <td style="max-width:180px;font-size:12px">${(v.dotari||[]).join(', ')}</td>
+    <td style="white-space:nowrap"><button class="bi" onclick="editItem('vehicle','${v.id}')">✏</button> <button class="bi del" onclick="delItem('flota','${v.id}')">🗑</button></td>
+  </tr>`).join('');
+  updateStats();
+}
+async function admRez() {
+  const snap=await getDocs(query(collection(db,'rezervari'),orderBy('createdAt','desc')));
+  rezs=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const sm={in_asteptare:'badge-accent',confirmata:'badge-green',anulat:'badge-red'};
+  document.getElementById('tb-rez').innerHTML=rezs.map(r=>`<tr>
+    <td style="white-space:nowrap">${r.data}</td>
+    <td style="white-space:nowrap">${r.plecare}→${r.destinatie}</td>
+    <td>${r.persoane}</td>
+    <td style="font-size:12px;max-width:150px">${r.vehiculeNume||''}</td>
+    <td>${r.pretEstimativ} RON</td>
+    <td style="font-size:12px">${r.telefon||r.email||'-'}</td>
+    <td><span class="badge ${sm[r.status]||'badge-accent'}">${r.status}</span></td>
+    <td style="white-space:nowrap"><button class="bi" onclick="confirmRez('${r.id}')" title="Confirmă">✅</button> <button class="bi del" onclick="delItem('rezervari','${r.id}')">🗑</button></td>
+  </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px">Nicio rezervare</td></tr>';
+  updateStats();
+}
+async function admStatus() {
+  const snap=await getDocs(collection(db,'status'));
+  statuses=snap.docs.map(d=>({id:d.id,...d.data()}));
+  document.getElementById('tb-status').innerHTML=statuses.map(s=>`<tr>
+    <td>${s.mesaj}</td>
+    <td><label class="toggle"><input type="checkbox" ${s.activ!==false?'checked':''} onchange="toggleSt('${s.id}',this.checked)"><span class="toggle-sl"></span></label></td>
+    <td style="white-space:nowrap"><button class="bi" onclick="editItem('status','${s.id}')">✏</button> <button class="bi del" onclick="delItem('status','${s.id}')">🗑</button></td>
+  </tr>`).join('');
+}
+async function admCurse() {
+  const snap=await getDocs(collection(db,'curse'));
+  curse=snap.docs.map(d=>({id:d.id,...d.data()}));
+  document.getElementById('tb-curse').innerHTML=curse.map(c=>`<tr>
+    <td>${c.ruta}</td><td>${c.data}</td><td>${c.vehicul}</td><td>${c.locuri}</td>
+    <td style="white-space:nowrap"><button class="bi" onclick="editItem('cursa','${c.id}')">✏</button> <button class="bi del" onclick="delItem('curse','${c.id}')">🗑</button></td>
+  </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Nicio cursă</td></tr>';
+}
+function updateStats() {
+  document.getElementById('adm-stats').innerHTML=`
+    <div class="stat-c"><div class="stat-l">Vehicule</div><div class="stat-v">${flota.length}</div></div>
+    <div class="stat-c"><div class="stat-l">Rezervări</div><div class="stat-v">${rezs.length}</div></div>
+    <div class="stat-c"><div class="stat-l">Confirmate</div><div class="stat-v">${rezs.filter(r=>r.status==='confirmata').length}</div></div>
+    <div class="stat-c"><div class="stat-l">În așteptare</div><div class="stat-v">${rezs.filter(r=>r.status==='in_asteptare').length}</div></div>`;
+}
+async function confirmRez(id){await updateDoc(doc(db,'rezervari',id),{status:'confirmata'});toast('Confirmat!','success');admRez();}
+async function toggleSt(id,val){await updateDoc(doc(db,'status',id),{activ:val});}
+async function delItem(col,id) {
+  if(!confirm('Sigur ștergi?'))return;
+  await deleteDoc(doc(db,col,id));
+  toast('Șters!','success');
+  if(col==='flota'){flota=[];await ensureFlota();admFlota();}
+  if(col==='rezervari')admRez();
+  if(col==='status')admStatus();
+  if(col==='curse')admCurse();
+}
+function swAdm(t) {
+  document.querySelectorAll('.adm-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.adm-sec').forEach(s=>s.classList.remove('active'));
+  const tabs={flota:0,rez:1,status:2,curse:3};
+  document.querySelectorAll('.adm-tab')[tabs[t]]?.classList.add('active');
+  document.getElementById('adm-'+t==='rez'?'adm-rez':t==='status'?'adm-status':t==='curse'?'adm-curse':'adm-flota');
+  // Correct mapping
+  const secId={flota:'adm-flota',rez:'adm-rez',status:'adm-status',curse:'adm-curse'}[t];
+  document.getElementById(secId)?.classList.add('active');
 }
 
-async function loadAdminFlota() {
-  await loadFlotaData();
-  document.getElementById('admin-flota-body').innerHTML = flotaCache.map(v => `
-    <tr>
-      <td>${v.icon || '🚌'} ${v.nume}</td>
-      <td>${v.capacitate} locuri</td>
-      <td>${v.pretPerKm} RON/km</td>
-      <td>${(v.dotari || []).join(', ')}</td>
-      <td>
-        <button class="btn-icon" onclick="editAdminItem('vehicle','${v.id}')">✏</button>
-        <button class="btn-icon del" onclick="deleteAdminItem('flota','${v.id}')">🗑</button>
-      </td>
-    </tr>`).join('');
-}
-
-async function loadAdminRez() {
-  const snap = await getDocs(query(collection(db, 'rezervari'), orderBy('createdAt', 'desc')));
-  rezCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  const statusMap = { in_asteptare: 'badge-accent', confirmata: 'badge-green', anulat: 'badge-red' };
-  document.getElementById('admin-rez-body').innerHTML = rezCache.map(r => `
-    <tr>
-      <td>${r.data}</td>
-      <td>${r.plecare} → ${r.destinatie}</td>
-      <td>${r.persoane}</td>
-      <td style="font-size:12px">${r.vehiculeNume || ''}</td>
-      <td>${r.pretEstimativ} RON</td>
-      <td><span class="badge ${statusMap[r.status] || 'badge-accent'}">${r.status}</span></td>
-      <td>
-        <button class="btn-icon" onclick="confirmRez('${r.id}')">✅</button>
-        <button class="btn-icon del" onclick="deleteAdminItem('rezervari','${r.id}')">🗑</button>
-      </td>
-    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted)">Nicio rezervare</td></tr>';
-  // Stats
-  document.getElementById('admin-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Vehicule</div><div class="stat-val">${flotaCache.length}</div></div>
-    <div class="stat-card"><div class="stat-label">Rezervări</div><div class="stat-val">${rezCache.length}</div></div>
-    <div class="stat-card"><div class="stat-label">Confirmate</div><div class="stat-val">${rezCache.filter(r=>r.status==='confirmata').length}</div></div>`;
-}
-
-async function loadAdminStatus() {
-  const snap = await getDocs(collection(db, 'status'));
-  statusCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  document.getElementById('admin-status-body').innerHTML = statusCache.map(s => `
-    <tr>
-      <td>${s.mesaj}</td>
-      <td><label class="toggle"><input type="checkbox" ${s.activ ? 'checked' : ''} onchange="toggleStatus('${s.id}', this.checked)"><span class="toggle-slider"></span></label></td>
-      <td>
-        <button class="btn-icon" onclick="editAdminItem('status','${s.id}')">✏</button>
-        <button class="btn-icon del" onclick="deleteAdminItem('status','${s.id}')">🗑</button>
-      </td>
-    </tr>`).join('');
-}
-
-async function loadAdminCurse() {
-  const snap = await getDocs(collection(db, 'curse'));
-  curseCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  document.getElementById('admin-curse-body').innerHTML = curseCache.map(c => `
-    <tr>
-      <td>${c.ruta}</td><td>${c.data}</td><td>${c.vehicul}</td>
-      <td>
-        <button class="btn-icon" onclick="editAdminItem('cursa','${c.id}')">✏</button>
-        <button class="btn-icon del" onclick="deleteAdminItem('curse','${c.id}')">🗑</button>
-      </td>
-    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted)">Nicio cursă</td></tr>';
-}
-
-async function confirmRez(id) {
-  await updateDoc(doc(db, 'rezervari', id), { status: 'confirmata' });
-  showToast('Rezervare confirmată!', 'success'); loadAdminRez();
-}
-
-window.toggleStatus = async (id, val) => {
-  await updateDoc(doc(db, 'status', id), { activ: val });
-};
-
-async function deleteAdminItem(col, id) {
-  if (!confirm('Sigur ștergi?')) return;
-  await deleteDoc(doc(db, col, id));
-  showToast('Șters!', 'success');
-  if (col === 'flota') loadAdminFlota();
-  if (col === 'rezervari') loadAdminRez();
-  if (col === 'status') loadAdminStatus();
-  if (col === 'curse') loadAdminCurse();
-}
-
-function switchAdminTab(t) {
-  document.querySelectorAll('.admin-tab').forEach((b, i) => b.classList.remove('active'));
-  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-  const map = { flota: 0, rez: 1, status: 2, curse: 3 };
-  document.querySelectorAll('.admin-tab')[map[t]].classList.add('active');
-  document.getElementById('admin-' + (t === 'rez' ? 'rez' : t === 'status' ? 'status' : t === 'curse' ? 'curse' : 'flota')).classList.add('active');
-}
-
-// ─── MODAL ────────────────────────────────────────────────
-function openModal(type, id) {
-  modalType = type; editingId = id || null;
-  const titles = { vehicle: 'Vehicul', status: 'Mesaj bară live', cursa: 'Cursă' };
-  document.getElementById('modal-title').textContent = (id ? 'Editează' : 'Adaugă') + ' ' + titles[type];
-  let body = '';
-
-  if (type === 'vehicle') {
-    const v = id ? flotaCache.find(x => x.id === id) || {} : {};
-    body = `
-      <div class="form-group"><label>Nume vehicul</label><input type="text" id="m-name" value="${v.nume||''}" placeholder="Mercedes Intouro"></div>
-      <div style="height:12px"></div>
-      <div class="form-group"><label>Capacitate (locuri)</label><input type="number" id="m-cap" value="${v.capacitate||''}" placeholder="53"></div>
-      <div style="height:12px"></div>
-      <div class="form-group"><label>Preț per km (RON)</label><input type="number" step="0.1" id="m-pret" value="${v.pretPerKm||''}" placeholder="4.5"></div>
-      <div style="height:12px"></div>
-      <div class="form-group"><label>Dotări (separate prin virgulă)</label><input type="text" id="m-dotari" value="${(v.dotari||[]).join(', ')}" placeholder="AC, WiFi, TV"></div>
-      <div style="height:12px"></div>
-      <div class="form-group"><label>Emoji vehicul</label><input type="text" id="m-icon" value="${v.icon||'🚌'}" placeholder="🚌"></div>`;
-  } else if (type === 'status') {
-    const s = id ? statusCache.find(x => x.id === id) || {} : {};
-    body = `
-      <div class="form-group"><label>Mesaj afișat</label><input type="text" id="m-mesaj" value="${s.mesaj||''}" placeholder="Mercedes Intouro – Iași → București"></div>
-      <div style="height:12px"></div>
-      <div class="form-group" style="flex-direction:row;align-items:center;gap:12px">
-        <label style="margin:0">Activ</label>
-        <label class="toggle"><input type="checkbox" id="m-activ" ${s.activ !== false ? 'checked' : ''}><span class="toggle-slider"></span></label>
+// ─── MODAL ──────────────────────────────────────────────────────
+function openModal(type,id) {
+  mType=type; mId=id||null; mImgs=[]; mExisting=[];
+  document.getElementById('modal-ttl').textContent=(id?'Editează ':'Adaugă ')+(type==='vehicle'?'Vehicul':type==='status'?'Mesaj live':'Cursă');
+  let body='';
+  if(type==='vehicle') {
+    const v=id?flota.find(x=>x.id===id)||{}:{};
+    mExisting=[...(v.imagini||[])];
+    const exHtml=mExisting.map((src,i)=>`<div class="img-wrap" id="ex-${i}"><img src="${src}" onclick="document.getElementById('lb-img').src='${src}';document.getElementById('lightbox').classList.add('open')"><button onclick="rmImg(${i})">×</button></div>`).join('');
+    body=`
+      <div class="fg"><label>Nume vehicul</label><input type="text" id="m-nm" value="${v.nume||''}" placeholder="Mercedes Intouro"></div>
+      <div class="fg"><label>Capacitate (locuri)</label><input type="number" id="m-cap" value="${v.capacitate||''}" placeholder="53"></div>
+      <div class="fg"><label>Preț per km (RON)</label><input type="number" step="0.1" id="m-pret" value="${v.pretPerKm||''}" placeholder="4.5"></div>
+      <div class="fg"><label>Dotări (separate prin virgulă)</label><input type="text" id="m-dot" value="${(v.dotari||[]).join(', ')}" placeholder="AC, WiFi, TV"></div>
+      <div class="fg"><label>Emoji vehicul</label><input type="text" id="m-ico" value="${v.icon||'🚌'}" style="font-size:20px"></div>
+      <div class="fg"><label>Fotografii (drag & drop sau click)</label>
+        <div class="dropzone" id="dz">
+          <input type="file" id="m-files" accept="image/*" multiple onchange="handleFiles(this.files)">
+          <div class="dz-lbl">📸 Trage imaginile aici sau apasă<br><small>JPG, PNG, WebP · Maxim 5 imagini · Compresie automată</small></div>
+        </div>
+        <div class="dz-prev" id="dz-prev">${exHtml}</div>
       </div>`;
-  } else if (type === 'cursa') {
-    const c = id ? curseCache.find(x => x.id === id) || {} : {};
-    const vehicleOpts = flotaCache.map(v => `<option value="${v.nume}" ${c.vehicul===v.nume?'selected':''}>${v.nume}</option>`).join('');
-    body = `
-      <div class="form-group"><label>Rută</label><input type="text" id="m-ruta" value="${c.ruta||''}" placeholder="Iași → București"></div>
-      <div style="height:12px"></div>
-      <div class="form-group"><label>Data</label><input type="date" id="m-data" value="${c.data||''}"></div>
-      <div style="height:12px"></div>
-      <div class="form-group"><label>Vehicul</label><select id="m-vehicul"><option value="">Selectează...</option>${vehicleOpts}</select></div>
-      <div style="height:12px"></div>
-      <div class="form-group"><label>Locuri disponibile</label><input type="number" id="m-locuri" value="${c.locuri||''}"></div>`;
+    setTimeout(dzInit,80);
+  } else if(type==='status') {
+    const s=id?statuses.find(x=>x.id===id)||{}:{};
+    body=`
+      <div class="fg"><label>Mesaj afișat în bara live</label><input type="text" id="m-msg" value="${s.mesaj||''}" placeholder="Mercedes Intouro – Iași → București"></div>
+      <div class="fg" style="flex-direction:row;align-items:center;gap:12px;margin-top:6px"><label style="margin:0">Activ</label><label class="toggle"><input type="checkbox" id="m-act" ${s.activ!==false?'checked':''}><span class="toggle-sl"></span></label></div>`;
+  } else if(type==='cursa') {
+    const c=id?curse.find(x=>x.id===id)||{}:{};
+    const opts=flota.map(v=>`<option value="${v.nume}" ${c.vehicul===v.nume?'selected':''}>${v.nume}</option>`).join('');
+    body=`
+      <div class="fg"><label>Rută</label><input type="text" id="m-ruta" value="${c.ruta||''}" placeholder="Iași → București"></div>
+      <div class="fg"><label>Data</label><input type="date" id="m-dt" value="${c.data||''}"></div>
+      <div class="fg"><label>Vehicul</label><select id="m-veh"><option value="">Selectează...</option>${opts}</select></div>
+      <div class="fg"><label>Locuri disponibile</label><input type="number" id="m-loc" value="${c.locuri||''}"></div>`;
   }
-  document.getElementById('modal-body').innerHTML = body;
-  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-body').innerHTML=body;
+  document.getElementById('modal-ov').classList.add('open');
 }
+function closeModal(){document.getElementById('modal-ov').classList.remove('open');}
+function ovClick(e){if(e.target===document.getElementById('modal-ov'))closeModal();}
 
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
-function closeModalOutside(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+// drag&drop init
+function dzInit() {
+  const dz=document.getElementById('dz'); if(!dz)return;
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dov');});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('dov'));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dov');handleFiles(e.dataTransfer.files);});
+}
+function handleFiles(files) {
+  const max=5-mImgs.length-mExisting.length;
+  Array.from(files).slice(0,Math.max(0,max)).forEach(f=>{
+    if(!f.type.startsWith('image/'))return;
+    const r=new FileReader();
+    r.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const c=document.createElement('canvas');
+        let w=img.width,h=img.height;
+        const mxW=800,mxH=600;
+        if(w>mxW){h=Math.round(h*mxW/w);w=mxW;}
+        if(h>mxH){w=Math.round(w*mxH/h);h=mxH;}
+        c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        mImgs.push(c.toDataURL('image/jpeg',0.72));
+        renderPrev();
+      };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(f);
+  });
+}
+function renderPrev() {
+  const exHtml=mExisting.map((src,i)=>src?`<div class="img-wrap" id="ex-${i}"><img src="${src}" onclick="document.getElementById('lb-img').src='${src}';document.getElementById('lightbox').classList.add('open')"><button onclick="rmImg(${i})">×</button></div>`:'').join('');
+  const newHtml=mImgs.map((src,i)=>`<div class="img-wrap"><img src="${src}"><button onclick="rmNewImg(${i})">×</button></div>`).join('');
+  document.getElementById('dz-prev').innerHTML=exHtml+newHtml;
+}
+function rmImg(i){mExisting[i]=null;renderPrev();}
+function rmNewImg(i){mImgs.splice(i,1);renderPrev();}
 
 async function saveModal() {
+  const btn=document.getElementById('btn-save'); btn.textContent='⏳ Se salvează...'; btn.disabled=true;
   try {
-    if (modalType === 'vehicle') {
-      const data = {
-        nume: document.getElementById('m-name').value,
-        capacitate: parseInt(document.getElementById('m-cap').value) || 0,
-        pretPerKm: parseFloat(document.getElementById('m-pret').value) || 0,
-        dotari: document.getElementById('m-dotari').value.split(',').map(s => s.trim()).filter(Boolean),
-        icon: document.getElementById('m-icon').value || '🚌'
+    if(mType==='vehicle') {
+      const allImgs=[...mExisting.filter(Boolean),...mImgs];
+      const data={
+        nume:document.getElementById('m-nm').value,
+        capacitate:parseInt(document.getElementById('m-cap').value)||0,
+        pretPerKm:parseFloat(document.getElementById('m-pret').value)||0,
+        dotari:document.getElementById('m-dot').value.split(',').map(s=>s.trim()).filter(Boolean),
+        icon:document.getElementById('m-ico').value||'🚌',
+        imagini:allImgs
       };
-      if (editingId) await updateDoc(doc(db, 'flota', editingId), data);
-      else await addDoc(collection(db, 'flota'), data);
-      flotaCache = [];
-      await loadFlotaData();
-      loadAdminFlota();
-    } else if (modalType === 'status') {
-      const data = { mesaj: document.getElementById('m-mesaj').value, activ: document.getElementById('m-activ').checked };
-      if (editingId) await updateDoc(doc(db, 'status', editingId), data);
-      else await addDoc(collection(db, 'status'), data);
-      loadAdminStatus();
-    } else if (modalType === 'cursa') {
-      const data = {
-        ruta: document.getElementById('m-ruta').value,
-        data: document.getElementById('m-data').value,
-        vehicul: document.getElementById('m-vehicul').value,
-        locuri: parseInt(document.getElementById('m-locuri').value) || 0
-      };
-      if (editingId) await updateDoc(doc(db, 'curse', editingId), data);
-      else await addDoc(collection(db, 'curse'), data);
-      loadAdminCurse();
+      if(mId) await updateDoc(doc(db,'flota',mId),data);
+      else await addDoc(collection(db,'flota'),data);
+      flota=[];await ensureFlota();admFlota();
+    } else if(mType==='status') {
+      const data={mesaj:document.getElementById('m-msg').value,activ:document.getElementById('m-act').checked};
+      if(mId) await updateDoc(doc(db,'status',mId),data);
+      else await addDoc(collection(db,'status'),data);
+      admStatus();
+    } else if(mType==='cursa') {
+      const data={ruta:document.getElementById('m-ruta').value,data:document.getElementById('m-dt').value,vehicul:document.getElementById('m-veh').value,locuri:parseInt(document.getElementById('m-loc').value)||0};
+      if(mId) await updateDoc(doc(db,'curse',mId),data);
+      else await addDoc(collection(db,'curse'),data);
+      admCurse();
     }
-    closeModal();
-    showToast('Salvat cu succes!', 'success');
-  } catch(e) { showToast('Eroare: ' + e.message, 'error'); }
+    closeModal(); toast('Salvat cu succes! ✅','success');
+  } catch(e){toast('Eroare: '+e.message,'error');}
+  btn.textContent='Salvează'; btn.disabled=false;
 }
+function editItem(type,id){openModal(type,id);}
 
-function editAdminItem(type, id) { openModal(type, id); }
-
-// ─── TOAST ────────────────────────────────────────────────
-function showToast(msg, type = 'success') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show ' + type;
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => { t.className = ''; }, 3000);
+// ─── TOAST ──────────────────────────────────────────────────────
+function toast(msg,type='success') {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show '+type;
+  clearTimeout(t._t); t._t=setTimeout(()=>t.className='',3500);
 }
+window.toast=toast;
 
-// ─── INIT ─────────────────────────────────────────────────
+// ─── INIT ───────────────────────────────────────────────────────
 loadHome();
-
 </script>
 </body>
 </html>
+
