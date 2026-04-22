@@ -279,6 +279,29 @@ tr:hover td{background:rgba(255,255,255,.02)}
 /* ADMIN EXTRAS */
 .admin-section-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 
+
+/* TIP CURSA CARDS */
+.tip-card{background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s;font-size:22px;line-height:1.4}
+.tip-card span{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-top:4px}
+.tip-card:hover{border-color:rgba(232,160,32,.4);background:rgba(232,160,32,.05)}
+.tip-card.selected{border-color:var(--gold);background:rgba(232,160,32,.1)}
+.tip-card.selected span{color:var(--gold)}
+
+/* STEP INDICATOR */
+.rez-step{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:80px}
+.rez-step-num{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--muted);transition:all .3s}
+.rez-step-label{font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap;transition:color .3s}
+.rez-step.active .rez-step-num{background:var(--gold);border-color:var(--gold);color:#0a0d14}
+.rez-step.active .rez-step-label{color:var(--gold)}
+.rez-step.done .rez-step-num{background:var(--green);border-color:var(--green);color:#fff}
+.rez-step.done .rez-step-label{color:var(--green)}
+.rez-step-line{flex:1;height:2px;background:var(--border);margin-bottom:16px;min-width:24px;transition:background .3s}
+#tip-cursa-grid{grid-template-columns:repeat(3,1fr)}
+@media(max-width:600px){
+  #tip-cursa-grid{grid-template-columns:repeat(2,1fr)!important}
+  #confirm-layout{grid-template-columns:1fr!important}
+  .rez-step-label{display:none}
+}
 @media(max-width:900px){
   .grid-3,.grid-4{grid-template-columns:repeat(2,1fr)}
   .grid-2{grid-template-columns:1fr}
@@ -394,68 +417,158 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="section-header">
         <div class="section-label">Rezervă</div>
         <div class="section-title">Planifică-ți călătoria</div>
-        <div class="section-sub">Completează formularul și sistemul îți recomandă cele mai bune opțiuni.</div>
+        <div class="section-sub">Completează datele de bază, alege vehiculul dorit, apoi confirmă rezervarea.</div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px" id="rez-layout">
-        <div>
-          <div class="card" style="padding:0;overflow:visible">
+      <!-- STEP INDICATOR -->
+      <div id="rez-steps" style="display:flex;align-items:center;gap:0;margin-bottom:32px;max-width:480px">
+        <div class="rez-step active" id="step-ind-1">
+          <div class="rez-step-num">1</div>
+          <div class="rez-step-label">Detalii cursă</div>
+        </div>
+        <div class="rez-step-line"></div>
+        <div class="rez-step" id="step-ind-2">
+          <div class="rez-step-num">2</div>
+          <div class="rez-step-label">Alege vehicul</div>
+        </div>
+        <div class="rez-step-line"></div>
+        <div class="rez-step" id="step-ind-3">
+          <div class="rez-step-num">3</div>
+          <div class="rez-step-label">Confirmare</div>
+        </div>
+      </div>
+
+      <!-- STEP 1: Detalii cursa -->
+      <div id="rez-step-1">
+        <div style="max-width:600px">
+          <div class="card">
             <div class="card-body">
-              <div id="selected-vehicle-info" style="display:none;margin-bottom:16px"></div>
+
+              <!-- Tip cursa -->
               <div class="form-group">
-                <label class="form-label">📍 Oraș plecare</label>
-                <input class="form-input" id="rez-plecare" placeholder="Ex: București"/>
+                <label class="form-label">🎯 Tipul cursei <span style="color:var(--red)">*</span></label>
+                <div id="tip-cursa-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px">
+                  <div class="tip-card" data-val="excursie" onclick="selectTip(this)">🏔️<br><span>Excursie</span></div>
+                  <div class="tip-card" data-val="nunta" onclick="selectTip(this)">💒<br><span>Nuntă / Eveniment</span></div>
+                  <div class="tip-card" data-val="transfer" onclick="selectTip(this)">✈️<br><span>Transfer aeroport</span></div>
+                  <div class="tip-card" data-val="regulata" onclick="selectTip(this)">🔄<br><span>Cursă regulată</span></div>
+                  <div class="tip-card" data-val="corporativ" onclick="selectTip(this)">🏢<br><span>Transport corporativ</span></div>
+                  <div class="tip-card" data-val="altele" onclick="selectTip(this)">📋<br><span>Altele</span></div>
+                </div>
               </div>
-              <div class="form-group">
-                <label class="form-label">🏁 Destinație</label>
-                <input class="form-input" id="rez-dest" placeholder="Ex: Cluj-Napoca"/>
+
+              <!-- Avertisment cursa regulata -->
+              <div id="regulata-info" style="display:none;background:rgba(232,160,32,.08);border:1px solid rgba(232,160,32,.25);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">
+                ℹ️ <strong>Cursă regulată:</strong> Rezervi un <strong>loc</strong> în autobuz, nu autobuzul întreg. Prețul per loc va fi comunicat de admin după confirmare.
               </div>
+
               <div class="form-row">
                 <div class="form-group">
-                  <label class="form-label">📅 Data</label>
+                  <label class="form-label">📅 Data dorită <span style="color:var(--red)">*</span></label>
                   <input class="form-input" id="rez-data" type="date"/>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">🕐 Ora plecare</label>
+                  <label class="form-label">🕐 Ora aproximativă</label>
                   <select class="form-select" id="rez-ora">
-                    <option value="">Selectează ora</option>
-                    <option>06:00</option><option>08:00</option><option>10:00</option>
-                    <option>12:00</option><option>14:00</option><option>16:00</option>
-                    <option>18:00</option><option>20:00</option><option>22:00</option>
+                    <option value="">Flexibil / Nu știu</option>
+                    <option>06:00</option><option>07:00</option><option>08:00</option>
+                    <option>09:00</option><option>10:00</option><option>11:00</option>
+                    <option>12:00</option><option>13:00</option><option>14:00</option>
+                    <option>15:00</option><option>16:00</option><option>17:00</option>
+                    <option>18:00</option><option>19:00</option><option>20:00</option>
+                    <option>21:00</option><option>22:00</option>
                   </select>
                 </div>
               </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">👥 Nr. persoane</label>
-                  <input class="form-input" id="rez-persoane" type="number" min="1" placeholder="Ex: 20"/>
+
+              <!-- Ruta SAU km — cel putin una -->
+              <div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:16px">
+                <div class="text-sm text-muted" style="margin-bottom:10px">📍 <strong>Rută</strong> — completează cel puțin una dintre opțiuni</div>
+                <div class="form-row">
+                  <div class="form-group" style="margin:0">
+                    <label class="form-label">Plecare</label>
+                    <input class="form-input" id="rez-plecare" placeholder="Ex: București"/>
+                  </div>
+                  <div class="form-group" style="margin:0">
+                    <label class="form-label">Destinație</label>
+                    <input class="form-input" id="rez-dest" placeholder="Ex: Cluj-Napoca"/>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">📏 Distanță (km)</label>
-                  <input class="form-input" id="rez-km" type="number" min="1" placeholder="Ex: 150"/>
+                <div style="text-align:center;color:var(--muted);font-size:12px;margin:8px 0">— sau —</div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Distanță estimată (km)</label>
+                  <input class="form-input" id="rez-km" type="number" min="1" placeholder="Ex: 150 km"/>
                 </div>
               </div>
-              <div class="form-group">
-                <label class="form-label">📞 Telefon contact</label>
-                <input class="form-input" id="rez-tel" type="tel" placeholder="07xx xxx xxx"/>
+
+              <!-- Nr persoane — optional pt regulata -->
+              <div class="form-group" id="rez-persoane-wrap">
+                <label class="form-label">👥 Număr persoane <span id="pers-optional" class="text-sm text-muted">(opțional)</span></label>
+                <input class="form-input" id="rez-persoane" type="number" min="1" placeholder="Ex: 20"/>
               </div>
+
               <div class="form-group">
-                <label class="form-label">📝 Observații (opțional)</label>
-                <textarea class="form-textarea" id="rez-obs" placeholder="Cerințe speciale, detalii suplimentare..."></textarea>
+                <label class="form-label">📝 Observații / cerințe speciale</label>
+                <textarea class="form-textarea" id="rez-obs" placeholder="Detalii despre eveniment, cerințe speciale, accesibilitate..."></textarea>
               </div>
-              <button class="btn btn-gold" style="width:100%" onclick="submitRezervare()">🔍 Caută vehicule disponibile</button>
-            </div>
-          </div>
-        </div>
-        <div>
-          <div id="rec-container">
-            <div class="empty-state">
-              <div class="empty-state-icon">🚌</div>
-              <div>Completează formularul și apasă "Caută" pentru a vedea vehiculele disponibile.</div>
+
+              <button class="btn btn-gold" style="width:100%" onclick="goToStep2()">🔍 Caută vehicule disponibile →</button>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- STEP 2: Alege vehicul -->
+      <div id="rez-step-2" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <button class="btn btn-outline btn-sm" onclick="goBackStep1()">← Înapoi</button>
+          <div id="rez-summary-bar" style="font-size:13px;color:var(--muted)"></div>
+        </div>
+        <div id="rec-container">
+          <div class="empty-state"><div class="empty-state-icon">🔍</div><div>Se caută vehicule...</div></div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Confirmare rezervare -->
+      <div id="rez-step-3" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <button class="btn btn-outline btn-sm" onclick="goBackStep2()">← Schimbă vehiculul</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" id="confirm-layout">
+          <div>
+            <div class="card mb-16" id="confirm-vehicle-preview"></div>
+            <div class="card">
+              <div class="card-body">
+                <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px">💬 Despre preț</div>
+                <div class="text-sm text-muted" style="line-height:1.7">Prețul exact va fi stabilit de echipa noastră și comunicat direct pe telefon sau email, în funcție de detaliile cursei. Rezervarea ta este o <strong>cerere de ofertă</strong> — adminul va răspunde cât mai curând.</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-body">
+                <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:16px">📋 Datele tale de contact</div>
+                <div class="form-group">
+                  <label class="form-label">👤 Nume complet <span style="color:var(--red)">*</span></label>
+                  <input class="form-input" id="conf-nume" placeholder="Ion Popescu"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">📞 Telefon <span style="color:var(--red)">*</span></label>
+                  <input class="form-input" id="conf-tel" type="tel" placeholder="07xx xxx xxx"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">📧 Email (opțional)</label>
+                  <input class="form-input" id="conf-email" type="email" placeholder="email@exemplu.com"/>
+                </div>
+                <div id="conf-error" style="color:var(--red);font-size:13px;margin-bottom:12px;display:none"></div>
+                <button class="btn btn-gold" style="width:100%" onclick="confirmRezervare()">✅ Trimite cererea de rezervare</button>
+                <div class="text-sm text-muted" style="margin-top:10px;text-align:center">Nu ești obligat să ai cont. Adminul te va contacta direct.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -582,12 +695,15 @@ tr:hover td{background:rgba(255,255,255,.02)}
             <span class="var-chip">{{ruta}}</span>
             <span class="var-chip">{{data_cursa}}</span>
             <span class="var-chip">{{ora}}</span>
+            <span class="var-chip">{{tip_cursa}}</span>
             <span class="var-chip">{{persoane}}</span>
             <span class="var-chip">{{vehicule}}</span>
-            <span class="var-chip">{{pret}}</span>
+            <span class="var-chip">{{distanta}}</span>
+            <span class="var-chip">{{client_name}}</span>
             <span class="var-chip">{{client_email}}</span>
             <span class="var-chip">{{client_phone}}</span>
             <span class="var-chip">{{observatii}}</span>
+            <span class="var-chip">{{pret}}</span>
           </div>
         </div>
       </div>
@@ -630,7 +746,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>Data/Ora</th><th>Rută</th><th>Persoane</th><th>Vehicule</th><th>Preț</th><th>Contact</th><th>Status</th><th>Acțiuni</th>
+              <th>Data/Ora</th><th>Tip / Rută</th><th>Persoane</th><th>Vehicul</th><th>Contact</th><th>Status</th><th>Acțiuni</th>
             </tr></thead>
             <tbody id="admin-rez-tbody"></tbody>
           </table>
@@ -1073,190 +1189,233 @@ window.checkAvailability = async (vehicleId, domId) => {
   }
 };
 
-// ─── PRESELECT VEHICLE ─────────────────────────────────────────
-window.preselectVehicle = id => {
-  const v = window._flota.find(x=>x.id===id);
-  window._preselectedVehicle = v || null;
-  navigate('rezervari');
-  if (v) {
-    const el = document.getElementById('selected-vehicle-info');
-    if (el) {
-      el.style.display = '';
-      el.innerHTML = `<div style="background:rgba(232,160,32,.1);border:1px solid rgba(232,160,32,.3);border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px">
-        <span style="font-size:24px">${v.icon}</span>
-        <div><div style="font-weight:600">${v.nume}</div><div class="text-sm text-muted">${v.capacitate} locuri · ${v.pretPerKm} RON/km</div></div>
-        <button class="btn btn-ghost btn-sm" onclick="clearPreselect()" style="margin-left:auto">✕</button>
-      </div>`;
-    }
-  }
-};
-window.clearPreselect = () => {
-  window._preselectedVehicle = null;
-  const el = document.getElementById('selected-vehicle-info');
-  if (el) el.style.display = 'none';
+// ─── TIP CURSA SELECTION ──────────────────────────────────────
+window._tipCursa = null;
+window.selectTip = el => {
+  document.querySelectorAll('.tip-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  window._tipCursa = el.dataset.val;
+  const isReg = window._tipCursa === 'regulata';
+  document.getElementById('regulata-info').style.display = isReg ? '' : 'none';
 };
 
-// ─── REZERVARE SUBMIT ──────────────────────────────────────────
-window.submitRezervare = async () => {
+// ─── PRESELECT VEHICLE (from Flota page) ───────────────────────
+window.preselectVehicle = id => {
+  window._preselectedVehicle = id;
+  navigate('rezervari');
+};
+
+// ─── STEP NAVIGATION ───────────────────────────────────────────
+function setStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('rez-step-'+i).style.display = i===n?'':'none';
+    const ind = document.getElementById('step-ind-'+i);
+    ind.className = 'rez-step' + (i<n?' done':i===n?' active':'');
+  });
+}
+
+window.goToStep2 = async () => {
+  const data = document.getElementById('rez-data').value;
+  if (!data) { toast('Selectează data dorită!', 'wr'); return; }
+  if (!window._tipCursa) { toast('Alege tipul cursei!', 'wr'); return; }
   const plecare = document.getElementById('rez-plecare').value.trim();
   const dest = document.getElementById('rez-dest').value.trim();
-  const data = document.getElementById('rez-data').value;
-  const ora = document.getElementById('rez-ora').value;
-  const persoane = parseInt(document.getElementById('rez-persoane').value)||0;
-  const km = parseInt(document.getElementById('rez-km').value)||0;
-  const tel = document.getElementById('rez-tel').value.trim();
-  const obs = document.getElementById('rez-obs').value.trim();
-
-  if (!plecare||!dest||!data||!ora||!persoane||!km) {
-    toast('Completează toate câmpurile obligatorii!', 'wr'); return;
+  const km = document.getElementById('rez-km').value.trim();
+  if (!plecare && !dest && !km) {
+    toast('Completează măcar ruta sau distanța în km!', 'wr'); return;
   }
+  // update summary bar
+  const tipLabels = {excursie:'Excursie',nunta:'Nuntă/Eveniment',transfer:'Transfer aeroport',regulata:'Cursă regulată',corporativ:'Transport corporativ',altele:'Altele'};
+  const ruta = (plecare&&dest)?`${plecare} → ${dest}`:km?`~${km} km`:'rută nespecificată';
+  document.getElementById('rez-summary-bar').innerHTML = `<span class="badge badge-gold">${tipLabels[window._tipCursa]}</span> &nbsp; 📅 ${data} &nbsp; 📍 ${ruta}`;
+  setStep(2);
+  await loadAvailableVehicles(data);
+};
 
+window.goBackStep1 = () => { setStep(1); window._selectedRec = null; };
+window.goBackStep2 = () => { setStep(2); };
+
+async function loadAvailableVehicles(data) {
   const recCont = document.getElementById('rec-container');
-  recCont.innerHTML = '<div class="spinner"></div>';
+  recCont.innerHTML = '<div class="spinner" style="margin-top:40px"></div>';
+  const persoane = parseInt(document.getElementById('rez-persoane').value)||0;
+  const isReg = window._tipCursa === 'regulata';
 
   try {
-    // get occupied vehicles on this date
     const q = query(collection(db,'rezervari'), where('data','==',data), where('status','!=','anulata'));
     const snap = await getDocs(q);
     const occupiedIds = new Set();
-    snap.docs.forEach(d=>{
+    snap.docs.forEach(d => {
       const r = d.data();
-      (r.vehiculeSelectate||[]).forEach(id=>occupiedIds.add(id));
+      // for charter reservations, mark the vehicle occupied; for regular routes (loc single) we don't block
+      if (r.tipCursa !== 'regulata') {
+        (r.vehiculeSelectate||[]).forEach(id => occupiedIds.add(id));
+      }
     });
 
-    const avail = window._flota.filter(v=>!occupiedIds.has(v.id));
-    let recs = [];
-
-    // Case 1: single vehicle with enough capacity, sorted by price
-    const singles = avail.filter(v=>v.capacitate>=persoane).sort((a,b)=>a.pretPerKm-b.pretPerKm);
+    let vehicles = window._flota.filter(v => !occupiedIds.has(v.id));
     
-    // Preselected first
-    if (window._preselectedVehicle) {
-      const pre = window._flota.find(v=>v.id===window._preselectedVehicle.id);
-      if (pre) {
-        const isAvail = !occupiedIds.has(pre.id);
-        const pret = Math.round(pre.pretPerKm * km);
-        recs.push({type:'preselect', vehicles:[pre], pret, available:isAvail, label:'Vehicul ales de tine', badge:'badge-gold'});
-      }
+    // Filter by capacity if specified and not regulata
+    if (persoane > 0 && !isReg) {
+      const exact = vehicles.filter(v => v.capacitate >= persoane);
+      if (exact.length) vehicles = exact;
+      // else show all anyway with warning
     }
 
-    singles.filter(v=>v!==window._preselectedVehicle).slice(0,3).forEach(v=>{
-      const pret = Math.round(v.pretPerKm*km);
-      recs.push({type:'single',vehicles:[v],pret,available:true,label:'Potrivit pentru grupul tău',badge:'badge-green'});
+    // Sort: preselected first, then by capacity ascending
+    vehicles.sort((a,b) => {
+      if (a.id === window._preselectedVehicle) return -1;
+      if (b.id === window._preselectedVehicle) return 1;
+      return a.capacitate - b.capacitate;
     });
 
-    // Case 2: similar capacity
-    const similar = avail.filter(v=>v.capacitate<persoane && v.capacitate>=persoane-15).sort((a,b)=>b.capacitate-a.capacitate);
-    similar.slice(0,2).forEach(v=>{
-      const pret = Math.round(v.pretPerKm*km);
-      recs.push({type:'similar',vehicles:[v],pret,available:true,label:'Capacitate similară',badge:'badge-blue'});
-    });
-
-    // Case 3: combo of 2
-    if (!singles.length && avail.length>=2) {
-      for (let i=0;i<avail.length-1;i++) {
-        for (let j=i+1;j<avail.length;j++) {
-          if (avail[i].capacitate+avail[j].capacitate>=persoane) {
-            const pret = Math.round((avail[i].pretPerKm+avail[j].pretPerKm)*km);
-            recs.push({type:'combo',vehicles:[avail[i],avail[j]],pret,available:true,label:'Combinație 2 vehicule',badge:'badge-orange'});
-            break;
-          }
-        }
-        if (recs.some(r=>r.type==='combo')) break;
-      }
-    }
-
-    if (!recs.length) {
-      recCont.innerHTML = `<div class="empty-state"><div class="empty-state-icon">😔</div><div>Nu există vehicule disponibile pentru data selectată.<br>Încearcă o altă dată.</div></div>`;
+    if (!vehicles.length) {
+      recCont.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😔</div><div>Nu am găsit vehicule disponibile pentru această dată.<br>Încearcă altă dată sau contactează-ne direct.</div></div>';
       return;
     }
 
-    recCont.innerHTML = `<div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:16px">🚐 Opțiuni disponibile (${recs.length})</div>` +
-      recs.map((r,idx)=>{
-        const vNames = r.vehicles.map(v=>`${v.icon} ${v.nume}`).join(' + ');
-        const totalCap = r.vehicles.reduce((s,v)=>s+v.capacitate,0);
-        const occ = persoane/totalCap;
-        const barColor = occ<0.6?'var(--green)':occ<0.9?'var(--orange)':'var(--red)';
-        const tags = [...new Set(r.vehicles.flatMap(v=>v.dotari||[]))].slice(0,4).map(d=>`<span class="vehicle-tag">${d}</span>`).join('');
-        const availBadge = r.available ? '' : '<span class="badge badge-red" style="margin-left:8px">⚠️ Ocupat</span>';
-        return `<div class="rec-card">
-          <div class="rec-card-icon">${r.vehicles.map(v=>v.icon||'🚐').join('')}</div>
+    recCont.innerHTML = `<div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:16px">🚐 Vehicule disponibile (${vehicles.length}) — alege unul</div>` +
+      vehicles.map((v, idx) => {
+        const imgs = v.imagini||[];
+        const isPresel = v.id === window._preselectedVehicle;
+        const tags = (v.dotari||[]).slice(0,4).map(d=>`<span class="vehicle-tag">${d}</span>`).join('');
+        let subtitle = isReg
+          ? `🎫 Rezervi un loc · ${v.capacitate} locuri total`
+          : `🚌 Închiezi autobuzul · ${v.capacitate} locuri`;
+        return `<div class="rec-card" style="cursor:default;margin-bottom:14px;${isPresel?'border-color:var(--gold)':''}">
+          <div class="rec-card-icon" style="font-size:32px">${imgs.length?`<img src="${imgs[0]}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:zoom-in" onclick="openLightbox('${imgs[0]}')"/>`:(v.icon||'🚐')}</div>
           <div class="rec-card-info">
-            <div class="rec-card-name">${vNames}${availBadge}</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-              <span class="badge ${r.badge}">${r.label}</span>
-              <span class="text-sm text-muted">${totalCap} locuri totale</span>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+              <span class="rec-card-name">${v.icon} ${v.nume}</span>
+              ${isPresel?'<span class="badge badge-gold">⭐ Ales de tine</span>':''}
             </div>
-            <div class="progress"><div class="progress-bar" style="width:${Math.min(100,Math.round(occ*100))}%;background:${barColor}"></div></div>
-            <div class="text-sm text-muted">${persoane}/${totalCap} locuri (${Math.round(occ*100)}% ocupare)</div>
-            <div class="vehicle-tags" style="margin-top:8px">${tags}</div>
+            <div class="text-sm text-muted" style="margin-bottom:8px">${subtitle}</div>
+            <div class="vehicle-tags">${tags}</div>
           </div>
           <div class="rec-card-action">
-            <div class="rec-card-price">${r.pret} RON</div>
-            <div class="text-sm text-muted" style="text-align:right;margin-bottom:8px">${km} km</div>
-            <button class="btn btn-gold btn-sm" onclick="rezervaOptiune(${idx})" ${!r.available?'disabled':''}>Rezervă →</button>
+            <div class="text-sm text-muted" style="text-align:right;margin-bottom:8px">Preț la cerere</div>
+            <button class="btn btn-gold btn-sm" onclick="selectVehicleForBooking('${v.id}')">Alege →</button>
           </div>
         </div>`;
       }).join('');
 
-    window._currentRecs = recs;
-    window._currentRezForm = {plecare,dest,data,ora,persoane,km,tel,obs};
+    window._availableVehicles = vehicles;
   } catch(e) {
-    recCont.innerHTML = '<div class="text-red">Eroare la căutare.</div>';
+    recCont.innerHTML = '<div class="text-red">Eroare la căutare vehicule.</div>';
+    console.error(e);
+  }
+}
+
+window.selectVehicleForBooking = vehicleId => {
+  const v = window._availableVehicles.find(x=>x.id===vehicleId);
+  if (!v) return;
+  window._selectedRec = v;
+  // fill confirm preview
+  const imgs = v.imagini||[];
+  const imgHtml = imgs.length ? `<img src="${imgs[0]}" style="width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:12px;cursor:zoom-in" onclick="openLightbox('${imgs[0]}')" />` : `<div style="text-align:center;font-size:48px;padding:20px">${v.icon}</div>`;
+  const tags = (v.dotari||[]).map(d=>`<span class="vehicle-tag">${d}</span>`).join('');
+  const tipLabels = {excursie:'Excursie',nunta:'Nuntă/Eveniment',transfer:'Transfer aeroport',regulata:'Cursă regulată',corporativ:'Transport corporativ',altele:'Altele'};
+  document.getElementById('confirm-vehicle-preview').innerHTML = `<div class="card-body">
+    ${imgHtml}
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px">${v.icon} ${v.nume}</div>
+    <div class="text-sm text-muted">${v.capacitate} locuri &nbsp;•&nbsp; ${window._tipCursa==='regulata'?'1 loc rezervat':'Închiriere autobuz'}</div>
+    <div class="vehicle-tags" style="margin-top:8px">${tags}</div>
+    <hr class="divider"/>
+    <div style="font-size:13px;color:var(--muted)">📋 Tip cursă: <strong style="color:var(--text)">${tipLabels[window._tipCursa]||'-'}</strong></div>
+    <div style="font-size:13px;color:var(--muted);margin-top:4px">📅 Data: <strong style="color:var(--text)">${document.getElementById('rez-data').value}</strong></div>
+  </div>`;
+  // prefill email from user if logged in
+  if (window._currentUser) {
+    document.getElementById('conf-email').value = window._currentUser.email || '';
+    document.getElementById('conf-nume').value = window._currentUser.displayName || '';
+  }
+  setStep(3);
+};
+
+window.confirmRezervare = async () => {
+  const nume = document.getElementById('conf-nume').value.trim();
+  const tel = document.getElementById('conf-tel').value.trim();
+  const email = document.getElementById('conf-email').value.trim();
+  const errEl = document.getElementById('conf-error');
+  errEl.style.display = 'none';
+  if (!nume) { errEl.style.display=''; errEl.textContent='Introduceți numele complet.'; return; }
+  if (!tel) { errEl.style.display=''; errEl.textContent='Introduceți numărul de telefon.'; return; }
+  if (!window._selectedRec) { toast('Niciun vehicul selectat.','wr'); return; }
+
+  const v = window._selectedRec;
+  const data = document.getElementById('rez-data').value;
+  const ora = document.getElementById('rez-ora').value;
+  const plecare = document.getElementById('rez-plecare').value.trim();
+  const dest = document.getElementById('rez-dest').value.trim();
+  const km = document.getElementById('rez-km').value.trim();
+  const persoane = document.getElementById('rez-persoane').value.trim();
+  const obs = document.getElementById('rez-obs').value.trim();
+  const isReg = window._tipCursa === 'regulata';
+
+  try {
+    const docData = {
+      uid: window._currentUser?.uid || null,
+      email: email || window._currentUser?.email || null,
+      numeClient: nume, telefon: tel,
+      plecare: plecare||'-', destinatie: dest||'-',
+      data, ora: ora||'flexibil',
+      persoane: isReg ? 1 : (parseInt(persoane)||null),
+      distantaKm: parseInt(km)||null,
+      vehiculeSelectate: [v.id],
+      vehiculeNume: v.nume,
+      tipCursa: window._tipCursa,
+      observatii: obs,
+      status: 'in_asteptare',
+      pretEstimativ: null, // admin va stabili pretul
+      createdAt: Timestamp.now()
+    };
+    await addDoc(collection(db,'rezervari'), docData);
+    toast('Cerere trimisă! Adminul te va contacta în curând. 🎉', 'ok');
+    sendEmailNew(docData, v);
+    // Reset form
+    window._tipCursa = null;
+    window._selectedRec = null;
+    window._preselectedVehicle = null;
+    document.querySelectorAll('.tip-card').forEach(c=>c.classList.remove('selected'));
+    ['rez-data','rez-plecare','rez-dest','rez-km','rez-persoane','rez-obs','conf-nume','conf-tel','conf-email'].forEach(id=>{
+      const el = document.getElementById(id); if(el) el.value='';
+    });
+    document.getElementById('rez-ora').value = '';
+    document.getElementById('regulata-info').style.display = 'none';
+    setStep(1);
+    if (window._currentUser) navigate('myres');
+  } catch(e) {
+    toast('Eroare la trimiterea cererii.', 'er');
     console.error(e);
   }
 };
 
-window.rezervaOptiune = async idx => {
-  if (!window._currentUser) {
-    toast('Trebuie să fii autentificat pentru a rezerva!', 'wr');
-    navigate('auth'); return;
-  }
-  const rec = window._currentRecs[idx];
-  const f = window._currentRezForm;
-  try {
-    const docRef = await addDoc(collection(db,'rezervari'), {
-      uid: window._currentUser.uid,
-      email: window._currentUser.email,
-      plecare: f.plecare, destinatie: f.dest,
-      data: f.data, ora: f.ora,
-      persoane: f.persoane, distantaKm: f.km,
-      vehiculeSelectate: rec.vehicles.map(v=>v.id),
-      vehiculeNume: rec.vehicles.map(v=>v.nume).join(' + '),
-      pretEstimativ: rec.pret,
-      telefon: f.tel, observatii: f.obs,
-      status: 'in_asteptare',
-      createdAt: Timestamp.now()
-    });
-    toast('Rezervare trimisă cu succes! 🎉', 'ok');
-    sendEmail(rec, f);
-    navigate('myres');
-  } catch(e) {
-    toast('Eroare la salvare rezervare.', 'er');
-  }
-};
-
 // ─── EMAIL ─────────────────────────────────────────────────────
-async function sendEmail(rec, f) {
+async function sendEmailNew(docData, vehicul) {
   const cfg = getEmailJSConfig();
   if (!cfg.serviceId||!cfg.templateId||!cfg.publicKey) return;
+  const tipLabels = {excursie:'Excursie',nunta:'Nunta/Eveniment',transfer:'Transfer aeroport',regulata:'Cursa regulata',corporativ:'Transport corporativ',altele:'Altele'};
   try {
-    if (!window.emailjs) {
-      await loadEmailJS(cfg.publicKey);
-    }
+    if (!window.emailjs) await loadEmailJS(cfg.publicKey);
     await window.emailjs.send(cfg.serviceId, cfg.templateId, {
-      ruta: `${f.plecare} → ${f.dest}`,
-      data_cursa: f.data, ora: f.ora,
-      persoane: f.persoane,
-      vehicule: rec.vehicles.map(v=>v.nume).join(' + '),
-      pret: rec.pret + ' RON',
-      client_email: window._currentUser?.email || '-',
-      client_phone: f.tel,
-      observatii: f.obs || '-',
+      ruta: `${docData.plecare} → ${docData.destinatie}`,
+      data_cursa: docData.data,
+      ora: docData.ora,
+      persoane: docData.persoane ? String(docData.persoane) : 'nespecificat',
+      vehicule: docData.vehiculeNume,
+      tip_cursa: tipLabels[docData.tipCursa] || docData.tipCursa,
+      pret: 'La cerere — adminul va contacta clientul',
+      client_email: docData.email || 'nespecificat',
+      client_phone: docData.telefon,
+      client_name: docData.numeClient,
+      observatii: docData.observatii || '-',
+      distanta: docData.distantaKm ? docData.distantaKm + ' km' : 'nespecificata',
       to_email: cfg.email
     });
   } catch(e) { console.warn('Email error:', e); }
 }
+// backward compat alias
+async function sendEmail(rec, f) { await sendEmailNew(f, rec); }
 
 function loadEmailJS(key) {
   return new Promise(res => {
@@ -1337,11 +1496,14 @@ async function loadMyReservations() {
           <div class="my-res-item"><label>Data</label><span>${r.data}</span></div>
           <div class="my-res-item"><label>Ora</label><span>${r.ora}</span></div>
           <div class="my-res-item"><label>Persoane</label><span>${r.persoane}</span></div>
-          <div class="my-res-item"><label>Vehicul</label><span>${r.vehiculeNume}</span></div>
-          <div class="my-res-item"><label>Preț estimat</label><span class="text-gold">${r.pretEstimativ} RON</span></div>
+          <div class="my-res-item"><label>Vehicul</label><span>${r.vehiculeNume||'-'}</span></div>
+          <div class="my-res-item"><label>Tip cursă</label><span>${{excursie:'🏔️ Excursie',nunta:'💒 Nuntă',transfer:'✈️ Transfer',regulata:'🔄 Regulată',corporativ:'🏢 Corporativ',altele:'📋 Altele'}[r.tipCursa]||r.tipCursa||'-'}</span></div>
           <div class="my-res-item"><label>Telefon</label><span>${r.telefon||'-'}</span></div>
         </div>
-        ${r.observatii?`<div style="margin-top:12px;padding:10px;background:var(--bg3);border-radius:6px;font-size:13px;color:var(--muted)">${r.observatii}</div>`:''}
+        ${r.observatii?`<div style="margin-top:12px;padding:10px;background:var(--bg3);border-radius:6px;font-size:13px;color:var(--muted)">📝 ${r.observatii}</div>`:''}
+        <div style="margin-top:10px;padding:10px;background:rgba(232,160,32,.06);border:1px solid rgba(232,160,32,.15);border-radius:6px;font-size:12px;color:var(--muted)">
+          💬 Prețul va fi comunicat de echipa LSD Group direct pe telefon sau email.
+        </div>
       </div>`;
     }).join('');
   } catch(e) { el.innerHTML = '<div class="text-red">Eroare la încărcare.</div>'; }
@@ -1419,24 +1581,24 @@ async function updateAdminStats() {
 function renderAdminRezervari(docs) {
   const tbody = document.getElementById('admin-rez-tbody');
   if (!tbody) return;
-  const sorted = [...docs].sort((a,b)=>b.data().data<a.data().data?-1:1);
+  const sorted = [...docs].sort((a,b)=>b.data().createdAt?.seconds>a.data().createdAt?.seconds?1:-1);
   const sMap = {in_asteptare:{label:'Așteptare',cls:'badge-orange'},confirmata:{label:'Confirmată',cls:'badge-green'},anulata:{label:'Anulată',cls:'badge-red'}};
+  const tipIco = {excursie:'🏔️',nunta:'💒',transfer:'✈️',regulata:'🔄',corporativ:'🏢',altele:'📋'};
   tbody.innerHTML = sorted.map(d=>{
     const r=d.data(); const s=sMap[r.status]||{label:r.status,cls:'badge-blue'};
     return `<tr>
-      <td>${r.data}<br><span class="text-muted text-sm">${r.ora}</span></td>
-      <td>${r.plecare} → ${r.destinatie}</td>
-      <td>${r.persoane}</td>
-      <td style="font-size:12px">${r.vehiculeNume}</td>
-      <td class="text-gold">${r.pretEstimativ} RON</td>
-      <td style="font-size:12px">${r.email}<br>${r.telefon||''}</td>
+      <td>${r.data||'-'}<br><span class="text-muted text-sm">${r.ora||'flexibil'}</span></td>
+      <td><div style="font-size:11px;color:var(--muted)">${tipIco[r.tipCursa]||''} ${r.tipCursa||'-'}</div>${r.plecare||'-'} → ${r.destinatie||'-'}</td>
+      <td>${r.tipCursa==='regulata'?'1 loc':(r.persoane||'-')}</td>
+      <td style="font-size:12px">${r.vehiculeNume||'-'}</td>
+      <td style="font-size:12px"><strong>${r.numeClient||r.email||'-'}</strong><br>${r.telefon||''}<br><span class="text-muted">${r.email||''}</span></td>
       <td><span class="badge ${s.cls}">${s.label}</span></td>
       <td><div style="display:flex;gap:4px;flex-wrap:wrap">
         ${r.status!=='confirmata'?`<button class="btn btn-green btn-sm" onclick="confirmRez('${d.id}')">✓</button>`:''}
         <button class="btn btn-red btn-sm" onclick="deleteRez('${d.id}')">🗑</button>
       </div></td>
     </tr>`;
-  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px">Nicio rezervare</td></tr>';
+  }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">Nicio rezervare</td></tr>';
 }
 
 window.confirmRez = async id => {
@@ -1666,8 +1828,15 @@ window.navigate = page => {
   document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
   const target = document.getElementById('page-'+page);
   if (target) target.classList.add('active');
-  document.querySelectorAll('.nav-link').forEach(l=>{ if(l.textContent.toLowerCase().includes(page)||l.getAttribute('onclick')?.includes(`'${page}'`)) l.classList.add('active'); });
+  document.querySelectorAll('.nav-link').forEach(l=>{ if(l.getAttribute('onclick')?.includes(`'${page}'`)) l.classList.add('active'); });
   window.scrollTo(0,0);
+  if (page==='rezervari') {
+    setStep(1);
+    // If coming from Flota with a preselected vehicle, pick the date first then auto-search
+    if (window._preselectedVehicle) {
+      toast('Vehiculul a fost preselectat. Alege tipul cursei și data!','in');
+    }
+  }
   if (page==='myres') loadMyReservations();
   if (page==='admin') {
     if (!window._currentUser || window._currentUser.email!==ADMIN_EMAIL) { toast('Acces interzis!','er'); navigate('home'); return; }
@@ -1721,10 +1890,12 @@ window.toast = (msg, type='ok') => {
 window.addEventListener('DOMContentLoaded', () => {
   seedIfEmpty();
   loadAll();
-  // Set default date on rezervari form
+  // Set min date on rezervari form
   const today = new Date().toISOString().split('T')[0];
   const rezData = document.getElementById('rez-data');
-  if (rezData) { rezData.value = today; rezData.min = today; }
+  if (rezData) { rezData.min = today; }
+  // Init step 1 visible
+  setStep(1);
   // Close modals on overlay click
   document.querySelectorAll('.modal-overlay').forEach(o=>{
     o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('open'); });
@@ -1734,3 +1905,4 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
