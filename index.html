@@ -280,6 +280,34 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .admin-section-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 
 
+/* CINEMA SEATS */
+.seat{width:34px;height:28px;border-radius:6px 6px 4px 4px;border:1.5px solid rgba(255,255,255,.15);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;position:relative}
+.seat.free{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:var(--green)}
+.seat.free:hover{background:rgba(34,197,94,.35);transform:scale(1.05)}
+.seat.occupied{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:var(--red);cursor:not-allowed}
+.seat.selected{background:var(--gold);border-color:var(--gold2);color:#0a0d14}
+.seat.driver{background:rgba(100,116,139,.2);border-color:rgba(100,116,139,.3);color:var(--muted);cursor:not-allowed;font-size:9px}
+.seats-row{display:flex;gap:5px;align-items:center;justify-content:center}
+.seats-aisle{width:20px}
+.bus-front{background:var(--bg3);border-radius:8px 8px 0 0;padding:8px 16px;text-align:center;font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:4px;width:200px}
+
+/* BILET */
+.bilet{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:2px solid var(--gold);border-radius:12px;padding:0;overflow:hidden;font-family:'Syne',sans-serif}
+.bilet-header{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0d14;padding:16px 20px;display:flex;align-items:center;gap:12px}
+.bilet-logo{font-size:22px;font-weight:800}
+.bilet-body{padding:20px}
+.bilet-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.bilet-row:last-child{border-bottom:none}
+.bilet-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.bilet-val{font-size:15px;font-weight:700}
+.bilet-seat{background:var(--gold);color:#0a0d14;width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0}
+.bilet-qr{background:var(--bg);border-radius:8px;padding:12px;text-align:center;margin-top:12px;font-size:11px;color:var(--muted)}
+.bilet-footer{background:rgba(232,160,32,.08);padding:12px 20px;font-size:11px;color:var(--muted);text-align:center}
+
+/* CUSTOM FIELD DEF */
+.cf-item{display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:8px;padding:10px;margin-bottom:8px}
+.cf-item input{flex:1}
+
 /* TIP CURSA CARDS */
 .tip-card{background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s;font-size:22px;line-height:1.4}
 .tip-card span{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-top:4px}
@@ -381,6 +409,16 @@ tr:hover td{background:rgba(255,255,255,.02)}
     </div>
 
     <div id="next-trip-banner"></div>
+
+    <!-- Curse regulate pe home -->
+    <div class="section" id="home-regulate-section" style="display:none">
+      <div class="section-header">
+        <div class="section-label">Curse Regulate</div>
+        <div class="section-title">🔄 Locuri disponibile azi</div>
+        <div class="section-sub">Rezervă un loc în autobuzele noastre regulate. Alege destinația și vezi locurile disponibile.</div>
+      </div>
+      <div id="home-regulate-grid" class="grid-3"></div>
+    </div>
 
     <div class="section">
       <div class="section-header">
@@ -557,8 +595,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
                   <input class="form-input" id="conf-tel" type="tel" placeholder="07xx xxx xxx"/>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">📧 Email (opțional)</label>
+                  <label class="form-label">📧 Email <span style="color:var(--red)">*</span></label>
                   <input class="form-input" id="conf-email" type="email" placeholder="email@exemplu.com"/>
+                  <div class="text-sm text-muted" style="margin-top:4px">📬 Vei primi detaliile și confirmarea pe email.</div>
                 </div>
                 <div id="conf-error" style="color:var(--red);font-size:13px;margin-bottom:12px;display:none"></div>
                 <button class="btn btn-gold" style="width:100%" onclick="confirmRezervare()">✅ Trimite cererea de rezervare</button>
@@ -742,7 +781,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
       <!-- ADMIN: REZERVARI -->
       <div class="tab-panel" id="admin-rezervari">
-        <div class="admin-section-title">Toate rezervările</div>
+        <div class="flex-between" style="margin-bottom:16px">
+          <div class="admin-section-title" style="margin:0;border:0;padding:0">Toate rezervările</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline btn-sm" onclick="openCustomFieldsModal()">⚙️ Câmpuri</button>
+            <button class="btn btn-gold btn-sm" onclick="openManualRezervare()">+ Adaugă manual</button>
+          </div>
+        </div>
         <div class="table-wrap">
           <table>
             <thead><tr>
@@ -784,6 +829,172 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <div id="lightbox" onclick="closeLightbox()">
   <button id="lightbox-close" onclick="closeLightbox()">✕</button>
   <img id="lightbox-img" src="" alt=""/>
+</div>
+
+<!-- MODAL: Cinema Seats -->
+<div class="modal-overlay" id="modal-seats">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title" id="seats-modal-title">🎭 Alege locul tău</div>
+      <button class="modal-close" onclick="closeModal('modal-seats')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="seats-cursa-info" style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px"></div>
+      <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px">
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:16px;background:var(--green);border-radius:3px;opacity:.3;display:inline-block"></span>Liber</span>
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:16px;background:var(--red);border-radius:3px;opacity:.5;display:inline-block"></span>Ocupat</span>
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:16px;background:var(--gold);border-radius:3px;display:inline-block"></span>Selectat</span>
+      </div>
+      <!-- bus front indicator -->
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:2px">⬆ FAȚĂ AUTOBUZ ⬆</div>
+      <div id="seats-grid" style="display:flex;flex-direction:column;gap:6px;align-items:center"></div>
+      <div id="seats-selected-info" style="margin-top:16px;padding:12px;background:rgba(232,160,32,.08);border:1px solid rgba(232,160,32,.2);border-radius:8px;display:none;font-size:13px"></div>
+      <div class="form-group" style="margin-top:16px" id="seats-pana-wrap" style="display:none">
+        <label class="form-label">📍 Până unde mergi? <span style="color:var(--red)">*</span></label>
+        <input class="form-input" id="seats-pana-unde" placeholder="Ex: Cluj-Napoca, stația centrală"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-seats')">Anulează</button>
+      <button class="btn btn-gold" id="seats-confirm-btn" onclick="confirmSeatReservation()" disabled>✅ Confirmă locul</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Bilet -->
+<div class="modal-overlay" id="modal-bilet">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">🎟️ Biletul tău</div>
+      <button class="modal-close" onclick="closeModal('modal-bilet')">✕</button>
+    </div>
+    <div class="modal-body" id="bilet-content"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-bilet')">Închide</button>
+      <button class="btn btn-gold" onclick="printBilet()">🖨️ Printează / Salvează</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Manual Rezervare (Admin) -->
+<div class="modal-overlay" id="modal-manual-rez">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title">➕ Adaugă rezervare manual</div>
+      <button class="modal-close" onclick="closeModal('modal-manual-rez')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">👤 Nume client</label>
+          <input class="form-input" id="mr-nume" placeholder="Ion Popescu"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">📞 Telefon</label>
+          <input class="form-input" id="mr-tel" type="tel" placeholder="07xx xxx xxx"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📧 Email</label>
+        <input class="form-input" id="mr-email" type="email" placeholder="email@exemplu.com"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">🎯 Tip cursă</label>
+          <select class="form-select" id="mr-tip">
+            <option value="excursie">🏔️ Excursie</option>
+            <option value="nunta">💒 Nuntă/Eveniment</option>
+            <option value="transfer">✈️ Transfer aeroport</option>
+            <option value="regulata">🔄 Cursă regulată</option>
+            <option value="corporativ">🏢 Corporativ</option>
+            <option value="altele">📋 Altele</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">📊 Status</label>
+          <select class="form-select" id="mr-status">
+            <option value="in_asteptare">În așteptare</option>
+            <option value="confirmata">Confirmată</option>
+            <option value="anulata">Anulată</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">📍 Plecare</label>
+          <input class="form-input" id="mr-plecare" placeholder="București"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">🏁 Destinație</label>
+          <input class="form-input" id="mr-dest" placeholder="Cluj-Napoca"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">📅 Data</label>
+          <input class="form-input" id="mr-data" type="date"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">🕐 Ora</label>
+          <select class="form-select" id="mr-ora">
+            <option value="flexibil">Flexibil</option>
+            <option>06:00</option><option>07:00</option><option>08:00</option><option>09:00</option>
+            <option>10:00</option><option>12:00</option><option>14:00</option><option>16:00</option>
+            <option>18:00</option><option>20:00</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">👥 Nr. persoane</label>
+          <input class="form-input" id="mr-persoane" type="number" min="1" placeholder="1"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">💰 Preț convenit (RON)</label>
+          <input class="form-input" id="mr-pret" type="number" min="0" placeholder="500"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">🚐 Vehicul</label>
+        <select class="form-select" id="mr-vehicul"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📝 Observații</label>
+        <textarea class="form-textarea" id="mr-obs" placeholder="Detalii suplimentare..."></textarea>
+      </div>
+      <!-- Câmpuri custom -->
+      <div id="mr-custom-fields-wrap">
+        <div class="flex-between" style="margin-bottom:8px">
+          <div class="text-sm text-muted">Câmpuri suplimentare</div>
+          <button class="btn btn-outline btn-sm" onclick="addCustomFieldManual()">+ Adaugă câmp</button>
+        </div>
+        <div id="mr-custom-fields"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-manual-rez')">Anulează</button>
+      <button class="btn btn-gold" onclick="saveManualRezervare()">💾 Salvează</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Custom Fields config -->
+<div class="modal-overlay" id="modal-custom-fields">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Câmpuri personalizate rezervări</div>
+      <button class="modal-close" onclick="closeModal('modal-custom-fields')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="text-sm text-muted" style="margin-bottom:16px">Aceste câmpuri vor apărea în toate rezervările noi și în formularul de adăugare manuală.</div>
+      <div id="custom-fields-list"></div>
+      <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="addCustomFieldDef()">+ Adaugă câmp nou</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-custom-fields')">Anulează</button>
+      <button class="btn btn-gold" onclick="saveCustomFieldsDef()">💾 Salvează</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: Vehicle -->
@@ -888,13 +1099,20 @@ tr:hover td{background:rgba(255,255,255,.02)}
           </select>
         </div>
       </div>
+      <div class="form-group">
+        <label class="form-label">🎯 Tip cursă</label>
+        <select class="form-select" id="c-tip">
+          <option value="regulata">🔄 Cursă regulată (locuri individuale)</option>
+          <option value="ocazionala">📋 Cursă ocazională (afișaj general)</option>
+        </select>
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Vehicul</label>
           <select class="form-select" id="c-vehicul"></select>
         </div>
         <div class="form-group">
-          <label class="form-label">Locuri disponibile</label>
+          <label class="form-label">Locuri totale</label>
           <input class="form-input" id="c-locuri" type="number" min="0" placeholder="20"/>
         </div>
       </div>
@@ -1044,7 +1262,14 @@ async function seedIfEmpty() {
   await addDoc(collection(db, 'curse'), {
     ruta: 'București – Cluj-Napoca',
     data: new Date(Date.now()+86400000*2).toISOString().split('T')[0],
-    ora: '08:00', vehicul: 'Mercedes Sprinter 20', locuri: 8
+    ora: '08:00', vehicul: 'Mercedes Sprinter 20', locuri: 20, locuriOcupate: 3,
+    tipCursa: 'regulata'
+  });
+  await addDoc(collection(db, 'curse'), {
+    ruta: 'București – Brașov',
+    data: new Date(Date.now()+86400000).toISOString().split('T')[0],
+    ora: '10:00', vehicul: 'Setra 50', locuri: 50, locuriOcupate: 12,
+    tipCursa: 'regulata'
   });
   toast('Date demo adăugate!', 'ok');
   loadAll();
@@ -1055,6 +1280,8 @@ async function loadAll() {
   await loadFlota();
   loadHome();
   loadTicker();
+  loadCustomFieldsDef();
+  loadRegulateHome();
 }
 
 // ─── FLOTA ──────────────────────────────────────────────────────
@@ -1202,7 +1429,9 @@ window.selectTip = el => {
 // ─── PRESELECT VEHICLE (from Flota page) ───────────────────────
 window.preselectVehicle = id => {
   window._preselectedVehicle = id;
+  // Don't skip step 1 — user still needs to pick tip and date
   navigate('rezervari');
+  toast('Vehicul preselectat! Alege tipul cursei și data pentru a continua.', 'in');
 };
 
 // ─── STEP NAVIGATION ───────────────────────────────────────────
@@ -1340,6 +1569,7 @@ window.confirmRezervare = async () => {
   errEl.style.display = 'none';
   if (!nume) { errEl.style.display=''; errEl.textContent='Introduceți numele complet.'; return; }
   if (!tel) { errEl.style.display=''; errEl.textContent='Introduceți numărul de telefon.'; return; }
+  if (!email) { errEl.style.display=''; errEl.textContent='Emailul este obligatoriu — vei fi contactat pe email cu detaliile.'; return; }
   if (!window._selectedRec) { toast('Niciun vehicul selectat.','wr'); return; }
 
   const v = window._selectedRec;
@@ -1370,7 +1600,10 @@ window.confirmRezervare = async () => {
       createdAt: Timestamp.now()
     };
     await addDoc(collection(db,'rezervari'), docData);
-    toast('Cerere trimisă! Adminul te va contacta în curând. 🎉', 'ok');
+    const tipMsg = window._tipCursa==='regulata'
+      ? 'Locul rezervat! Verifică emailul pentru confirmare. 🎉'
+      : 'Cerere trimisă! Echipa LSD te va contacta pe email/telefon cu detaliile și prețul. 🎉';
+    toast(tipMsg, 'ok');
     sendEmailNew(docData, v);
     // Reset form
     window._tipCursa = null;
@@ -1781,6 +2014,7 @@ window.openCursaModal = () => {
   document.getElementById('c-locuri').value = '';
   const sel = document.getElementById('c-vehicul');
   sel.innerHTML = window._flota.map(v=>`<option value="${v.nume}">${v.icon} ${v.nume}</option>`).join('');
+  if(document.getElementById('c-tip')) document.getElementById('c-tip').value='regulata';
   document.getElementById('modal-cursa').classList.add('open');
 };
 window.saveCursa = async () => {
@@ -1790,7 +2024,9 @@ window.saveCursa = async () => {
     data: document.getElementById('c-data').value,
     ora: document.getElementById('c-ora').value,
     vehicul: document.getElementById('c-vehicul').value,
-    locuri: parseInt(document.getElementById('c-locuri').value)||0
+    locuri: parseInt(document.getElementById('c-locuri').value)||0,
+    tipCursa: document.getElementById('c-tip')?.value||'regulata',
+    locuriOcupate: 0
   };
   if (!data.ruta||!data.data) { toast('Completați câmpurile!','wr'); return; }
   if (id) { await setDoc(doc(db,'curse',id), data, {merge:true}); }
@@ -1806,10 +2042,12 @@ async function loadCurseAdmin() {
   const snap = await getDocs(collection(db,'curse'));
   el.innerHTML = snap.docs.map(d=>{
     const c=d.data();
+    const tipBadge = c.tipCursa==='regulata'?'<span class="badge badge-blue">🔄 Regulată</span>':'<span class="badge badge-orange">📋 Ocazională</span>';
+    const locLibere = (c.locuri||0)-(c.locuriOcupate||0);
     return `<div class="card card-body" style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
       <div style="flex:1">
-        <div style="font-weight:600">${c.ruta}</div>
-        <div class="text-sm text-muted">📅 ${c.data} · ⏰ ${c.ora} · 🚐 ${c.vehicul} · 💺 ${c.locuri} locuri</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">${tipBadge}<span style="font-weight:600">${c.ruta}</span></div>
+        <div class="text-sm text-muted">📅 ${c.data} · ⏰ ${c.ora} · 🚐 ${c.vehicul} · 💺 ${c.locuri} total (${locLibere} libere)</div>
       </div>
       <button class="btn btn-red btn-sm" onclick="deleteCursa('${d.id}')">🗑 Șterge</button>
     </div>`;
@@ -1820,6 +2058,434 @@ window.deleteCursa = async id => {
   await deleteDoc(doc(db,'curse',id));
   loadCurseAdmin();
   loadHome();
+  loadRegulateHome();
+};
+
+
+// ─── CURSE REGULATE - HOME ─────────────────────────────────────
+async function loadRegulateHome() {
+  const snap = await getDocs(collection(db,'curse'));
+  const curse = snap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>c.tipCursa==='regulata'||!c.tipCursa);
+  // Show only future or today's curse
+  const today = new Date().toISOString().split('T')[0];
+  const viitoare = curse.filter(c=>c.data>=today).sort((a,b)=>a.data<b.data?-1:1);
+  const section = document.getElementById('home-regulate-section');
+  const grid = document.getElementById('home-regulate-grid');
+  if (!grid) return;
+  if (!viitoare.length) { if(section) section.style.display='none'; return; }
+  if(section) section.style.display='';
+  grid.innerHTML = viitoare.slice(0,6).map(curs => {
+    const locLibere = (curs.locuri||0) - (curs.locuriOcupate||0);
+    const pct = Math.round(((curs.locuriOcupate||0)/(curs.locuri||1))*100);
+    const barColor = pct<60?'var(--green)':pct<90?'var(--orange)':'var(--red)';
+    return `<div class="card" style="padding:0">
+      <div class="card-body">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span class="badge badge-blue">🔄 Cursă regulată</span>
+          <span class="text-sm text-muted">${curs.data}</span>
+        </div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px">${curs.ruta}</div>
+        <div class="card-meta">🕐 ${curs.ora||'—'} &nbsp;•&nbsp; 🚐 ${curs.vehicul}</div>
+        <div class="progress" style="margin:12px 0 4px">
+          <div class="progress-bar" style="width:${pct}%;background:${barColor}"></div>
+        </div>
+        <div class="text-sm" style="display:flex;justify-content:space-between;margin-bottom:12px">
+          <span class="text-muted">${curs.locuriOcupate||0}/${curs.locuri} locuri ocupate</span>
+          <span style="color:${locLibere>0?'var(--green)':'var(--red)'};font-weight:600">${locLibere>0?locLibere+' libere':'Complet'}</span>
+        </div>
+        ${locLibere>0
+          ? `<button class="btn btn-gold" style="width:100%" onclick="openCinemaSeatModal('${curs.id}')">🎭 Alege locul tău</button>`
+          : `<button class="btn btn-outline" style="width:100%" disabled>Epuizat</button>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── CINEMA SEATS MODAL ────────────────────────────────────────
+window._currentCursa = null;
+window._selectedSeat = null;
+
+window.openCinemaSeatModal = async (cursaId) => {
+  const snap = await getDoc(doc(db,'curse',cursaId));
+  if (!snap.exists()) return;
+  const curs = {id:cursaId,...snap.data()};
+  window._currentCursa = curs;
+  window._selectedSeat = null;
+
+  // get reserved seats for this cursa
+  const q = query(collection(db,'rezervari'),
+    where('cursaId','==',cursaId),
+    where('status','!=','anulata'));
+  const rezSnap = await getDocs(q);
+  const ocupate = new Set();
+  rezSnap.docs.forEach(d=>{
+    const r=d.data();
+    if(r.locNr) ocupate.add(r.locNr);
+  });
+
+  const totalLocuri = curs.locuri || 20;
+  const vehicul = window._flota.find(v=>v.nume===curs.vehicul)||{capacitate:totalLocuri};
+  
+  document.getElementById('seats-modal-title').textContent = `🎭 ${curs.ruta} — Alege locul`;
+  document.getElementById('seats-cursa-info').innerHTML = `
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div>📅 <strong>${curs.data}</strong></div>
+      <div>🕐 <strong>${curs.ora}</strong></div>
+      <div>🚐 <strong>${curs.vehicul}</strong></div>
+      <div>💺 <strong>${totalLocuri} locuri total</strong></div>
+    </div>`;
+  document.getElementById('seats-selected-info').style.display='none';
+  document.getElementById('seats-confirm-btn').disabled = true;
+  document.getElementById('seats-pana-wrap') && (document.getElementById('seats-pana-wrap').style.display='');
+  document.getElementById('seats-pana-unde') && (document.getElementById('seats-pana-unde').value='');
+
+  // Build seat grid — bus layout: 2+2 with aisle, rows
+  const grid = document.getElementById('seats-grid');
+  const rows = Math.ceil(totalLocuri / 4);
+  let html = '';
+  let seatNum = 0;
+  // Driver seat row
+  html += `<div class="seats-row"><div class="seat driver" title="Șofer">🚗</div><div class="seats-aisle"></div><div style="width:34px"></div><div style="width:34px"></div></div>`;
+  
+  for (let r=0; r<rows; r++) {
+    html += '<div class="seats-row">';
+    for (let col=0; col<4; col++) {
+      if (col===2) html += '<div class="seats-aisle"></div>';
+      seatNum++;
+      if (seatNum > totalLocuri) { html += '<div style="width:34px"></div>'; continue; }
+      const isOc = ocupate.has(seatNum);
+      html += `<div class="seat ${isOc?'occupied':'free'}" id="seat-${seatNum}" data-num="${seatNum}" ${isOc?'':` onclick="selectSeat(${seatNum})"`} title="Loc ${seatNum}">${seatNum}</div>`;
+    }
+    html += '</div>';
+  }
+  grid.innerHTML = html;
+  document.getElementById('modal-seats').classList.add('open');
+};
+
+window.selectSeat = (num) => {
+  // deselect previous
+  if (window._selectedSeat) {
+    const prev = document.getElementById('seat-'+window._selectedSeat);
+    if(prev && !prev.classList.contains('occupied')) prev.className = 'seat free';
+  }
+  window._selectedSeat = num;
+  const el = document.getElementById('seat-'+num);
+  if(el) el.className = 'seat selected';
+  const info = document.getElementById('seats-selected-info');
+  info.style.display='';
+  info.innerHTML = `✅ Ai selectat <strong>Locul ${num}</strong>. Completează destinația și confirmă.`;
+  document.getElementById('seats-confirm-btn').disabled = false;
+};
+
+window.confirmSeatReservation = async () => {
+  if (!window._selectedSeat || !window._currentCursa) return;
+  const panaUnde = document.getElementById('seats-pana-unde')?.value.trim();
+  if (!panaUnde) { toast('Introduceți destinația (până unde mergeți)!','wr'); return; }
+
+  const curs = window._currentCursa;
+  const user = window._currentUser;
+
+  // Need contact info
+  const numeEl = document.getElementById('conf-nume');
+  const telEl = document.getElementById('conf-tel');
+  const emailEl = document.getElementById('conf-email');
+  
+  // Open mini contact modal or use logged-in user info
+  if (!user) {
+    // Show inline form in modal
+    const info = document.getElementById('seats-selected-info');
+    if (!document.getElementById('seats-inline-form')) {
+      info.innerHTML += `
+        <div id="seats-inline-form" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+          <div class="form-group"><label class="form-label">👤 Nume <span style="color:var(--red)">*</span></label>
+            <input class="form-input" id="seat-name" placeholder="Ion Popescu"/></div>
+          <div class="form-group"><label class="form-label">📞 Telefon <span style="color:var(--red)">*</span></label>
+            <input class="form-input" id="seat-tel" placeholder="07xx xxx xxx"/></div>
+          <div class="form-group"><label class="form-label">📧 Email <span style="color:var(--red)">*</span></label>
+            <input class="form-input" id="seat-email" type="email" placeholder="email@exemplu.com"/></div>
+        </div>`;
+      document.getElementById('seats-confirm-btn').onclick = doSeatBooking;
+    }
+    return;
+  }
+  await doSeatBooking();
+};
+
+window.doSeatBooking = async () => {
+  const curs = window._currentCursa;
+  const seatNum = window._selectedSeat;
+  const panaUnde = document.getElementById('seats-pana-unde')?.value.trim()||'';
+  const user = window._currentUser;
+  
+  const numeClient = user?.displayName || document.getElementById('seat-name')?.value.trim() || '';
+  const tel = document.getElementById('seat-tel')?.value.trim() || '';
+  const email = user?.email || document.getElementById('seat-email')?.value.trim() || '';
+  
+  if (!numeClient||!email) { toast('Completați numele și emailul!','wr'); return; }
+
+  try {
+    // Check seat not taken in the meantime
+    const q = query(collection(db,'rezervari'),where('cursaId','==',curs.id),where('locNr','==',seatNum),where('status','!=','anulata'));
+    const check = await getDocs(q);
+    if (!check.empty) { toast('Locul a fost ocupat tocmai! Alege altul.','wr'); openCinemaSeatModal(curs.id); return; }
+
+    const biletId = 'LSD-'+Date.now().toString(36).toUpperCase();
+    const rezDoc = {
+      uid: user?.uid||null, email, numeClient, telefon: tel,
+      cursaId: curs.id, tipCursa:'regulata',
+      plecare: curs.ruta?.split('–')[0]?.trim()||curs.ruta,
+      destinatie: panaUnde,
+      data: curs.data, ora: curs.ora||'',
+      vehiculeSelectate:[window._flota.find(v=>v.nume===curs.vehicul)?.id].filter(Boolean),
+      vehiculeNume: curs.vehicul,
+      locNr: seatNum, biletId,
+      persoane:1, status:'confirmata',
+      pretEstimativ: null,
+      createdAt: Timestamp.now()
+    };
+    await addDoc(collection(db,'rezervari'), rezDoc);
+    // update locuri ocupate on cursa
+    await setDoc(doc(db,'curse',curs.id),{locuriOcupate:(curs.locuriOcupate||0)+1},{merge:true});
+    
+    closeModal('modal-seats');
+    toast('Rezervare confirmată! 🎉','ok');
+    showBilet({...rezDoc, cursaRuta:curs.ruta});
+    loadRegulateHome();
+  } catch(e) {
+    toast('Eroare la rezervare.','er');
+    console.error(e);
+  }
+};
+
+// ─── BILET ─────────────────────────────────────────────────────
+function showBilet(rez) {
+  const biletContent = document.getElementById('bilet-content');
+  biletContent.innerHTML = `
+    <div class="bilet">
+      <div class="bilet-header">
+        <div>
+          <div class="bilet-logo">LSD Group SRL</div>
+          <div style="font-size:12px;opacity:.8">Transport Persoane</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-size:11px;opacity:.8">Bilet nr.</div>
+          <div style="font-size:16px;font-weight:800">${rez.biletId}</div>
+        </div>
+      </div>
+      <div class="bilet-body">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+          <div class="bilet-seat">${rez.locNr}</div>
+          <div>
+            <div style="font-size:11px;color:var(--muted)">LOCUL TĂU</div>
+            <div style="font-size:22px;font-weight:800;color:var(--gold)">Nr. ${rez.locNr}</div>
+          </div>
+        </div>
+        <div class="bilet-row"><span class="bilet-label">Rută</span><span class="bilet-val">${rez.cursaRuta||rez.plecare+' → '+rez.destinatie}</span></div>
+        <div class="bilet-row"><span class="bilet-label">Destinație ta</span><span class="bilet-val">${rez.destinatie}</span></div>
+        <div class="bilet-row"><span class="bilet-label">Data</span><span class="bilet-val">${rez.data}</span></div>
+        <div class="bilet-row"><span class="bilet-label">Ora</span><span class="bilet-val">${rez.ora||'—'}</span></div>
+        <div class="bilet-row"><span class="bilet-label">Vehicul</span><span class="bilet-val">${rez.vehiculeNume}</span></div>
+        <div class="bilet-row"><span class="bilet-label">Pasager</span><span class="bilet-val">${rez.numeClient}</span></div>
+        <div class="bilet-qr">
+          <div style="font-size:28px;margin-bottom:4px">📱</div>
+          <div>Prezintă acest bilet șoferului</div>
+          <div style="font-weight:700;letter-spacing:2px;margin-top:4px">${rez.biletId}</div>
+        </div>
+      </div>
+      <div class="bilet-footer">⚠️ Biletul este valabil o singură dată · LSD Group SRL</div>
+    </div>`;
+  document.getElementById('modal-bilet').classList.add('open');
+}
+
+window.printBilet = () => {
+  const content = document.getElementById('bilet-content').innerHTML;
+  const w = window.open('','_blank','width=500,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><title>Bilet LSD Group</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    body{margin:20px;background:#0a0d14;color:#e2e8f0;font-family:'Inter',sans-serif}
+    .bilet{border:2px solid #e8a020;border-radius:12px;overflow:hidden;max-width:400px;margin:0 auto}
+    .bilet-header{background:linear-gradient(135deg,#e8a020,#f5b940);color:#0a0d14;padding:16px 20px;display:flex;align-items:center;gap:12px;font-family:'Syne',sans-serif}
+    .bilet-logo{font-size:20px;font-weight:800}
+    .bilet-body{padding:20px;background:#0f1320}
+    .bilet-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e2540;font-size:14px}
+    .bilet-label{color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+    .bilet-val{font-weight:700}
+    .bilet-seat{background:#e8a020;color:#0a0d14;width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800}
+    .bilet-qr{background:#0a0d14;border-radius:8px;padding:12px;text-align:center;margin-top:12px;font-size:11px;color:#64748b}
+    .bilet-footer{background:rgba(232,160,32,.08);padding:12px 20px;font-size:11px;color:#64748b;text-align:center}
+  </style></head><body>${content}<script>window.onload=()=>window.print()</scr`+'ipt></body></html>');
+  w.document.close();
+};
+
+// ─── MANUAL REZERVARE (Admin) ──────────────────────────────────
+window._customFieldsDef = [];
+
+window.openManualRezervare = () => {
+  const sel = document.getElementById('mr-vehicul');
+  sel.innerHTML = '<option value="">— Niciun vehicul —</option>' + window._flota.map(v=>`<option value="${v.id}">${v.icon} ${v.nume}</option>`).join('');
+  document.getElementById('mr-data').value = new Date().toISOString().split('T')[0];
+  // Load custom fields
+  renderManualCustomFields();
+  document.getElementById('modal-manual-rez').classList.add('open');
+};
+
+function renderManualCustomFields() {
+  const wrap = document.getElementById('mr-custom-fields');
+  if (!wrap) return;
+  const defs = window._customFieldsDef;
+  wrap.innerHTML = defs.map((f,i)=>`
+    <div class="form-group">
+      <label class="form-label">${f.icon||'📌'} ${f.label}</label>
+      <input class="form-input" id="mr-cf-${i}" placeholder="${f.placeholder||''}"/>
+    </div>`).join('');
+}
+
+window.addCustomFieldManual = () => {
+  // quick add a text row
+  const wrap = document.getElementById('mr-custom-fields');
+  const idx = Date.now();
+  const div = document.createElement('div');
+  div.className='form-group';
+  div.innerHTML=`<label class="form-label">📌 Câmp suplimentar</label><div style="display:flex;gap:8px">
+    <input class="form-input" id="mr-adhoc-label-${idx}" placeholder="Nume câmp"/>
+    <input class="form-input" id="mr-adhoc-val-${idx}" placeholder="Valoare"/>
+    <button class="btn btn-ghost btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+  </div>`;
+  div.dataset.adhoc=idx;
+  wrap.appendChild(div);
+};
+
+window.saveManualRezervare = async () => {
+  const vehiculId = document.getElementById('mr-vehicul').value;
+  const vehiculObj = window._flota.find(v=>v.id===vehiculId);
+  
+  // gather custom fields
+  const customData = {};
+  window._customFieldsDef.forEach((f,i)=>{
+    const v = document.getElementById('mr-cf-'+i)?.value.trim();
+    if(v) customData[f.key||f.label] = v;
+  });
+  // gather adhoc fields
+  document.querySelectorAll('[data-adhoc]').forEach(el=>{
+    const idx = el.dataset.adhoc;
+    const label = document.getElementById('mr-adhoc-label-'+idx)?.value.trim();
+    const val = document.getElementById('mr-adhoc-val-'+idx)?.value.trim();
+    if(label&&val) customData[label]=val;
+  });
+
+  const data = {
+    uid: null,
+    numeClient: document.getElementById('mr-nume').value.trim(),
+    email: document.getElementById('mr-email').value.trim()||null,
+    telefon: document.getElementById('mr-tel').value.trim(),
+    tipCursa: document.getElementById('mr-tip').value,
+    status: document.getElementById('mr-status').value,
+    plecare: document.getElementById('mr-plecare').value.trim()||'-',
+    destinatie: document.getElementById('mr-dest').value.trim()||'-',
+    data: document.getElementById('mr-data').value,
+    ora: document.getElementById('mr-ora').value,
+    persoane: parseInt(document.getElementById('mr-persoane').value)||1,
+    pretEstimativ: parseFloat(document.getElementById('mr-pret').value)||null,
+    vehiculeSelectate: vehiculId?[vehiculId]:[],
+    vehiculeNume: vehiculObj?.nume||'—',
+    observatii: document.getElementById('mr-obs').value.trim(),
+    adaugataDeAdmin: true,
+    createdAt: Timestamp.now(),
+    ...customData
+  };
+  if (!data.numeClient) { toast('Introduceți numele clientului!','wr'); return; }
+  
+  await addDoc(collection(db,'rezervari'), data);
+  toast('Rezervare adăugată manual!','ok');
+  closeModal('modal-manual-rez');
+  updateAdminStats();
+};
+
+// ─── CUSTOM FIELDS DEF ─────────────────────────────────────────
+window.openCustomFieldsModal = () => {
+  renderCustomFieldsDef();
+  document.getElementById('modal-custom-fields').classList.add('open');
+};
+
+function loadCustomFieldsDef() {
+  try {
+    const saved = localStorage.getItem('lsd_custom_fields');
+    window._customFieldsDef = saved ? JSON.parse(saved) : [];
+  } catch(e) { window._customFieldsDef = []; }
+}
+
+function renderCustomFieldsDef() {
+  const list = document.getElementById('custom-fields-list');
+  if (!list) return;
+  list.innerHTML = window._customFieldsDef.map((f,i)=>`
+    <div class="cf-item" data-idx="${i}">
+      <input class="form-input" style="width:60px" value="${f.icon||'📌'}" placeholder="🔖"/>
+      <input class="form-input" value="${f.label||''}" placeholder="Nume câmp (ex: Cod grupă)"/>
+      <input class="form-input" value="${f.placeholder||''}" placeholder="Placeholder"/>
+      <button class="btn btn-red btn-sm" onclick="this.closest('.cf-item').remove()">✕</button>
+    </div>`).join('') || '<div class="text-sm text-muted">Niciun câmp definit.</div>';
+}
+
+window.addCustomFieldDef = () => {
+  const list = document.getElementById('custom-fields-list');
+  const div = document.createElement('div');
+  div.className='cf-item';
+  div.innerHTML=`<input class="form-input" style="width:60px" value="📌" placeholder="🔖"/>
+    <input class="form-input" placeholder="Nume câmp"/>
+    <input class="form-input" placeholder="Placeholder"/>
+    <button class="btn btn-red btn-sm" onclick="this.closest('.cf-item').remove()">✕</button>`;
+  list.appendChild(div);
+};
+
+window.saveCustomFieldsDef = () => {
+  const items = document.querySelectorAll('#custom-fields-list .cf-item');
+  window._customFieldsDef = [...items].map(el=>{
+    const inputs = el.querySelectorAll('input');
+    return {icon:inputs[0].value, label:inputs[1].value, placeholder:inputs[2].value, key:inputs[1].value.toLowerCase().replace(/\s+/g,'_')};
+  }).filter(f=>f.label);
+  localStorage.setItem('lsd_custom_fields', JSON.stringify(window._customFieldsDef));
+  toast('Câmpuri salvate!','ok');
+  closeModal('modal-custom-fields');
+};
+
+// ─── PREȚ ESTIMATIV pe vehicle card ────────────────────────────
+// Updated selectVehicleForBooking to show price estimate if km given
+const _origSelectVehicle = window.selectVehicleForBooking;
+window.selectVehicleForBooking = vehicleId => {
+  const v = window._availableVehicles?.find(x=>x.id===vehicleId);
+  if (!v) return;
+  window._selectedRec = v;
+  const imgs = v.imagini||[];
+  const imgHtml = imgs.length ? `<img src="${imgs[0]}" style="width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:12px;cursor:zoom-in" onclick="openLightbox('${imgs[0]}')" />` : `<div style="text-align:center;font-size:48px;padding:20px">${v.icon}</div>`;
+  const tags = (v.dotari||[]).map(d=>`<span class="vehicle-tag">${d}</span>`).join('');
+  const tipLabels = {excursie:'Excursie',nunta:'Nuntă/Eveniment',transfer:'Transfer aeroport',regulata:'Cursă regulată',corporativ:'Transport corporativ',altele:'Altele'};
+  const km = parseInt(document.getElementById('rez-km')?.value)||0;
+  const pretEstim = km && v.pretPerKm ? Math.round(v.pretPerKm * km) : null;
+  const pretHtml = pretEstim
+    ? `<div style="background:rgba(232,160,32,.1);border:1px solid rgba(232,160,32,.2);border-radius:8px;padding:10px;margin-top:8px">
+        <div class="text-sm text-muted">💰 Preț estimativ</div>
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gold)">${pretEstim} RON</div>
+        <div class="text-sm text-muted">bazat pe ${km} km × ${v.pretPerKm} RON/km — prețul final se confirmă de admin</div>
+      </div>`
+    : `<div class="text-sm text-muted" style="margin-top:8px">💬 Prețul va fi confirmat de admin pe email sau telefon.</div>`;
+  
+  document.getElementById('confirm-vehicle-preview').innerHTML = `<div class="card-body">
+    ${imgHtml}
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px">${v.icon} ${v.nume}</div>
+    <div class="text-sm text-muted">${v.capacitate} locuri</div>
+    <div class="vehicle-tags" style="margin-top:8px">${tags}</div>
+    ${pretHtml}
+    <hr class="divider"/>
+    <div style="font-size:13px;color:var(--muted)">📋 Tip: <strong style="color:var(--text)">${tipLabels[window._tipCursa]||'-'}</strong></div>
+    <div style="font-size:13px;color:var(--muted);margin-top:4px">📅 Data: <strong style="color:var(--text)">${document.getElementById('rez-data')?.value}</strong></div>
+  </div>`;
+  if (window._currentUser) {
+    document.getElementById('conf-email').value = window._currentUser.email||'';
+    document.getElementById('conf-nume').value = window._currentUser.displayName||'';
+  }
+  setStep(3);
 };
 
 // ─── NAVIGATION ────────────────────────────────────────────────
@@ -1830,13 +2496,8 @@ window.navigate = page => {
   if (target) target.classList.add('active');
   document.querySelectorAll('.nav-link').forEach(l=>{ if(l.getAttribute('onclick')?.includes(`'${page}'`)) l.classList.add('active'); });
   window.scrollTo(0,0);
-  if (page==='rezervari') {
-    setStep(1);
-    // If coming from Flota with a preselected vehicle, pick the date first then auto-search
-    if (window._preselectedVehicle) {
-      toast('Vehiculul a fost preselectat. Alege tipul cursei și data!','in');
-    }
-  }
+  if (page==='rezervari') { setStep(1); }
+  if (page==='home') { loadRegulateHome(); }
   if (page==='myres') loadMyReservations();
   if (page==='admin') {
     if (!window._currentUser || window._currentUser.email!==ADMIN_EMAIL) { toast('Acces interzis!','er'); navigate('home'); return; }
@@ -1905,4 +2566,3 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
