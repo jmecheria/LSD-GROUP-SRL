@@ -293,7 +293,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="nav-link" onclick="navigate('home')">🏠 Acasă</div>
     <div class="nav-link" onclick="navigate('regulate')">🔄 Curse Regulate</div>
     <div class="nav-link" onclick="navigate('organizate')">🚌 Curse Organizate</div>
-    <div class="nav-link" onclick="navigate('flota')">🚐 Flotă</div>
     <div class="nav-link" id="nl-myres" style="display:none" onclick="navigate('myres')">📂 Ale mele</div>
     <div class="nav-link" id="nl-admin" style="display:none" onclick="navigate('admin')">👑 Admin</div>
   </div>
@@ -310,7 +309,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <div class="nav-link" onclick="navigate('home');closeMenu()">🏠 Acasă</div>
   <div class="nav-link" onclick="navigate('regulate');closeMenu()">🔄 Curse Regulate</div>
   <div class="nav-link" onclick="navigate('organizate');closeMenu()">🚌 Curse Organizate</div>
-  <div class="nav-link" onclick="navigate('flota');closeMenu()">🚐 Flotă</div>
   <div class="nav-link" id="mob-myres" style="display:none" onclick="navigate('myres');closeMenu()">📂 Rezervările mele</div>
   <div class="nav-link" id="mob-admin" style="display:none" onclick="navigate('admin');closeMenu()">👑 Admin</div>
 </div>
@@ -385,6 +383,12 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="step" id="osi3"><div class="step-n">3</div><div class="step-l">Confirmare</div></div>
       </div>
 
+      <!-- Fleet overview inside organizate -->
+      <div id="org-flota-preview" style="margin-bottom:24px">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:12px;color:var(--muted)">🚐 Vehiculele noastre disponibile pentru charter</div>
+        <div class="g3" id="org-flota-grid"></div>
+      </div>
+
       <!-- Step 1 -->
       <div id="org-s1" style="max-width:640px">
         <div class="card">
@@ -392,12 +396,11 @@ tr:hover td{background:rgba(255,255,255,.02)}
             <div class="fg">
               <label class="fl">🎯 Scopul cursei <span class="text-red">*</span></label>
               <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="tip-grid">
-                <div class="tip-c" data-v="excursie" onclick="selTip(this)">🏔️<br><span>Excursie</span></div>
-                <div class="tip-c" data-v="nunta" onclick="selTip(this)">💒<br><span>Nuntă / Eveniment</span></div>
-                <div class="tip-c" data-v="transfer" onclick="selTip(this)">✈️<br><span>Transfer</span></div>
-                <div class="tip-c" data-v="corporativ" onclick="selTip(this)">🏢<br><span>Corporativ</span></div>
-                <div class="tip-c" data-v="scoala" onclick="selTip(this)">🎓<br><span>Școală / Sport</span></div>
-                <div class="tip-c" data-v="altele" onclick="selTip(this)">📋<br><span>Altele</span></div>
+                <!-- populated dynamically from Firestore -->
+              </div>
+              <div id="tip-altele-wrap" style="display:none;margin-top:10px">
+                <label class="fl">📝 Descrie tipul cursei</label>
+                <input class="fi" id="tip-altele-text" placeholder="Ex: Transport nuntă cu program special..."/>
               </div>
             </div>
             <div class="fr">
@@ -477,18 +480,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- FLOTA -->
-<div id="page-flota" class="page">
-  <div class="container">
-    <div class="section">
-      <div class="section-label">Parcul Auto</div>
-      <div class="section-title" style="margin-bottom:6px">Flota LSD Group</div>
-      <div class="section-sub" style="margin-bottom:28px">Selectează un vehicul pentru a vedea disponibilitatea și a face o rezervare.</div>
-      <div class="g3" id="flota-grid"></div>
     </div>
   </div>
 </div>
@@ -612,6 +603,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <button class="tab-btn" onclick="switchAdminTab('regulate')">🔄 Regulate</button>
         <button class="tab-btn" onclick="switchAdminTab('rezervari')">📋 Rezervări</button>
         <button class="tab-btn" onclick="switchAdminTab('ticker')">📢 Ticker</button>
+        <button class="tab-btn" onclick="switchAdminTab('tipuri')">🎯 Tipuri cursă</button>
       </div>
 
       <!-- ADMIN: VEHICULE -->
@@ -657,6 +649,18 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <button class="btn btn-gold btn-sm" onclick="openTickerModal()">+ Adaugă</button>
         </div>
         <div id="adm-tick-list"></div>
+      </div>
+
+      <!-- ADMIN: TIPURI CURSA -->
+      <div class="tp" id="adm-tipuri">
+        <div class="flex-b mb-16">
+          <div>
+            <div class="ff-syne fw7">Tipuri de cursă</div>
+            <div class="text-sm text-muted mt-8">Clientul va vedea aceste opțiuni când face o rezervare. Tipul "Altele" permite text liber.</div>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="openTipModal()">+ Adaugă tip</button>
+        </div>
+        <div id="adm-tipuri-list"></div>
       </div>
     </div>
   </div>
@@ -893,6 +897,29 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- Modal: Tip cursă (admin) -->
+<div class="modal-ov" id="m-tip">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-h"><div class="modal-title">🎯 Tip de cursă</div><button class="modal-x" onclick="closeM('m-tip')">✕</button></div>
+    <div class="modal-b">
+      <input type="hidden" id="m-tip-id"/>
+      <div class="fg"><label class="fl">Emoji</label><input class="fi" id="tip-icon" placeholder="🏔️" maxlength="4" style="font-size:22px"/></div>
+      <div class="fg"><label class="fl">Nume tip</label><input class="fi" id="tip-label" placeholder="Ex: Excursie montană"/></div>
+      <div class="fg">
+        <label class="fl">Permite text liber (câmp "Altele")?</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+          <label class="toggle"><input type="checkbox" id="tip-altele"/><span class="tsl"></span></label>
+          <span class="text-sm text-muted">Dacă activat, clientul poate scrie detalii custom</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-outline" onclick="closeM('m-tip')">Anulează</button>
+      <button class="btn btn-gold" onclick="saveTip()">💾 Salvează</button>
+    </div>
+  </div>
+</div>
+
 <!-- FIREBASE -->
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -1007,6 +1034,7 @@ async function loadAll(){
   loadTicker();
   loadRegulate();
   loadHomeVehicles();
+  loadTipuri();
 }
 
 // ── FLOTA ───────────────────────────────────────────────────────
@@ -1020,8 +1048,10 @@ async function loadFlota(){
 
 function renderFlota(){
   const g=document.getElementById('flota-grid');
-  if(!g)return;
-  g.innerHTML=window._flota.map(v=>vehCard(v,false)).join('');
+  if(g)g.innerHTML=window._flota.map(v=>vehCard(v,false)).join('');
+  // Also render in organizate preview
+  const og=document.getElementById('org-flota-grid');
+  if(og)og.innerHTML=window._flota.map(v=>vehCard(v,false)).join('');
 }
 function loadHomeVehicles(){
   const g=document.getElementById('home-vehicles');
@@ -1216,9 +1246,11 @@ window.confirmSeat=async()=>{
     emailC=document.getElementById('seat-email').value.trim();
     if(!numeC||!emailC){toast('Completați numele și emailul!','wr');return;}
   }
-  // Double-check seat
-  const q=query(collection(db,'rezervari'),where('cursaId','==',c.id),where('data','==',filterDate),where('locNr','==',sn),where('status','!=','anulata'));
-  const chk=await getDocs(q);if(!chk.empty){toast('Locul tocmai a fost ocupat! Alege altul.','wr');openSeats(c.id);return;}
+  // Double-check seat (simple query to avoid composite index requirement)
+  const q=query(collection(db,'rezervari'),where('cursaId','==',c.id),where('data','==',filterDate),where('locNr','==',sn));
+  const chk=await getDocs(q);
+  const stillOcc=chk.docs.some(d=>d.data().status!=='anulata');
+  if(stillOcc){toast('Locul tocmai a fost ocupat! Alege altul.','wr');openSeats(c.id);return;}
   const biletId='LSD-'+Date.now().toString(36).toUpperCase().slice(-6);
   try{
     await addDoc(collection(db,'rezervari'),{
@@ -1289,7 +1321,12 @@ window._tipCursa=null;window._stops=[];window._orgVeh=null;
 
 window.selTip=el=>{
   document.querySelectorAll('.tip-c').forEach(x=>x.classList.remove('sel-tip'));
-  el.classList.add('sel-tip');window._tipCursa=el.dataset.v;
+  el.classList.add('sel-tip');
+  window._tipCursa=el.dataset.v;
+  const isAltele=el.dataset.altele==='true';
+  const alteleWrap=document.getElementById('tip-altele-wrap');
+  if(alteleWrap)alteleWrap.style.display=isAltele?'':'none';
+  if(!isAltele){const inp=document.getElementById('tip-altele-text');if(inp)inp.value='';}
 };
 
 // init stops
@@ -1304,11 +1341,14 @@ window.addStop=()=>{
   const wrap=document.getElementById('stops-list');
   const div=document.createElement('div');
   div.className='stop-item';div.dataset.idx=idx;
+  const ph=idx===0?'Punct plecare (oraș start)':idx===window._stops.length-1?'Destinație finală':'Oprire '+idx;
+  const delBtn=idx>=2?`<button class="btn btn-ghost btn-sm" onclick="removeStop(${idx},this.closest('.stop-item'))">✕</button>`:'';
   div.innerHTML=`<div class="stop-num">${idx+1}</div>
-    <input class="fi" style="flex:1" placeholder="${idx===0?'Punct plecare':'Punct ${idx+1} / Destinație'}" oninput="window._stops[${idx}]=this.value"/>
-    ${idx>=2?`<button class="btn btn-ghost btn-sm" onclick="removeStop(${idx},this.closest('.stop-item'))">✕</button>`:''}`;
+    <input class="fi" style="flex:1" placeholder="${ph}" oninput="window._stops[${idx}]=this.value"/>
+    ${delBtn}`;
   wrap.appendChild(div);
 };
+
 window.removeStop=(idx,el)=>{
   el.remove();
   // re-index
@@ -1408,6 +1448,8 @@ window.submitOrganizata=async()=>{
   if(!email){err.style.display='';err.textContent='Emailul este obligatoriu — oferta va fi trimisă pe email.';return;}
   if(!window._orgVeh){err.style.display='';err.textContent='Selectați un vehicul.';return;}
   const v=window._flota.find(x=>x.id===window._orgVeh);
+  const alteleText=document.getElementById('tip-altele-text')?.value.trim();
+  const tipFinal=window._tipCursa==='Altele'&&alteleText?`Altele: ${alteleText}`:window._tipCursa;
   const stopsArr=window._stops.filter(s=>s.trim());
   const data=document.getElementById('org-data').value;
   const ora=document.getElementById('org-ora').value;
@@ -1418,7 +1460,7 @@ window.submitOrganizata=async()=>{
   try{
     await addDoc(collection(db,'rezervari'),{
       uid:window._user?.uid||null,numeClient:nume,email,telefon:tel,
-      tipCursa:window._tipCursa||'altele',
+      tipCursa:tipFinal||window._tipCursa||'altele',
       stops:stopsArr,traseu:stopsArr.join(' → '),
       data,ora:ora||'flexibil',persoane:pers,distantaKm:km,
       vehiculId:window._orgVeh,vehiculNume:v?.nume||'',
@@ -1749,7 +1791,7 @@ async function loadAdmTicker(){
   const el=document.getElementById('adm-tick-list');if(!el)return;
   const s=await getDocs(collection(db,'ticker'));
   el.innerHTML=s.docs.map(d=>{const t=d.data();return`<div class="card card-body flex-b" style="margin-bottom:8px;gap:10px">
-    <label class="toggle"><input type="checkbox" ${t.activ?'checked':''} onchange="setDoc(doc(DB,'ticker','${d.id}'),{activ:this.checked},{merge:true})"/><span class="tsl"></span></label>
+    <label class="toggle"><input type="checkbox" ${t.activ?'checked':''} onchange="toggleTickerActive('${d.id}',this.checked)"/><span class="tsl"></span></label>
     <span style="flex:1;font-size:13px">${t.mesaj}</span>
     <button class="btn btn-outline btn-sm" onclick="editTick('${d.id}','${t.mesaj.replace(/'/g,"\\'")}')">✏️</button>
     <button class="btn btn-red btn-sm" onclick="delTick('${d.id}')">🗑</button>
@@ -1761,6 +1803,10 @@ window.delTick=async id=>{if(!confirm('Ștergi?'))return;await deleteDoc(doc(db,
 // Admin: manual
 window.openManualRezModal=()=>{
   document.getElementById('mn-veh').innerHTML='<option value="">— Niciun vehicul —</option>'+window._flota.map(v=>`<option value="${v.id}">${v.icon} ${v.nume}</option>`).join('');
+  // populate tip types
+  const tipSel=document.getElementById('mn-tip');
+  const tipuri=window._tipuri||DEFAULT_TIPURI;
+  tipSel.innerHTML='<option value="regulata">🔄 Cursă regulată</option>'+tipuri.map(t=>`<option value="${t.label}">${t.icon} ${t.label}</option>`).join('');
   document.getElementById('mn-data').value=new Date().toISOString().split('T')[0];
   ['mn-name','mn-tel','mn-email','mn-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('mn-pret').value='';
@@ -1823,6 +1869,74 @@ window.testEmail=async()=>{
   catch(e){toast('Eroare: '+e.message,'er');}
 };
 
+// ── TIP CURSA MANAGEMENT ───────────────────────────────────────
+const DEFAULT_TIPURI = [
+  {icon:'🏔️',label:'Excursie',altele:false},
+  {icon:'💒',label:'Nuntă / Eveniment',altele:false},
+  {icon:'✈️',label:'Transfer aeroport',altele:false},
+  {icon:'🏢',label:'Transport corporativ',altele:false},
+  {icon:'🎓',label:'Școală / Sport',altele:false},
+  {icon:'📋',label:'Altele',altele:true},
+];
+
+async function loadTipuri(){
+  const s=await getDocs(collection(db,'tipuri_curse'));
+  const tipuri=s.empty?DEFAULT_TIPURI:s.docs.map(d=>({id:d.id,...d.data()}));
+  window._tipuri=tipuri;
+  renderTipGrid(tipuri);
+}
+
+function renderTipGrid(tipuri){
+  const g=document.getElementById('tip-grid');if(!g)return;
+  g.innerHTML=tipuri.map(t=>`<div class="tip-c" data-v="${t.label}" data-altele="${t.altele||false}" onclick="selTip(this)">${t.icon}<br><span>${t.label}</span></div>`).join('');
+}
+
+async function loadAdmTipuri(){
+  const el=document.getElementById('adm-tipuri-list');if(!el)return;
+  const tipuri=window._tipuri||DEFAULT_TIPURI;
+  el.innerHTML=tipuri.map((t,i)=>`<div class="card card-body flex-b" style="margin-bottom:8px;gap:10px">
+    <span style="font-size:22px">${t.icon}</span>
+    <span style="flex:1">${t.label} ${t.altele?'<span class="badge bg-b text-sm">text liber</span>':''}</span>
+    <button class="btn btn-outline btn-sm" onclick="editTipItem('${t.id||''}','${t.icon}','${t.label.replace(/'/g,'\\'').replace(/\//g,'|')}',${t.altele||false})">✏️</button>
+    ${t.id?`<button class="btn btn-red btn-sm" onclick="delTip('${t.id}')">🗑</button>`:'<span class="text-sm text-muted">default</span>'}
+  </div>`).join('');
+}
+
+window.openTipModal=()=>{
+  document.getElementById('m-tip-id').value='';
+  document.getElementById('tip-icon').value='';
+  document.getElementById('tip-label').value='';
+  document.getElementById('tip-altele').checked=false;
+  document.getElementById('m-tip').classList.add('open');
+};
+window.editTipItem=(id,icon,label,altele)=>{
+  document.getElementById('m-tip-id').value=id||'';
+  document.getElementById('tip-icon').value=icon;
+  document.getElementById('tip-label').value=label.replace(/\|/g,'/');
+  document.getElementById('tip-altele').checked=altele;
+  document.getElementById('m-tip').classList.add('open');
+};
+window.saveTip=async()=>{
+  const id=document.getElementById('m-tip-id').value;
+  const d={icon:document.getElementById('tip-icon').value.trim()||'📋',
+    label:document.getElementById('tip-label').value.trim(),
+    altele:document.getElementById('tip-altele').checked};
+  if(!d.label){toast('Introduceți numele tipului!','wr');return;}
+  if(id)await setDoc(doc(db,'tipuri_curse',id),d,{merge:true});
+  else await addDoc(collection(db,'tipuri_curse'),d);
+  toast('Tip salvat!','ok');closeM('m-tip');await loadTipuri();loadAdmTipuri();
+};
+window.delTip=async id=>{
+  if(!confirm('Ștergi tipul?'))return;
+  await deleteDoc(doc(db,'tipuri_curse',id));
+  toast('Tip șters.','in');await loadTipuri();loadAdmTipuri();
+};
+
+// ── TICKER TOGGLE ──────────────────────────────────────────────
+window.toggleTickerActive=async(id,val)=>{
+  await setDoc(doc(db,'ticker',id),{activ:val},{merge:true});
+};
+
 // ── NAVIGATION ─────────────────────────────────────────────────
 window.navigate=page=>{
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1845,12 +1959,13 @@ window.switchAuthTab=tab=>{
   document.getElementById('auth-register').classList.toggle('active',tab==='register');
 };
 window.switchAdminTab=tab=>{
-  const tabs=['vehicule','regulate','rezervari','ticker'];
+  const tabs=['vehicule','regulate','rezervari','ticker','tipuri'];
   document.querySelectorAll('#admin-tabs .tab-btn').forEach((b,i)=>b.classList.toggle('active',tabs[i]===tab));
   tabs.forEach(t=>{const el=document.getElementById('adm-'+t);if(el)el.classList.toggle('active',t===tab);});
   if(tab==='regulate')loadAdmRegulate();
   if(tab==='rezervari')updateStats();
   if(tab==='ticker')loadAdmTicker();
+  if(tab==='tipuri')loadAdmTipuri();
 };
 window.closeM=id=>{document.getElementById(id)?.classList.remove('open');};
 document.querySelectorAll('.modal-ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
@@ -1884,8 +1999,7 @@ document.head.appendChild(tipStyle);
 
 // ── INIT ────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
-  seedIfEmpty().then(()=>{if(window._flota.length)loadAll();});
-  loadAll();
+  loadAll().then(()=>seedIfEmpty());
   initStops();
   const today=new Date().toISOString().split('T')[0];
   const df=document.getElementById('reg-filter-date');if(df){df.value=today;df.min=today;}
@@ -1894,3 +2008,4 @@ window.addEventListener('DOMContentLoaded',()=>{
 </script>
 </body>
 </html>
+
