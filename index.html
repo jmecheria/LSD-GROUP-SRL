@@ -344,7 +344,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="section-title" style="margin-bottom:20px">Vehicule de top</div>
       <div class="g3" id="home-vehicles"></div>
       <div style="text-align:center;margin-top:20px">
-        <button class="btn btn-outline" onclick="navigate('flota')">Vezi toate vehiculele →</button>
+        <button class="btn btn-outline" onclick="navigate('organizate')">Solicită o cursă →</button>
       </div>
     </div>
   </div>
@@ -1184,10 +1184,10 @@ window.openSeats=async(cursaId)=>{
   // Get occupied seats
   const filterDate=document.getElementById('reg-filter-date')?.value;
   const targetDate=filterDate||new Date().toISOString().split('T')[0];
-  const q=query(collection(db,'rezervari'),where('cursaId','==',cursaId),where('data','==',targetDate),where('status','!=','anulata'));
+  const q=query(collection(db,'rezervari'),where('cursaId','==',cursaId),where('data','==',targetDate));
   const rs=await getDocs(q);
   const ocupate=new Set();
-  rs.docs.forEach(d=>{const r=d.data();if(r.locNr)ocupate.add(r.locNr);});
+  rs.docs.forEach(d=>{const r=d.data();if(r.status!=='anulata'&&r.locNr)ocupate.add(r.locNr);});
   document.getElementById('seats-title').textContent=`🎭 ${c.ruta} — ${c.ora}`;
   document.getElementById('seats-info').innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap">
     <span>📅 ${filterDate||'Azi'}</span><span>🕐 ${c.ora}</span><span>🚐 ${c.vehiculNume}</span>
@@ -1383,12 +1383,17 @@ async function loadOrgVehicule(data){
   const dow=new Date(data+'T12:00').getDay();
   const occupiedByReg=new Set();
   window._regulate.filter(r=>r.activa&&(r.zile||[]).includes(dow)).forEach(r=>occupiedByReg.add(r.vehiculId));
-  // Find vehicles with charter rezervare on this date
-  const q=query(collection(db,'rezervari'),where('data','==',data),where('tipCursa','!=','regulata'),where('status','!=','anulata'));
+  // Find vehicles with charter rezervare on this date (filter in JS to avoid multi-!= query)
+  const q=query(collection(db,'rezervari'),where('data','==',data));
   const rs=await getDocs(q);
   const occupiedByCharter=new Set();
-  rs.docs.forEach(d=>(d.data().vehiculId||d.data().vehiculeSelectate||[]).forEach?.(id=>occupiedByCharter.add(id)));
-  rs.docs.forEach(d=>{const r=d.data();if(r.vehiculId)occupiedByCharter.add(r.vehiculId);});
+  rs.docs.forEach(d=>{
+    const r=d.data();
+    if(r.tipCursa==='regulata')return; // skip regular seat bookings
+    if(r.status==='anulata')return;    // skip cancelled
+    if(r.vehiculId)occupiedByCharter.add(r.vehiculId);
+    (r.vehiculeSelectate||[]).forEach(id=>occupiedByCharter.add(id));
+  });
   const pers=parseInt(document.getElementById('org-pers').value)||0;
   const km=parseInt(document.getElementById('org-km').value)||0;
   const stopsStr=window._stops.filter(s=>s.trim()).join(' → ');
@@ -1492,11 +1497,13 @@ function setOrgStep(n){
 async function loadMyReservations(){
   if(!window._user){navigate('auth');return;}
   const el=document.getElementById('myres-list');el.innerHTML='<div class="spinner"></div>';
-  const q=query(collection(db,'rezervari'),where('uid','==',window._user.uid),orderBy('createdAt','desc'));
+  const q=query(collection(db,'rezervari'),where('uid','==',window._user.uid));
   const s=await getDocs(q);
   if(s.empty){el.innerHTML='<div class="empty-s"><div class="empty-s-icon">📂</div><div>Nu ai rezervări.</div></div>';return;}
+  // Sort descending by createdAt in JS
+  const sortedDocs=[...s.docs].sort((a,b)=>(b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
   const sMap={in_asteptare:{l:'În așteptare',c:'bg-o'},oferta_trimisa:{l:'Ofertă primită',c:'bg-m'},confirmata:{l:'Confirmată',c:'bg-g'},anulata:{l:'Anulată',c:'bg-r'}};
-  el.innerHTML=s.docs.map(d=>{
+  el.innerHTML=sortedDocs.map(d=>{
     const r=d.data();const sm=sMap[r.status]||{l:r.status,c:'bg-b'};
     const isReg=r.tipCursa==='regulata';
     const canEdit=r.status==='in_asteptare';
