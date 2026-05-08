@@ -397,12 +397,45 @@ footer a{color:var(--muted)}.footer-links{display:flex;gap:16px;justify-content:
 <!-- PORTAL SOFER -->
 <div id="pg-sofer" class="pg">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px">
-    <div><h2 style="font-size:22px;font-weight:700;margin-bottom:4px">🚌 Portal Șofer</h2><div id="sfgreet" style="color:var(--muted);font-size:14px"></div></div>
-    <div style="display:flex;gap:8px;align-items:center"><input type="date" id="sfdate" style="width:auto" onchange="loadSofer()"/><button class="btn bs bsm" onclick="loadSofer()">🔄 Refresh</button></div>
+    <div>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:4px">🚌 Portal Șofer</h2>
+      <div id="sfgreet" style="color:var(--muted);font-size:14px"></div>
+    </div>
+    <button class="btn bs bsm" onclick="loadSofer()">🔄 Refresh</button>
   </div>
-  <div id="sflist"></div>
+  <!-- TABS sofer -->
+  <div class="tbar">
+    <button class="tb on" onclick="sfTab('azi')">📅 Azi</button>
+    <button class="tb" onclick="sfTab('curse')">🗓️ Toate cursele</button>
+    <button class="tb" onclick="sfTab('vehicul')">🚌 Vehiculul meu</button>
+    <button class="tb" onclick="sfTab('bilete')">🎟️ Bilete / Rezervări</button>
+  </div>
+  <!-- AZI -->
+  <div id="sf-tab-azi" class="tc on">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
+      <input type="date" id="sfdate" style="width:auto" onchange="loadSoferAzi()"/>
+      <button class="btn bs bsm" onclick="loadSoferAzi()">🔄</button>
+    </div>
+    <div id="sflist"></div>
+  </div>
+  <!-- TOATE CURSELE -->
+  <div id="sf-tab-curse" class="tc">
+    <div id="sf-curse-list"></div>
+  </div>
+  <!-- VEHICULUL MEU -->
+  <div id="sf-tab-vehicul" class="tc">
+    <div id="sf-vehicul-info"></div>
+  </div>
+  <!-- BILETE / REZERVARI -->
+  <div id="sf-tab-bilete" class="tc">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+      <select id="sf-bilete-cursa" style="max-width:300px" onchange="loadSoferBilete()"><option value="">— toate cursele —</option></select>
+      <input type="date" id="sf-bilete-data" style="width:auto" onchange="loadSoferBilete()"/>
+      <button class="btn bs bsm" onclick="loadSoferBilete()">🔍 Caută</button>
+    </div>
+    <div id="sf-bilete-list"></div>
+  </div>
 </div>
-<!-- ADMIN -->
 <div id="pg-admin" class="pg">
   <h2 style="font-size:22px;font-weight:700;margin-bottom:20px">👑 Panou Administrator</h2>
   <div class="g4" style="margin-bottom:24px">
@@ -1455,97 +1488,228 @@ window.sendClientMsg=async()=>{
 window.loadSofer=async()=>{
   const u=window._U;if(!u)return;
   document.getElementById('sfgreet').textContent='Bună ziua, '+(u.displayName||u.email);
-  const di=document.getElementById('sfdate');if(!di.value)di.value=new Date().toISOString().split('T')[0];
-  const data=di.value;const dow=new Date(data+'T12:00:00').getDay();
-  const c=document.getElementById('sflist');c.innerHTML='<p style="color:var(--muted);padding:20px">Se încarcă...</p>';
+  const di=document.getElementById('sfdate');
+  if(!di.value)di.value=new Date().toISOString().split('T')[0];
+  // Cache sofer data
+  try{
+    const ss=await getDocs(query(collection(db,'soferi'),where('email','==',u.email)));
+    if(!ss.empty)window._soferDoc={id:ss.docs[0].id,...ss.docs[0].data()};
+  }catch(e){}
+  loadSoferAzi();
+  loadSoferCurse();
+  loadSoferVehicul();
+};
+
+window.sfTab=tab=>{
+  ['azi','curse','vehicul','bilete'].forEach(t=>{
+    document.getElementById('sf-tab-'+t).classList.toggle('on',t===tab);
+  });
+  document.querySelectorAll('#pg-sofer .tb').forEach((b,i)=>{
+    b.classList.toggle('on',['azi','curse','vehicul','bilete'][i]===tab);
+  });
+  if(tab==='bilete')loadSoferBilete();
+};
+
+window.loadSoferAzi=async()=>{
+  const u=window._U;if(!u)return;
+  const di=document.getElementById('sfdate');
+  if(!di.value)di.value=new Date().toISOString().split('T')[0];
+  const data=di.value;
+  const dow=new Date(data+'T12:00:00').getDay();
+  const c=document.getElementById('sflist');
+  c.innerHTML='<p style="color:var(--muted);padding:16px">Se încarcă...</p>';
   try{
     const snap=await getDocs(collection(db,'curse_regulate'));
     const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.activa&&(x.zile||[]).includes(dow)&&x.soferEmail===u.email);
     if(!curse.length){
-      c.innerHTML=`<div style="text-align:center;padding:60px 24px;color:var(--muted)">
-        <div style="font-size:56px;margin-bottom:16px">😴</div>
-        <div style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)">Nicio cursă pentru ${data}</div>
-        <div>Nu aveți curse asignate în această zi. Verificați o altă dată.</div>
-      </div>`;return;
+      c.innerHTML=`<div style="text-align:center;padding:48px 24px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">😴</div><h3 style="margin-bottom:8px;color:var(--text)">Nicio cursă pentru ${data}</h3><p>Nu aveți curse asignate în această zi.</p></div>`;
+      return;
     }
     const cards=await Promise.all(curse.map(cr=>bSC(cr,data)));
     c.innerHTML=cards.join('');
-  }catch(e){c.innerHTML=`<div style="text-align:center;padding:48px;color:var(--red)">❌ ${e.message}</div>`}
-};
-async function bSC(cursa,data){
-  const snap=await getDocs(query(collection(db,'rezervari'),where('cursaId','==',cursa.id),where('data','==',data)));
-  const rezervari=snap.docs.map(d=>({id:d.id,...d.data()})).filter(r=>r.status!=='anulata');
-  const occ=new Set();rezervari.forEach(r=>(r.locuriRezervate||[]).forEach(l=>occ.add(l.locNr)));
-  const cp=cursa.capacitate||20;const statii=cursa.statii||[];
-  const pU={};statii.forEach((_,i)=>{pU[i]=[]});const pD={};statii.forEach((_,i)=>{pD[i]=[]});
-  rezervari.forEach(rez=>{
-    (rez.locuriRezervate||[]).forEach(l=>{
-      const iU=statii.findIndex(s=>s.nume===l.statieUrcare);if(iU!==-1)pU[iU].push({numeClient:rez.numeClient,telefon:rez.telefon||'-',locNr:l.locNr,statieCoborare:l.statieCoborare,biletId:rez.biletId||'-'});
-      const iC=statii.findIndex(s=>s.nume===l.statieCoborare);if(iC!==-1)pD[iC].push({numeClient:rez.numeClient,locNr:l.locNr,statieUrcare:l.statieUrcare});
-    });
-  });
-  let html=`<div class="sfc">
-    <div class="sfh">
-      <div><div class="sfr">${cursa.ruta}</div><div style="font-size:13px;color:var(--muted);margin-top:4px;display:flex;gap:14px;flex-wrap:wrap"><span>🕐 ${cursa.ora}</span><span>🚌 ${cursa.vehiculNume||'-'}</span><span>📅 ${data}</span></div></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <div class="sfp oc">🪑 ${occ.size} ocupate</div>
-        <div class="sfp lb">✅ ${cp-occ.size} libere</div>
-        <div class="sfp" style="color:var(--muted)">📊 ${cp} total</div>
-      </div>
-    </div>
-    <div class="sftml">`;
-  statii.forEach((st,i)=>{
-    const isL=i===statii.length-1;const up=pU[i]||[];const dn=pD[i]||[];
-    html+=`<div class="sfsp">
-      <div class="sfl"><div class="sfd${isL?' last':''}"></div>${!isL?'<div class="sfco"></div>':''}</div>
-      <div style="flex:1;padding-bottom:20px">
-        <div style="font-weight:700;font-size:15px;margin-bottom:8px">${st.nume}${st.pretDeLaStart>0?` <span style="font-size:12px;color:var(--muted);font-weight:400">(${st.pretDeLaStart} RON de la start)</span>`:' <span style="font-size:12px;color:var(--gold);font-weight:400">START</span>'}</div>`;
-    if(up.length){
-      html+=`<div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:6px">⬆ ${up.length} pasager${up.length>1?'i':''} urcă</div>`;
-      up.forEach(p=>{html+=`<div class="pr2"><div><div style="font-weight:600;font-size:14px">👤 ${p.numeClient}</div><div style="font-size:12px;color:var(--muted)">📞 ${p.telefon} · 🎟️ ${p.biletId}</div></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pl2">Loc ${p.locNr}</span><span style="font-size:12px;color:var(--muted);background:var(--bg2);padding:3px 8px;border-radius:5px">↓ coboară: ${p.statieCoborare}</span></div></div>`});
-    }
-    if(dn.length){
-      html+=`<div style="font-size:12px;color:var(--orange);font-weight:600;margin:${up.length?'10px':0} 0 6px">⬇ ${dn.length} pasager${dn.length>1?'i':''} coboară</div>`;
-      dn.forEach(p=>{html+=`<div class="pr2" style="border-color:rgba(249,115,22,.2)"><div><div style="font-weight:600;font-size:14px;color:var(--orange)">👤 ${p.numeClient} — Loc ${p.locNr}</div><div style="font-size:12px;color:var(--muted)">a urcat din: ${p.statieUrcare}</div></div><div style="background:rgba(249,115,22,.08);color:var(--orange);font-size:12px;padding:4px 10px;border-radius:6px;font-weight:600">COBOARĂ AICI</div></div>`});
-    }
-    if(!up.length&&!dn.length)html+=`<div style="font-size:12px;color:var(--muted)">Nicio oprire necesară</div>`;
-    html+=`</div></div>`;
-  });
-  html+=`</div>`;
-  // Mini hartă locuri din rows
-  const rows=cursa.rows||[];
-  let mh=`<div style="padding:0 20px 20px;border-top:1px solid var(--border)">
-    <div style="font-size:12px;color:var(--muted);margin:14px 0 10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">🗺️ Hartă locuri</div>
-    <div style="max-width:280px;display:flex;flex-direction:column;gap:4px">`;
-  if(rows.length){
-    mh+=`<div style="display:flex;gap:4px;align-items:center;justify-content:flex-start;margin-bottom:4px"><div style="width:32px;height:28px;border-radius:5px;border:1px dashed var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px">🚗</div></div>`;
-    rows.forEach(row=>{
-      const type=row.type||'2+2';const seats=row.seats||[];
-      mh+=`<div style="display:flex;gap:4px;align-items:center;justify-content:center">`;
-      if(type==='2+2'){
-        [0,1].forEach(i=>{if(seats[i]){const n=seats[i].nr;mh+=`<div style="width:32px;height:28px;border-radius:5px;border:1px solid var(--border);background:${occ.has(n)?'rgba(239,68,68,.1)':'rgba(34,197,94,.1)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${occ.has(n)?'var(--red)':'var(--green)'}">${n}</div>`}});
-        mh+=`<div style="width:14px"></div>`;
-        [2,3].forEach(i=>{if(seats[i]){const n=seats[i].nr;mh+=`<div style="width:32px;height:28px;border-radius:5px;border:1px solid var(--border);background:${occ.has(n)?'rgba(239,68,68,.1)':'rgba(34,197,94,.1)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${occ.has(n)?'var(--red)':'var(--green)'}">${n}</div>`}});
-      }else if(type==='1+2'){
-        if(seats[0]){const n=seats[0].nr;mh+=`<div style="width:32px;height:28px;border-radius:5px;border:1px solid var(--border);background:${occ.has(n)?'rgba(239,68,68,.1)':'rgba(34,197,94,.1)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${occ.has(n)?'var(--red)':'var(--green)'}">${n}</div>`}
-        mh+=`<div style="width:14px"></div>`;
-        [1,2].forEach(i=>{if(seats[i]){const n=seats[i].nr;mh+=`<div style="width:32px;height:28px;border-radius:5px;border:1px solid var(--border);background:${occ.has(n)?'rgba(239,68,68,.1)':'rgba(34,197,94,.1)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${occ.has(n)?'var(--red)':'var(--green)'}">${n}</div>`}});
-      }else if(type==='1+1'){
-        if(seats[0]){const n=seats[0].nr;mh+=`<div style="width:32px;height:28px;border-radius:5px;border:1px solid var(--border);background:${occ.has(n)?'rgba(239,68,68,.1)':'rgba(34,197,94,.1)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${occ.has(n)?'var(--red)':'var(--green)'}">${n}</div>`}
-        mh+=`<div style="width:14px"></div>`;
-        if(seats[1]){const n=seats[1].nr;mh+=`<div style="width:32px;height:28px;border-radius:5px;border:1px solid var(--border);background:${occ.has(n)?'rgba(239,68,68,.1)':'rgba(34,197,94,.1)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${occ.has(n)?'var(--red)':'var(--green)'}">${n}</div>`}
-      }else{
-        // spate
-        seats.forEach(seat=>{const n=seat.nr;mh+=`<div style="width:32px;height:28px;border-radius:5px;border:1px solid var(--border);background:${occ.has(n)?'rgba(239,68,68,.1)':'rgba(34,197,94,.1)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${occ.has(n)?'var(--red)':'var(--green)'}">${n}</div>`});
-      }
-      mh+=`</div>`;
-    });
+  }catch(e){
+    c.innerHTML=`<div style="text-align:center;padding:48px;color:var(--red)">❌ Eroare: ${e.message}<br><br><small>Verificați că ați configurat regulile Firestore (firestore.rules)</small></div>`;
   }
-  mh+=`</div><div style="display:flex;gap:14px;margin-top:8px;font-size:11px"><span style="color:var(--red)">■ Ocupat</span><span style="color:var(--green)">■ Liber</span></div></div>`;
-  html+=mh+`</div>`;return html;
-}
+};
 
-// ── ADMIN ─────────────────────────────────────────────────
+window.loadSoferCurse=async()=>{
+  const u=window._U;if(!u)return;
+  const el=document.getElementById('sf-curse-list');
+  el.innerHTML='<p style="color:var(--muted)">Se încarcă...</p>';
+  try{
+    const snap=await getDocs(collection(db,'curse_regulate'));
+    const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.soferEmail===u.email);
+    if(!curse.length){el.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">📋</div><p>Nu aveți curse asignate.</p></div>';return}
+    const DAYS=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
+    el.innerHTML=curse.map(c=>{
+      const dc=DAYS.map((d,i)=>`<div class="dc ${(c.zile||[]).includes(i)?'on':''}">${d}</div>`).join('');
+      const stb=(c.statii||[]).map((s,i)=>`<span class="stb">📍 ${s.nume}${i>0?` <span class="pr">${s.pretDeLaStart} RON</span>`:' <span class="pr">START</span>'}</span>`).join('');
+      return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">${c.ruta}</div>
+          <span class="sb ${c.activa?'confirmata':'anulata'}">${c.activa?'✅ Activă':'⏸️ Inactivă'}</span>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:10px">
+          <span>🕐 ${c.ora}</span><span>🚌 ${c.vehiculNume||'-'}</span><span>👥 ${c.capacitate||'?'} locuri</span>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">${dc}</div>
+        <div>${stb}</div>
+      </div>`;
+    }).join('');
+    // Also populate bilete filter
+    const selCursa=document.getElementById('sf-bilete-cursa');
+    selCursa.innerHTML='<option value="">— toate cursele —</option>'+curse.map(c=>`<option value="${c.id}">${c.ruta} (${c.ora})</option>`).join('');
+  }catch(e){el.innerHTML=`<div style="color:var(--red);padding:16px">❌ ${e.message}</div>`}
+};
+
+window.loadSoferVehicul=async()=>{
+  const u=window._U;if(!u)return;
+  const el=document.getElementById('sf-vehicul-info');
+  el.innerHTML='<p style="color:var(--muted)">Se încarcă...</p>';
+  try{
+    // Find vehicle assigned to sofer's routes
+    const snap=await getDocs(collection(db,'curse_regulate'));
+    const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.soferEmail===u.email&&x.activa);
+    if(!curse.length){el.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">🚌</div><p>Nu aveți vehicul asignat momentan.</p></div>';return}
+    // Get unique vehicles
+    const vehIds=[...new Set(curse.map(c=>c.vehiculId).filter(Boolean))];
+    const vehs=[];
+    for(const vid of vehIds){
+      const ref=await getDoc(doc(db,'vehicule',vid));
+      if(ref.exists())vehs.push({id:ref.id,...ref.data()});
+    }
+    if(!vehs.length){el.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)">Nu s-au găsit vehicule.</div>';return}
+    el.innerHTML=vehs.map(v=>{
+      const imgs=v.imagini&&v.imagini.length?v.imagini:[];
+      const imgHtml=imgs.length?`<img src="${imgs[0]}" style="width:100%;height:180px;object-fit:cover;border-radius:10px;margin-bottom:16px;cursor:zoom-in" onclick="openLB('${imgs[0]}')" />`:`<div style="width:100%;height:100px;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:56px;margin-bottom:16px">${v.icon||'🚌'}</div>`;
+      const rows=v.rows||[];
+      const totalSeats=rows.reduce((s,r)=>s+(r.seats||[]).length,0);
+      // Build seat map
+      let seatMap='';
+      if(rows.length){
+        seatMap='<div style="display:flex;flex-direction:column;gap:4px;max-width:320px">';
+        seatMap+=`<div style="display:flex;gap:4px;justify-content:flex-start"><div style="width:36px;height:32px;border-radius:6px;border:1px dashed var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px">🚗</div></div>`;
+        rows.forEach(row=>{
+          const type=row.type||'2+2';const seats=row.seats||[];
+          seatMap+=`<div style="display:flex;gap:4px;justify-content:center">`;
+          if(type==='2+2'){
+            seats.slice(0,2).forEach(s=>seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${s.nr}</div>`);
+            seatMap+=`<div style="width:14px"></div>`;
+            seats.slice(2,4).forEach(s=>seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${s.nr}</div>`);
+          }else if(type==='1+2'){
+            seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${seats[0]?.nr||''}</div>`;
+            seatMap+=`<div style="width:14px"></div>`;
+            seats.slice(1,3).forEach(s=>seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${s.nr}</div>`);
+          }else if(type==='1+1'){
+            seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${seats[0]?.nr||''}</div>`;
+            seatMap+=`<div style="width:14px"></div>`;
+            seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${seats[1]?.nr||''}</div>`;
+          }else{
+            seats.forEach(s=>seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${s.nr}</div>`);
+          }
+          seatMap+=`</div>`;
+        });
+        seatMap+='</div>';
+      }
+      const curseMele=curse.filter(c=>c.vehiculId===v.id);
+      return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px">
+        ${imgHtml}
+        <h3 style="font-size:20px;margin-bottom:4px">${v.icon||''} ${v.nume}</h3>
+        <div style="color:var(--muted);font-size:13px;margin-bottom:16px">${v.model||''} ${v.anFab?'('+v.anFab+')':''} · ${v.nrInmatr||''} · ${v.culoare||''}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+          <div style="background:var(--bg3);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--gold)">${totalSeats}</div>
+            <div style="font-size:12px;color:var(--muted)">Locuri totale</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--blue)">${curseMele.length}</div>
+            <div style="font-size:12px;color:var(--muted)">Curse asignate</div>
+          </div>
+        </div>
+        <div style="margin-bottom:16px"><div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Dotări</div><div>${(v.dotari||[]).map(d=>`<span class="chip">${d}</span>`).join('')||'—'}</div></div>
+        ${seatMap?`<div><div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Configurație locuri</div>${seatMap}</div>`:''}
+        <div style="margin-top:16px"><div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Cursele mele cu acest vehicul</div>
+          ${curseMele.map(c=>`<div style="background:var(--bg3);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:13px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px"><span style="font-weight:600">${c.ruta}</span><span style="color:var(--muted)">🕐 ${c.ora}</span></div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML=`<div style="color:var(--red);padding:16px">❌ ${e.message}</div>`}
+};
+
+window.loadSoferBilete=async()=>{
+  const u=window._U;if(!u)return;
+  const el=document.getElementById('sf-bilete-list');
+  el.innerHTML='<p style="color:var(--muted)">Se încarcă...</p>';
+  const cursaId=document.getElementById('sf-bilete-cursa').value;
+  const data=document.getElementById('sf-bilete-data').value;
+  try{
+    // Get all routes for this driver
+    const snapR=await getDocs(collection(db,'curse_regulate'));
+    const curseMele=snapR.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.soferEmail===u.email);
+    const cursaIds=cursaId?[cursaId]:curseMele.map(c=>c.id);
+    // Query reservations
+    let allRez=[];
+    for(const cid of cursaIds){
+      if(!cid)continue;
+      let q=query(collection(db,'rezervari'),where('cursaId','==',cid));
+      const snap=await getDocs(q);
+      snap.docs.forEach(d=>{
+        const r={id:d.id,...d.data()};
+        if(r.status==='anulata')return;
+        if(data&&r.data!==data)return;
+        allRez.push(r);
+      });
+    }
+    allRez.sort((a,b)=>{
+      if(a.data!==b.data)return a.data>b.data?-1:1;
+      return(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0);
+    });
+    if(!allRez.length){
+      el.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">🎟️</div><p>Nu s-au găsit rezervări cu filtrele selectate.</p></div>';
+      return;
+    }
+    // Group by date
+    const byDate={};
+    allRez.forEach(r=>{const d=r.data||'necunoscut';if(!byDate[d])byDate[d]=[];byDate[d].push(r)});
+    const sl={'in_asteptare':'⏳','oferta_trimisa':'📩','confirmata':'✅','anulata':'❌'};
+    el.innerHTML=Object.entries(byDate).sort((a,b)=>b[0]>a[0]?1:-1).map(([dt,rezervari])=>{
+      const totalLoc=rezervari.reduce((s,r)=>s+(r.nrLocuri||0),0);
+      const totalSuma=rezervari.reduce((s,r)=>s+(r.pretTotal||0),0);
+      return `<div style="margin-bottom:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px">📅 ${dt}</div>
+          <div style="display:flex;gap:10px">
+            <span class="chip g">🪑 ${totalLoc} locuri</span>
+            <span class="chip gr">💰 ${totalSuma} RON</span>
+          </div>
+        </div>
+        ${rezervari.map(r=>{
+          const locs=r.locuriRezervate||[];
+          const sU=locs[0]?.statieUrcare||'-';const sC=locs[0]?.statieCoborare||'-';
+          return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+              <div>
+                <div style="font-weight:600;font-size:14px">👤 ${r.numeClient}</div>
+                <div style="font-size:12px;color:var(--muted)">📞 ${r.telefon||'-'} · ${r.email||'-'}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                <span style="background:rgba(232,160,32,.15);border:1px solid rgba(232,160,32,.3);color:var(--gold);font-weight:700;font-size:12px;padding:3px 10px;border-radius:6px">${locs.map(l=>'Loc '+l.locNr).join(', ')||'—'}</span>
+                <span style="font-size:11px;color:var(--gold);font-weight:600">🎟️ ${r.biletId||'-'}</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)">
+              <span>📍 Urcă: <strong style="color:var(--green)">${sU}</strong></span>
+              <span>📍 Coboară: <strong style="color:var(--orange)">${sC}</strong></span>
+              <span style="color:var(--gold);font-weight:600">💰 ${r.pretTotal||0} RON</span>
+              ${r.nrLocuri>1?`<span>🪑 ${r.nrLocuri} locuri</span>`:''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML=`<div style="color:var(--red);padding:16px">❌ ${e.message}</div>`}
+};
+
 window.loadAdmin=async()=>{
   await loadFlota();loadStats();loadVT();loadRT();loadAzT();loadSfT();loadTkT();loadSetari();
   const vars=['{{nume}}','{{email}}','{{telefon}}','{{tip}}','{{data}}','{{ora}}','{{traseu}}','{{vehicul}}','{{obs}}'];
