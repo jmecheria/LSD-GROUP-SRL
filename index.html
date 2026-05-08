@@ -660,6 +660,7 @@ footer a{color:var(--muted)}.footer-links{display:flex;gap:16px;justify-content:
           <div style="font-weight:700;margin-bottom:12px">💬 Conversație cu clientul</div>
           <div class="mth" id="admth" style="max-height:280px"></div>
           <div class="fg"><div class="fl">Mesaj către client</div><textarea id="admmsg" rows="3" placeholder="Scrie un mesaj, ofertă sau informații suplimentare..."></textarea></div>
+          <div class="fg"><div class="fl">Vehicul pentru ofertă (organizate)</div><select id="adm-veh-sel"><option value="">— alege vehiculul potrivit —</option></select></div>
           <div class="fg"><div class="fl">Status rezervare</div>
             <select id="admst">
               <option value="in_asteptare">⏳ În așteptare</option>
@@ -1727,14 +1728,12 @@ async function loadRT(){
 window.tR=async(id,val)=>{await setDoc(doc(db,'curse_regulate',id),{activa:val},{merge:true});await loadRT()};
 function rSE(){
   document.getElementById('stlist').innerHTML=_eSt.map((s,i)=>{
-    const first=i===0;const ph=first?'Prima stație (punct de plecare)':(i===_eSt.length-1?'Destinație finală':'Stație intermediară');
+    const first=i===0;const ph=first?'Prima statie (plecare)':(i===_eSt.length-1?'Destinatie finala':'Statie intermediara');
     const del=i>=2?`<button class="sdel" onclick="dSt(${i})">✕</button>`:`<div style="width:32px"></div>`;
-    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <div style="width:24px;height:24px;border-radius:50%;background:var(--gold);color:#0a0d14;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
-      <input type="text" placeholder="${ph}" value="${s.n}" oninput="_eSt[${i}].n=this.value" style="flex:2"/>
-      ${first?`<div style="width:110px;font-size:11px;color:var(--muted);text-align:center;flex-shrink:0">0 RON (start)</div>`:`<input type="number" min="0" placeholder="RON cumul." value="${s.p||''}" oninput="_eSt[${i}].p=parseFloat(this.value)||0" style="width:110px;flex-shrink:0" title="Prețul total de la prima stație până aici"/>`}
-      ${del}
-    </div>`;
+    const pretInput=first
+      ?`<div style="width:110px;font-size:11px;color:var(--muted);text-align:center;flex-shrink:0">0 RON (start)</div>`
+      :`<input data-st-pret type="number" min="0" placeholder="RON cumul." value="${s.p||''}" style="width:110px;flex-shrink:0"/>`;
+    return `<div data-st-row="${i}" style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div style="width:24px;height:24px;border-radius:50%;background:var(--gold);color:#0a0d14;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><input data-st-name type="text" placeholder="${ph}" value="${s.n}" style="flex:2"/>${pretInput}${del}</div>`;
   }).join('');
 }
 window.addSt=()=>{_eSt.splice(_eSt.length-1,0,{n:'',p:0});rSE()};
@@ -1775,9 +1774,18 @@ window.saveReg=async()=>{
   const veh=window._F.find(v=>v.id===vehId);
   const sfE=document.getElementById('rmsf').value;
   const zile=[...document.querySelectorAll('[data-day].on')].map(b=>parseInt(b.dataset.day));
-  const statii=_eSt.map(s=>({nume:s.n,pretDeLaStart:parseFloat(s.p)||0}));
+  // Read directly from DOM inputs — fix for oninput not always firing
+  const stRows=document.getElementById('stlist').querySelectorAll('[data-st-row]');
+  const statii=[];
+  stRows.forEach((row,i)=>{
+    const numeEl=row.querySelector('[data-st-name]');
+    const pretEl=row.querySelector('[data-st-pret]');
+    const nume=numeEl?numeEl.value.trim():'';
+    const pret=i===0?0:(parseFloat(pretEl?pretEl.value:0)||0);
+    statii.push({nume,pretDeLaStart:pret});
+  });
   if(statii.length<2){toast('Adăugați minim 2 stații','wr');return}
-  if(statii.some(s=>!s.nume.trim())){toast('Completați numele tuturor stațiilor','wr');return}
+  if(statii.some(s=>!s.nume)){toast('Completați numele tuturor stațiilor','wr');return}
   statii[0].pretDeLaStart=0;
   for(let i=1;i<statii.length;i++){
     if(statii[i].pretDeLaStart<=statii[i-1].pretDeLaStart){toast(`Prețul stației "${statii[i].nume}" trebuie să fie mai mare decât "${statii[i-1].nume}"`,'wr');return}
@@ -1854,7 +1862,11 @@ window.openRD=async rId=>{
   // Thread
   const th=document.getElementById('admth');const msgs=r.mesaje||[];
   th.innerHTML=msgs.length?msgs.map(m=>`<div class="mbub ${m.from==='admin'?'ma':'mc'}"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">${m.from==='admin'?'👑 Admin':'👤 Client'} — ${m.timestamp?new Date(m.timestamp.seconds*1000).toLocaleString('ro'):'...'}</div>${m.text}</div>`).join(''):'<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Nicio conversație încă.</p>';
-  th.scrollTop=th.scrollHeight;om('rd');
+  th.scrollTop=th.scrollHeight;
+  // Populate vehicle selector in reply area
+  const avSel=document.getElementById('adm-veh-sel');
+  avSel.innerHTML='<option value="">— alege vehiculul potrivit —</option>'+window._F.map(v=>`<option value="${v.id}" ${r.vehiculId===v.id?'selected':''}>${v.icon||''} ${v.nume} (${cap(v)} locuri)</option>`).join('');
+  om('rd');
 };
 window.sendReply=async()=>{
   const text=document.getElementById('admmsg').value.trim();
@@ -1866,10 +1878,10 @@ window.sendReply=async()=>{
   if(text)mesaje.push({from:'admin',text,timestamp:Timestamp.now()});
   const upd={mesaje,status};
   if(pret)upd.pretFinal=pret;
-  // Save vehicle & driver allocation for organizate
-  const vehId=document.getElementById('rd-veh')?.value;
+  // Save vehicle & driver allocation
+  const vehId=document.getElementById('adm-veh-sel')?.value||document.getElementById('rd-veh')?.value;
   const sfEmail=document.getElementById('rd-sofer')?.value;
-  if(vehId){const v=window._F.find(x=>x.id===vehId);upd.vehiculId=vehId;upd.vehiculNume=v?v.nume:'-'}
+  if(vehId){const v=window._F.find(x=>x.id===vehId);if(v){upd.vehiculId=vehId;upd.vehiculNume=v.nume}}
   if(sfEmail)upd.soferEmail=sfEmail;
   await setDoc(doc(db,'rezervari',_aRId),upd,{merge:true});
   if(text)await sendEjs({
