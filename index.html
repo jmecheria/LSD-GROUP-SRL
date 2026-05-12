@@ -234,6 +234,21 @@ footer a{color:var(--muted)}.footer-links{display:flex;gap:16px;justify-content:
 .profile-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px}
 .avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:24px;font-family:"Syne",sans-serif;font-weight:800;color:#0a0d14;margin-bottom:12px}
 .rez-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px}
+/* SOFER CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:24px}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
+.cal-hday{text-align:center;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;padding:4px}
+.cal-day{border-radius:8px;padding:6px 4px;min-height:52px;font-size:11px;cursor:default;border:1px solid transparent;position:relative}
+.cal-day.empty{background:transparent}
+.cal-day.azi{border-color:var(--gold)!important}
+.cal-day-nr{font-weight:600;font-size:12px;margin-bottom:3px;text-align:center}
+.cal-event{border-radius:3px;padding:1px 4px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.cal-event.cursa-reg{background:rgba(59,130,246,.2);color:var(--blue)}
+.cal-event.cursa-org{background:rgba(232,160,32,.2);color:var(--gold)}
+.cal-day.has-cursa{background:var(--bg2);border-color:var(--border)}
+.cal-day.liber{background:var(--bg3);opacity:.5}
+.cal-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.cal-month{font-family:'Syne',sans-serif;font-weight:700;font-size:18px}
 /* RESPONSIVE */
 @media(max-width:700px){
   #nlinks,#ab{display:none}
@@ -294,6 +309,14 @@ footer a{color:var(--muted)}.footer-links{display:flex;gap:16px;justify-content:
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px">
         <h3 style="font-size:15px;margin-bottom:16px">📋 Detalii cursă</h3>
         <div class="fg"><div class="fl">Tip / Descriere cursă *</div><input type="text" id="odesc" placeholder="Ex: Excursie la munte, nuntă, transfer aeroport, corporativ..."/></div>
+      <div class="fg">
+        <div class="fl">Vehicul dorit (opțional)</div>
+        <select id="org-veh-select" onchange="calcOrgPret()"><option value="">— selectați vehiculul dorit (opțional) —</option></select>
+        <div id="org-pret-estim" style="display:none;margin-top:8px;background:var(--bg3);border:1px solid rgba(232,160,32,.3);border-radius:8px;padding:10px 14px;font-size:13px">
+          <span style="color:var(--muted)">Preț estimativ: </span><strong id="org-pret-val" style="color:var(--gold)">—</strong>
+          <span id="org-pret-info" style="color:var(--muted);font-size:12px"></span>
+        </div>
+      </div>
         <div class="fr">
           <div class="fg"><div class="fl">Data dorită *</div><input type="date" id="odata"/></div>
           <div class="fg"><div class="fl">Ora</div><select id="oora"><option value="flexibil">Flexibil</option><option>05:00</option><option>06:00</option><option>07:00</option><option>08:00</option><option>09:00</option><option>10:00</option><option>11:00</option><option>12:00</option><option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option><option>17:00</option><option>18:00</option><option>19:00</option><option>20:00</option><option>21:00</option></select></div>
@@ -301,7 +324,7 @@ footer a{color:var(--muted)}.footer-links{display:flex;gap:16px;justify-content:
         <div class="fg"><div class="fl">Traseu (opriri în ordine) *</div><div id="stopsc"></div><button class="btn bs bsm" style="margin-top:8px" onclick="addStop()">+ Adaugă oprire</button></div>
         <div class="fr">
           <div class="fg"><div class="fl">Nr. persoane estimat</div><input type="number" id="opers" min="1" placeholder="Ex: 20"/></div>
-          <div class="fg"><div class="fl">Distanță estimată (km)</div><input type="number" id="okm" min="1" placeholder="Optional"/></div>
+          <div class="fg"><div class="fl">Distanță estimată (km)</div><input type="number" id="okm" min="1" placeholder="Optional" oninput="calcOrgPret()"/></div>
         </div>
         <div class="fg"><div class="fl">Observații / cerințe speciale</div><textarea id="oobs" rows="3" placeholder="Ex: Nevoie de microfon, opriri suplimentare, bagaje mari..."></textarea></div>
       </div>
@@ -406,6 +429,7 @@ footer a{color:var(--muted)}.footer-links{display:flex;gap:16px;justify-content:
   <!-- TABS sofer -->
   <div class="tbar">
     <button class="tb on" onclick="sfTab('azi')">📅 Azi</button>
+    <button class="tb" onclick="sfTab('calendar')">📆 Calendar</button>
     <button class="tb" onclick="sfTab('curse')">🗓️ Toate cursele</button>
     <button class="tb" onclick="sfTab('vehicul')">🚌 Vehiculul meu</button>
     <button class="tb" onclick="sfTab('bilete')">🎟️ Bilete / Rezervări</button>
@@ -417,6 +441,24 @@ footer a{color:var(--muted)}.footer-links{display:flex;gap:16px;justify-content:
       <button class="btn bs bsm" onclick="loadSoferAzi()">🔄</button>
     </div>
     <div id="sflist"></div>
+  </div>
+  <!-- CALENDAR -->
+  <div id="sf-tab-calendar" class="tc">
+    <div class="cal-nav">
+      <button class="btn bs bsm" onclick="calPrev()">← Prev</button>
+      <div class="cal-month" id="cal-month-label"></div>
+      <button class="btn bs bsm" onclick="calNext()">Urm →</button>
+    </div>
+    <div class="cal-header">
+      <div class="cal-hday">Lun</div><div class="cal-hday">Mar</div><div class="cal-hday">Mie</div>
+      <div class="cal-hday">Joi</div><div class="cal-hday">Vin</div><div class="cal-hday">Sâm</div><div class="cal-hday">Dum</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-top:4px">
+      <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(59,130,246,.2);margin-right:4px"></span>Cursă regulată</span>
+      <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(232,160,32,.2);margin-right:4px"></span>Cursă organizată</span>
+      <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid var(--gold);margin-right:4px"></span>Azi</span>
+    </div>
   </div>
   <!-- TOATE CURSELE -->
   <div id="sf-tab-curse" class="tc">
@@ -576,6 +618,7 @@ footer a{color:var(--muted)}.footer-links{display:flex;gap:16px;justify-content:
         <div style="margin-top:10px"><div class="fl" style="margin-bottom:6px">Preview hartă autobuz:</div><div id="seat-preview" style="max-width:340px"></div></div>
       </div>
       <div class="fg"><div class="fl">Dotări (separate prin virgulă)</div><input type="text" id="vmd" placeholder="AC, WiFi, USB, TV, Toaletă, Prize 220V"/></div>
+      <div class="fg"><div class="fl">Preț per km (RON) — pentru estimare cursă organizată</div><input type="number" id="vmpkm" min="0" step="0.1" placeholder="Ex: 3.5"/></div>
       <div class="fg"><div class="fl">Disponibil pentru charter</div><label class="tog"><input type="checkbox" id="vmdc" checked/><span class="tosl"></span></label></div>
       <div class="fg">
         <div class="fl">Imagini (max 5, se comprimă automat)</div>
@@ -703,6 +746,10 @@ footer a{color:var(--muted)}.footer-links{display:flex;gap:16px;justify-content:
             </select>
           </div>
           <button class="btn bp bw" onclick="sendReply()">📤 Trimite răspuns</button>
+          <div id="adm-fact-btns" style="display:none;margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn bs bsm" onclick="openFactura(_aRId,30)">📄 Factură avans 30%</button>
+            <button class="btn bs bsm" onclick="openFactura(_aRId,70)">📄 Factură rest 70%</button>
+          </div>
         </div>
       </div>
     </div>
@@ -744,6 +791,18 @@ footer a{color:var(--muted)}.footer-links{display:flex;gap:16px;justify-content:
   <div class="mf"><button class="btn bs" onclick="cm('profile')">Anulează</button><button class="btn bp" onclick="saveProfile()">Salvează profilul</button></div></div>
 </div>
 <!-- LIGHTBOX -->
+<!-- MODAL FACTURA PROFORMA -->
+<div class="mo" id="mo-factura">
+  <div class="md md-lg">
+    <div class="mh"><div><div class="mt2" id="fact-title">📄 Factură Proformă</div><div style="font-size:12px;color:var(--muted);margin-top:3px" id="fact-sub"></div></div><button class="mx" onclick="cm('factura')">✕</button></div>
+    <div class="mb2" id="fact-body"></div>
+    <div class="mf">
+      <button class="btn bs" onclick="cm('factura')">Închide</button>
+      <button class="btn bp" onclick="printFactura()">🖨️ Printează factura</button>
+    </div>
+  </div>
+</div>
+
 <div id="lb" onclick="clb()"><button id="lbx" onclick="clb()">✕</button><img id="lbi" src="" alt=""/></div>
 <div id="tc"></div>
 <div id="ckb"><span>🍪 Folosim cookie-uri necesare funcționării. <a onclick="nav('gdpr')">Politică GDPR</a> | <a onclick="nav('termeni')">Termeni</a></span><button class="btn bp bsm" onclick="ack()">Acceptă</button></div>
@@ -855,6 +914,28 @@ onAuthStateChanged(auth,async u=>{
   renderFooter();
 });
 
+// ── VALIDATION HELPERS ──────────────────────────────────
+function validEmail(em){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.trim())}
+function validPhone(tel){return /^(\+4|0)[0-9]{9}$/.test(tel.replace(/\s/g,''))}
+function validName(n){return n.trim().length>=3&&/^[a-zA-ZăâîșțĂÂÎȘȚ\s\-]+$/.test(n.trim())}
+function fieldErr(id,msg){
+  const el=document.getElementById(id);if(!el)return;
+  el.style.borderColor='var(--red)';
+  let hint=el.parentNode.querySelector('.ferr');
+  if(!hint){hint=document.createElement('div');hint.className='ferr';hint.style.cssText='font-size:11px;color:var(--red);margin-top:3px';el.parentNode.appendChild(hint)}
+  hint.textContent=msg;
+}
+function fieldOk(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.style.borderColor='var(--green)';
+  const hint=el.parentNode.querySelector('.ferr');if(hint)hint.remove();
+}
+function clearFieldErr(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.style.borderColor='';
+  const hint=el.parentNode.querySelector('.ferr');if(hint)hint.remove();
+}
+
 window.doLogin=async()=>{
   const em=document.getElementById('lem').value.trim(),pw=document.getElementById('lpw').value;
   if(!em||!pw){toast('Completați email și parola','wr');return}
@@ -867,9 +948,14 @@ window.doReg=async()=>{
   const em=document.getElementById('rem').value.trim();
   const tel=document.getElementById('rtel').value.trim();
   const pw=document.getElementById('rpw').value;
-  if(!fn||!ln||!em||!tel||!pw){toast('Completați toate câmpurile obligatorii','wr');return}
-  if(!document.getElementById('rgdpr').checked){toast('Trebuie să acceptați Politica GDPR și Termenii','wr');return}
-  if(pw.length<6){toast('Parola trebuie să aibă minim 6 caractere','wr');return}
+  let regOk=true;
+  if(!fn||!validName(fn)){fieldErr('rname','Introduceți un prenume valid (minim 3 litere, fără cifre)');regOk=false}else fieldOk('rname');
+  if(!ln||!validName(ln)){fieldErr('rpren','Introduceți un nume valid (minim 3 litere, fără cifre)');regOk=false}else fieldOk('rpren');
+  if(!em||!validEmail(em)){fieldErr('rem','Adresa de email nu este validă');regOk=false}else fieldOk('rem');
+  if(!tel||!validPhone(tel)){fieldErr('rtel','Introduceți un număr de telefon valid (ex: 0740 123 456)');regOk=false}else fieldOk('rtel');
+  if(!pw||pw.length<6){fieldErr('rpw','Parola trebuie să aibă minim 6 caractere');regOk=false}else fieldOk('rpw');
+  if(!document.getElementById('rgdpr').checked){toast('Trebuie să acceptați Politica GDPR și Termenii','wr');regOk=false}
+  if(!regOk)return;
   const name=fn+' '+ln;
   try{
     const uc=await createUserWithEmailAndPassword(auth,em,pw);
@@ -988,6 +1074,15 @@ async function initHome(){
 }
 
 // ── REGULATE ─────────────────────────────────────────────
+function calcArrival(ora,minutes){
+  try{
+    const [h,m]=ora.split(':').map(Number);
+    const total=h*60+m+minutes;
+    const hh=Math.floor(total/60)%24;
+    const mm=total%60;
+    return (hh<10?'0':'')+hh+':'+(mm<10?'0':'')+mm;
+  }catch(e){return ''}
+}
 window.loadReg=async()=>{
   const di=document.getElementById('rdate');
   if(!di.value){const t=new Date().toISOString().split('T')[0];di.value=t;di.min=t}
@@ -996,11 +1091,20 @@ window.loadReg=async()=>{
   await loadFlota();
   const snap=await getDocs(collection(db,'curse_regulate'));
   window._R=snap.docs.map(d=>({id:d.id,...d.data()}));
-  const curse=window._R.filter(c=>c.activa&&(c.zile||[]).includes(dow));
+  const curse=window._R.filter(c=>{
+    if(!c.activa)return false;
+    if(!(c.zile||[]).includes(dow))return false;
+    if(c.dataStart&&data<c.dataStart)return false;
+    if(c.dataEnd&&data>c.dataEnd)return false;
+    return true;
+  });
   if(!curse.length){list.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">🔍</div><p>Nu există curse în această zi.</p></div>';return}
   list.innerHTML=curse.map(c=>{
     const dc=DAYS.map((d,i)=>`<div class="dc ${(c.zile||[]).includes(i)?'on':''}">${d}</div>`).join('');
-    const stb=(c.statii||[]).map((s,i)=>`<span class="stb">📍 ${s.nume}${i>0?` <span class="pr">${s.pretDeLaStart} RON</span>`:' <span class="pr">START</span>'}</span>`).join('');
+    const stb=(c.statii||[]).map((s,i)=>{
+      const arrTime=i>0&&c.ora&&s.minuteDeLaStart?calcArrival(c.ora,s.minuteDeLaStart):'';
+      return `<span class="stb">📍 ${s.nume}${i>0?` <span class="pr">${s.pretDeLaStart} RON</span>${arrTime?` <span style="color:var(--muted);font-size:10px">≈${arrTime}</span>`:''}`:' <span class="pr">START</span>'}</span>`;
+    }).join('');
     return `<div class="sch">
       <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:10px">${c.ruta}</div>
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
@@ -1062,7 +1166,8 @@ window.selU=idx=>{
   const st=_cC.statii||[];
   document.getElementById('scob').innerHTML=st.slice(idx+1).map((s,i)=>{
     const ri=idx+1+i;const pr=s.pretDeLaStart-st[idx].pretDeLaStart;
-    return`<button class="stbt" onclick="selC(${ri})">${s.nume} <span style="opacity:.65;font-size:11px">(${pr} RON)</span></button>`;
+    const arr=_cC.ora&&s.minuteDeLaStart?calcArrival(_cC.ora,s.minuteDeLaStart):'';
+    return`<button class="stbt" onclick="selC(${ri})">${s.nume} <span style="opacity:.65;font-size:11px">(${pr} RON${arr?' · ≈'+arr:''})</span></button>`;
   }).join('');
   renderSeats();
 };
@@ -1178,7 +1283,11 @@ window.confSeats=async()=>{
     nc=document.getElementById('cnn')?.value?.trim()||'';
     tel=document.getElementById('cnt')?.value?.trim()||'';
     em=document.getElementById('cne')?.value?.trim()||'';
-    if(!nc||!tel||!em){toast('Completați datele de contact','wr');return}
+    let cinOk=true;
+    if(!nc||!validName(nc)){fieldErr('cnn','Introduceți un nume valid (minim 3 litere)');cinOk=false}else fieldOk('cnn');
+    if(!tel||!validPhone(tel)){fieldErr('cnt','Număr de telefon invalid (ex: 0740 123 456)');cinOk=false}else fieldOk('cnt');
+    if(!em||!validEmail(em)){fieldErr('cne','Adresă de email invalidă');cinOk=false}else fieldOk('cne');
+    if(!cinOk)return;
   }
   // Re-verify availability
   await loadOcc(_cId,_cD);
@@ -1263,9 +1372,46 @@ window.printB=()=>{
 };
 
 // ── ORGANIZATE ────────────────────────────────────────────
+window.calcOrgPret=()=>{
+  const vehId=document.getElementById('org-veh-select')?.value;
+  const km=parseInt(document.getElementById('okm')?.value)||0;
+  const el=document.getElementById('org-pret-estim');
+  const valEl=document.getElementById('org-pret-val');
+  const infoEl=document.getElementById('org-pret-info');
+  if(!el)return;
+  if(!vehId){el.style.display='none';return}
+  const v=window._F.find(x=>x.id===vehId);
+  if(!v){el.style.display='none';return}
+  if(v.pretPerKm&&km){
+    const est=Math.round(v.pretPerKm*km);
+    valEl.textContent=est+' RON';
+    infoEl.textContent=` (${v.pretPerKm} RON/km × ${km} km — estimativ, prețul final se confirmă)`;
+    el.style.display='block';
+  }else if(v.pretPerKm){
+    valEl.textContent='—';
+    infoEl.textContent=` (${v.pretPerKm} RON/km — introduceți distanța pentru estimare)`;
+    el.style.display='block';
+  }else{
+    valEl.textContent='La cerere';
+    infoEl.textContent=' — prețul se confirmă de echipă';
+    el.style.display='block';
+  }
+};
+
 function loadOrgPage(){
   renderStops();
   const u=window._U;
+  // Populate vehicle selection
+  await loadFlota();
+  const orgVehSel=document.getElementById('org-veh-select');
+  if(orgVehSel){
+    orgVehSel.innerHTML='<option value="">— selectați vehiculul dorit (opțional) —</option>'+window._F.filter(v=>v.disponibil).map(v=>{
+      const cp=cap(v);
+      const dotari=(v.dotari||[]).slice(0,3).join(', ');
+      const pretKm=v.pretPerKm?` · ${v.pretPerKm} RON/km`:'';
+      return `<option value="${v.id}">${v.icon||''} ${v.nume} — ${cp} locuri${pretKm}${dotari?' · '+dotari:''}`;
+    }).join('');
+  }
   const wrap=document.getElementById('org-contact-wrap');
   if(u){
     wrap.innerHTML=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;margin-bottom:16px">
@@ -1311,9 +1457,11 @@ window.submitOrg=async()=>{
   const km=parseInt(document.getElementById('okm')?.value)||null;
   const obs=document.getElementById('oobs')?.value?.trim()||'';
   const stops=_oSt.filter(Boolean);
-  if(!desc){toast('Descrieți tipul cursei','wr');return}
-  if(!data){toast('Selectați data dorită','wr');return}
-  if(stops.length<2){toast('Completați cel puțin punctul de plecare și destinația','wr');return}
+  let orgOk=true;
+  if(!desc){toast('Descrieți tipul cursei','wr');orgOk=false}
+  if(!data){toast('Selectați data dorită','wr');orgOk=false}
+  if(stops.length<2||!stops[0]||!stops[stops.length-1]){toast('Completați cel puțin punctul de plecare și destinația','wr');orgOk=false}
+  if(!orgOk)return;
   const u=window._U;
   let nc,em,tel;
   if(u){
@@ -1323,21 +1471,30 @@ window.submitOrg=async()=>{
     nc=document.getElementById('oname')?.value?.trim()||'';
     tel=document.getElementById('otel')?.value?.trim()||'';
     em=document.getElementById('oemail')?.value?.trim()||'';
-    if(!nc||!tel||!em){toast('Completați datele de contact','wr');return}
+    let contactOk=true;
+    if(!nc||!validName(nc)){fieldErr('oname','Introduceți un nume valid');contactOk=false}else fieldOk('oname');
+    if(!tel||!validPhone(tel)){fieldErr('otel','Număr de telefon invalid (ex: 0740 123 456)');contactOk=false}else fieldOk('otel');
+    if(!em||!validEmail(em)){fieldErr('oemail','Adresă de email invalidă');contactOk=false}else fieldOk('oemail');
+    if(!contactOk)return;
   }
+  const chosenVehId=document.getElementById('org-veh-select')?.value||null;
+  const chosenVeh=chosenVehId?window._F.find(x=>x.id===chosenVehId):null;
+  const pretEstim=chosenVeh&&chosenVeh.pretPerKm&&km?Math.round(chosenVeh.pretPerKm*km):null;
   const rez={
     uid:u?u.uid:null,numeClient:nc,email:em,telefon:tel,
     tipRezervare:'organizata',descriereCursa:desc,
     stops,traseu:stops.join(' → '),data,ora,persoane:pers,distantaKm:km,
-    vehiculId:null,vehiculNume:null,soferEmail:null,
-    pretFinal:null,observatii:obs,
+    vehiculId:chosenVehId,vehiculNume:chosenVeh?chosenVeh.nume:null,soferEmail:null,
+    pretEstimativ:pretEstim,pretFinal:null,observatii:obs,
     status:'in_asteptare',mesaje:[],adaugataManual:false,createdAt:serverTimestamp()
   };
   try{
     await addDoc(collection(db,'rezervari'),rez);
     await sendEjs({
       nume:nc,email:em,telefon:tel,tip:desc,data,ora,
-      traseu:stops.join(' → '),vehicul:'De confirmat de echipă',obs
+      traseu:stops.join(' → '),
+      vehicul:chosenVeh?chosenVeh.nume+' ('+cap(chosenVeh)+' locuri)':'De confirmat de echipă',
+      obs:(obs?obs+' | ':'')+(pretEstim?'Preț estimativ: '+pretEstim+' RON':'')
     });
     toast('✅ Cererea a fost trimisă! Veți fi contactat în curând.','ok');
     _oSt=['',''];
@@ -1381,7 +1538,7 @@ window.loadContPage=async()=>{
     const r=d.data();const sc=r.status||'in_asteptare';
     const locs=r.locuriRezervate||[];
     const locBadges=locs.map(l=>`<span class="chip g">Loc ${l.locNr}: ${l.statieUrcare}→${l.statieCoborare} (${l.pretLoc} RON)</span>`).join('');
-    const biletBtn=r.biletId?`<button class="btn bs bsm" onclick="showBStr(${JSON.stringify(JSON.stringify(r))})">🎟️ Bilet</button>`:'';
+    const biletBtn=r.biletId?`<button class="btn bp bsm" onclick="showBStr(${JSON.stringify(JSON.stringify(r))})">🎟️ Vezi biletul</button>`:'';;
     const anulBtn=r.status==='in_asteptare'?`<button class="btn bd bsm" onclick="anuleazaRez('${d.id}')">❌ Anulează</button>`:'';
     // MESAJE THREAD pentru organizate
     const msgs=r.mesaje||[];
@@ -1403,6 +1560,13 @@ window.loadContPage=async()=>{
           ${msgs.length>1?`<button class="btn bs bsm" style="margin-top:8px" onclick="openClientMsg('${d.id}')">💬 Vezi conversația completă (${msgs.length} mesaje)</button>`:
           `<button class="btn bs bsm" style="margin-top:8px" onclick="openClientMsg('${d.id}')">💬 Răspunde</button>`}
         </div>`;
+      // Factura buttons - only if confirmed and pretFinal set
+      if(r.status==='confirmata'&&r.pretFinal){
+        msgBlock+=`<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn bs bsm" onclick="openFactura('${d.id}',30)">📄 Factură avans 30%</button>
+          <button class="btn bs bsm" onclick="openFactura('${d.id}',70)">📄 Factură rest 70%</button>
+        </div>`;
+      }
       }else if(r.status==='in_asteptare'){
         msgBlock=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:12px">
           <div style="font-size:13px;color:var(--muted)">⏳ Echipa LSD Group analizează cererea dvs. și vă va trimite o ofertă în curând.</div>
@@ -1424,7 +1588,8 @@ window.loadContPage=async()=>{
         ${r.vehiculNume?`<span>🚌 ${r.vehiculNume}</span>`:''}
         ${r.descriereCursa?`<span>📋 ${r.descriereCursa}</span>`:''}
         ${r.pretTotal?`<span style="color:var(--gold);font-weight:600">💰 ${r.pretTotal} RON</span>`:''}
-        ${r.pretFinal?`<span style="color:var(--gold);font-weight:600">💰 Ofertă: ${r.pretFinal} RON</span>`:''}
+        ${r.pretEstimativ&&!r.pretFinal?`<span style="color:var(--muted);font-weight:600">💰 Estimativ: ~${r.pretEstimativ} RON</span>`:''}
+        ${r.pretFinal?`<span style="color:var(--gold);font-weight:700;font-size:14px">💰 Ofertă: ${r.pretFinal} RON</span>`:''}
       </div>
       ${locBadges?`<div style="margin-bottom:8px">${locBadges}</div>`:''}
       ${msgBlock}
@@ -1501,13 +1666,14 @@ window.loadSofer=async()=>{
 };
 
 window.sfTab=tab=>{
-  ['azi','curse','vehicul','bilete'].forEach(t=>{
+  ['azi','calendar','curse','vehicul','bilete'].forEach(t=>{
     document.getElementById('sf-tab-'+t).classList.toggle('on',t===tab);
   });
   document.querySelectorAll('#pg-sofer .tb').forEach((b,i)=>{
-    b.classList.toggle('on',['azi','curse','vehicul','bilete'][i]===tab);
+    b.classList.toggle('on',['azi','calendar','curse','vehicul','bilete'][i]===tab);
   });
   if(tab==='bilete')loadSoferBilete();
+  if(tab==='calendar')loadCalendar();
 };
 
 window.loadSoferAzi=async()=>{
@@ -1520,7 +1686,14 @@ window.loadSoferAzi=async()=>{
   c.innerHTML='<p style="color:var(--muted);padding:16px">Se încarcă...</p>';
   try{
     const snap=await getDocs(collection(db,'curse_regulate'));
-    const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.activa&&(x.zile||[]).includes(dow)&&x.soferEmail===u.email);
+    const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
+      if(!x.activa)return false;
+      if(!(x.zile||[]).includes(dow))return false;
+      if(x.soferEmail!==u.email)return false;
+      if(x.dataStart&&data<x.dataStart)return false;
+      if(x.dataEnd&&data>x.dataEnd)return false;
+      return true;
+    });
     if(!curse.length){
       c.innerHTML=`<div style="text-align:center;padding:48px 24px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">😴</div><h3 style="margin-bottom:8px;color:var(--text)">Nicio cursă pentru ${data}</h3><p>Nu aveți curse asignate în această zi.</p></div>`;
       return;
@@ -1530,6 +1703,180 @@ window.loadSoferAzi=async()=>{
   }catch(e){
     c.innerHTML=`<div style="text-align:center;padding:48px;color:var(--red)">❌ Eroare: ${e.message}<br><br><small>Verificați că ați configurat regulile Firestore (firestore.rules)</small></div>`;
   }
+};
+
+async function bSC(cursa,data){
+  const snap=await getDocs(query(collection(db,'rezervari'),where('cursaId','==',cursa.id),where('data','==',data)));
+  const rezervari=snap.docs.map(d=>({id:d.id,...d.data()})).filter(r=>r.status!=='anulata');
+  const occ=new Set();
+  rezervari.forEach(r=>(r.locuriRezervate||[]).forEach(l=>occ.add(l.locNr)));
+  const cp=cursa.capacitate||20;
+  const statii=cursa.statii||[];
+  const pU={};statii.forEach((_,i)=>{pU[i]=[]});
+  const pD={};statii.forEach((_,i)=>{pD[i]=[]});
+  rezervari.forEach(rez=>{
+    (rez.locuriRezervate||[]).forEach(l=>{
+      const iU=statii.findIndex(s=>s.nume===l.statieUrcare);
+      if(iU!==-1)pU[iU].push({numeClient:rez.numeClient,telefon:rez.telefon||'-',locNr:l.locNr,statieCoborare:l.statieCoborare,biletId:rez.biletId||'-'});
+      const iC=statii.findIndex(s=>s.nume===l.statieCoborare);
+      if(iC!==-1)pD[iC].push({numeClient:rez.numeClient,locNr:l.locNr,statieUrcare:l.statieUrcare});
+    });
+  });
+  let html=`<div class="sfc">
+    <div class="sfh">
+      <div>
+        <div class="sfr">${cursa.ruta}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;display:flex;gap:14px;flex-wrap:wrap">
+          <span>🕐 ${cursa.ora}</span><span>🚌 ${cursa.vehiculNume||'-'}</span><span>📅 ${data}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div class="sfp oc">🪑 ${occ.size} ocupate</div>
+        <div class="sfp lb">✅ ${cp-occ.size} libere</div>
+        <div class="sfp" style="color:var(--muted)">📊 ${cp} total</div>
+      </div>
+    </div>
+    <div class="sftml">`;
+  statii.forEach((st,i)=>{
+    const isL=i===statii.length-1;
+    const up=pU[i]||[];const dn=pD[i]||[];
+    const arrTime=st.minuteDeLaStart&&cursa.ora?calcArrival(cursa.ora,st.minuteDeLaStart):'';
+    html+=`<div class="sfsp">
+      <div class="sfl">
+        <div class="sfd${isL?' last':''}"></div>
+        ${!isL?'<div class="sfco"></div>':''}
+      </div>
+      <div style="flex:1;padding-bottom:20px">
+        <div style="font-weight:700;font-size:15px;margin-bottom:8px">
+          ${st.nume}
+          ${i===0
+            ?`<span style="font-size:12px;color:var(--gold);font-weight:400"> ★ START ${cursa.ora}</span>`
+            :`<span style="font-size:12px;color:var(--muted);font-weight:400"> (${st.pretDeLaStart} RON${arrTime?' · ≈'+arrTime:''})</span>`
+          }
+        </div>`;
+    if(up.length){
+      html+=`<div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:6px">⬆ ${up.length} pasager${up.length>1?'i':''} urcă</div>`;
+      up.forEach(p=>{html+=`<div class="pr2">
+        <div>
+          <div style="font-weight:600;font-size:14px">👤 ${p.numeClient}</div>
+          <div style="font-size:12px;color:var(--muted)">📞 ${p.telefon} · 🎟️ ${p.biletId}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="pl2">Loc ${p.locNr}</span>
+          <span style="font-size:12px;color:var(--muted);background:var(--bg2);padding:3px 8px;border-radius:5px">↓ coboară: ${p.statieCoborare}</span>
+        </div>
+      </div>`});
+    }
+    if(dn.length){
+      html+=`<div style="font-size:12px;color:var(--orange);font-weight:600;margin:${up.length?'10px':0} 0 6px">⬇ ${dn.length} pasager${dn.length>1?'i':''} coboară</div>`;
+      dn.forEach(p=>{html+=`<div class="pr2" style="border-color:rgba(249,115,22,.2)">
+        <div>
+          <div style="font-weight:600;font-size:14px;color:var(--orange)">👤 ${p.numeClient} — Loc ${p.locNr}</div>
+          <div style="font-size:12px;color:var(--muted)">a urcat din: ${p.statieUrcare}</div>
+        </div>
+        <div style="background:rgba(249,115,22,.08);color:var(--orange);font-size:12px;padding:4px 10px;border-radius:6px;font-weight:600">COBOARĂ AICI</div>
+      </div>`});
+    }
+    if(!up.length&&!dn.length){
+      html+=`<div style="font-size:12px;color:var(--muted)">Nicio oprire necesară</div>`;
+    }
+    html+=`</div></div>`;
+  });
+  html+=`</div>`;
+  // Mini seat map
+  const rows=cursa.rows||[];
+  let mh=`<div style="padding:0 20px 20px;border-top:1px solid var(--border)">
+    <div style="font-size:12px;color:var(--muted);margin:14px 0 10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">🗺️ Hartă locuri</div>
+    <div style="max-width:280px;display:flex;flex-direction:column;gap:4px">`;
+  if(rows.length){
+    mh+=`<div style="display:flex;gap:4px;justify-content:flex-start"><div style="width:32px;height:28px;border-radius:5px;border:1px dashed var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px">🚗</div></div>`;
+    rows.forEach(row=>{
+      const type=row.type||'2+2';const seats=row.seats||[];
+      mh+=`<div style="display:flex;gap:4px;align-items:center;justify-content:center">`;
+      const seatDiv=(s)=>`<div style="width:32px;height:28px;border-radius:5px;border:1px solid var(--border);background:${occ.has(s.nr)?'rgba(239,68,68,.1)':'rgba(34,197,94,.1)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${occ.has(s.nr)?'var(--red)':'var(--green)'}">${s.nr}</div>`;
+      if(type==='2+2'){
+        seats.slice(0,2).forEach(s=>mh+=seatDiv(s));
+        mh+=`<div style="width:14px"></div>`;
+        seats.slice(2,4).forEach(s=>mh+=seatDiv(s));
+      }else if(type==='1+2'){
+        if(seats[0])mh+=seatDiv(seats[0]);
+        mh+=`<div style="width:14px"></div>`;
+        seats.slice(1,3).forEach(s=>mh+=seatDiv(s));
+      }else if(type==='1+1'){
+        if(seats[0])mh+=seatDiv(seats[0]);
+        mh+=`<div style="width:14px"></div>`;
+        if(seats[1])mh+=seatDiv(seats[1]);
+      }else{
+        seats.forEach(s=>mh+=seatDiv(s));
+      }
+      mh+=`</div>`;
+    });
+  }
+  mh+=`</div><div style="display:flex;gap:14px;margin-top:8px;font-size:11px"><span style="color:var(--red)">■ Ocupat</span><span style="color:var(--green)">■ Liber</span></div></div>`;
+  html+=mh+`</div>`;
+  return html;
+}
+
+// ── CALENDAR ──────────────────────────────────────────────
+let _calYear=new Date().getFullYear();
+let _calMonth=new Date().getMonth();
+const MONTHS_RO=['Ianuarie','Februarie','Martie','Aprilie','Mai','Iunie','Iulie','August','Septembrie','Octombrie','Noiembrie','Decembrie'];
+
+window.calPrev=()=>{_calMonth--;if(_calMonth<0){_calMonth=11;_calYear--}loadCalendar()};
+window.calNext=()=>{_calMonth++;if(_calMonth>11){_calMonth=0;_calYear++}loadCalendar()};
+
+window.loadCalendar=async()=>{
+  const u=window._U;if(!u)return;
+  document.getElementById('cal-month-label').textContent=MONTHS_RO[_calMonth]+' '+_calYear;
+  const grid=document.getElementById('cal-grid');
+  grid.innerHTML='<p style="color:var(--muted);font-size:13px">Se încarcă...</p>';
+  // Get driver's regular routes
+  const regSnap=await getDocs(collection(db,'curse_regulate'));
+  const curseMele=regSnap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.soferEmail===u.email&&x.activa);
+  // Get organized rides assigned to this driver in this month
+  let orgRez=[];
+  try{
+    const orgSnap=await getDocs(query(collection(db,'rezervari'),where('soferEmail','==',u.email)));
+    orgRez=orgSnap.docs.map(d=>d.data()).filter(r=>r.status!=='anulata'&&r.data);
+  }catch(e){}
+  // Build calendar
+  const firstDay=new Date(_calYear,_calMonth,1);
+  const lastDay=new Date(_calYear,_calMonth+1,0);
+  const today=new Date().toISOString().split('T')[0];
+  // Monday=0 offset
+  let startDow=firstDay.getDay()-1; // 0=Mon
+  if(startDow<0)startDow=6;
+  let cells=[];
+  for(let i=0;i<startDow;i++)cells.push(null);
+  for(let d=1;d<=lastDay.getDate();d++)cells.push(d);
+  while(cells.length%7!==0)cells.push(null);
+  const DOWS_RO=['Lun','Mar','Mie','Joi','Vin','Sâm','Dum'];
+  // dow mapping: 0=Sun,1=Mon...6=Sat -> Mon=1,Tue=2,...Sun=0
+  // cell index 0=Mon(1),1=Tue(2),...,5=Sat(6),6=Sun(0)
+  const cellDow=[1,2,3,4,5,6,0];
+  grid.innerHTML=cells.map((d,ci)=>{
+    if(!d)return`<div class="cal-day empty"></div>`;
+    const dow=cellDow[ci%7];
+    const dateStr=`${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=dateStr===today;
+    // Regular routes active this day
+    const regToday=curseMele.filter(c=>{
+      if(!(c.zile||[]).includes(dow))return false;
+      if(c.dataStart&&dateStr<c.dataStart)return false;
+      if(c.dataEnd&&dateStr>c.dataEnd)return false;
+      return true;
+    });
+    // Organized rides this day
+    const orgToday=orgRez.filter(r=>r.data===dateStr);
+    const hasEvents=regToday.length>0||orgToday.length>0;
+    let evHtml='';
+    regToday.forEach(c=>{evHtml+=`<div class="cal-event cursa-reg" title="${c.ruta} ${c.ora}">🔄 ${c.ora}</div>`});
+    orgToday.forEach(r=>{evHtml+=`<div class="cal-event cursa-org" title="${r.traseu||r.descriereCursa}">🚌 ${r.ora||''}</div>`});
+    return`<div class="cal-day ${hasEvents?'has-cursa':'liber'} ${isToday?'azi':''}" onclick="${hasEvents?`sfTab('azi');document.getElementById('sfdate').value='${dateStr}';loadSoferAzi()`:''}">
+      <div class="cal-day-nr" style="color:${isToday?'var(--gold)':hasEvents?'var(--text)':'var(--muted)'}">${d}</div>
+      ${evHtml}
+    </div>`;
+  }).join('');
 };
 
 window.loadSoferCurse=async()=>{
@@ -1543,7 +1890,10 @@ window.loadSoferCurse=async()=>{
     const DAYS=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
     el.innerHTML=curse.map(c=>{
       const dc=DAYS.map((d,i)=>`<div class="dc ${(c.zile||[]).includes(i)?'on':''}">${d}</div>`).join('');
-      const stb=(c.statii||[]).map((s,i)=>`<span class="stb">📍 ${s.nume}${i>0?` <span class="pr">${s.pretDeLaStart} RON</span>`:' <span class="pr">START</span>'}</span>`).join('');
+      const stb=(c.statii||[]).map((s,i)=>{
+      const arrTime=i>0&&c.ora&&s.minuteDeLaStart?calcArrival(c.ora,s.minuteDeLaStart):'';
+      return `<span class="stb">📍 ${s.nume}${i>0?` <span class="pr">${s.pretDeLaStart} RON</span>${arrTime?` <span style="color:var(--muted);font-size:10px">≈${arrTime}</span>`:''}`:' <span class="pr">START</span>'}</span>`;
+    }).join('');
       return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
           <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">${c.ruta}</div>
@@ -1793,7 +2143,7 @@ window.delSeatRow=ri=>{_seatRows.splice(ri,1);renderSeatBuilder()};
 function loadVT(){
   document.getElementById('vtb').innerHTML=window._F.map(v=>`<tr>
     <td><strong>${v.icon||''} ${v.nume}</strong><br><span style="color:var(--muted);font-size:11px">${v.model||''} ${v.anFab||''}</span></td>
-    <td>${cap(v)} locuri</td>
+    <td>${cap(v)} locuri${v.pretPerKm?' · '+v.pretPerKm+' RON/km':''}</td>
     <td style="font-size:12px">${v.nrInmatr||'-'}</td>
     <td><label class="tog"><input type="checkbox" ${v.disponibil?'checked':''} onchange="tVD('${v.id}',this.checked)"/><span class="tosl"></span></label></td>
     <td style="display:flex;gap:6px;padding:10px 12px">
@@ -1806,7 +2156,7 @@ window.openVM=async(id=null)=>{
   _vI=[];_seatRows=[];
   document.getElementById('vmt').textContent=id?'Editează vehicul':'Adaugă vehicul';
   document.getElementById('vmid').value=id||'';
-  ['vmn','vmi','vmnr','vmmod','vmcol','vmd'].forEach(x=>document.getElementById(x).value='');
+  ['vmn','vmi','vmnr','vmmod','vmcol','vmd','vmpkm'].forEach(x=>document.getElementById(x).value='');
   document.getElementById('vmi').value='🚐';
   document.getElementById('vman').value='';
   document.getElementById('vmdc').checked=true;
@@ -1821,6 +2171,7 @@ window.openVM=async(id=null)=>{
       document.getElementById('vmmod').value=v.model||'';
       document.getElementById('vmcol').value=v.culoare||'';
       document.getElementById('vmd').value=(v.dotari||[]).join(', ');
+      document.getElementById('vmpkm').value=v.pretPerKm||'';
       document.getElementById('vmdc').checked=v.disponibil!==false;
       _vI=[...(v.imagini||[])];
       _seatRows=(v.rows||[]).map(r=>({...r,seats:r.seats.map(s=>({...s}))}));
@@ -1864,6 +2215,7 @@ window.saveVeh=async()=>{
     culoare:document.getElementById('vmcol').value.trim(),
     rows:_seatRows,capacitate:totalSeats,
     dotari:document.getElementById('vmd').value.split(',').map(s=>s.trim()).filter(Boolean),
+    pretPerKm:parseFloat(document.getElementById('vmpkm').value)||null,
     disponibil:document.getElementById('vmdc').checked,imagini:_vI
   };
   if(!data.nume){toast('Introduceți denumirea vehiculului','wr');return}
@@ -1892,15 +2244,30 @@ async function loadRT(){
 window.tR=async(id,val)=>{await setDoc(doc(db,'curse_regulate',id),{activa:val},{merge:true});await loadRT()};
 function rSE(){
   document.getElementById('stlist').innerHTML=_eSt.map((s,i)=>{
-    const first=i===0;const ph=first?'Prima statie (plecare)':(i===_eSt.length-1?'Destinatie finala':'Statie intermediara');
+    const first=i===0;
+    const ph=first?'Prima statie (plecare)':(i===_eSt.length-1?'Destinatie finala':'Statie intermediara');
     const del=i>=2?`<button class="sdel" onclick="dSt(${i})">✕</button>`:`<div style="width:32px"></div>`;
     const pretInput=first
-      ?`<div style="width:110px;font-size:11px;color:var(--muted);text-align:center;flex-shrink:0">0 RON (start)</div>`
-      :`<input data-st-pret type="number" min="0" placeholder="RON cumul." value="${s.p||''}" style="width:110px;flex-shrink:0"/>`;
-    return `<div data-st-row="${i}" style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div style="width:24px;height:24px;border-radius:50%;background:var(--gold);color:#0a0d14;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><input data-st-name type="text" placeholder="${ph}" value="${s.n}" style="flex:2"/>${pretInput}${del}</div>`;
+      ?`<div style="width:90px;font-size:11px;color:var(--muted);text-align:center;flex-shrink:0">0 RON</div>`
+      :`<input data-st-pret type="number" min="0" placeholder="RON cumul." value="${s.p||''}" style="width:90px;flex-shrink:0" title="Pret total de la prima statie pana aici"/>`;
+    const minInput=first
+      ?`<div style="width:80px;font-size:11px;color:var(--muted);text-align:center;flex-shrink:0">0 min</div>`
+      :`<input data-st-min type="number" min="0" placeholder="min" value="${s.m||''}" style="width:80px;flex-shrink:0" title="Minute de la plecare pana la aceasta statie"/>`;
+    return `<div data-st-row="${i}" style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+      <div style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:#0a0d14;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+      <input data-st-name type="text" placeholder="${ph}" value="${s.n}" style="flex:2;min-width:100px"/>
+      ${pretInput}
+      ${minInput}
+      ${del}
+    </div>`;
   }).join('');
+  // Add header labels if at least 2 stations
+  const stl=document.getElementById('stlist');
+  if(_eSt.length>0){
+    stl.insertAdjacentHTML('afterbegin','<div style="display:flex;gap:6px;margin-bottom:4px;padding-left:28px"><div style="flex:2;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Stație</div><div style="width:90px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Preț (RON)</div><div style="width:80px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Min. de la start</div><div style="width:32px"></div></div>');
+  }
 }
-window.addSt=()=>{_eSt.splice(_eSt.length-1,0,{n:'',p:0});rSE()};
+window.addSt=()=>{_eSt.splice(_eSt.length-1,0,{n:'',p:0,m:0});rSE()};
 window.dSt=i=>{if(_eSt.length<=2){toast('Trebuie minim 2 stații','wr');return}_eSt.splice(i,1);rSE()};
 window.tday=btn=>btn.classList.toggle('on');
 window.openRM=async(id=null)=>{
@@ -1914,7 +2281,15 @@ window.openRM=async(id=null)=>{
   vS.innerHTML=window._F.map(v=>`<option value="${v.id}">${v.icon||''} ${v.nume} (${cap(v)} locuri)</option>`).join('');
   const sfS=document.getElementById('rmsf');
   const sfSnap=await getDocs(collection(db,'soferi'));
-  sfS.innerHTML='<option value="">— fără șofer asignat —</option>'+sfSnap.docs.filter(d=>d.data().activ!==false).map(d=>`<option value="${d.data().email}">${d.data().prenume||''} ${d.data().nume||''} (${d.data().email})</option>`).join('');
+  // Check conflicts: for each driver, which days/hours are they already assigned
+  const regSnap=await getDocs(collection(db,'curse_regulate'));
+  const existingCurse=regSnap.docs.map(d=>({id:d.id,...d.data()})).filter(d=>d.activa&&d.id!==id);
+  sfS.innerHTML='<option value="">— fără șofer asignat —</option>'+sfSnap.docs.filter(d=>d.data().activ!==false).map(d=>{
+    const sf=d.data();
+    const conflicts=existingCurse.filter(cr=>cr.soferEmail===sf.email);
+    const conflictInfo=conflicts.length?` [ocupat: ${conflicts.map(cr=>cr.ruta+' '+cr.ora).join(', ')}]`:'';
+    return `<option value="${sf.email}">${sf.prenume||''} ${sf.nume||''} (${sf.email})${conflictInfo}</option>`;
+  }).join('');
   _eSt=[{n:'',p:0},{n:'',p:0}];
   if(id){
     const c=window._R.find(x=>x.id===id);
@@ -1927,7 +2302,7 @@ window.openRM=async(id=null)=>{
       if(c.vehiculId)vS.value=c.vehiculId;
       if(c.soferEmail)sfS.value=c.soferEmail;
       (c.zile||[]).forEach(d=>{const b=document.querySelector(`[data-day="${d}"]`);if(b)b.classList.add('on')});
-      if(c.statii&&c.statii.length>=2)_eSt=c.statii.map(s=>({n:s.nume,p:s.pretDeLaStart}));
+      if(c.statii&&c.statii.length>=2)_eSt=c.statii.map(s=>({n:s.nume,p:s.pretDeLaStart,m:s.minuteDeLaStart||0}));
     }
   }
   rSE();om('reg');
@@ -1944,9 +2319,11 @@ window.saveReg=async()=>{
   stRows.forEach((row,i)=>{
     const numeEl=row.querySelector('[data-st-name]');
     const pretEl=row.querySelector('[data-st-pret]');
+    const minEl=row.querySelector('[data-st-min]');
     const nume=numeEl?numeEl.value.trim():'';
     const pret=i===0?0:(parseFloat(pretEl?pretEl.value:0)||0);
-    statii.push({nume,pretDeLaStart:pret});
+    const min=i===0?0:(parseInt(minEl?minEl.value:0)||0);
+    statii.push({nume,pretDeLaStart:pret,minuteDeLaStart:min});
   });
   if(statii.length<2){toast('Adăugați minim 2 stații','wr');return}
   if(statii.some(s=>!s.nume)){toast('Completați numele tuturor stațiilor','wr');return}
@@ -2027,6 +2404,9 @@ window.openRD=async rId=>{
   const th=document.getElementById('admth');const msgs=r.mesaje||[];
   th.innerHTML=msgs.length?msgs.map(m=>`<div class="mbub ${m.from==='admin'?'ma':'mc'}"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">${m.from==='admin'?'👑 Admin':'👤 Client'} — ${m.timestamp?new Date(m.timestamp.seconds*1000).toLocaleString('ro'):'...'}</div>${m.text}</div>`).join(''):'<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Nicio conversație încă.</p>';
   th.scrollTop=th.scrollHeight;
+  // Show factura buttons if confirmed
+  const factBtns=document.getElementById('adm-fact-btns');
+  if(factBtns)factBtns.style.display=(r.status==='confirmata'&&r.pretFinal)?'flex':'none';
   // Populate vehicle selector in reply area
   const avSel=document.getElementById('adm-veh-sel');
   avSel.innerHTML='<option value="">— alege vehiculul potrivit —</option>'+window._F.map(v=>`<option value="${v.id}" ${r.vehiculId===v.id?'selected':''}>${v.icon||''} ${v.nume} (${cap(v)} locuri)</option>`).join('');
@@ -2231,6 +2611,170 @@ window.testEjs=async()=>{
     traseu:'Iași → Test',vehicul:'Test Vehicul',obs:'Acesta este un email de test de la LSD Group SRL.'
   });
   toast(ok?'✅ Email trimis cu succes!':'❌ EmailJS neconfigurat sau eroare de trimitere',ok?'ok':'er');
+};
+
+// ── FACTURA PROFORMA ─────────────────────────────────────
+let _factRez=null;let _factTip=null;
+
+window.openFactura=async(rezId,tip)=>{
+  const ref=await getDoc(doc(db,'rezervari',rezId));
+  if(!ref.exists()){toast('Rezervarea nu a fost găsită','er');return}
+  const r={id:rezId,...ref.data()};
+  if(r.status!=='confirmata'||!r.pretFinal){
+    toast('Factura este disponibilă doar după confirmarea ofertei','wr');return;
+  }
+  _factRez=r;_factTip=tip;
+  const pct=tip===30?30:70;
+  const suma=Math.round(r.pretFinal*pct/100*100)/100;
+  document.getElementById('fact-title').textContent=`📄 Factură Proformă — ${pct}%`;
+  document.getElementById('fact-sub').textContent=tip===30?'Avans 30% — la confirmarea rezervării':'Rest 70% — la finalizarea serviciului';
+  const firma=window._FIRMA||{};
+  const now=new Date();
+  const dataDoc=now.toLocaleDateString('ro-RO');
+  const nrFact='LSD-'+(r.id||'').slice(-6).toUpperCase()+'-'+pct;
+  document.getElementById('fact-body').innerHTML=`
+    <div id="fact-print-area" style="font-family:'Inter',sans-serif">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:16px">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gold)">🚌 ${firma.name||'LSD Group SRL'}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">${firma.cui?'CUI: '+firma.cui:''} ${firma.reg?'· '+firma.reg:''}</div>
+          <div style="font-size:12px;color:var(--muted)">${firma.adr||''}</div>
+          <div style="font-size:12px;color:var(--muted)">${firma.tel?'Tel: '+firma.tel:''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:20px;font-weight:700;font-family:'Syne',sans-serif">FACTURĂ PROFORMĂ</div>
+          <div style="font-size:13px;color:var(--muted)">Nr. ${nrFact}</div>
+          <div style="font-size:13px;color:var(--muted)">Data: ${dataDoc}</div>
+          <div style="margin-top:8px;background:rgba(232,160,32,.15);border:1px solid rgba(232,160,32,.3);border-radius:8px;padding:6px 14px;display:inline-block">
+            <span style="font-size:11px;color:var(--muted)">Tranșă</span>
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--gold)">${pct}%</div>
+          </div>
+        </div>
+      </div>
+      <!-- Client / Furnizor -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+        <div style="background:var(--bg3);border-radius:10px;padding:14px">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Furnizor</div>
+          <div style="font-weight:600">${firma.name||'LSD Group SRL'}</div>
+          <div style="font-size:12px;color:var(--muted)">${firma.cui?'CUI: '+firma.cui:''}</div>
+          <div style="font-size:12px;color:var(--muted)">${firma.adr||''}</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:10px;padding:14px">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Client</div>
+          <div style="font-weight:600">${r.numeClient||'-'}</div>
+          <div style="font-size:12px;color:var(--muted)">${r.email||''}</div>
+          <div style="font-size:12px;color:var(--muted)">${r.telefon?'Tel: '+r.telefon:''}</div>
+        </div>
+      </div>
+      <!-- Detalii serviciu -->
+      <div style="background:var(--bg3);border-radius:10px;padding:16px;margin-bottom:20px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px">Detalii serviciu</div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Serviciu</span><span>Transport persoane — ${r.descriereCursa||'Cursă organizată'}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Traseu</span><span>${r.traseu||'-'}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Data serviciului</span><span>${r.data||'-'} · ${r.ora||''}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Vehicul</span><span>${r.vehiculNume||'De confirmat'}</span></div>
+        ${r.persoane?`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Nr. persoane</span><span>${r.persoane}</span></div>`:''}
+      </div>
+      <!-- Calcul suma -->
+      <div style="background:var(--bg3);border-radius:10px;padding:16px;margin-bottom:20px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px">Calcul sumă</div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Valoare totală contract</span><span style="font-weight:600">${r.pretFinal} RON</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Tranșă ${pct}% ${tip===30?'(avans)':'(rest de plată)'}</span><span style="font-weight:600">${suma} RON</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-weight:700"><span>TOTAL DE PLATĂ</span><span style="color:var(--gold);font-family:'Syne',sans-serif;font-size:20px">${suma} RON</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">* Prețurile includ TVA (dacă este cazul conform regimului fiscal al furnizorului)</div>
+      </div>
+      <!-- Restul de plata -->
+      <div style="background:rgba(232,160,32,.07);border:1px solid rgba(232,160,32,.2);border-radius:10px;padding:14px;margin-bottom:20px;font-size:13px">
+        ${tip===30
+          ?`<strong>Tranșă 1/2 — Avans 30%: ${suma} RON</strong> — de achitat la confirmarea rezervării<br>
+            <span style="color:var(--muted)">Tranșă 2/2 — Rest 70%: ${Math.round(r.pretFinal*70/100*100)/100} RON — de achitat la data serviciului</span>`
+          :`<span style="color:var(--muted)">Tranșă 1/2 — Avans 30% (achitat): ${Math.round(r.pretFinal*30/100*100)/100} RON</span><br>
+            <strong>Tranșă 2/2 — Rest 70%: ${suma} RON</strong> — de achitat la data serviciului`
+        }
+      </div>
+      <!-- Footer -->
+      <div style="text-align:center;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:14px">
+        <div>Acest document este o factură proformă și nu constituie document contabil primar.</div>
+        <div style="margin-top:4px">${firma.name||'LSD Group SRL'} — ${firma.cui?'CUI: '+firma.cui+' · ':''} ${firma.adr||''}</div>
+        <div style="margin-top:4px">Nr. ref: ${nrFact} · Emis: ${dataDoc}</div>
+      </div>
+    </div>`;
+  om('factura');
+};
+
+window.printFactura=()=>{
+  const area=document.getElementById('fact-print-area');
+  if(!area)return;
+  const firma=window._FIRMA||{};
+  const r=_factRez;const tip=_factTip;
+  const pct=tip===30?30:70;
+  const suma=Math.round(r.pretFinal*pct/100*100)/100;
+  const nrFact='LSD-'+(r.id||'').slice(-6).toUpperCase()+'-'+pct;
+  const now=new Date().toLocaleDateString('ro-RO');
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>Factura Proforma ${nrFact}</title>
+  <style>
+    body{font-family:Arial,sans-serif;padding:32px;max-width:700px;margin:0 auto;color:#111}
+    .header{display:flex;justify-content:space-between;margin-bottom:24px}
+    .logo{font-size:22px;font-weight:800;color:#e8a020}
+    .fact-title{font-size:20px;font-weight:700;text-align:right}
+    .fact-nr{font-size:13px;color:#666;text-align:right}
+    .pct-badge{background:#fff8e6;border:2px solid #e8a020;border-radius:8px;padding:6px 14px;text-align:center;display:inline-block;margin-top:8px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+    .box{background:#f8f8f8;border-radius:8px;padding:14px;font-size:13px}
+    .box-title{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:600}
+    .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee;font-size:13px}
+    .row:last-child{border-bottom:none}
+    .lbl{color:#666}.total-row{display:flex;justify-content:space-between;padding:10px 0;font-size:18px;font-weight:700}
+    .gold{color:#e8a020}.info-box{background:#fff8e6;border:1px solid #e8a020;border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px}
+    .footer{text-align:center;font-size:11px;color:#888;border-top:1px solid #eee;padding-top:14px;margin-top:20px}
+    @media print{body{padding:16px}}
+  </style></head><body>
+  <div class="header">
+    <div><div class="logo">🚌 ${firma.name||'LSD Group SRL'}</div>
+      <div style="font-size:12px;color:#666;margin-top:4px">${firma.cui?'CUI: '+firma.cui:''} ${firma.reg?'· '+firma.reg:''}</div>
+      <div style="font-size:12px;color:#666">${firma.adr||''}</div>
+      <div style="font-size:12px;color:#666">${firma.tel?'Tel: '+firma.tel:''}</div>
+    </div>
+    <div>
+      <div class="fact-title">FACTURĂ PROFORMĂ</div>
+      <div class="fact-nr">Nr. ${nrFact}</div>
+      <div class="fact-nr">Data: ${now}</div>
+      <div class="pct-badge"><div style="font-size:10px;color:#888">Tranșă</div><div style="font-size:24px;font-weight:800;color:#e8a020">${pct}%</div></div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="box"><div class="box-title">Furnizor</div><strong>${firma.name||'LSD Group SRL'}</strong><br>${firma.cui?'CUI: '+firma.cui:''}${firma.reg?' · '+firma.reg:''}<br>${firma.adr||''}</div>
+    <div class="box"><div class="box-title">Client</div><strong>${r.numeClient||'-'}</strong><br>${r.email||''}<br>${r.telefon?'Tel: '+r.telefon:''}</div>
+  </div>
+  <div class="box" style="margin-bottom:16px">
+    <div class="box-title">Detalii serviciu</div>
+    <div class="row"><span class="lbl">Serviciu</span><span>Transport persoane — ${r.descriereCursa||'Cursă organizată'}</span></div>
+    <div class="row"><span class="lbl">Traseu</span><span>${r.traseu||'-'}</span></div>
+    <div class="row"><span class="lbl">Data</span><span>${r.data||'-'} · ${r.ora||''}</span></div>
+    <div class="row"><span class="lbl">Vehicul</span><span>${r.vehiculNume||'De confirmat'}</span></div>
+    ${r.persoane?`<div class="row"><span class="lbl">Nr. persoane</span><span>${r.persoane}</span></div>`:''}
+  </div>
+  <div class="box" style="margin-bottom:16px">
+    <div class="box-title">Calcul sumă</div>
+    <div class="row"><span class="lbl">Valoare totală contract</span><span><strong>${r.pretFinal} RON</strong></span></div>
+    <div class="row"><span class="lbl">Tranșă ${pct}% ${tip===30?'(avans)':'(rest de plată)'}</span><span><strong>${suma} RON</strong></span></div>
+    <div class="total-row"><span>TOTAL DE PLATĂ</span><span class="gold">${suma} RON</span></div>
+    <div style="font-size:11px;color:#888;margin-top:4px">* Prețurile includ TVA dacă este cazul</div>
+  </div>
+  <div class="info-box">
+    ${tip===30
+      ?`<strong>Tranșă 1/2 — Avans 30%: ${suma} RON</strong> — de achitat la confirmarea rezervării<br>Tranșă 2/2 — Rest 70%: ${Math.round(r.pretFinal*70/100*100)/100} RON — de achitat la data serviciului`
+      :`Tranșă 1/2 — Avans 30% achitat: ${Math.round(r.pretFinal*30/100*100)/100} RON<br><strong>Tranșă 2/2 — Rest 70%: ${suma} RON</strong> — de achitat la data serviciului`}
+  </div>
+  <div class="footer">
+    Factură proformă · Document informativ, nu constituie document contabil primar<br>
+    ${firma.name||'LSD Group SRL'} · ${firma.cui?'CUI: '+firma.cui+' · ':''}${firma.adr||''} · Nr.ref: ${nrFact}
+  </div>
+  <script>window.print()<\/script>
+  </body></html>`);
+  w.document.close();
 };
 
 // EMAILJS
