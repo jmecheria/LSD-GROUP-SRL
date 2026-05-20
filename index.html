@@ -502,7 +502,7 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
   </div>
   <div id="tab-regulate" class="tc">
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn bp bsm" onclick="openRM()">+ Adaugă cursă</button></div>
-    <table class="tbl"><thead><tr><th>Rută</th><th>Vehicul</th><th>Stații / Prețuri</th><th>Ora</th><th>Șofer</th><th>Activ</th><th></th></tr></thead><tbody id="rtb"></tbody></table>
+    <table class="tbl"><thead><tr><th>Rută</th><th>Vehicul</th><th>Stații / Prețuri</th><th>Plecări / Șoferi</th><th>Activ</th><th></th></tr></thead><tbody id="rtb"></tbody></table>
   </div>
   <div id="tab-rezervari" class="tc">
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn bp bsm" onclick="openMR()">+ Manual</button></div>
@@ -544,6 +544,10 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
         <div class="fg"><div class="fl">Telefon</div><input type="tel" id="firm-tel" placeholder="0700 000 000"/></div>
       </div>
       <div class="fg"><div class="fl">Adresă</div><input type="text" id="firm-adr" placeholder="Str. Exemplu, Nr. 1, Iași"/></div>
+      <div class="fr">
+        <div class="fg"><div class="fl">IBAN cont bancar</div><input type="text" id="firm-iban" placeholder="RO49AAAA1B31007593840000"/></div>
+        <div class="fg"><div class="fl">Bancă</div><input type="text" id="firm-banca" placeholder="Banca Transilvania"/></div>
+      </div>
       <button class="btn bp bsm" onclick="saveFirma()">💾 Salvează date firmă</button>
     </div>
   </div>
@@ -647,14 +651,14 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
         <div id="stlist"></div>
         <button class="btn bs bsm" onclick="addSt()">+ Adaugă stație</button>
       </div>
-      <div class="fr">
-        <div class="fg"><div class="fl">Vehicul *</div><select id="rmv"></select></div>
-        <div class="fg"><div class="fl">Șofer asignat</div><select id="rmsf"></select></div>
+      <div class="fg"><div class="fl">Vehicul *</div><select id="rmv" onchange="calcCapRM()"></select></div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">🕐 Plecări — ore și șoferi</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Poți adăuga mai multe plecări pe aceeași rută. Fiecare poate avea un șofer diferit.</div>
+        <div id="plecari-list"></div>
+        <button class="btn bs bsm" style="margin-top:8px" onclick="addPlecare()">+ Adaugă plecare</button>
       </div>
-      <div class="fr">
-        <div class="fg"><div class="fl">Ora plecare</div><input type="time" id="rmo"/></div>
-        <div class="fg"><div class="fl">Activ</div><label class="tog" style="margin-top:8px"><input type="checkbox" id="rma" checked/><span class="tosl"></span></label></div>
-      </div>
+      <div class="fg"><div class="fl">Activ</div><label class="tog" style="margin-top:4px"><input type="checkbox" id="rma" checked/><span class="tosl"></span></label></div>
       <div class="fg"><div class="fl">Zile active</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button type="button" class="dc" data-day="1" onclick="tday(this)">Lun</button>
@@ -1696,10 +1700,16 @@ window.loadSoferAzi=async()=>{
     const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
       if(!x.activa)return false;
       if(!(x.zile||[]).includes(dow))return false;
-      if(x.soferEmail!==u.email)return false;
       if(x.dataStart&&data<x.dataStart)return false;
       if(x.dataEnd&&data>x.dataEnd)return false;
-      return true;
+      // Check if driver is in any departure
+      const plecari=x.plecari||[{ora:x.ora,soferEmail:x.soferEmail}];
+      return plecari.some(p=>p.soferEmail===u.email);
+    });
+    // For each cursa, filter to only the plecari for this driver
+    curse.forEach(c=>{
+      const pl=c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}];
+      c._myPlecari=pl.filter(p=>p.soferEmail===u.email);
     });
     if(!curse.length){
       c.innerHTML=`<div style="text-align:center;padding:48px 24px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">😴</div><h3 style="margin-bottom:8px;color:var(--text)">Nicio cursă pentru ${data}</h3><p>Nu aveți curse asignate în această zi.</p></div>`;
@@ -1729,12 +1739,13 @@ async function bSC(cursa,data){
       if(iC!==-1)pD[iC].push({numeClient:rez.numeClient,locNr:l.locNr,statieUrcare:l.statieUrcare});
     });
   });
+  const myOra=(cursa._myPlecari&&cursa._myPlecari[0])?cursa._myPlecari[0].ora:(cursa.ora||'-');
   let html=`<div class="sfc">
     <div class="sfh">
       <div>
         <div class="sfr">${cursa.ruta}</div>
         <div style="font-size:13px;color:var(--muted);margin-top:4px;display:flex;gap:14px;flex-wrap:wrap">
-          <span>🕐 ${cursa.ora}</span><span>🚌 ${cursa.vehiculNume||'-'}</span><span>📅 ${data}</span>
+          <span>🕐 ${myOra}</span><span>🚌 ${cursa.vehiculNume||'-'}</span><span>📅 ${data}</span>
         </div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -1892,7 +1903,10 @@ window.loadSoferCurse=async()=>{
   el.innerHTML='<p style="color:var(--muted)">Se încarcă...</p>';
   try{
     const snap=await getDocs(collection(db,'curse_regulate'));
-    const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.soferEmail===u.email);
+    const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
+      const pl=x.plecari||[{ora:x.ora,soferEmail:x.soferEmail}];
+      return pl.some(p=>p.soferEmail===u.email);
+    });
     if(!curse.length){el.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">📋</div><p>Nu aveți curse asignate.</p></div>';return}
     const DAYS=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
     el.innerHTML=curse.map(c=>{
@@ -1926,7 +1940,11 @@ window.loadSoferVehicul=async()=>{
   try{
     // Find vehicle assigned to sofer's routes
     const snap=await getDocs(collection(db,'curse_regulate'));
-    const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.soferEmail===u.email&&x.activa);
+    const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
+      if(!x.activa)return false;
+      const pl=x.plecari||[{ora:x.ora,soferEmail:x.soferEmail}];
+      return pl.some(p=>p.soferEmail===u.email);
+    });
     if(!curse.length){el.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">🚌</div><p>Nu aveți vehicul asignat momentan.</p></div>';return}
     // Get unique vehicles
     const vehIds=[...new Set(curse.map(c=>c.vehiculId).filter(Boolean))];
@@ -2237,16 +2255,19 @@ window.delV=async id=>{if(!confirm('Ștergeți vehiculul?'))return;await deleteD
 // CURSE REGULATE ADMIN
 async function loadRT(){
   const snap=await getDocs(collection(db,'curse_regulate'));window._R=snap.docs.map(d=>({id:d.id,...d.data()}));
-  document.getElementById('rtb').innerHTML=window._R.map(c=>`<tr>
+  document.getElementById('rtb').innerHTML=window._R.map(c=>{
+    const plecari=c.plecari||[{ora:c.ora||'-',soferEmail:c.soferEmail||null}];
+    const plecariHtml=plecari.map(p=>`<div style="font-size:12px"><strong>${p.ora||'-'}</strong>${p.soferEmail?` <span style="color:var(--muted)">(${p.soferEmail})</span>`:''}</div>`).join('');
+    return `<tr>
     <td><strong>${c.ruta}</strong></td><td>${c.vehiculNume||'-'}</td>
-    <td style="max-width:220px">${(c.statii||[]).map(s=>`<span class="chip">${s.nume}${s.pretDeLaStart>0?' ('+s.pretDeLaStart+' RON)':' ★'}</span>`).join('')}</td>
-    <td>${c.ora}</td>
-    <td style="font-size:12px;color:var(--muted)">${c.soferEmail||'—'}</td>
+    <td style="max-width:200px">${(c.statii||[]).map(s=>`<span class="chip">${s.nume}${s.pretDeLaStart>0?' ('+s.pretDeLaStart+' RON)':' ★'}</span>`).join('')}</td>
+    <td>${plecariHtml}</td>
     <td><label class="tog"><input type="checkbox" ${c.activa?'checked':''} onchange="tR('${c.id}',this.checked)"/><span class="tosl"></span></label></td>
     <td style="display:flex;gap:6px;padding:10px 12px">
       <button class="btn bs bsm" onclick="openRM('${c.id}')">✏️</button>
       <button class="btn bd bsm" onclick="delR('${c.id}')">🗑️</button>
-    </td></tr>`).join('');
+    </td></tr>`;
+  }).join('');
 }
 window.tR=async(id,val)=>{await setDoc(doc(db,'curse_regulate',id),{activa:val},{merge:true});await loadRT()};
 function rSE(){
@@ -2277,48 +2298,66 @@ function rSE(){
 window.addSt=()=>{_eSt.splice(_eSt.length-1,0,{n:'',p:0,m:0});rSE()};
 window.dSt=i=>{if(_eSt.length<=2){toast('Trebuie minim 2 stații','wr');return}_eSt.splice(i,1);rSE()};
 window.tday=btn=>btn.classList.toggle('on');
+// Plecari state
+let _plecari=[{ora:'',soferEmail:''}];
+let _soferiList=[];
+
+window.calcCapRM=()=>{};
+
+function rPL(){
+  const el=document.getElementById('plecari-list');if(!el)return;
+  el.innerHTML=_plecari.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+      <div style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+      <input type="time" value="${p.ora||''}" style="width:100px;flex-shrink:0" onchange="_plecari[${i}].ora=this.value"/>
+      <select style="flex:1" onchange="_plecari[${i}].soferEmail=this.value">
+        <option value="">— fără șofer —</option>
+        ${_soferiList.map(sf=>`<option value="${sf.email}" ${p.soferEmail===sf.email?'selected':''}>${sf.prenume||''} ${sf.nume||''}</option>`).join('')}
+      </select>
+      ${_plecari.length>1?`<button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;flex-shrink:0" onclick="delPlecare(${i})">✕</button>`:'<div style="width:20px"></div>'}
+    </div>`).join('');
+}
+window.addPlecare=()=>{_plecari.push({ora:'',soferEmail:''});rPL()};
+window.delPlecare=i=>{if(_plecari.length<=1)return;_plecari.splice(i,1);rPL()};
+
 window.openRM=async(id=null)=>{
   document.getElementById('rmt').textContent=id?'Editează cursă':'Adaugă cursă regulată';
   document.getElementById('rmid').value=id||'';
-  document.getElementById('rmr').value='';document.getElementById('rmo').value='';
+  document.getElementById('rmr').value='';
   document.getElementById('rmds').value='';document.getElementById('rmde').value='';
   document.getElementById('rma').checked=true;
   document.querySelectorAll('[data-day]').forEach(b=>b.classList.remove('on'));
   const vS=document.getElementById('rmv');
   vS.innerHTML=window._F.map(v=>`<option value="${v.id}">${v.icon||''} ${v.nume} (${cap(v)} locuri)</option>`).join('');
-  const sfS=document.getElementById('rmsf');
+  // Load soferi
   const sfSnap=await getDocs(collection(db,'soferi'));
-  // Check conflicts: for each driver, which days/hours are they already assigned
-  const regSnap=await getDocs(collection(db,'curse_regulate'));
-  const existingCurse=regSnap.docs.map(d=>({id:d.id,...d.data()})).filter(d=>d.activa&&d.id!==id);
-  sfS.innerHTML='<option value="">— fără șofer asignat —</option>'+sfSnap.docs.filter(d=>d.data().activ!==false).map(d=>{
-    const sf=d.data();
-    const conflicts=existingCurse.filter(cr=>cr.soferEmail===sf.email);
-    const conflictInfo=conflicts.length?` [ocupat: ${conflicts.map(cr=>cr.ruta+' '+cr.ora).join(', ')}]`:'';
-    return `<option value="${sf.email}">${sf.prenume||''} ${sf.nume||''} (${sf.email})${conflictInfo}</option>`;
-  }).join('');
+  _soferiList=sfSnap.docs.filter(d=>d.data().activ!==false).map(d=>d.data());
+  _plecari=[{ora:'',soferEmail:''}];
   _eSt=[{n:'',p:0},{n:'',p:0}];
   if(id){
     const c=window._R.find(x=>x.id===id);
     if(c){
       document.getElementById('rmr').value=c.ruta||'';
-      document.getElementById('rmo').value=c.ora||'';
       document.getElementById('rmds').value=c.dataStart||'';
       document.getElementById('rmde').value=c.dataEnd||'';
       document.getElementById('rma').checked=c.activa!==false;
       if(c.vehiculId)vS.value=c.vehiculId;
-      if(c.soferEmail)sfS.value=c.soferEmail;
+      // Load plecari — backwards compat with old single ora/sofer
+      if(c.plecari&&c.plecari.length){
+        _plecari=c.plecari.map(p=>({ora:p.ora||'',soferEmail:p.soferEmail||''}));
+      }else{
+        _plecari=[{ora:c.ora||'',soferEmail:c.soferEmail||''}];
+      }
       (c.zile||[]).forEach(d=>{const b=document.querySelector(`[data-day="${d}"]`);if(b)b.classList.add('on')});
       if(c.statii&&c.statii.length>=2)_eSt=c.statii.map(s=>({n:s.nume,p:s.pretDeLaStart,m:s.minuteDeLaStart||0}));
     }
   }
-  rSE();om('reg');
+  rPL();rSE();om('reg');
 };
 window.saveReg=async()=>{
   const id=document.getElementById('rmid').value;
   const vehId=document.getElementById('rmv').value;
   const veh=window._F.find(v=>v.id===vehId);
-  const sfE=document.getElementById('rmsf').value;
   const zile=[...document.querySelectorAll('[data-day].on')].map(b=>parseInt(b.dataset.day));
   // Read directly from DOM inputs — fix for oninput not always firing
   const stRows=document.getElementById('stlist').querySelectorAll('[data-st-row]');
@@ -2338,14 +2377,27 @@ window.saveReg=async()=>{
   for(let i=1;i<statii.length;i++){
     if(statii[i].pretDeLaStart<=statii[i-1].pretDeLaStart){toast(`Prețul stației "${statii[i].nume}" trebuie să fie mai mare decât "${statii[i-1].nume}"`,'wr');return}
   }
+  // Read plecari from DOM (selects may have changed)
+  const plecariRows=document.querySelectorAll('#plecari-list > div');
+  const plecariSaved=[];
+  plecariRows.forEach((row,i)=>{
+    const oraEl=row.querySelector('input[type="time"]');
+    const sfEl=row.querySelector('select');
+    plecariSaved.push({ora:oraEl?oraEl.value:'',soferEmail:sfEl?sfEl.value:''});
+  });
+  const plecariFinale=plecariSaved.length?plecariSaved:_plecari;
+  if(plecariFinale.every(p=>!p.ora)){toast('Adăugați cel puțin o oră de plecare','wr');return}
+  // Backwards compat: store first departure as ora/soferEmail too
+  const firstP=plecariFinale.find(p=>p.ora)||plecariFinale[0];
   const ruta=document.getElementById('rmr').value.trim()||statii.map(s=>s.nume).join(' – ');
   const data={
     ruta,vehiculId:vehId,vehiculNume:veh?veh.nume:'-',
     capacitate:veh?cap(veh):0,rows:veh?veh.rows:[],
-    statii,ora:document.getElementById('rmo').value,zile,
+    statii,plecari:plecariFinale,
+    ora:firstP.ora,soferEmail:firstP.soferEmail||null,zile,
     dataStart:document.getElementById('rmds').value||null,
     dataEnd:document.getElementById('rmde').value||null,
-    activa:document.getElementById('rma').checked,soferEmail:sfE||null
+    activa:document.getElementById('rma').checked
   };
   try{
     if(id)await setDoc(doc(db,'curse_regulate',id),data,{merge:true});
@@ -2583,6 +2635,8 @@ window.loadSetari=async()=>{
     document.getElementById('firm-reg').value=f.reg||'';
     document.getElementById('firm-tel').value=f.tel||'';
     document.getElementById('firm-adr').value=f.adr||'';
+    document.getElementById('firm-iban').value=f.iban||'';
+    document.getElementById('firm-banca').value=f.banca||'';
     window._EJS=s;window._FIRMA=f;
     const ok=s.serviceId&&s.templateId&&s.publicKey;
     const b=document.getElementById('ejsb');b.className='ejsb '+(ok?'ok':'bad');b.textContent='● '+(ok?'Configurat':'Neconfigurat');
@@ -2604,7 +2658,9 @@ window.saveFirma=async()=>{
     cui:document.getElementById('firm-cui').value.trim(),
     reg:document.getElementById('firm-reg').value.trim(),
     tel:document.getElementById('firm-tel').value.trim(),
-    adr:document.getElementById('firm-adr').value.trim()
+    adr:document.getElementById('firm-adr').value.trim(),
+    iban:document.getElementById('firm-iban').value.trim(),
+    banca:document.getElementById('firm-banca').value.trim()
   };
   await setDoc(doc(db,'setari','global'),{firma},{merge:true});
   window._FIRMA=firma;renderFooter();
@@ -2631,155 +2687,274 @@ window.openFactura=async(rezId,tip)=>{
     toast('Factura este disponibilă doar după confirmarea ofertei','wr');return;
   }
   _factRez=r;_factTip=tip;
-  const pct=tip===30?30:70;
-  const suma=Math.round(r.pretFinal*pct/100*100)/100;
-  document.getElementById('fact-title').textContent=`📄 Factură Proformă — ${pct}%`;
-  document.getElementById('fact-sub').textContent=tip===30?'Avans 30% — la confirmarea rezervării':'Rest 70% — la finalizarea serviciului';
   const firma=window._FIRMA||{};
+  const pct=tip===30?30:70;
+  const sumaTotal=Math.round(r.pretFinal*pct/100*100)/100;
+  const bazaImpozabila=Math.round(sumaTotal/1.21*100)/100;
+  const tvaVal=Math.round((sumaTotal-bazaImpozabila)*100)/100;
   const now=new Date();
   const dataDoc=now.toLocaleDateString('ro-RO');
   const nrFact='LSD-'+(r.id||'').slice(-6).toUpperCase()+'-'+pct;
-  document.getElementById('fact-body').innerHTML=`
-    <div id="fact-print-area" style="font-family:'Inter',sans-serif">
-      <!-- Header -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:16px">
-        <div>
-          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gold)">🚌 ${firma.name||'LSD Group SRL'}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px">${firma.cui?'CUI: '+firma.cui:''} ${firma.reg?'· '+firma.reg:''}</div>
-          <div style="font-size:12px;color:var(--muted)">${firma.adr||''}</div>
-          <div style="font-size:12px;color:var(--muted)">${firma.tel?'Tel: '+firma.tel:''}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:20px;font-weight:700;font-family:'Syne',sans-serif">FACTURĂ PROFORMĂ</div>
-          <div style="font-size:13px;color:var(--muted)">Nr. ${nrFact}</div>
-          <div style="font-size:13px;color:var(--muted)">Data: ${dataDoc}</div>
-          <div style="margin-top:8px;background:rgba(232,160,32,.15);border:1px solid rgba(232,160,32,.3);border-radius:8px;padding:6px 14px;display:inline-block">
-            <span style="font-size:11px;color:var(--muted)">Tranșă</span>
-            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--gold)">${pct}%</div>
-          </div>
-        </div>
-      </div>
-      <!-- Client / Furnizor -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
-        <div style="background:var(--bg3);border-radius:10px;padding:14px">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Furnizor</div>
-          <div style="font-weight:600">${firma.name||'LSD Group SRL'}</div>
-          <div style="font-size:12px;color:var(--muted)">${firma.cui?'CUI: '+firma.cui:''}</div>
-          <div style="font-size:12px;color:var(--muted)">${firma.adr||''}</div>
-        </div>
-        <div style="background:var(--bg3);border-radius:10px;padding:14px">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Client</div>
-          <div style="font-weight:600">${r.numeClient||'-'}</div>
-          <div style="font-size:12px;color:var(--muted)">${r.email||''}</div>
-          <div style="font-size:12px;color:var(--muted)">${r.telefon?'Tel: '+r.telefon:''}</div>
+  const scadenta=tip===30?'La confirmarea rezervarii (avans)':'La data serviciului';
+  const rest30=parseFloat((r.pretFinal*0.30).toFixed(2));
+  const rest70=parseFloat((r.pretFinal*0.70).toFixed(2));
+  document.getElementById('fact-title').textContent='Factura Proforma Nr. '+nrFact;
+  document.getElementById('fact-sub').textContent=tip===30?'Transa 1/2 — Avans 30%':'Transa 2/2 — Rest 70%';
+  document.getElementById('fact-body').innerHTML=`<div id="fact-print-area" style="font-family:'Inter',sans-serif">
+
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid var(--gold);flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-size:20px;font-weight:800;color:var(--gold);margin-bottom:6px">LSD Group SRL</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.9">
+          ${firma.cui?'<b>CUI:</b> '+firma.cui+'<br>':''}
+          ${firma.reg?'<b>Reg.Com:</b> '+firma.reg+'<br>':''}
+          ${firma.adr?firma.adr+'<br>':''}
+          ${firma.tel?'<b>Tel:</b> '+firma.tel+'<br>':''}
+          ${firma.iban?'<b>IBAN:</b> '+firma.iban+'<br>':''}
+          ${firma.banca?'<b>Banca:</b> '+firma.banca:''}
         </div>
       </div>
-      <!-- Detalii serviciu -->
-      <div style="background:var(--bg3);border-radius:10px;padding:16px;margin-bottom:20px">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px">Detalii serviciu</div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Serviciu</span><span>Transport persoane — ${r.descriereCursa||'Cursă organizată'}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Traseu</span><span>${r.traseu||'-'}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Data serviciului</span><span>${r.data||'-'} · ${r.ora||''}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Vehicul</span><span>${r.vehiculNume||'De confirmat'}</span></div>
-        ${r.persoane?`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Nr. persoane</span><span>${r.persoane}</span></div>`:''}
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Document fiscal</div>
+        <div style="font-size:22px;font-weight:800">FACTURA PROFORMA</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:2">
+          <b>Nr.:</b> ${nrFact}<br>
+          <b>Data emiterii:</b> ${dataDoc}<br>
+          <b>Scadenta:</b> ${scadenta}
+        </div>
+        <div style="margin-top:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:8px;padding:8px 16px;display:inline-block;text-align:center">
+          <div style="font-size:10px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px">Transa</div>
+          <div style="font-size:24px;font-weight:800;color:#fff">${pct}%</div>
+        </div>
       </div>
-      <!-- Calcul suma -->
-      <div style="background:var(--bg3);border-radius:10px;padding:16px;margin-bottom:20px">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px">Calcul sumă</div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Valoare totală contract</span><span style="font-weight:600">${r.pretFinal} RON</span></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">Tranșă ${pct}% ${tip===30?'(avans)':'(rest de plată)'}</span><span style="font-weight:600">${suma} RON</span></div>
-        <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-weight:700"><span>TOTAL DE PLATĂ</span><span style="color:var(--gold);font-family:'Syne',sans-serif;font-size:20px">${suma} RON</span></div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">* Prețurile includ TVA (dacă este cazul conform regimului fiscal al furnizorului)</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
+      <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px">Furnizor</div>
+        <div style="font-weight:700;margin-bottom:4px">${firma.name||'LSD Group SRL'}</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.8">${firma.cui?'CUI: '+firma.cui+'<br>':''}${firma.reg?firma.reg+'<br>':''}${firma.adr||''}</div>
       </div>
-      <!-- Restul de plata -->
-      <div style="background:rgba(232,160,32,.07);border:1px solid rgba(232,160,32,.2);border-radius:10px;padding:14px;margin-bottom:20px;font-size:13px">
-        ${tip===30
-          ?`<strong>Tranșă 1/2 — Avans 30%: ${suma} RON</strong> — de achitat la confirmarea rezervării<br>
-            <span style="color:var(--muted)">Tranșă 2/2 — Rest 70%: ${Math.round(r.pretFinal*70/100*100)/100} RON — de achitat la data serviciului</span>`
-          :`<span style="color:var(--muted)">Tranșă 1/2 — Avans 30% (achitat): ${Math.round(r.pretFinal*30/100*100)/100} RON</span><br>
-            <strong>Tranșă 2/2 — Rest 70%: ${suma} RON</strong> — de achitat la data serviciului`
-        }
+      <div style="border:1.5px solid var(--gold);border-radius:10px;padding:14px;background:rgba(184,134,11,.03)">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px">Cumparator</div>
+        <div style="font-weight:700;margin-bottom:4px">${r.numeClient||'-'}</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.8">${r.email||''}${r.telefon?'<br>Tel: '+r.telefon:''}</div>
       </div>
-      <!-- Footer -->
-      <div style="text-align:center;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:14px">
-        <div>Acest document este o factură proformă și nu constituie document contabil primar.</div>
-        <div style="margin-top:4px">${firma.name||'LSD Group SRL'} — ${firma.cui?'CUI: '+firma.cui+' · ':''} ${firma.adr||''}</div>
-        <div style="margin-top:4px">Nr. ref: ${nrFact} · Emis: ${dataDoc}</div>
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px">
+      <thead>
+        <tr style="background:var(--bg3)">
+          <th style="padding:9px 10px;border:1px solid var(--border);text-align:left;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;width:30px">Nr</th>
+          <th style="padding:9px 10px;border:1px solid var(--border);text-align:left;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase">Descriere</th>
+          <th style="padding:9px 10px;border:1px solid var(--border);text-align:center;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;width:50px">UM</th>
+          <th style="padding:9px 10px;border:1px solid var(--border);text-align:right;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;width:50px">Cant</th>
+          <th style="padding:9px 10px;border:1px solid var(--border);text-align:right;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;width:120px">Pret fara TVA</th>
+          <th style="padding:9px 10px;border:1px solid var(--border);text-align:right;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;width:120px">Valoare fara TVA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:10px;border:1px solid var(--border);vertical-align:top">1</td>
+          <td style="padding:10px;border:1px solid var(--border)">
+            <div style="font-weight:600;margin-bottom:4px">Transport persoane — ${r.descriereCursa||'Cursa organizata'}</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.8">
+              Traseu: ${r.traseu||'-'}<br>
+              Data: ${r.data||'-'}${r.ora?' · Ora: '+r.ora:''}<br>
+              Vehicul: ${r.vehiculNume||'De confirmat'}${r.persoane?' · Nr. persoane: '+r.persoane:''}<br>
+              <span style="color:var(--gold);font-weight:600">Transa ${pct}% din valoarea totala a contractului</span>
+            </div>
+          </td>
+          <td style="padding:10px;border:1px solid var(--border);text-align:center">buc</td>
+          <td style="padding:10px;border:1px solid var(--border);text-align:right">1</td>
+          <td style="padding:10px;border:1px solid var(--border);text-align:right">${bazaImpozabila.toFixed(2)} RON</td>
+          <td style="padding:10px;border:1px solid var(--border);text-align:right;font-weight:600">${bazaImpozabila.toFixed(2)} RON</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:24px">
+      <div style="width:320px;border:1.5px solid var(--border);border-radius:10px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;background:var(--bg3)">
+          <span style="color:var(--muted)">Baza impozabila</span><span style="font-weight:600">${bazaImpozabila.toFixed(2)} RON</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px">
+          <span style="color:var(--muted)">TVA 21%</span><span style="font-weight:600">${tvaVal.toFixed(2)} RON</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:12px 14px;font-size:16px;font-weight:800;background:linear-gradient(135deg,rgba(184,134,11,.1),rgba(212,160,23,.05))">
+          <span>TOTAL DE PLATA</span><span style="color:var(--gold);font-size:18px">${sumaTotal.toFixed(2)} RON</span>
+        </div>
+        <div style="padding:6px 14px;font-size:11px;color:var(--muted);background:var(--bg3);text-align:right">TVA 21% inclus in pret</div>
       </div>
-    </div>`;
+    </div>
+
+    <div style="background:rgba(184,134,11,.07);border:1px solid rgba(184,134,11,.2);border-radius:10px;padding:16px;margin-bottom:20px">
+      <div style="font-weight:700;color:var(--gold);margin-bottom:10px">Structura platilor</div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:${tip===30?'rgba(184,134,11,.12)':'rgba(21,128,61,.06)'};border:1px solid ${tip===30?'rgba(184,134,11,.3)':'rgba(21,128,61,.2)'}">
+          <span style="font-weight:${tip===30?700:400}">${tip===30?'>> ':'OK '}Transa 1/2 — Avans 30%</span>
+          <span style="font-weight:${tip===30?700:400}">${tip===30?sumaTotal.toFixed(2):rest30.toFixed(2)} RON${tip!==30?' (achitat)':''}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:${tip===70?'rgba(184,134,11,.12)':'var(--bg3)'};border:1px solid ${tip===70?'rgba(184,134,11,.3)':'var(--border)'}">
+          <span style="font-weight:${tip===70?700:400}">${tip===70?'>> ':''}Transa 2/2 — Rest 70%</span>
+          <span style="font-weight:${tip===70?700:400}">${tip===70?sumaTotal.toFixed(2):rest70.toFixed(2)} RON${tip!==70?' (la data serviciului)':''}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 12px;font-size:11px;color:var(--muted)">
+          <span>Valoare totala contract (incl. TVA 21%)</span>
+          <span style="font-weight:600">${r.pretFinal.toFixed(2)} RON</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:14px;font-size:11px;color:var(--muted);text-align:center;line-height:1.9">
+      <div>Acest document este o <b>factura proforma</b> si nu constituie document contabil primar conform Legii contabilitatii nr. 82/1991.</div>
+      <div>Plata se poate efectua prin transfer bancar${firma.iban?' la IBAN: <b>'+firma.iban+'</b>':''} sau numerar la sediu.</div>
+      <div>${firma.name||'LSD Group SRL'} ${firma.cui?'· CUI: '+firma.cui:''} ${firma.adr?'· '+firma.adr:''}</div>
+      <div>Nr. document: <b>${nrFact}</b> · Data emiterii: <b>${dataDoc}</b></div>
+    </div>
+  </div>`;
   om('factura');
 };
-
 window.printFactura=()=>{
-  const area=document.getElementById('fact-print-area');
-  if(!area)return;
-  const firma=window._FIRMA||{};
+  if(!_factRez)return;
   const r=_factRez;const tip=_factTip;
+  const firma=window._FIRMA||{};
   const pct=tip===30?30:70;
-  const suma=Math.round(r.pretFinal*pct/100*100)/100;
+  const sumaTotal=parseFloat((r.pretFinal*pct/100).toFixed(2));
+  const bazaImpozabila=parseFloat((sumaTotal/1.21).toFixed(2));
+  const tvaVal=parseFloat((sumaTotal-bazaImpozabila).toFixed(2));
   const nrFact='LSD-'+(r.id||'').slice(-6).toUpperCase()+'-'+pct;
-  const now=new Date().toLocaleDateString('ro-RO');
+  const dataDoc=new Date().toLocaleDateString('ro-RO');
+  const scadenta=tip===30?'La confirmarea rezervarii (avans)':'La data serviciului';
+  const rest30=parseFloat((r.pretFinal*0.30).toFixed(2));
+  const rest70=parseFloat((r.pretFinal*0.70).toFixed(2));
   const w=window.open('','_blank');
-  w.document.write(`<html><head><title>Factura Proforma ${nrFact}</title>
+  w.document.write(`<!DOCTYPE html><html><head><title>Factura Proforma ${nrFact}</title>
   <style>
-    body{font-family:Arial,sans-serif;padding:32px;max-width:700px;margin:0 auto;color:#111}
-    .header{display:flex;justify-content:space-between;margin-bottom:24px}
-    .logo{font-size:22px;font-weight:800;color:#e8a020}
-    .fact-title{font-size:20px;font-weight:700;text-align:right}
-    .fact-nr{font-size:13px;color:#666;text-align:right}
-    .pct-badge{background:#fff8e6;border:2px solid #e8a020;border-radius:8px;padding:6px 14px;text-align:center;display:inline-block;margin-top:8px}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
-    .box{background:#f8f8f8;border-radius:8px;padding:14px;font-size:13px}
-    .box-title{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:600}
-    .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee;font-size:13px}
-    .row:last-child{border-bottom:none}
-    .lbl{color:#666}.total-row{display:flex;justify-content:space-between;padding:10px 0;font-size:18px;font-weight:700}
-    .gold{color:#e8a020}.info-box{background:#fff8e6;border:1px solid #e8a020;border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px}
-    .footer{text-align:center;font-size:11px;color:#888;border-top:1px solid #eee;padding-top:14px;margin-top:20px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;padding:32px;max-width:800px;margin:0 auto;color:#1c1713;font-size:13px}
+    h1{font-size:20px;font-weight:800;color:#1c1713}
+    .gold{color:#b8860b}.muted{color:#6b6b6b}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid #b8860b}
+    .logo{font-size:20px;font-weight:800;color:#b8860b;margin-bottom:6px}
+    .badge{background:linear-gradient(135deg,#b8860b,#d4a017);border-radius:8px;padding:8px 16px;text-align:center;display:inline-block;color:#fff}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+    .box{border:1.5px solid #e2d9c4;border-radius:8px;padding:14px}
+    .box-gold{border-color:#b8860b;background:#fef9ed}
+    .box-title{font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid #e2d9c4;padding-bottom:6px;margin-bottom:10px}
+    table{width:100%;border-collapse:collapse;margin-bottom:24px}
+    th{padding:9px 10px;background:#f0ead8;border:1px solid #e2d9c4;text-align:left;font-size:11px;color:#6b6b6b;font-weight:700;text-transform:uppercase}
+    td{padding:10px;border:1px solid #e2d9c4;vertical-align:top}
+    .totals{margin-left:auto;width:320px;border:1.5px solid #e2d9c4;border-radius:8px;overflow:hidden;margin-bottom:24px}
+    .tot-row{display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #e2d9c4;font-size:13px}
+    .tot-row:last-child{border-bottom:none}
+    .tot-final{background:linear-gradient(135deg,rgba(184,134,11,.12),rgba(212,160,23,.06));font-size:16px;font-weight:800}
+    .transe{background:#fef9ed;border:1px solid rgba(184,134,11,.3);border-radius:8px;padding:14px;margin-bottom:20px}
+    .transa-row{display:flex;justify-content:space-between;padding:8px 12px;border-radius:6px;margin-bottom:6px;font-size:13px}
+    .transa-active{background:rgba(184,134,11,.15);border:1px solid rgba(184,134,11,.4);font-weight:700}
+    .transa-done{background:#f0f9f0;border:1px solid rgba(21,128,61,.2)}
+    .footer{border-top:1px solid #e2d9c4;padding-top:14px;font-size:11px;color:#6b6b6b;text-align:center;line-height:1.9}
     @media print{body{padding:16px}}
   </style></head><body>
   <div class="header">
-    <div><div class="logo">🚌 ${firma.name||'LSD Group SRL'}</div>
-      <div style="font-size:12px;color:#666;margin-top:4px">${firma.cui?'CUI: '+firma.cui:''} ${firma.reg?'· '+firma.reg:''}</div>
-      <div style="font-size:12px;color:#666">${firma.adr||''}</div>
-      <div style="font-size:12px;color:#666">${firma.tel?'Tel: '+firma.tel:''}</div>
-    </div>
     <div>
-      <div class="fact-title">FACTURĂ PROFORMĂ</div>
-      <div class="fact-nr">Nr. ${nrFact}</div>
-      <div class="fact-nr">Data: ${now}</div>
-      <div class="pct-badge"><div style="font-size:10px;color:#888">Tranșă</div><div style="font-size:24px;font-weight:800;color:#e8a020">${pct}%</div></div>
+      <div class="logo">LSD Group SRL</div>
+      <div class="muted" style="line-height:1.9;font-size:12px">
+        ${firma.cui?'<b>CUI:</b> '+firma.cui+'<br>':''}
+        ${firma.reg?'<b>Reg.Com:</b> '+firma.reg+'<br>':''}
+        ${firma.adr?firma.adr+'<br>':''}
+        ${firma.tel?'<b>Tel:</b> '+firma.tel+'<br>':''}
+        ${firma.iban?'<b>IBAN:</b> '+firma.iban+'<br>':''}
+        ${firma.banca?'<b>Banca:</b> '+firma.banca:''}
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div class="muted" style="font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Document fiscal</div>
+      <h1>FACTURA PROFORMA</h1>
+      <div class="muted" style="margin-top:8px;line-height:2;font-size:12px">
+        <b>Nr.:</b> ${nrFact}<br>
+        <b>Data emiterii:</b> ${dataDoc}<br>
+        <b>Scadenta:</b> ${scadenta}
+      </div>
+      <div class="badge" style="margin-top:10px">
+        <div style="font-size:10px;opacity:.8;text-transform:uppercase">Transa</div>
+        <div style="font-size:22px;font-weight:800">${pct}%</div>
+      </div>
     </div>
   </div>
+
   <div class="grid2">
-    <div class="box"><div class="box-title">Furnizor</div><strong>${firma.name||'LSD Group SRL'}</strong><br>${firma.cui?'CUI: '+firma.cui:''}${firma.reg?' · '+firma.reg:''}<br>${firma.adr||''}</div>
-    <div class="box"><div class="box-title">Client</div><strong>${r.numeClient||'-'}</strong><br>${r.email||''}<br>${r.telefon?'Tel: '+r.telefon:''}</div>
+    <div class="box">
+      <div class="box-title">Furnizor</div>
+      <div style="font-weight:700;margin-bottom:4px">${firma.name||'LSD Group SRL'}</div>
+      <div class="muted" style="font-size:12px;line-height:1.8">${firma.cui?'CUI: '+firma.cui+'<br>':''}${firma.reg?firma.reg+'<br>':''}${firma.adr||''}</div>
+    </div>
+    <div class="box box-gold">
+      <div class="box-title">Cumparator</div>
+      <div style="font-weight:700;margin-bottom:4px">${r.numeClient||'-'}</div>
+      <div class="muted" style="font-size:12px;line-height:1.8">${r.email||''}${r.telefon?'<br>Tel: '+r.telefon:''}</div>
+    </div>
   </div>
-  <div class="box" style="margin-bottom:16px">
-    <div class="box-title">Detalii serviciu</div>
-    <div class="row"><span class="lbl">Serviciu</span><span>Transport persoane — ${r.descriereCursa||'Cursă organizată'}</span></div>
-    <div class="row"><span class="lbl">Traseu</span><span>${r.traseu||'-'}</span></div>
-    <div class="row"><span class="lbl">Data</span><span>${r.data||'-'} · ${r.ora||''}</span></div>
-    <div class="row"><span class="lbl">Vehicul</span><span>${r.vehiculNume||'De confirmat'}</span></div>
-    ${r.persoane?`<div class="row"><span class="lbl">Nr. persoane</span><span>${r.persoane}</span></div>`:''}
+
+  <table>
+    <thead><tr>
+      <th style="width:30px">Nr</th>
+      <th>Descriere serviciu</th>
+      <th style="width:50px;text-align:center">UM</th>
+      <th style="width:40px;text-align:right">Cant</th>
+      <th style="width:130px;text-align:right">Pret fara TVA</th>
+      <th style="width:130px;text-align:right">Valoare fara TVA</th>
+    </tr></thead>
+    <tbody><tr>
+      <td>1</td>
+      <td>
+        <div style="font-weight:600;margin-bottom:4px">Transport persoane — ${r.descriereCursa||'Cursa organizata'}</div>
+        <div class="muted" style="font-size:11px;line-height:1.8">
+          Traseu: ${r.traseu||'-'}<br>
+          Data: ${r.data||'-'}${r.ora?' · Ora: '+r.ora:''}<br>
+          Vehicul: ${r.vehiculNume||'De confirmat'}${r.persoane?' · Nr. persoane: '+r.persoane:''}<br>
+          <span class="gold" style="font-weight:600">Transa ${pct}% din valoarea totala a contractului</span>
+        </div>
+      </td>
+      <td style="text-align:center">buc</td>
+      <td style="text-align:right">1</td>
+      <td style="text-align:right">${bazaImpozabila.toFixed(2)} RON</td>
+      <td style="text-align:right;font-weight:600">${bazaImpozabila.toFixed(2)} RON</td>
+    </tr></tbody>
+  </table>
+
+  <div style="display:flex;justify-content:flex-end">
+    <div class="totals">
+      <div class="tot-row"><span class="muted">Baza impozabila</span><span style="font-weight:600">${bazaImpozabila.toFixed(2)} RON</span></div>
+      <div class="tot-row"><span class="muted">TVA 21%</span><span style="font-weight:600">${tvaVal.toFixed(2)} RON</span></div>
+      <div class="tot-row tot-final"><span>TOTAL DE PLATA</span><span class="gold" style="font-size:18px">${sumaTotal.toFixed(2)} RON</span></div>
+      <div class="tot-row" style="font-size:11px;color:#6b6b6b;padding:6px 14px">TVA 21% inclus in pret</div>
+    </div>
   </div>
-  <div class="box" style="margin-bottom:16px">
-    <div class="box-title">Calcul sumă</div>
-    <div class="row"><span class="lbl">Valoare totală contract</span><span><strong>${r.pretFinal} RON</strong></span></div>
-    <div class="row"><span class="lbl">Tranșă ${pct}% ${tip===30?'(avans)':'(rest de plată)'}</span><span><strong>${suma} RON</strong></span></div>
-    <div class="total-row"><span>TOTAL DE PLATĂ</span><span class="gold">${suma} RON</span></div>
-    <div style="font-size:11px;color:#888;margin-top:4px">* Prețurile includ TVA dacă este cazul</div>
+
+  <div class="transe">
+    <div style="font-weight:700;color:#b8860b;margin-bottom:10px">Structura platilor</div>
+    <div class="transa-row ${tip===30?'transa-active':'transa-done'}">
+      <span>${tip===30?'>> ':'OK '}Transa 1/2 — Avans 30%</span>
+      <span>${tip===30?sumaTotal.toFixed(2):rest30.toFixed(2)} RON${tip!==30?' (achitat)':''}</span>
+    </div>
+    <div class="transa-row ${tip===70?'transa-active':''}">
+      <span>${tip===70?'>> ':''}Transa 2/2 — Rest 70%</span>
+      <span>${tip===70?sumaTotal.toFixed(2):rest70.toFixed(2)} RON${tip!==70?' (la data serviciului)':''}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:6px 12px;font-size:11px;color:#6b6b6b;margin-top:4px">
+      <span>Valoare totala contract (incl. TVA 21%)</span>
+      <span style="font-weight:600">${r.pretFinal.toFixed(2)} RON</span>
+    </div>
   </div>
-  <div class="info-box">
-    ${tip===30
-      ?`<strong>Tranșă 1/2 — Avans 30%: ${suma} RON</strong> — de achitat la confirmarea rezervării<br>Tranșă 2/2 — Rest 70%: ${Math.round(r.pretFinal*70/100*100)/100} RON — de achitat la data serviciului`
-      :`Tranșă 1/2 — Avans 30% achitat: ${Math.round(r.pretFinal*30/100*100)/100} RON<br><strong>Tranșă 2/2 — Rest 70%: ${suma} RON</strong> — de achitat la data serviciului`}
-  </div>
+
   <div class="footer">
-    Factură proformă · Document informativ, nu constituie document contabil primar<br>
-    ${firma.name||'LSD Group SRL'} · ${firma.cui?'CUI: '+firma.cui+' · ':''}${firma.adr||''} · Nr.ref: ${nrFact}
+    <div>Acest document este o <b>factura proforma</b> si nu constituie document contabil primar conform Legii contabilitatii nr. 82/1991.</div>
+    <div>Plata se poate efectua prin transfer bancar${firma.iban?' la IBAN: <b>'+firma.iban+'</b>':''} sau numerar la sediu.</div>
+    <div>${firma.name||'LSD Group SRL'} ${firma.cui?'· CUI: '+firma.cui:''} ${firma.adr?'· '+firma.adr:''}</div>
+    <div>Nr. document: <b>${nrFact}</b> · Data emiterii: <b>${dataDoc}</b></div>
   </div>
-  <script>window.print()<\/script>
+  <script>setTimeout(()=>window.print(),400)<\/script>
   </body></html>`);
   w.document.close();
 };
