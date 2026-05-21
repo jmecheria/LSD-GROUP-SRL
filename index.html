@@ -952,7 +952,13 @@ function bNav(role){
 // ── AUTH ──────────────────────────────────────────────────
 onAuthStateChanged(auth,async u=>{
   window._U=u;
-  if(!u){window._ROLE='client';bNav('guest');return}
+  if(!u){
+    window._ROLE='client';
+    bNav('guest');
+    // Load public settings for anon too
+    try{const sr=await getDoc(doc(db,'setari','global'));if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{};renderFooter();}}catch(e){}
+    return;
+  }
   if(u.email===ADMIN){window._ROLE='admin';bNav('admin');return}
   const ss=await getDocs(query(collection(db,'soferi'),where('email','==',u.email)));
   if(!ss.empty&&ss.docs[0].data().activ!==false){
@@ -1532,6 +1538,12 @@ window.submitOrg=async()=>{
     nc=u.displayName||'';em=u.email||'';
     try{const ud=await getDoc(doc(db,'users',u.uid));tel=ud.exists()?ud.data().tel||'-':'-'}catch(e){tel='-'}
   }else{
+    // Check if user clicked "Continuă fără cont" - else show the recommendation
+    const faraContDiv=document.getElementById('org-fara-cont');
+    if(!faraContDiv||faraContDiv.style.display==='none'){
+      toast('Completați datele de contact sau creați un cont','wr');
+      return;
+    }
     nc=document.getElementById('oname')?.value?.trim()||'';
     tel=document.getElementById('otel')?.value?.trim()||'';
     em=document.getElementById('oemail')?.value?.trim()||'';
@@ -2477,24 +2489,37 @@ window.saveReg=async()=>{
     });
     if(!intorsPlecariFinale.length)intorsPlecariFinale=_intorsPlecari;
     if(intorsPlecariFinale.every(p=>!p.ora)){toast('Adăugați cel puțin o oră de plecare pentru retur','wr');return}
-    // Intors statii = reversed, with prices mirrored
-    const statiiIntors=[...statii].reverse().map((s,i,arr)=>({
-      nume:s.nume,
-      pretDeLaStart:i===0?0:arr[0].pretDeLaStart-s.pretDeLaStart+arr[arr.length-1].pretDeLaStart,
-      minuteDeLaStart:s.minuteDeLaStart||0
-    }));
-    // Fix prices for intors
-    const maxPret=statii[statii.length-1].pretDeLaStart;
-    statiiIntors.forEach((s,i)=>{
-      if(i===0){s.pretDeLaStart=0;}
-      else{
-        const origSt=statii[statii.length-1-i];
-        s.pretDeLaStart=maxPret-(origSt?origSt.pretDeLaStart:0);
-      }
+    // Calcul corect statiiIntors:
+    // Dus:    [A(0min), B(20min), C(45min)]  → intervalele: A-B=20, B-C=25
+    // Retur:  [C(0min), B(25min), A(45min)]  → intervalele inversate: C-B=25, B-A=20
+    const maxMin=statii[statii.length-1].minuteDeLaStart||0;
+    const maxPret=statii[statii.length-1].pretDeLaStart||0;
+    const statiiIntors=[...statii].reverse().map((s,i,arr)=>{
+      // minute de la start pt retur = maxMin - minute_originale ale statiei precedente (in dus)
+      // adica: minRetur[i] = maxMin - minute_dus[ n-1-i ]
+      // pt i=0 (capatul): 0
+      // pt i=1: maxMin - minute_dus[n-2]
+      // pt i=n-1 (startul original): maxMin - minute_dus[0] = maxMin
+      const minRetur=i===0?0:(maxMin-(statii[statii.length-1-i].minuteDeLaStart||0));
+      const pretRetur=i===0?0:(maxPret-(statii[statii.length-1-i].pretDeLaStart||0));
+      return{
+        nume:s.nume,
+        pretDeLaStart:pretRetur,
+        minuteDeLaStart:minRetur
+      };
     });
   }
   const ruta=document.getElementById('rmr').value.trim()||statii.map(s=>s.nume).join(' – ');
   const rutaIntors=tipCursa==='dus-intors'?(statii.map(s=>s.nume).reverse().join(' – ')):'';
+  const statiiIntorsFinal=tipCursa==='dus-intors'?(()=>{
+    const maxMin=statii[statii.length-1].minuteDeLaStart||0;
+    const maxPret=statii[statii.length-1].pretDeLaStart||0;
+    return[...statii].reverse().map((s,i)=>{
+      const minRetur=i===0?0:(maxMin-(statii[statii.length-1-i].minuteDeLaStart||0));
+      const pretRetur=i===0?0:(maxPret-(statii[statii.length-1-i].pretDeLaStart||0));
+      return{nume:s.nume,pretDeLaStart:pretRetur,minuteDeLaStart:minRetur};
+    });
+  })():null;
   const data={
     ruta,vehiculId:vehId,vehiculNume:veh?veh.nume:'-',
     capacitate:veh?cap(veh):0,rows:veh?veh.rows:[],
@@ -2506,12 +2531,7 @@ window.saveReg=async()=>{
     ...(tipCursa==='dus-intors'?{
       intorsPlecari:intorsPlecariFinale,
       rutaIntors,
-      statiiIntors:[...statii].reverse().map((s,i,arr)=>{
-        if(i===0)return{...s,pretDeLaStart:0};
-        const maxP=statii[statii.length-1].pretDeLaStart;
-        const origSt=statii[statii.length-1-i];
-        return{...s,pretDeLaStart:maxP-(origSt?origSt.pretDeLaStart:0)};
-      })
+      statiiIntors:statiiIntorsFinal
     }:{})
   };
   try{
@@ -3321,7 +3341,10 @@ function scheduleRefreshes(){
   try{
     const sr=await getDoc(doc(db,'setari','global'));
     if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{}}
-  }catch(e){}
+  }catch(e){
+    // Anon may not have access - use defaults
+    console.warn('Could not load settings:', e.message);
+  }
   renderFooter();
   await loadFlota();
   const rs=await getDocs(collection(db,'curse_regulate'));
