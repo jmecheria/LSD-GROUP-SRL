@@ -451,6 +451,7 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
     <button class="tb" onclick="sfTab('curse')">🗓️ Toate cursele</button>
     <button class="tb" onclick="sfTab('vehicul')">🚌 Vehiculul meu</button>
     <button class="tb" onclick="sfTab('bilete')">🎟️ Bilete / Rezervări</button>
+    <button class="tb" onclick="sfTab('scanner')">📷 Scanner QR</button>
   </div>
   <!-- AZI -->
   <div id="sf-tab-azi" class="tc on">
@@ -494,6 +495,42 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
       <button class="btn bs bsm" onclick="loadSoferBilete()">🔍 Caută</button>
     </div>
     <div id="sf-bilete-list"></div>
+  </div>
+  <!-- SCANNER QR -->
+  <div id="sf-tab-scanner" class="tc">
+    <div style="max-width:480px;margin:0 auto">
+      <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:var(--shadow)">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">📷 Scanează cod QR bilet</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Scanează codul QR de pe biletul pasagerului sau introdu manual codul.</p>
+        <!-- Camera scanner -->
+        <div id="qr-reader-wrap" style="margin-bottom:14px">
+          <div id="qr-video-container" style="display:none;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);margin-bottom:10px;position:relative">
+            <video id="qr-video" style="width:100%;display:block" playsinline></video>
+            <div style="position:absolute;inset:0;border:3px solid var(--gold);border-radius:10px;pointer-events:none;box-shadow:inset 0 0 0 60px rgba(253,252,248,.4)"></div>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;height:160px;border:2px solid var(--gold);border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.4)"></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn bp bsm" id="btn-start-scan" onclick="startQRScan()">📷 Pornește camera</button>
+            <button class="btn bs bsm" id="btn-stop-scan" onclick="stopQRScan()" style="display:none">⏹ Oprește camera</button>
+          </div>
+        </div>
+        <!-- Manual input -->
+        <div style="border-top:1px solid var(--border);padding-top:14px">
+          <div class="fl" style="margin-bottom:6px">Sau introdu codul manual</div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="scanner-manual-cod" placeholder="Ex: LSD-A1B2C3-L2" style="font-weight:700;letter-spacing:1px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')verificaBiletSofer(this.value)"/>
+            <button class="btn bp" onclick="verificaBiletSofer(document.getElementById('scanner-manual-cod').value)" style="flex-shrink:0">✓ Verifică</button>
+          </div>
+        </div>
+      </div>
+      <!-- Rezultat scanare -->
+      <div id="scanner-result"></div>
+      <!-- Istoric scanări sesiune -->
+      <div id="scanner-history" style="display:none;margin-top:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Scanări în această sesiune</div>
+        <div id="scanner-history-list"></div>
+      </div>
+    </div>
   </div>
 </div>
 <div id="pg-admin" class="pg">
@@ -1753,14 +1790,248 @@ window.loadSofer=async()=>{
 };
 
 window.sfTab=tab=>{
-  ['azi','calendar','curse','vehicul','bilete'].forEach(t=>{
+  ['azi','calendar','curse','vehicul','bilete','scanner'].forEach(t=>{
     document.getElementById('sf-tab-'+t).classList.toggle('on',t===tab);
   });
   document.querySelectorAll('#pg-sofer .tb').forEach((b,i)=>{
-    b.classList.toggle('on',['azi','calendar','curse','vehicul','bilete'][i]===tab);
+    b.classList.toggle('on',['azi','calendar','curse','vehicul','bilete','scanner'][i]===tab);
   });
   if(tab==='bilete')loadSoferBilete();
   if(tab==='calendar')loadCalendar();
+  if(tab!=='scanner')stopQRScan();
+};
+
+// ── QR SCANNER ────────────────────────────────────────────
+let _qrStream=null;
+let _qrScanning=false;
+let _scanHistory=[];
+let _qrAnimFrame=null;
+
+window.startQRScan=async()=>{
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}
+    });
+    _qrStream=stream;
+    const video=document.getElementById('qr-video');
+    const container=document.getElementById('qr-video-container');
+    video.srcObject=stream;
+    await video.play();
+    container.style.display='block';
+    document.getElementById('btn-start-scan').style.display='none';
+    document.getElementById('btn-stop-scan').style.display='inline-flex';
+    _qrScanning=true;
+    // Load jsQR library dynamically
+    if(!window.jsQR){
+      await new Promise((res,rej)=>{
+        const s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
+        s.onload=res;s.onerror=rej;
+        document.head.appendChild(s);
+      });
+    }
+    scanFrame(video);
+    toast('📷 Camera pornită — îndreptați spre codul QR','in');
+  }catch(e){
+    toast('Nu s-a putut accesa camera: '+e.message,'er');
+  }
+};
+
+function scanFrame(video){
+  if(!_qrScanning)return;
+  const canvas=document.createElement('canvas');
+  canvas.width=video.videoWidth;
+  canvas.height=video.videoHeight;
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  if(canvas.width>0){
+    const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code=window.jsQR&&window.jsQR(imageData.data,imageData.width,imageData.height,{inversionAttempts:'dontInvert'});
+    if(code&&code.data){
+      stopQRScan();
+      verificaBiletSofer(code.data);
+      return;
+    }
+  }
+  _qrAnimFrame=requestAnimationFrame(()=>scanFrame(video));
+}
+
+window.stopQRScan=()=>{
+  _qrScanning=false;
+  if(_qrAnimFrame)cancelAnimationFrame(_qrAnimFrame);
+  if(_qrStream){_qrStream.getTracks().forEach(t=>t.stop());_qrStream=null;}
+  const video=document.getElementById('qr-video');
+  const container=document.getElementById('qr-video-container');
+  if(video)video.srcObject=null;
+  if(container)container.style.display='none';
+  const btnStart=document.getElementById('btn-start-scan');
+  const btnStop=document.getElementById('btn-stop-scan');
+  if(btnStart)btnStart.style.display='inline-flex';
+  if(btnStop)btnStop.style.display='none';
+};
+
+window.verificaBiletSofer=async(codBrut)=>{
+  if(!codBrut||!codBrut.trim()){toast('Introduceți un cod','wr');return}
+  const el=document.getElementById('scanner-result');
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">⏳ Se verifică...</div>';
+  // Cod poate fi: "LSD:LSD-ABC123-L2|cursaId|data|locNr" (din QR)
+  // sau "LSD-ABC123-L2" (manual) sau "LSD-ABC123" (biletId simplu)
+  let biletId=codBrut.trim().toUpperCase();
+  let locNrTarget=null;
+  // Parse QR format: LSD:biletId-LlocNr|cursaId|data|locNr
+  if(biletId.startsWith('LSD:')){
+    const parts=biletId.slice(4).split('|');
+    const codLoc=parts[0]; // ex: LSD-ABC123-L2
+    const locMatch=codLoc.match(/-L(\d+)$/);
+    if(locMatch){
+      locNrTarget=parseInt(locMatch[1]);
+      biletId=codLoc.replace(/-L\d+$/,'');
+    }else{
+      biletId=codLoc;
+    }
+  }else if(biletId.match(/-L\d+$/)){
+    // Format manual: LSD-ABC123-L2
+    const locMatch=biletId.match(/-L(\d+)$/);
+    if(locMatch){
+      locNrTarget=parseInt(locMatch[1]);
+      biletId=biletId.replace(/-L\d+$/,'');
+    }
+  }
+  try{
+    const snap=await getDocs(query(collection(db,'rezervari'),where('biletId','==',biletId)));
+    if(snap.empty){
+      el.innerHTML=`<div style="background:#fff;border:2px solid var(--red);border-radius:14px;padding:20px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-size:40px;margin-bottom:10px">❌</div>
+        <div style="font-weight:700;font-size:16px;margin-bottom:4px">Bilet negăsit</div>
+        <div style="color:var(--muted);font-size:13px">Codul <strong>${biletId}</strong> nu există în sistem.</div>
+        <button class="btn bs bsm" style="margin-top:12px" onclick="startQRScan()">📷 Scanează alt bilet</button>
+      </div>`;
+      return;
+    }
+    const rezDoc=snap.docs[0];
+    const r={id:rezDoc.id,...rezDoc.data()};
+    const locs=r.locuriRezervate||[];
+    // Find specific loc or all locs
+    const locsTarget=locNrTarget?locs.filter(l=>l.locNr===locNrTarget):locs;
+    if(!locsTarget.length){
+      el.innerHTML=`<div style="background:#fff;border:2px solid var(--red);border-radius:14px;padding:20px;text-align:center">
+        <div style="font-size:40px;margin-bottom:10px">⚠️</div>
+        <div style="font-weight:700">Loc ${locNrTarget} nu există în acest bilet</div>
+        <button class="btn bs bsm" style="margin-top:12px" onclick="startQRScan()">📷 Scanează alt bilet</button>
+      </div>`;
+      return;
+    }
+    // Check if already scanned
+    const locTarget=locsTarget[0];
+    if(locTarget.scanat){
+      el.innerHTML=`<div style="background:#fff;border:2px solid var(--red);border-radius:14px;padding:20px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-size:40px;margin-bottom:10px">🚫</div>
+        <div style="font-weight:700;font-size:16px;color:var(--red);margin-bottom:4px">Bilet deja scanat!</div>
+        <div style="color:var(--muted);font-size:13px">Locul <strong>${locNrTarget}</strong> a fost deja scanat${locTarget.scanatLa?' la '+new Date(locTarget.scanatLa.seconds*1000).toLocaleString('ro'):''}.</div>
+        <div style="background:rgba(185,28,28,.08);border:1px solid rgba(185,28,28,.2);border-radius:10px;padding:12px;margin-top:12px;font-size:13px">
+          ⚠️ Nu permiteți îmbarcarea cu acest cod. Solicitați alt bilet valid.
+        </div>
+        <button class="btn bs bsm" style="margin-top:12px" onclick="startQRScan()">📷 Scanează alt bilet</button>
+      </div>`;
+      return;
+    }
+    // Valid! Show confirm button
+    const isValidDate=r.data>=new Date().toISOString().split('T')[0];
+    const isConfirmed=r.status==='confirmata';
+    if(!isConfirmed||!isValidDate){
+      el.innerHTML=`<div style="background:#fff;border:2px solid var(--orange);border-radius:14px;padding:20px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-size:40px;margin-bottom:10px">⚠️</div>
+        <div style="font-weight:700;font-size:16px;color:var(--orange);margin-bottom:4px">Bilet ${!isConfirmed?'neconfirmat':'expirat'}</div>
+        <div style="color:var(--muted);font-size:13px">Status: <strong>${r.status}</strong> · Data: <strong>${r.data}</strong></div>
+        <button class="btn bs bsm" style="margin-top:12px" onclick="startQRScan()">📷 Scanează alt bilet</button>
+      </div>`;
+      return;
+    }
+    el.innerHTML=`<div style="background:#fff;border:2px solid var(--green);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-lg)">
+      <div style="background:linear-gradient(135deg,var(--green),#16a34a);padding:16px 20px;text-align:center">
+        <div style="font-size:40px;margin-bottom:6px">✅</div>
+        <div style="font-weight:800;font-size:18px;color:#fff">Bilet VALID</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:4px">${r.biletId}${locNrTarget?' · Loc '+locNrTarget:''}</div>
+      </div>
+      <div style="padding:16px">
+        <div style="display:flex;flex-direction:column;gap:0;margin-bottom:14px">
+          ${[
+            ['👤 Pasager',r.numeClient||'-'],
+            ['🚌 Rută',r.ruta||r.traseu||'-'],
+            ['📍 Urcare',locTarget.statieUrcare||'-'],
+            ['📍 Coborâre',locTarget.statieCoborare||'-'],
+            ['🪑 Loc',locNrTarget||locs.map(l=>l.locNr).join(', ')],
+            ['📅 Data',r.data||'-'],
+            ['🕐 Ora',r.ora||'-'],
+          ].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
+        </div>
+        <button class="btn bp bw" onclick="marcheazaScanat('${rezDoc.id}',${locNrTarget||'null'})">
+          ✅ Confirmă îmbarcarea — Marchează scanat
+        </button>
+        <button class="btn bs bw" style="margin-top:8px" onclick="startQRScan()">📷 Scanează alt bilet</button>
+      </div>
+    </div>`;
+  }catch(e){
+    el.innerHTML=`<div style="background:#fff;border:2px solid var(--red);border-radius:14px;padding:20px;text-align:center">
+      <div style="font-size:36px;margin-bottom:10px">❌</div>
+      <div style="font-weight:700;margin-bottom:4px">Eroare la verificare</div>
+      <div style="font-size:13px;color:var(--muted)">${e.message}</div>
+      <button class="btn bs bsm" style="margin-top:12px" onclick="startQRScan()">📷 Încearcă din nou</button>
+    </div>`;
+  }
+};
+
+window.marcheazaScanat=async(rezId,locNr)=>{
+  try{
+    const ref=await getDoc(doc(db,'rezervari',rezId));
+    if(!ref.exists())return;
+    const r=ref.data();
+    const locs=[...(r.locuriRezervate||[])];
+    const now=Timestamp.now();
+    if(locNr){
+      // Marchează doar locul specific
+      const idx=locs.findIndex(l=>l.locNr===locNr);
+      if(idx>-1){locs[idx]={...locs[idx],scanat:true,scanatLa:now,scanatDe:window._U?.email||'sofer'}}
+    }else{
+      // Marchează toate locurile
+      locs.forEach((l,i)=>{locs[i]={...l,scanat:true,scanatLa:now,scanatDe:window._U?.email||'sofer'}});
+    }
+    await setDoc(doc(db,'rezervari',rezId),{locuriRezervate:locs},{merge:true});
+    // Add to session history
+    const r2=ref.data();
+    _scanHistory.unshift({
+      biletId:r2.biletId,
+      numeClient:r2.numeClient,
+      locNr,
+      ruta:r2.ruta||r2.traseu,
+      ora:new Date().toLocaleTimeString('ro',{hour:'2-digit',minute:'2-digit'})
+    });
+    // Update history UI
+    const histEl=document.getElementById('scanner-history');
+    const histList=document.getElementById('scanner-history-list');
+    if(histEl&&histList){
+      histEl.style.display='block';
+      histList.innerHTML=_scanHistory.slice(0,10).map(h=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;font-size:13px">
+          <div>
+            <div style="font-weight:600">${h.numeClient} ${h.locNr?'· Loc '+h.locNr:''}</div>
+            <div style="font-size:11px;color:var(--muted)">${h.ruta} · ${h.biletId}</div>
+          </div>
+          <div style="font-size:11px;color:var(--green);font-weight:700">✅ ${h.ora}</div>
+        </div>`).join('');
+    }
+    // Show success
+    document.getElementById('scanner-result').innerHTML=`
+      <div style="background:#fff;border:2px solid var(--green);border-radius:14px;padding:20px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-size:48px;margin-bottom:10px">✅</div>
+        <div style="font-weight:800;font-size:18px;color:var(--green);margin-bottom:4px">Îmbarcare confirmată!</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px">${r2.numeClient}${locNr?' · Loc '+locNr:''} · ${r2.biletId}</div>
+        <button class="btn bp bw" onclick="startQRScan()">📷 Scanează următorul bilet</button>
+      </div>`;
+    toast('✅ Bilet marcat ca scanat!','ok');
+  }catch(e){
+    toast('Eroare la marcare: '+e.message,'er');
+  }
 };
 
 window.loadSoferAzi=async()=>{
