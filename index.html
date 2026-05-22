@@ -502,16 +502,12 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
       <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:var(--shadow)">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">📷 Scanează cod QR bilet</h3>
         <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Scanează codul QR de pe biletul pasagerului sau introdu manual codul.</p>
-        <!-- Camera scanner -->
+        <!-- html5-qrcode scanner -->
         <div id="qr-reader-wrap" style="margin-bottom:14px">
-          <div id="qr-video-container" style="display:none;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);margin-bottom:10px;position:relative">
-            <video id="qr-video" style="width:100%;display:block" playsinline></video>
-            <div style="position:absolute;inset:0;border:3px solid var(--gold);border-radius:10px;pointer-events:none;box-shadow:inset 0 0 0 60px rgba(253,252,248,.4)"></div>
-            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;height:160px;border:2px solid var(--gold);border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.4)"></div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn bp bsm" id="btn-start-scan" onclick="startQRScan()">📷 Pornește camera</button>
-            <button class="btn bs bsm" id="btn-stop-scan" onclick="stopQRScan()" style="display:none">⏹ Oprește camera</button>
+          <div id="html5-qrcode-reader" style="border-radius:10px;overflow:hidden;border:1.5px solid var(--border)"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn bp bsm" id="btn-start-scan" onclick="startQRScan()">📷 Pornește scanerul</button>
+            <button class="btn bs bsm" id="btn-stop-scan" onclick="stopQRScan()" style="display:none">⏹ Oprește scanerul</button>
           </div>
         </div>
         <!-- Manual input -->
@@ -640,7 +636,11 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
 <div class="mo" id="mo-bilet">
   <div class="md"><div class="mh"><div class="mt2">🎟️ Biletul tău</div><button class="mx" onclick="cm('bilet')">✕</button></div>
   <div class="mb2" id="bbody"></div>
-  <div class="mf"><button class="btn bs" onclick="cm('bilet')">Închide</button><button class="btn bp" onclick="printB()">🖨️ Printează</button></div></div>
+  <div class="mf" style="flex-wrap:wrap;gap:8px">
+    <button class="btn bs" onclick="cm('bilet')">Închide</button>
+    <button class="btn bs" id="btn-ia-intors" style="display:none" onclick="iaIntors()">↩️ Ia și bilet ÎNTORS</button>
+    <button class="btn bp" onclick="printB()">🖨️ Printează biletele</button>
+  </div></div>
 </div>
 <!-- VEHICUL ADMIN -->
 <div class="mo" id="mo-veh">
@@ -1351,8 +1351,18 @@ window.tS=n=>{
   if(_cIC===null){toast('Selectați destinația mai întâi','wr');return}
   if(sst(n)==='oc')return;
   const idx=_cSel.indexOf(n);
-  if(idx>-1){_cSel.splice(idx,1);const e=document.getElementById('s'+n);if(e)e.className='seat fr'}
-  else{_cSel.push(n);const e=document.getElementById('s'+n);if(e)e.className='seat sl'}
+  if(idx>-1){
+    _cSel.splice(idx,1);
+    const e=document.getElementById('s'+n);if(e)e.className='seat fr';
+  }else{
+    // Anonim: max 1 loc
+    if(!window._U&&_cSel.length>=1){
+      toast('Fără cont poți selecta doar 1 loc. Creează un cont pentru mai multe.','wr');
+      return;
+    }
+    _cSel.push(n);
+    const e=document.getElementById('s'+n);if(e)e.className='seat sl';
+  }
   updSum();document.getElementById('cinok').disabled=_cSel.length===0;
 };
 function updSum(){
@@ -1378,18 +1388,25 @@ async function renderCC(){
     </div>`;
   }else{
     cf.innerHTML=`<div style="margin-top:14px">
+      <div style="background:rgba(184,134,11,.08);border:1.5px solid rgba(184,134,11,.25);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">
+        <div style="font-weight:700;color:var(--gold);margin-bottom:4px">⚠️ Fără cont: maxim 1 loc</div>
+        <div style="color:var(--muted);line-height:1.6">Cu un <a onclick="nav('auth');cm('cinema')" style="color:var(--gold);font-weight:600">cont gratuit</a> poți rezerva mai multe locuri, urmări biletele și descărca factura.</div>
+      </div>
       <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:10px">Date de contact</div>
       <div class="fr"><div class="fg"><div class="fl">Nume complet *</div><input type="text" id="cnn"/></div><div class="fg"><div class="fl">Telefon *</div><input type="tel" id="cnt"/></div></div>
       <div class="fg"><div class="fl">Email *</div><input type="email" id="cne"/></div>
-      <div style="background:var(--bg3);border:1px solid rgba(249,115,22,.3);border-radius:8px;padding:10px;font-size:12px;color:var(--orange);margin-top:4px">
-        💡 <a onclick="nav('auth');cm('cinema')">Creează un cont</a> pentru a urmări rezervarea și a comunica cu echipa LSD Group.
-      </div>
     </div>`;
   }
 }
 window.confSeats=async()=>{
   if(!_cSel.length||_cIU===null||_cIC===null){toast('Selectați stațiile și cel puțin un loc','wr');return}
-  const u=window._U;let nc,em,tel;
+  const u=window._U;
+  // Fara cont: max 1 loc
+  if(!u&&_cSel.length>1){
+    toast('Fără cont poți rezerva doar 1 loc. Creează un cont pentru mai multe locuri.','wr');
+    return;
+  }
+  let nc,em,tel;
   if(u){
     nc=u.displayName||'';em=u.email||'';
     try{const ud=await getDoc(doc(db,'users',u.uid));tel=ud.exists()?ud.data().tel||'-':'-'}catch(e){tel='-'}
@@ -1403,123 +1420,171 @@ window.confSeats=async()=>{
     if(!em||!validEmail(em)){fieldErr('cne','Adresă de email invalidă');cinOk=false}else fieldOk('cne');
     if(!cinOk)return;
   }
-  // Re-verify availability (poate esua pt anonim fara reguli corecte)
   try{await loadOcc(_cId,_cD);}catch(e){}
   const bad=_cSel.filter(n=>sst(n)==='oc');
   if(bad.length){
-    toast(`Locul${bad.length>1?'rile':''} ${bad.join(', ')} ${bad.length>1?'au fost ocupate':'a fost ocupat'} între timp.`,'er');
+    toast('Locul'+( bad.length>1?'rile':'')+' '+bad.join(', ')+' '+(bad.length>1?'au fost ocupate':'a fost ocupat')+' între timp.','er');
     _cSel=_cSel.filter(n=>!bad.includes(n));renderSeats();updSum();
     if(!_cSel.length)document.getElementById('cinok').disabled=true;
     return;
   }
   const st=_cC.statii||[];const sU=st[_cIU].nume,sC=st[_cIC].nume;
-  const lr=_cSel.map(n=>({locNr:n,statieUrcare:sU,statieCoborare:sC,pretLoc:_cPret}));
-  const bid='LSD-'+Math.random().toString(36).slice(2,8).toUpperCase();
   const firstPlecare=(_cC.plecari&&_cC.plecari.length)?(_cC.plecari[0].ora||_cC.ora):_cC.ora;
-  const rez={
-    uid:u?u.uid:null,numeClient:nc,email:em,telefon:tel,
-    tipRezervare:'regulata',cursaId:_cId,ruta:_cC.ruta,data:_cD,ora:firstPlecare,
-    vehiculId:_cC.vehiculId||'',vehiculNume:_cC.vehiculNume||'',
-    locuriRezervate:lr,nrLocuri:lr.length,biletId:bid,pretTotal:_cPret*_cSel.length,
-    traseu:_cC.ruta,status:'confirmata',mesaje:[],createdAt:serverTimestamp()
-  };
+  // Fiecare loc = rezervare separata cu biletId unic
+  const rezervari=[];
+  for(const locNr of _cSel){
+    const bid='LSD-'+Math.random().toString(36).slice(2,8).toUpperCase();
+    rezervari.push({
+      uid:u?u.uid:null,numeClient:nc,email:em,telefon:tel,
+      tipRezervare:'regulata',cursaId:_cId,ruta:_cC.ruta,data:_cD,ora:firstPlecare,
+      vehiculId:_cC.vehiculId||'',vehiculNume:_cC.vehiculNume||'',
+      locuriRezervate:[{locNr,statieUrcare:sU,statieCoborare:sC,pretLoc:_cPret,scanat:false}],
+      nrLocuri:1,biletId:bid,pretTotal:_cPret,
+      traseu:_cC.ruta,status:'confirmata',mesaje:[],createdAt:serverTimestamp()
+    });
+  }
   try{
-    await addDoc(collection(db,'rezervari'),rez);
-    cm('cinema');showB(rez);toast('🎉 Rezervare confirmată!','ok');
+    const refs=await Promise.all(rezervari.map(r=>addDoc(collection(db,'rezervari'),r)));
+    // Ataseaza id-urile
+    refs.forEach((ref,i)=>{rezervari[i].id=ref.id});
+    cm('cinema');
+    showBMultiple(rezervari);
+    toast('🎉 '+rezervari.length+' bilet'+(rezervari.length>1?'e rezervate':'rezervat')+'!','ok');
   }catch(e){toast('Eroare la salvare: '+e.message,'er')}
 };
+// showB pentru un singur bilet (folosit din showBById)
 function showB(r){
-  const locs=r.locuriRezervate||[];
-  const sU=locs[0]?.statieUrcare||'-';
-  const sC=locs[0]?.statieCoborare||'-';
-  // Un QR unic per loc: cod = biletId-LlocNr
-  const qrCards=locs.map(l=>{
-    const codLoc=r.biletId+'-L'+l.locNr;
-    const qrData='LSD:'+codLoc+'|'+(r.cursaId||'')+'|'+r.data+'|'+l.locNr;
-    const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='+encodeURIComponent(qrData)+'&bgcolor=ffffff&color=1c1713';
-    const scanatBadge=l.scanat?'<div style="background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:6px;display:inline-block">✅ SCANAT</div>':'';
-    return '<div style="text-align:center;background:#fff;border:1.5px solid '+(l.scanat?'var(--red)':'var(--border)')
-      +';border-radius:12px;padding:14px;min-width:140px;flex:1">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Loc '+l.locNr+'</div>'
-      +'<img src="'+qrUrl+'" width="130" height="130" style="border-radius:6px;display:block;margin:0 auto"'+(l.scanat?' style="opacity:.4;filter:grayscale(1)"':'')+'/>'
-      +'<div style="font-size:11px;font-weight:800;color:var(--gold);letter-spacing:1px;margin-top:8px">'+codLoc+'</div>'
-      +'<div style="font-size:10px;color:var(--muted);margin-top:3px">'+l.statieUrcare+' → '+l.statieCoborare+'</div>'
-      +scanatBadge
-      +'</div>';
-  }).join('');
-  document.getElementById('bbody').innerHTML=
-    '<div class="bh2"><h2 style="font-family:Syne,sans-serif;color:#fff;font-size:20px;margin-bottom:4px">🎟️ LSD Group SRL</h2>'
-    +'<p style="color:rgba(255,255,255,.8);font-size:13px">Bilet confirmat — '+r.biletId+'</p></div>'
-    // AVERTISMENT SCREENSHOT
-    +'<div style="background:rgba(194,85,15,.1);border:1.5px solid rgba(194,85,15,.4);border-radius:12px;padding:14px 16px;margin:16px 16px 0;display:flex;gap:12px;align-items:flex-start">'
-    +'<div style="font-size:28px;flex-shrink:0">📸</div>'
-    +'<div><div style="font-weight:700;font-size:14px;color:var(--orange);margin-bottom:5px">Salvează biletul acum!</div>'
-    +'<div style="font-size:13px;color:var(--muted);line-height:1.6">Fă un <strong>screenshot</strong> sau notează codul <strong style="color:var(--text);letter-spacing:1px">'+r.biletId+'</strong>.<br>'
-    +'Prezintă codul QR șoferului la îmbarcare. <strong>Fiecare loc are propriul cod QR</strong> — nu îl trimite altora!</div></div></div>'
-    +'<div style="padding:16px">'
-    // QR-uri
-    +'<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Coduri QR — câte unul per loc</div>'
-    +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">'+qrCards+'</div>'
-    // Detalii
-    +'<div>'
-    +'<div class="brow"><span class="blbl">Rută</span><span>'+(r.ruta||r.traseu)+'</span></div>'
-    +'<div class="brow"><span class="blbl">Urcare</span><span style="color:var(--green)">'+sU+'</span></div>'
-    +'<div class="brow"><span class="blbl">Coborâre</span><span style="color:var(--orange)">'+sC+'</span></div>'
-    +'<div class="brow"><span class="blbl">Data</span><span>'+r.data+'</span></div>'
-    +'<div class="brow"><span class="blbl">Ora</span><span>'+(r.ora||'-')+'</span></div>'
-    +'<div class="brow"><span class="blbl">Vehicul</span><span>'+(r.vehiculNume||'-')+'</span></div>'
-    +'<div class="brow"><span class="blbl">Pasager</span><span>'+r.numeClient+'</span></div>'
-    +'<div class="brow"><span class="blbl">Nr. locuri</span><span>'+(r.nrLocuri||locs.length)+'</span></div>'
-    +'<div class="brow"><span class="blbl">Total de plată</span><span style="color:var(--gold);font-weight:700;font-size:15px">'+r.pretTotal+' RON</span></div>'
-    +'</div></div>';
-  _LB=r;om('bilet');
+  showBMultiple([r]);
 }
+
+// showBMultiple — afiseaza mai multe bilete (unul per loc)
+function showBMultiple(bilete){
+  const r0=bilete[0];
+  const isDusIntors=bilete.length===1&&r0._directie==='intors';
+
+  const biletCards=bilete.map((r,idx)=>{
+    const loc=r.locuriRezervate[0];
+    const bid=r.biletId;
+    const qrData='LSD:'+bid+'|'+(r.cursaId||'')+'|'+r.data+'|'+loc.locNr;
+    const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=160x160&data='+encodeURIComponent(qrData)+'&bgcolor=ffffff&color=1c1713';
+    return '<div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;box-shadow:0 2px 8px rgba(28,23,19,.08)">'
+      +'<div style="background:linear-gradient(135deg,var(--gold),var(--gold2));padding:14px 18px;display:flex;justify-content:space-between;align-items:center">'
+      +'<div><div style="color:#fff;font-weight:800;font-size:15px;letter-spacing:1px">'+bid+'</div>'
+      +'<div style="color:rgba(255,255,255,.8);font-size:12px;margin-top:2px">Loc '+loc.locNr+' · '+r.ruta+'</div></div>'
+      +'<div style="background:rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;color:#fff">Bilet '+(idx+1)+'/'+bilete.length+'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:16px;padding:16px;align-items:flex-start;flex-wrap:wrap">'
+      +'<div style="text-align:center;flex-shrink:0">'
+      +'<img src="'+qrUrl+'" width="140" height="140" style="border-radius:8px;border:1px solid var(--border);display:block"/>'
+      +'<div style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.5px;margin-top:6px">'+bid+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-top:2px">Scanați la îmbarcare</div>'
+      +'</div>'
+      +'<div style="flex:1;min-width:160px">'
+      +'<div style="display:flex;flex-direction:column;gap:0">'
+      +'<div class="brow"><span class="blbl">Loc</span><span style="font-weight:700;color:var(--gold)">'+loc.locNr+'</span></div>'
+      +'<div class="brow"><span class="blbl">Urcare</span><span style="color:var(--green);font-weight:600">'+loc.statieUrcare+'</span></div>'
+      +'<div class="brow"><span class="blbl">Coborâre</span><span style="color:var(--orange);font-weight:600">'+loc.statieCoborare+'</span></div>'
+      +'<div class="brow"><span class="blbl">Data</span><span>'+r.data+'</span></div>'
+      +'<div class="brow"><span class="blbl">Ora</span><span>'+(r.ora||'-')+'</span></div>'
+      +'<div class="brow"><span class="blbl">Preț</span><span style="font-weight:700">'+r.pretTotal+' RON</span></div>'
+      +'</div></div></div></div>';
+  }).join('');
+
+  // Bouton printare
+  const totalPret=bilete.reduce((s,r)=>s+r.pretTotal,0);
+
+  document.getElementById('bbody').innerHTML=
+    // AVERTISMENT SCREENSHOT
+    '<div style="background:rgba(194,85,15,.1);border:1.5px solid rgba(194,85,15,.4);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start">'
+    +'<div style="font-size:26px;flex-shrink:0">📸</div>'
+    +'<div><div style="font-weight:700;font-size:14px;color:var(--orange);margin-bottom:4px">Salvează biletele acum!</div>'
+    +'<div style="font-size:12px;color:var(--muted);line-height:1.6">'
+    +'Fă un <strong>screenshot</strong> sau notează codurile. '
+    +(bilete.length>1?'Ai <strong>'+bilete.length+' bilete separate</strong> — câte unul per loc.':
+      'Codul biletului: <strong style="letter-spacing:1px;color:var(--text)">'+bilete[0].biletId+'</strong>.')
+    +' Prezintă QR-ul șoferului la îmbarcare. <strong>Nu trimite codul altora!</strong>'
+    +'</div></div></div>'
+    // Bilete
+    +'<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px">'
+    +bilete.length+' bilet'+(bilete.length>1?'e':'')+(bilete.length>1?' — câte unul per loc':'')
+    +'</div>'
+    +biletCards
+    // Total
+    +(bilete.length>1?'<div style="background:var(--bg3);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-top:4px">'
+      +'<span>Total achitat</span><span style="color:var(--gold)">'+totalPret+' RON</span></div>':'');
+
+  _LB=bilete;
+  // Arata buton "Ia si intors" daca cursa e dus-intors
+  const btnIntors=document.getElementById('btn-ia-intors');
+  if(btnIntors){
+    const cursa=window._R&&window._R.find(c=>c.id===bilete[0].cursaId);
+    const esteReturnata=bilete[0]._directie==='intors';
+    btnIntors.style.display=(cursa&&cursa.tipCursa==='dus-intors'&&!esteReturnata)?'inline-flex':'none';
+  }
+  om('bilet');
+}
+
+
 window.printB=()=>{
   if(!_LB)return;
-  const r=_LB;
-  const locs=r.locuriRezervate||[];
-  const sU=locs[0]?.statieUrcare||'-';
-  const sC=locs[0]?.statieCoborare||'-';
+  const bilete=Array.isArray(_LB)?_LB:[_LB];
   const firma=window._FIRMA||{};
-  const qrSectiuni=locs.map(l=>{
-    const codLoc=r.biletId+'-L'+l.locNr;
-    const qrData='LSD:'+codLoc+'|'+(r.cursaId||'')+'|'+r.data+'|'+l.locNr;
+  const biletHtml=bilete.map((r,idx)=>{
+    const loc=r.locuriRezervate[0];
+    const bid=r.biletId;
+    const qrData='LSD:'+bid+'|'+(r.cursaId||'')+'|'+r.data+'|'+loc.locNr;
     const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=130x130&data='+encodeURIComponent(qrData)+'&bgcolor=ffffff&color=1c1713';
-    return '<div style="text-align:center;border:1.5px solid #e2d9c4;border-radius:10px;padding:12px;display:inline-block;margin:4px;vertical-align:top">'
-      +'<div style="font-size:11px;font-weight:700;color:#6b6b6b;margin-bottom:6px;text-transform:uppercase">Loc '+l.locNr+'</div>'
-      +'<img src="'+qrUrl+'" width="120" height="120" style="display:block;margin:0 auto;border-radius:4px"/>'
-      +'<div style="font-size:10px;font-weight:800;color:#b8860b;letter-spacing:1px;margin-top:6px">'+codLoc+'</div>'
-      +'<div style="font-size:10px;color:#6b6b6b;margin-top:2px">'+l.statieUrcare+' → '+l.statieCoborare+'</div>'
+    return '<div class="bilet-card">'
+      +'<div class="bilet-header">'
+      +'<div><div style="font-size:16px;font-weight:800">'+bid+'</div>'
+      +'<div style="font-size:11px;opacity:.85">Bilet '+(idx+1)+'/'+bilete.length+' · Loc '+loc.locNr+'</div></div>'
+      +'<div style="text-align:right;font-size:11px;opacity:.85">LSD Group SRL</div>'
+      +'</div>'
+      +'<div class="bilet-body">'
+      +'<div style="text-align:center;flex-shrink:0">'
+      +'<img src="'+qrUrl+'" width="120" height="120" style="border-radius:6px;border:1px solid #e2d9c4"/>'
+      +'<div style="font-size:10px;font-weight:800;color:#b8860b;letter-spacing:.5px;margin-top:4px">'+bid+'</div>'
+      +'<div style="font-size:9px;color:#6b6b6b;margin-top:2px">Scanați la îmbarcare</div>'
+      +'</div>'
+      +'<div style="flex:1">'
+      +'<div class="brow"><span class="lbl">Loc</span><span style="font-weight:700;color:#b8860b">'+loc.locNr+'</span></div>'
+      +'<div class="brow"><span class="lbl">Rută</span><span>'+r.ruta+'</span></div>'
+      +'<div class="brow"><span class="lbl">Urcare</span><span style="color:#15803d;font-weight:600">'+loc.statieUrcare+'</span></div>'
+      +'<div class="brow"><span class="lbl">Coborâre</span><span style="color:#c2550f;font-weight:600">'+loc.statieCoborare+'</span></div>'
+      +'<div class="brow"><span class="lbl">Data</span><span>'+r.data+' · '+(r.ora||'-')+'</span></div>'
+      +'<div class="brow"><span class="lbl">Pasager</span><span>'+r.numeClient+'</span></div>'
+      +'<div class="brow"><span class="lbl">Vehicul</span><span>'+(r.vehiculNume||'-')+'</span></div>'
+      +'<div class="brow"><span class="lbl">Preț</span><span style="font-weight:700;color:#b8860b">'+r.pretTotal+' RON</span></div>'
+      +'</div></div>'
+      +'<div style="font-size:9px;color:#9a8f7a;text-align:center;padding:6px 0;border-top:1px dashed #e2d9c4">'
+      +'Valabil o singură dată · Nu transferabili · '+bid+'</div>'
       +'</div>';
-  }).join('');
+  }).join('<div style="height:16px"></div>');
+
+  const totalPret=bilete.reduce((s,r)=>s+r.pretTotal,0);
   const w=window.open('','_blank');
-  w.document.write('<!DOCTYPE html><html><head><title>Bilet '+r.biletId+'</title>'
-    +'<style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;padding:20px;max-width:500px;margin:0 auto;color:#1c1713}'
-    +'.header{background:linear-gradient(135deg,#b8860b,#d4a017);color:#fff;padding:18px 20px;border-radius:10px;margin-bottom:14px;text-align:center}'
-    +'.warn-box{background:#fef9ed;border:1.5px solid #b8860b;border-radius:8px;padding:12px;margin:12px 0;font-size:12px;text-align:center;color:#1c1713}'
-    +'.qr-wrap{text-align:center;margin:14px 0}'
-    +'.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eee;font-size:13px}'
+  w.document.write('<!DOCTYPE html><html><head><title>Bilete '+bilete[0].biletId+'</title>'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Arial,sans-serif;padding:16px;max-width:500px;margin:0 auto;color:#1c1713;font-size:13px}'
+    +'.bilet-card{border:1.5px solid #e2d9c4;border-radius:10px;overflow:hidden;break-inside:avoid;margin-bottom:0}'
+    +'.bilet-header{background:linear-gradient(135deg,#b8860b,#d4a017);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-start}'
+    +'.bilet-body{display:flex;gap:14px;padding:14px;align-items:flex-start}'
+    +'.brow{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0ead8;font-size:12px}'
     +'.lbl{color:#6b6b6b}'
-    +'.footer{font-size:10px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:10px;line-height:1.8}'
-    +'@media print{body{padding:10px}@page{margin:8mm}}</style></head><body>'
-    +'<div class="header"><div style="font-size:18px;font-weight:800;margin-bottom:4px">🎟️ LSD Group SRL</div>'
-    +'<div style="font-size:12px;opacity:.85">'+r.biletId+' · '+new Date().toLocaleDateString('ro')+'</div></div>'
-    +'<div class="warn-box">📸 <strong>Prezentați codul QR șoferului la îmbarcare.</strong><br>'
-    +'Fiecare loc are propriul cod QR. Valabil o singură dată — nu îl trimiteți altora!</div>'
-    +'<div class="qr-wrap">'+qrSectiuni+'</div>'
-    +'<div class="row"><span class="lbl">Rută</span><span style="font-weight:600">'+(r.ruta||r.traseu)+'</span></div>'
-    +'<div class="row"><span class="lbl">Urcare</span><span style="color:#15803d;font-weight:600">'+sU+'</span></div>'
-    +'<div class="row"><span class="lbl">Coborâre</span><span style="color:#c2550f;font-weight:600">'+sC+'</span></div>'
-    +'<div class="row"><span class="lbl">Data</span><span>'+r.data+' · '+(r.ora||'-')+'</span></div>'
-    +'<div class="row"><span class="lbl">Vehicul</span><span>'+(r.vehiculNume||'-')+'</span></div>'
-    +'<div class="row"><span class="lbl">Pasager</span><span style="font-weight:600">'+r.numeClient+'</span></div>'
-    +'<div class="row"><span class="lbl">Total achitat</span><span style="font-weight:800;color:#b8860b">'+r.pretTotal+' RON</span></div>'
-    +'<div class="footer">LSD Group SRL '+(firma.cui?'· CUI: '+firma.cui:'')+'<br>'
-    +'Emis: '+new Date().toLocaleDateString('ro')+' · Bilet electronic valabil o singură dată</div>'
+    +'.warn{background:#fef9ed;border:1.5px solid #b8860b;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;text-align:center}'
+    +'.total{display:flex;justify-content:space-between;padding:10px 14px;background:#fef9ed;border:1.5px solid #b8860b;border-radius:8px;font-weight:700;font-size:14px;margin-top:14px}'
+    +'.footer{font-size:10px;color:#9a8f7a;text-align:center;margin-top:14px;border-top:1px solid #e2d9c4;padding-top:10px;line-height:1.8}'
+    +'@media print{body{padding:8px}@page{margin:6mm}.bilet-card{page-break-inside:avoid}}</style></head><body>'
+    +'<div class="warn">📸 <strong>Prezentați codul QR șoferului la îmbarcare.</strong> Valabil o singură dată.</div>'
+    +biletHtml
+    +(bilete.length>1?'<div class="total"><span>Total achitat ('+bilete.length+' bilete)</span><span style="color:#b8860b">'+totalPret+' RON</span></div>':'')
+    +'<div class="footer">LSD Group SRL '+(firma.cui?'· CUI: '+firma.cui:'')+' '+(firma.adr?'· '+firma.adr:'')+'<br>'
+    +'Emis: '+new Date().toLocaleDateString('ro')+' · Bilete electronice, netransferabile</div>'
     +'<script>setTimeout(()=>window.print(),600)<\/script>'
     +'</body></html>');
   w.document.close();
 };
+
 
 // ── ORGANIZATE ────────────────────────────────────────────
 window.calcOrgPret=()=>{
@@ -1753,6 +1818,19 @@ window.loadContPage=async()=>{
   }).join('');
 };
 
+window.iaIntors=()=>{
+  if(!_LB)return;
+  const bilete=Array.isArray(_LB)?_LB:[_LB];
+  const r0=bilete[0];
+  const cursa=window._R&&window._R.find(c=>c.id===r0.cursaId);
+  if(!cursa||cursa.tipCursa!=='dus-intors'){
+    toast('Această cursă nu are retur','wr');return;
+  }
+  cm('bilet');
+  // Deschide cinema pentru retur (acelasi loc daca disponibil)
+  openCin(r0.cursaId,r0.data,'intors');
+};
+
 window.showBById=async rezId=>{
   try{
     const ref=await getDoc(doc(db,'rezervari',rezId));
@@ -1838,69 +1916,68 @@ window.sfTab=tab=>{
   if(tab!=='scanner')stopQRScan();
 };
 
-// ── QR SCANNER ────────────────────────────────────────────
-let _qrStream=null;
-let _qrScanning=false;
+// ── QR SCANNER (html5-qrcode) ─────────────────────────────
 let _scanHistory=[];
-let _qrAnimFrame=null;
+let _html5QrScanner=null;
+
+async function loadHtml5QrLib(){
+  if(window.Html5Qrcode)return;
+  await new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js';
+    s.onload=res;s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
 
 window.startQRScan=async()=>{
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}
-    });
-    _qrStream=stream;
-    const video=document.getElementById('qr-video');
-    const container=document.getElementById('qr-video-container');
-    video.srcObject=stream;
-    await video.play();
-    container.style.display='block';
+    await loadHtml5QrLib();
+    // Clear previous instance
+    if(_html5QrScanner){
+      try{await _html5QrScanner.stop();}catch(e){}
+      _html5QrScanner=null;
+    }
+    const container=document.getElementById('html5-qrcode-reader');
+    container.innerHTML='';
+    _html5QrScanner=new Html5Qrcode('html5-qrcode-reader');
+    const config={
+      fps:10,
+      qrbox:{width:220,height:220},
+      aspectRatio:1.0,
+      rememberLastUsedCamera:true
+    };
+    await _html5QrScanner.start(
+      {facingMode:'environment'},
+      config,
+      (decodedText)=>{
+        // Succes — opreste si proceseaza
+        stopQRScan();
+        verificaBiletSofer(decodedText);
+      },
+      ()=>{}// eroare frame - ignoram
+    );
     document.getElementById('btn-start-scan').style.display='none';
     document.getElementById('btn-stop-scan').style.display='inline-flex';
-    _qrScanning=true;
-    // Load jsQR library dynamically
-    if(!window.jsQR){
-      await new Promise((res,rej)=>{
-        const s=document.createElement('script');
-        s.src='https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
-        s.onload=res;s.onerror=rej;
-        document.head.appendChild(s);
-      });
-    }
-    scanFrame(video);
-    toast('📷 Camera pornită — îndreptați spre codul QR','in');
+    toast('📷 Scaner pornit — îndreptați spre codul QR','in');
   }catch(e){
-    toast('Nu s-a putut accesa camera: '+e.message,'er');
+    toast('Nu s-a putut porni scanerul: '+e.message,'er');
+    console.error('QR scanner error:',e);
   }
 };
 
-function scanFrame(video){
-  if(!_qrScanning)return;
-  const canvas=document.createElement('canvas');
-  canvas.width=video.videoWidth;
-  canvas.height=video.videoHeight;
-  const ctx=canvas.getContext('2d');
-  ctx.drawImage(video,0,0,canvas.width,canvas.height);
-  if(canvas.width>0){
-    const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
-    const code=window.jsQR&&window.jsQR(imageData.data,imageData.width,imageData.height,{inversionAttempts:'dontInvert'});
-    if(code&&code.data){
-      stopQRScan();
-      verificaBiletSofer(code.data);
-      return;
-    }
+window.stopQRScan=async()=>{
+  if(_html5QrScanner){
+    try{
+      const state=_html5QrScanner.getState();
+      if(state===2){// SCANNING
+        await _html5QrScanner.stop();
+      }
+    }catch(e){}
+    _html5QrScanner=null;
   }
-  _qrAnimFrame=requestAnimationFrame(()=>scanFrame(video));
-}
-
-window.stopQRScan=()=>{
-  _qrScanning=false;
-  if(_qrAnimFrame)cancelAnimationFrame(_qrAnimFrame);
-  if(_qrStream){_qrStream.getTracks().forEach(t=>t.stop());_qrStream=null;}
-  const video=document.getElementById('qr-video');
-  const container=document.getElementById('qr-video-container');
-  if(video)video.srcObject=null;
-  if(container)container.style.display='none';
+  const container=document.getElementById('html5-qrcode-reader');
+  if(container)container.innerHTML='';
   const btnStart=document.getElementById('btn-start-scan');
   const btnStop=document.getElementById('btn-stop-scan');
   if(btnStart)btnStart.style.display='inline-flex';
