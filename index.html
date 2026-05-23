@@ -665,11 +665,19 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
         <div style="font-weight:600;font-size:13px;margin-bottom:4px">🪑 Configurare locuri — Rând cu rând</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Adaugă rânduri și specifică locurile. Rândul 1 = față (lângă șofer).</div>
         <div id="seat-builder"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-          <button class="btn bs bsm" onclick="addSeatRow('2+2')">+ Rând 2+2</button>
-          <button class="btn bs bsm" onclick="addSeatRow('1+2')">+ Rând 1+2</button>
-          <button class="btn bs bsm" onclick="addSeatRow('2+3')">+ Rând 2+3</button>
-          <button class="btn bs bsm" onclick="addSeatRow('spate')">+ Rând spate (complet)</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+          <button class="btn bs bsm" onclick="addSeatRow('1+1')">+ 1+1</button>
+          <button class="btn bs bsm" onclick="addSeatRow('1+2')">+ 1+2</button>
+          <button class="btn bs bsm" onclick="addSeatRow('2+2')">+ 2+2</button>
+          <button class="btn bs bsm" onclick="addSeatRow('2+3')">+ 2+3</button>
+          <button class="btn bs bsm" onclick="addSeatRow('3+2')">+ 3+2</button>
+          <button class="btn bs bsm" onclick="addSeatRow('3+3')">+ 3+3</button>
+          <button class="btn bs bsm" onclick="addSeatRow('1+0')">+ 1+0 (culoar)</button>
+          <button class="btn bs bsm" onclick="addSeatRow('spate-3')">+ Spate 3</button>
+          <button class="btn bs bsm" onclick="addSeatRow('spate-4')">+ Spate 4</button>
+          <button class="btn bs bsm" onclick="addSeatRow('spate')">+ Spate 5</button>
+          <button class="btn bs bsm" onclick="addSeatRow('blocat')">+ Rând blocat 🚫</button>
+          <button class="btn bp bsm" onclick="addSeatRowCustom()">+ Custom nr. locuri</button>
         </div>
         <div style="margin-top:12px;padding:10px;background:var(--bg2);border-radius:8px;font-size:13px">
           <span style="color:var(--muted)">Total locuri configurate: </span><strong id="seat-total" style="color:var(--gold)">0</strong>
@@ -1193,29 +1201,61 @@ window.loadReg=async()=>{
     return true;
   });
   if(!curse.length){list.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">🔍</div><p>Nu există curse în această zi.</p></div>';return}
-  list.innerHTML=curse.map(c=>{
+  // Expandam fiecare cursa in plecari individuale
+  const carduri=[];
+  curse.forEach(c=>{
+    const plecari=c.plecari&&c.plecari.length?c.plecari:[{ora:c.ora||'-',soferEmail:c.soferEmail||null}];
     const dc=DAYS.map((d,i)=>`<div class="dc ${(c.zile||[]).includes(i)?'on':''}">${d}</div>`).join('');
-    const stb=(c.statii||[]).map((s,i)=>{
-      const arrTime=i>0&&c.ora&&s.minuteDeLaStart?calcArrival(c.ora,s.minuteDeLaStart):'';
-      return `<span class="stb">📍 ${s.nume}${i>0?` <span class="pr">${s.pretDeLaStart} RON</span>${arrTime?` <span style="color:var(--muted);font-size:10px">≈${arrTime}</span>`:''}`:' <span class="pr">START</span>'}</span>`;
-    }).join('');
-    return `<div class="sch">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:10px">${c.ruta}</div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">🕐 <span style="color:var(--text)">${c.ora}</span></div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">🚌 <span style="color:var(--text)">${c.vehiculNume||'-'}</span></div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">👥 <span style="color:var(--text)">${c.capacitate||'?'} locuri</span></div>
-      </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">${dc}</div>
-      <div style="margin-bottom:12px">${stb}</div>
-      <button class="btn bp bsm" onclick="openCin('${c.id}','${data}','dus')">🎟️ Rezervă loc DUS</button>
-      ${c.tipCursa==='dus-intors'?`<button class="btn bs bsm" style="margin-left:8px" onclick="openCin('${c.id}','${data}','intors')">↩️ Rezervă loc ÎNTORS</button>`:''}
-    </div>`;
-  }).join('');
+    plecari.forEach((p,pi)=>{
+      const oraP=p.ora||'-';
+      // Statii DUS cu ore estimate bazate pe ora acestei plecari
+      const stbDus=(c.statii||[]).map((s,i)=>{
+        const arrTime=i>0&&oraP&&s.minuteDeLaStart?calcArrival(oraP,s.minuteDeLaStart):'';
+        return `<span class="stb">📍 ${s.nume}${i>0
+          ?` <span class="pr">${s.pretDeLaStart} RON</span>${arrTime?` <span style="color:var(--muted);font-size:10px">≈${arrTime}</span>`:''}`
+          :' <span class="pr">START</span>'}</span>`;
+      }).join('');
+      // Statii INTORS cu ore estimate (daca e dus-intors)
+      let intorsSection='';
+      if(c.tipCursa==='dus-intors'&&c.intorsPlecari){
+        const intorsPl=c.intorsPlecari[pi]||c.intorsPlecari[0];
+        const oraI=intorsPl?.ora||'-';
+        const statiiI=c.statiiIntors||[...c.statii].reverse();
+        const stbIntors=statiiI.map((s,i)=>{
+          const arrTime=i>0&&oraI&&s.minuteDeLaStart?calcArrival(oraI,s.minuteDeLaStart):'';
+          return `<span class="stb" style="background:rgba(184,134,11,.06)">📍 ${s.nume}${i>0
+            ?` <span class="pr">${s.pretDeLaStart} RON</span>${arrTime?` <span style="color:var(--muted);font-size:10px">≈${arrTime}</span>`:''}`
+            :' <span class="pr">START</span>'}</span>`;
+        }).join('');
+        intorsSection=`<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+          <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">↩️ Retur — ora ${oraI}</div>
+          <div style="margin-bottom:8px">${stbIntors}</div>
+          <button class="btn bs bsm" onclick="openCin('${c.id}','${data}','intors',${pi})">↩️ Rezervă loc ÎNTORS ${oraI}</button>
+        </div>`;
+      }
+      carduri.push(`<div class="sch">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">${c.ruta}</div>
+          ${c.tipCursa==='dus-intors'?'<span style="background:rgba(184,134,11,.12);color:var(--gold);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid rgba(184,134,11,.3)">↔️ Dus-Întors</span>':''}
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">🕐 <span style="color:var(--text);font-weight:600">${oraP}</span></div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">🚌 <span style="color:var(--text)">${c.vehiculNume||'-'}</span></div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">👥 <span style="color:var(--text)">${c.capacitate||'?'} locuri</span></div>
+          ${p.soferEmail?`<div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">👨‍✈️ <span style="color:var(--text)">${p.soferEmail.split('@')[0]}</span></div>`:''}
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">${dc}</div>
+        <div style="margin-bottom:12px">${stbDus}</div>
+        <button class="btn bp bsm" onclick="openCin('${c.id}','${data}','dus',${pi})">🎟️ Rezervă loc — ${oraP}</button>
+        ${intorsSection}
+      </div>`);
+    });
+  });
+  list.innerHTML=carduri.join('');
 };
 
 // ── CINEMA v2 ─────────────────────────────────────────────
-window.openCin=async(cId,data,directie='dus')=>{
+window.openCin=async(cId,data,directie='dus',plecareIdx=0)=>{
   _cId=cId;_cD=data;_cIU=null;_cIC=null;_cSel=[];_cPret=0;
   const c=window._R.find(x=>x.id===cId);if(!c){toast('Cursa nu a fost găsită','er');return}
   _cC=c;
@@ -1225,15 +1265,25 @@ window.openCin=async(cId,data,directie='dus')=>{
     if(c.statiiIntors&&c.statiiIntors.length)_cC.statii=c.statiiIntors;
     else _cC.statii=[...c.statii].reverse();
     if(c.intorsPlecari&&c.intorsPlecari.length){
-      _cC.plecari=c.intorsPlecari;
-      _cC.ora=c.intorsPlecari[0]?.ora||c.ora;
+      // Folosim plecare specifica dupa index
+      const plI=c.intorsPlecari[plecareIdx]||c.intorsPlecari[0];
+      _cC.plecari=[plI];
+      _cC.ora=plI?.ora||c.ora;
     }
-    _cC.ruta=c.rutaIntors||c.statii.map(s=>s.nume).reverse().join(' – ');
+    _cC.ruta=c.rutaIntors||[...(c.statii||[])].map(s=>s.nume).reverse().join(' – ');
+  }else{
+    // Dus: folosim plecare specifica dupa index
+    _cC={...c};
+    if(c.plecari&&c.plecari.length){
+      const plD=c.plecari[plecareIdx]||c.plecari[0];
+      _cC.plecari=[plD];
+      _cC.ora=plD?.ora||c.ora;
+    }
   }
-  const titluDir=directie==='intors'?'↩️ RETUR: ':' ';
+  const titluDir=directie==='intors'?'↩️ RETUR: ':'';
   document.getElementById('cintitle').textContent=titluDir+_cC.ruta;
-  const oraCurenta=(_cC.plecari&&_cC.plecari.length)?_cC.plecari.map(p=>p.ora).filter(Boolean).join(' / '):(_cC.ora||'-');
-  document.getElementById('cinsub').textContent=`📅 ${data} · 🕐 ${oraCurenta} · 🚌 ${c.vehiculNume||'-'}`;
+  const oraAfisata=_cC.ora||'-';
+  document.getElementById('cinsub').textContent=`📅 ${data} · 🕐 ${oraAfisata} · 🚌 ${c.vehiculNume||'-'}`;
   document.getElementById('pprev').style.display='none';
   document.getElementById('ssum').style.display='none';
   document.getElementById('cinok').disabled=true;
@@ -1308,23 +1358,22 @@ function renderSeats(){
   rows.forEach((row,ri)=>{
     const seats=row.seats||[];
     const type=row.type||'2+2';
-    html+=`<div class="srow ${type==='spate'?'bk':''}">`;
-    if(type==='2+2'){
-      [0,1].forEach(i=>{if(seats[i]){const n=seats[i].nr;const s=sst(n);const cl=_cSel.includes(n)?'sl':(s||'');html+=`<div class="seat ${cl}" id="s${n}" onclick="tS(${n})">${n}</div>`}});
-      html+=`<div class="aisle"></div>`;
-      [2,3].forEach(i=>{if(seats[i]){const n=seats[i].nr;const s=sst(n);const cl=_cSel.includes(n)?'sl':(s||'');html+=`<div class="seat ${cl}" id="s${n}" onclick="tS(${n})">${n}</div>`}});
-    }else if(type==='1+2'){
-      if(seats[0]){const n=seats[0].nr;const s=sst(n);const cl=_cSel.includes(n)?'sl':(s||'');html+=`<div class="seat ${cl}" id="s${n}" onclick="tS(${n})">${n}</div>`}
-      html+=`<div class="aisle"></div>`;
-      [1,2].forEach(i=>{if(seats[i]){const n=seats[i].nr;const s=sst(n);const cl=_cSel.includes(n)?'sl':(s||'');html+=`<div class="seat ${cl}" id="s${n}" onclick="tS(${n})">${n}</div>`}});
-    }else if(type==='1+1'){
-      if(seats[0]){const n=seats[0].nr;const s=sst(n);const cl=_cSel.includes(n)?'sl':(s||'');html+=`<div class="seat ${cl}" id="s${n}" onclick="tS(${n})">${n}</div>`}
-      html+=`<div class="aisle"></div>`;
-      if(seats[1]){const n=seats[1].nr;const s=sst(n);const cl=_cSel.includes(n)?'sl':(s||'');html+=`<div class="seat ${cl}" id="s${n}" onclick="tS(${n})">${n}</div>`}
-    }else{
-      // spate: all seats in a row
-      seats.forEach(seat=>{const n=seat.nr;const s=sst(n);const cl=_cSel.includes(n)?'sl':(s||'');html+=`<div class="seat ${cl}" id="s${n}" onclick="tS(${n})">${n}</div>`});
+    // Rand blocat — afiseaza ca spatiu neutilizabil
+    if(row.blocat){
+      html+=`<div style="display:flex;align-items:center;justify-content:center;padding:4px 0"><div style="background:rgba(185,28,28,.07);border:1px dashed rgba(185,28,28,.25);border-radius:6px;padding:4px 16px;font-size:11px;color:var(--red);width:100%;text-align:center">${row.label||'🚫 Blocat'}</div></div>`;
+      return;
     }
+    const mkSeat=(s)=>{if(!s)return'';const n=s.nr;const st=sst(n);const cl=_cSel.includes(n)?'sl':(st||'');return`<div class="seat ${cl}" id="s${n}" onclick="tS(${n})">${n}</div>`;};
+    const isSpate=type.startsWith('spate');
+    html+=`<div class="srow ${isSpate?'bk':''}">`;
+    if(type==='1+0'){html+=mkSeat(seats[0]);}
+    else if(type==='1+1'){html+=mkSeat(seats[0]);html+=`<div class="aisle"></div>`;html+=mkSeat(seats[1]);}
+    else if(type==='1+2'){html+=mkSeat(seats[0]);html+=`<div class="aisle"></div>`;html+=mkSeat(seats[1]);html+=mkSeat(seats[2]);}
+    else if(type==='2+2'){html+=mkSeat(seats[0]);html+=mkSeat(seats[1]);html+=`<div class="aisle"></div>`;html+=mkSeat(seats[2]);html+=mkSeat(seats[3]);}
+    else if(type==='2+3'){html+=mkSeat(seats[0]);html+=mkSeat(seats[1]);html+=`<div class="aisle"></div>`;html+=mkSeat(seats[2]);html+=mkSeat(seats[3]);html+=mkSeat(seats[4]);}
+    else if(type==='3+2'){html+=mkSeat(seats[0]);html+=mkSeat(seats[1]);html+=mkSeat(seats[2]);html+=`<div class="aisle"></div>`;html+=mkSeat(seats[3]);html+=mkSeat(seats[4]);}
+    else if(type==='3+3'){html+=mkSeat(seats[0]);html+=mkSeat(seats[1]);html+=mkSeat(seats[2]);html+=`<div class="aisle"></div>`;html+=mkSeat(seats[3]);html+=mkSeat(seats[4]);html+=mkSeat(seats[5]);}
+    else{seats.forEach(seat=>html+=mkSeat(seat));}
     html+=`</div>`;
   });
   if(_cIC===null)html+=`<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">☝️ Selectați stația de urcare și destinația pentru a vedea locurile</div>`;
@@ -1429,7 +1478,7 @@ window.confSeats=async()=>{
     return;
   }
   const st=_cC.statii||[];const sU=st[_cIU].nume,sC=st[_cIC].nume;
-  const firstPlecare=(_cC.plecari&&_cC.plecari.length)?(_cC.plecari[0].ora||_cC.ora):_cC.ora;
+  const firstPlecare=_cC.ora||'-';
   // Fiecare loc = rezervare separata cu biletId unic
   const rezervari=[];
   for(const locNr of _cSel){
@@ -1827,8 +1876,9 @@ window.iaIntors=()=>{
     toast('Această cursă nu are retur','wr');return;
   }
   cm('bilet');
-  // Deschide cinema pentru retur (acelasi loc daca disponibil)
-  openCin(r0.cursaId,r0.data,'intors');
+  // Cauta indexul plecarii potrivite pentru retur (dupa ora)
+  const plecareIdx=0; // default primul retur
+  openCin(r0.cursaId,r0.data,'intors',plecareIdx);
 };
 
 window.showBById=async rezId=>{
@@ -2270,24 +2320,19 @@ async function bSC(cursa,data){
   if(rows.length){
     mh+=`<div style="display:flex;gap:4px;justify-content:flex-start"><div style="width:32px;height:28px;border-radius:5px;border:1px dashed var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px">🚗</div></div>`;
     rows.forEach(row=>{
+      if(row.blocat){mh+=`<div style="font-size:9px;color:var(--red);text-align:center;padding:2px 0;opacity:.6">${row.label||'Blocat'}</div>`;return;}
       const type=row.type||'2+2';const seats=row.seats||[];
-      mh+=`<div style="display:flex;gap:4px;align-items:center;justify-content:center">`;
-      const seatDiv=(s)=>`<div style="width:32px;height:28px;border-radius:5px;border:1px solid var(--border);background:${occ.has(s.nr)?'rgba(239,68,68,.1)':'rgba(34,197,94,.1)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${occ.has(s.nr)?'var(--red)':'var(--green)'}">${s.nr}</div>`;
-      if(type==='2+2'){
-        seats.slice(0,2).forEach(s=>mh+=seatDiv(s));
-        mh+=`<div style="width:14px"></div>`;
-        seats.slice(2,4).forEach(s=>mh+=seatDiv(s));
-      }else if(type==='1+2'){
-        if(seats[0])mh+=seatDiv(seats[0]);
-        mh+=`<div style="width:14px"></div>`;
-        seats.slice(1,3).forEach(s=>mh+=seatDiv(s));
-      }else if(type==='1+1'){
-        if(seats[0])mh+=seatDiv(seats[0]);
-        mh+=`<div style="width:14px"></div>`;
-        if(seats[1])mh+=seatDiv(seats[1]);
-      }else{
-        seats.forEach(s=>mh+=seatDiv(s));
-      }
+      const sD=(s)=>`<div style="width:28px;height:24px;border-radius:4px;border:1px solid var(--border);background:${occ.has(s.nr)?'rgba(185,28,28,.1)':'rgba(21,128,61,.08)'};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:${occ.has(s.nr)?'var(--red)':'var(--green)'}">${s.nr}</div>`;
+      const gap='<div style="width:10px"></div>';
+      mh+=`<div style="display:flex;gap:3px;align-items:center;justify-content:center">`;
+      if(type==='1+0'){if(seats[0])mh+=sD(seats[0]);}
+      else if(type==='1+1'){if(seats[0])mh+=sD(seats[0]);mh+=gap;if(seats[1])mh+=sD(seats[1]);}
+      else if(type==='1+2'){if(seats[0])mh+=sD(seats[0]);mh+=gap;seats.slice(1,3).forEach(s=>mh+=sD(s));}
+      else if(type==='2+2'){seats.slice(0,2).forEach(s=>mh+=sD(s));mh+=gap;seats.slice(2,4).forEach(s=>mh+=sD(s));}
+      else if(type==='2+3'){seats.slice(0,2).forEach(s=>mh+=sD(s));mh+=gap;seats.slice(2,5).forEach(s=>mh+=sD(s));}
+      else if(type==='3+2'){seats.slice(0,3).forEach(s=>mh+=sD(s));mh+=gap;seats.slice(3,5).forEach(s=>mh+=sD(s));}
+      else if(type==='3+3'){seats.slice(0,3).forEach(s=>mh+=sD(s));mh+=gap;seats.slice(3,6).forEach(s=>mh+=sD(s));}
+      else{seats.forEach(s=>mh+=sD(s));}
       mh+=`</div>`;
     });
   }
@@ -2426,23 +2471,19 @@ window.loadSoferVehicul=async()=>{
         seatMap='<div style="display:flex;flex-direction:column;gap:4px;max-width:320px">';
         seatMap+=`<div style="display:flex;gap:4px;justify-content:flex-start"><div style="width:36px;height:32px;border-radius:6px;border:1px dashed var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px">🚗</div></div>`;
         rows.forEach(row=>{
+          if(row.blocat){seatMap+=`<div style="font-size:10px;color:var(--red);text-align:center;padding:3px 0;opacity:.7">${row.label||'🚫 Blocat'}</div>`;return;}
           const type=row.type||'2+2';const seats=row.seats||[];
-          seatMap+=`<div style="display:flex;gap:4px;justify-content:center">`;
-          if(type==='2+2'){
-            seats.slice(0,2).forEach(s=>seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${s.nr}</div>`);
-            seatMap+=`<div style="width:14px"></div>`;
-            seats.slice(2,4).forEach(s=>seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${s.nr}</div>`);
-          }else if(type==='1+2'){
-            seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${seats[0]?.nr||''}</div>`;
-            seatMap+=`<div style="width:14px"></div>`;
-            seats.slice(1,3).forEach(s=>seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${s.nr}</div>`);
-          }else if(type==='1+1'){
-            seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${seats[0]?.nr||''}</div>`;
-            seatMap+=`<div style="width:14px"></div>`;
-            seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${seats[1]?.nr||''}</div>`;
-          }else{
-            seats.forEach(s=>seatMap+=`<div style="width:36px;height:32px;border-radius:6px;border:1px solid var(--border);background:rgba(232,160,32,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)">${s.nr}</div>`);
-          }
+          const sV=(s)=>`<div style="width:34px;height:30px;border-radius:6px;border:1px solid var(--border);background:rgba(184,134,11,.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--gold)">${s.nr}</div>`;
+          const gapV='<div style="width:12px"></div>';
+          seatMap+=`<div style="display:flex;gap:3px;justify-content:center">`;
+          if(type==='1+0'){if(seats[0])seatMap+=sV(seats[0]);}
+          else if(type==='1+1'){if(seats[0])seatMap+=sV(seats[0]);seatMap+=gapV;if(seats[1])seatMap+=sV(seats[1]);}
+          else if(type==='1+2'){if(seats[0])seatMap+=sV(seats[0]);seatMap+=gapV;seats.slice(1,3).forEach(s=>seatMap+=sV(s));}
+          else if(type==='2+2'){seats.slice(0,2).forEach(s=>seatMap+=sV(s));seatMap+=gapV;seats.slice(2,4).forEach(s=>seatMap+=sV(s));}
+          else if(type==='2+3'){seats.slice(0,2).forEach(s=>seatMap+=sV(s));seatMap+=gapV;seats.slice(2,5).forEach(s=>seatMap+=sV(s));}
+          else if(type==='3+2'){seats.slice(0,3).forEach(s=>seatMap+=sV(s));seatMap+=gapV;seats.slice(3,5).forEach(s=>seatMap+=sV(s));}
+          else if(type==='3+3'){seats.slice(0,3).forEach(s=>seatMap+=sV(s));seatMap+=gapV;seats.slice(3,6).forEach(s=>seatMap+=sV(s));}
+          else{seats.forEach(s=>seatMap+=sV(s));}
           seatMap+=`</div>`;
         });
         seatMap+='</div>';
@@ -2566,30 +2607,92 @@ window.atb=tab=>{
 
 // SEAT BUILDER ADMIN
 window.addSeatRow=type=>{
-  let seats=[];let n=(_seatRows.reduce((s,r)=>s+r.seats.length,0))+1;
-  if(type==='2+2'){seats=[{nr:n},{nr:n+1},{nr:n+2},{nr:n+3}]}
-  else if(type==='1+2'){seats=[{nr:n},{nr:n+1},{nr:n+2}]}
+  // Count only real seats (not blocked rows)
+  let n=(_seatRows.reduce((s,r)=>s+(r.blocat?0:r.seats.length),0))+1;
+  let seats=[];
+  if(type==='1+0'){seats=[{nr:n}]}
   else if(type==='1+1'){seats=[{nr:n},{nr:n+1}]}
+  else if(type==='1+2'){seats=[{nr:n},{nr:n+1},{nr:n+2}]}
+  else if(type==='2+2'){seats=[{nr:n},{nr:n+1},{nr:n+2},{nr:n+3}]}
+  else if(type==='2+3'){seats=[{nr:n},{nr:n+1},{nr:n+2},{nr:n+3},{nr:n+4}]}
+  else if(type==='3+2'){seats=[{nr:n},{nr:n+1},{nr:n+2},{nr:n+3},{nr:n+4}]}
+  else if(type==='3+3'){seats=[{nr:n},{nr:n+1},{nr:n+2},{nr:n+3},{nr:n+4},{nr:n+5}]}
+  else if(type==='spate-3'){seats=[{nr:n},{nr:n+1},{nr:n+2}]}
+  else if(type==='spate-4'){seats=[{nr:n},{nr:n+1},{nr:n+2},{nr:n+3}]}
   else if(type==='spate'){seats=[{nr:n},{nr:n+1},{nr:n+2},{nr:n+3},{nr:n+4}]}
+  else if(type==='blocat'){
+    _seatRows.push({type:'blocat',blocat:true,seats:[],label:'Blocat / Toaletă / Bagaje'});
+    renderSeatBuilder();
+    return;
+  }
   _seatRows.push({type,seats});
   renderSeatBuilder();
 };
+
+window.addSeatRowCustom=()=>{
+  const nr=parseInt(prompt('Câte locuri pe acest rând? (1-10)','4'));
+  if(!nr||nr<1||nr>10){toast('Număr invalid (1-10)','wr');return}
+  const n=(_seatRows.reduce((s,r)=>s+(r.blocat?0:r.seats.length),0))+1;
+  const seats=[];
+  for(let i=0;i<nr;i++)seats.push({nr:n+i});
+  // Determina tipul dupa nr
+  let type='custom-'+nr;
+  if(nr===1)type='1+0';
+  else if(nr===2)type='1+1';
+  else if(nr===3)type='1+2';
+  else if(nr===4)type='2+2';
+  else if(nr===5)type='2+3';
+  else if(nr===6)type='3+3';
+  _seatRows.push({type,seats,customNr:nr});
+  renderSeatBuilder();
+};
+function getSeatLayout(type, seats){
+  const sep='<span style="width:12px;display:inline-block;text-align:center;color:var(--muted);font-size:10px">|</span>';
+  const s=(i)=>seats[i]?`<span class="seat-mini used">${seats[i].nr}</span>`:'';
+  if(type==='1+0')return s(0);
+  if(type==='1+1')return s(0)+sep+s(1);
+  if(type==='1+2')return s(0)+sep+s(1)+s(2);
+  if(type==='2+2')return s(0)+s(1)+sep+s(2)+s(3);
+  if(type==='2+3')return s(0)+s(1)+sep+s(2)+s(3)+s(4);
+  if(type==='3+2')return s(0)+s(1)+s(2)+sep+s(3)+s(4);
+  if(type==='3+3')return s(0)+s(1)+s(2)+sep+s(3)+s(4)+s(5);
+  if(type==='spate-3')return seats.slice(0,3).map(s=>`<span class="seat-mini used">${s.nr}</span>`).join('');
+  if(type==='spate-4')return seats.slice(0,4).map(s=>`<span class="seat-mini used">${s.nr}</span>`).join('');
+  // spate, custom: all in a row
+  return seats.map(s=>`<span class="seat-mini used">${s.nr}</span>`).join('');
+}
+
+function getTypeLabel(row){
+  if(row.blocat)return '🚫 Blocat';
+  if(row.customNr)return 'Custom ('+row.customNr+')';
+  const labels={'1+0':'1+0','1+1':'1+1','1+2':'1+2','2+2':'2+2','2+3':'2+3','3+2':'3+2','3+3':'3+3','spate-3':'Spate 3','spate-4':'Spate 4','spate':'Spate 5'};
+  return labels[row.type]||row.type;
+}
+
 function renderSeatBuilder(){
   const sb=document.getElementById('seat-builder');
-  const total=_seatRows.reduce((s,r)=>s+r.seats.length,0);
+  const total=_seatRows.reduce((s,r)=>s+(r.blocat?0:r.seats.length),0);
   document.getElementById('seat-total').textContent=total;
   if(!_seatRows.length){sb.innerHTML='<p style="color:var(--muted);font-size:13px;margin-bottom:10px">Niciun rând adăugat. Folosiți butoanele de mai jos.</p>';renderSeatPreview();return}
   sb.innerHTML=_seatRows.map((row,ri)=>{
-    const type=row.type||'2+2';const seats=row.seats||[];
-    const seatHtml=seats.map((s,si)=>`<span class="seat-mini used">${s.nr}</span>`).join('');
-    let layout='';
-    if(type==='2+2')layout=`${seats.slice(0,2).map(s=>`<span class="seat-mini used">${s.nr}</span>`).join('')} <span style="color:var(--muted)">|</span> ${seats.slice(2).map(s=>`<span class="seat-mini used">${s.nr}</span>`).join('')}`;
-    else if(type==='1+2')layout=`<span class="seat-mini used">${seats[0]?.nr||''}</span> <span style="color:var(--muted)">|</span> ${seats.slice(1).map(s=>`<span class="seat-mini used">${s.nr}</span>`).join('')}`;
-    else if(type==='1+1')layout=`<span class="seat-mini used">${seats[0]?.nr||''}</span> <span style="color:var(--muted)">|</span> <span class="seat-mini used">${seats[1]?.nr||''}</span>`;
-    else layout=seatHtml;
+    if(row.blocat){
+      return `<div class="sr-row" style="background:rgba(185,28,28,.06);border:1px solid rgba(185,28,28,.2)">
+        <div class="sr-lbl" style="font-size:11px;color:var(--red)">Rând ${ri+1}<br><span>🚫 Blocat</span></div>
+        <div style="flex:1;display:flex;align-items:center;gap:8px">
+          <input type="text" value="${row.label||'Blocat / Toaletă / Bagaje'}" 
+            style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--muted);max-width:220px"
+            onchange="_seatRows[${ri}].label=this.value" placeholder="Descriere (ex: Toaletă)"/>
+        </div>
+        <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;flex-shrink:0" onclick="delSeatRow(${ri})">✕</button>
+      </div>`;
+    }
+    const type=row.type||'2+2';
+    const seats=row.seats||[];
+    const layout=getSeatLayout(type,seats);
+    const label=getTypeLabel(row);
     return `<div class="sr-row">
-      <div class="sr-lbl" style="font-size:11px;color:var(--muted)">Rând ${ri+1}<br><span style="color:var(--gold)">${type}</span></div>
-      <div class="sr-seats" style="display:flex;gap:4px;align-items:center">${layout}</div>
+      <div class="sr-lbl" style="font-size:11px;color:var(--muted)">Rând ${ri+1}<br><span style="color:var(--gold)">${label}</span></div>
+      <div class="sr-seats" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${layout}</div>
       <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;flex-shrink:0" onclick="delSeatRow(${ri})">✕</button>
     </div>`;
   }).join('');
@@ -2598,29 +2701,29 @@ function renderSeatBuilder(){
 function renderSeatPreview(){
   const preview=document.getElementById('seat-preview');if(!preview)return;
   if(!_seatRows.length){preview.innerHTML='';return}
-  let html=`<div style="display:flex;flex-direction:column;gap:4px">`;
-  html+=`<div style="display:flex;gap:4px;justify-content:flex-start"><div class="seat-mini drv">🚗</div></div>`;
+  const aisle='<div style="width:12px"></div>';
+  let html='<div style="display:flex;flex-direction:column;gap:4px">';
+  html+='<div style="display:flex;gap:4px;justify-content:flex-start"><div class="seat-mini drv">🚗</div></div>';
   _seatRows.forEach(row=>{
-    const seats=row.seats||[];const type=row.type;
-    html+=`<div style="display:flex;gap:4px;justify-content:center">`;
-    if(type==='2+2'){
-      seats.slice(0,2).forEach(s=>html+=`<div class="seat-mini used">${s.nr}</div>`);
-      html+=`<div style="width:14px"></div>`;
-      seats.slice(2).forEach(s=>html+=`<div class="seat-mini used">${s.nr}</div>`);
-    }else if(type==='1+2'){
-      html+=`<div class="seat-mini used">${seats[0]?.nr||''}</div>`;
-      html+=`<div style="width:14px"></div>`;
-      seats.slice(1).forEach(s=>html+=`<div class="seat-mini used">${s.nr}</div>`);
-    }else if(type==='1+1'){
-      html+=`<div class="seat-mini used">${seats[0]?.nr||''}</div>`;
-      html+=`<div style="width:14px"></div>`;
-      html+=`<div class="seat-mini used">${seats[1]?.nr||''}</div>`;
-    }else{
-      seats.forEach(s=>html+=`<div class="seat-mini used">${s.nr}</div>`);
+    const seats=row.seats||[];
+    const type=row.type;
+    if(row.blocat){
+      html+='<div style="background:rgba(185,28,28,.08);border:1px dashed rgba(185,28,28,.3);border-radius:6px;padding:3px 8px;font-size:10px;color:var(--red);text-align:center;margin:1px 0">'+(row.label||'Blocat')+'</div>';
+      return;
     }
-    html+=`</div>`;
+    const s=(i)=>seats[i]?`<div class="seat-mini used">${seats[i].nr}</div>`:'';
+    html+='<div style="display:flex;gap:4px;justify-content:center">';
+    if(type==='1+0'){html+=s(0);}
+    else if(type==='1+1'){html+=s(0)+aisle+s(1);}
+    else if(type==='1+2'){html+=s(0)+aisle+s(1)+s(2);}
+    else if(type==='2+2'){html+=s(0)+s(1)+aisle+s(2)+s(3);}
+    else if(type==='2+3'){html+=s(0)+s(1)+aisle+s(2)+s(3)+s(4);}
+    else if(type==='3+2'){html+=s(0)+s(1)+s(2)+aisle+s(3)+s(4);}
+    else if(type==='3+3'){html+=s(0)+s(1)+s(2)+aisle+s(3)+s(4)+s(5);}
+    else{seats.forEach(seat=>html+=`<div class="seat-mini used">${seat.nr}</div>`);}
+    html+='</div>';
   });
-  html+=`</div>`;
+  html+='</div>';
   preview.innerHTML=html;
 }
 window.delSeatRow=ri=>{_seatRows.splice(ri,1);renderSeatBuilder()};
@@ -2691,7 +2794,7 @@ window.hf=files=>{
 window.saveVeh=async()=>{
   const id=document.getElementById('vmid').value;
   if(!_seatRows.length){toast('Configurați cel puțin un rând de locuri','wr');return}
-  const totalSeats=_seatRows.reduce((s,r)=>s+r.seats.length,0);
+  const totalSeats=_seatRows.reduce((s,r)=>s+(r.blocat?0:r.seats.length),0);
   const data={
     nume:document.getElementById('vmn').value.trim(),
     icon:document.getElementById('vmi').value.trim(),
