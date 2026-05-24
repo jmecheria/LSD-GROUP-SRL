@@ -251,6 +251,10 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
 .cal-day.liber{background:var(--bg2);opacity:.6}
 .cal-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .cal-month{font-family:'Syne',sans-serif;font-weight:700;font-size:18px}
+/* NOTIF BELL */
+#notif-bell{display:none;position:relative;cursor:pointer;padding:4px 8px;align-items:center;border-radius:8px;transition:background .2s}
+#notif-bell:hover{background:var(--bg3)}
+#notif-badge{position:absolute;top:0;right:0;background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px}
 /* BILET VERIFY */
 #bilet-cod{font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
 /* RESPONSIVE */
@@ -276,6 +280,10 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
 <div id="ticker"><div class="ti" id="ti"></div></div>
 <nav id="nav">
   <div class="nlogo" onclick="nav('home')">🚌 LSD Group SRL</div>
+  <div id="notif-bell" style="display:none;position:relative;cursor:pointer;padding:4px 8px;align-items:center" onclick="toggleNotifPanel()">
+    <span style="font-size:20px">🔔</span>
+    <span id="notif-badge" style="display:none;position:absolute;top:0;right:0;background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px">0</span>
+  </div>
   <div id="nlinks"></div><div id="ab"></div>
   <button id="ham" onclick="tmob()"><span></span><span></span><span></span></button>
 </nav>
@@ -344,7 +352,10 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
         <div class="fg"><div class="fl">Traseu (opriri în ordine) *</div><div id="stopsc"></div><button class="btn bs bsm" style="margin-top:8px" onclick="addStop()">+ Adaugă oprire</button></div>
         <div class="fr">
           <div class="fg"><div class="fl">Nr. persoane estimat</div><input type="number" id="opers" min="1" placeholder="Ex: 20"/></div>
-          <div class="fg"><div class="fl">Distanță estimată (km)</div><input type="number" id="okm" min="1" placeholder="Optional" oninput="calcOrgPret()"/></div>
+          <div class="fg"><div class="fl">Distanță estimată (km)</div>
+            <input type="number" id="okm" min="1" placeholder="Optional — se calculează automat" oninput="calcOrgPret()"/>
+            <div id="org-timp-estim" style="margin-top:6px"></div>
+          </div>
         </div>
         <div class="fg"><div class="fl">Observații / cerințe speciale</div><textarea id="oobs" rows="3" placeholder="Ex: Nevoie de microfon, opriri suplimentare, bagaje mari..."></textarea></div>
       </div>
@@ -792,6 +803,7 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
         <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Prima stație = 0 RON (punct de plecare). Restul = prețul total de la start până acolo.</div>
         <div id="stlist"></div>
         <button class="btn bs bsm" onclick="addSt()">+ Adaugă stație</button>
+        <button class="btn bs bsm" onclick="calcStatiiORS()" style="margin-left:8px">🗺️ Calculează distanțe automat</button>
       </div>
       <div class="fg"><div class="fl">Vehicul *</div><select id="rmv" onchange="calcCapRM()"></select></div>
       <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px">
@@ -923,6 +935,10 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
             </select>
           </div>
           <button class="btn bp bw" onclick="sendReply()">📤 Trimite răspuns</button>
+          <div style="margin-top:10px">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">🔔 Trimite notificare push</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap" id="notif-btns"></div>
+          </div>
           <div id="adm-fact-btns" style="display:none;margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn bs bsm" onclick="openFactura(_aRId,30)">📄 Factură avans 30%</button>
             <button class="btn bs bsm" onclick="openFactura(_aRId,70)">📄 Factură rest 70%</button>
@@ -992,6 +1008,13 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
     </div>
   </div>
 </div>
+<div id="notif-panel" style="display:none;position:fixed;top:104px;right:16px;width:320px;max-width:calc(100vw - 32px);background:#fff;border:1.5px solid var(--border);border-radius:14px;box-shadow:var(--shadow-xl);z-index:9998;max-height:420px;overflow-y:auto">
+  <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff">
+    🔔 Notificări
+    <button class="btn bs bsm" onclick="marcheazaToateCitite()">✓ Toate citite</button>
+  </div>
+  <div id="notif-list" style="padding:8px"></div>
+</div>
 <div id="tc"></div>
 <div id="ckb"><span>🍪 Folosim cookie-uri necesare funcționării. <a onclick="nav('gdpr')">Politică GDPR</a> | <a onclick="nav('termeni')">Termeni</a></span><button class="btn bp bsm" onclick="ack()">Acceptă</button></div>
 <script type="module">
@@ -1001,6 +1024,7 @@ import{getFirestore,collection,doc,addDoc,getDocs,getDoc,setDoc,deleteDoc,query,
 const app=initializeApp({apiKey:"AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",authDomain:"lsd-group-srl.firebaseapp.com",projectId:"lsd-group-srl"});
 const auth=getAuth(app);const db=getFirestore(app);
 const ADMIN='irimia.teodor.17@gmail.com';
+const ORS_KEY='eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjljMTA5ZGY1ZWU5NTQ2ZjA5Nzc1NGVmYWU0MzNlOTFiIiwiaCI6Im11cm11cjY0In0=';
 const DAYS=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
 window._F=[];window._R=[];window._U=null;window._EJS={};window._ROLE='client';window._FIRMA={};
 let _cId=null,_cD=null,_cC=null,_cIU=null,_cIC=null,_cSel=[],_cOcc=new Map(),_cPret=0;
@@ -1024,6 +1048,13 @@ window.toast=(m,t='ok')=>{
 window.cm=id=>document.getElementById('mo-'+id).classList.remove('on');
 const om=id=>document.getElementById('mo-'+id).classList.add('on');
 document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on')}));
+document.addEventListener('click',e=>{
+  const panel=document.getElementById('notif-panel');
+  const bell=document.getElementById('notif-bell');
+  if(panel&&!panel.contains(e.target)&&bell&&!bell.contains(e.target)){
+    panel.style.display='none';
+  }
+});
 window.openLB=s=>{document.getElementById('lbi').src=s;document.getElementById('lb').classList.add('on')};
 window.clb=()=>document.getElementById('lb').classList.remove('on');
 
@@ -1081,9 +1112,11 @@ function bNav(role){
     mm.innerHTML=`<button class="nl" onclick="nav('home')">🏠 Acasă</button><button class="nl" onclick="nav('regulate')">🔄 Regulate</button><button class="nl" onclick="nav('organizate')">🚌 Organizate</button><button class="nl" onclick="nav('admin')">👑 Admin</button><button class="nl" onclick="nav('cont')">👤 Contul Meu</button><button class="nl" onclick="nav('gdpr')">GDPR</button><button class="nl" onclick="nav('termeni')">Termeni</button><button class="nl" onclick="doSO()">↗ Deconectare</button>`;
   } else if(u){
     ab.innerHTML=`<button class="nb nbo" onclick="nav('cont')">👤 Contul Meu</button><button class="nb nbo" onclick="doSO()">${u.displayName||'Cont'} ↗</button>`;
+    const nb=document.getElementById('notif-bell');if(nb)nb.style.display='flex';
     mm.innerHTML=`<button class="nl" onclick="nav('home')">🏠 Acasă</button><button class="nl" onclick="nav('regulate')">🔄 Regulate</button><button class="nl" onclick="nav('organizate')">🚌 Organizate</button><button class="nl" onclick="nav('bilet')">🎟️ Biletul meu</button><button class="nl" onclick="nav('cont')">👤 Contul Meu</button><button class="nl" onclick="nav('gdpr')">GDPR</button><button class="nl" onclick="nav('termeni')">Termeni</button><button class="nl" onclick="doSO()">↗ Deconectare</button>`;
   } else {
     ab.innerHTML=`<button class="nb nbg" onclick="nav('auth')">Conectare / Înregistrare</button>`;
+    const nbg=document.getElementById('notif-bell');if(nbg)nbg.style.display='none';
     mm.innerHTML=`<button class="nl" onclick="nav('home')">🏠 Acasă</button><button class="nl" onclick="nav('regulate')">🔄 Regulate</button><button class="nl" onclick="nav('organizate')">🚌 Organizate</button><button class="nl" onclick="nav('bilet')">🎟️ Biletul meu</button><button class="nl" onclick="nav('gdpr')">GDPR</button><button class="nl" onclick="nav('termeni')">Termeni</button><button class="nl" onclick="nav('auth')">🔐 Conectare</button>`;
   }
 }
@@ -1104,6 +1137,7 @@ onAuthStateChanged(auth,async u=>{
     window._ROLE='sofer';bNav('sofer');window.nav('sofer');return;
   }
   window._ROLE='client';bNav('client');
+  startNotifListener();
   try{const sr=await getDoc(doc(db,'setari','global'));if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{}}}catch(e){}
   renderFooter();
 });
@@ -1752,9 +1786,21 @@ window.printB=()=>{
 
 
 // ── ORGANIZATE ────────────────────────────────────────────
-window.calcOrgPret=()=>{
+window.calcOrgPret=async()=>{
   const vehId=document.getElementById('org-veh-select')?.value;
-  const km=parseInt(document.getElementById('okm')?.value)||0;
+  let km=parseInt(document.getElementById('okm')?.value)||0;
+  // Auto-calc km din ORS daca avem statii
+  if(!km&&_oSt.filter(Boolean).length>=2){
+    const dist=await calcDistantaORS(_oSt[0],_oSt[_oSt.length-1]);
+    if(dist){
+      km=dist.km*2; // dus-intors
+      const kmEl=document.getElementById('okm');
+      if(kmEl)kmEl.value=km;
+      // Afiseaza timp estimat
+      const timpEl=document.getElementById('org-timp-estim');
+      if(timpEl)timpEl.innerHTML=`<span style="color:var(--muted);font-size:12px">⏱️ Timp estimat dus-întors: ~${dist.durataText} × 2 = ~${minToTime2(dist.minReal*2)} · ${dist.km} km × 2 = ${km} km</span>`;
+    }
+  }
   const el=document.getElementById('org-pret-estim');
   const valEl=document.getElementById('org-pret-val');
   const infoEl=document.getElementById('org-pret-info');
@@ -1818,7 +1864,7 @@ function renderStops(){
     const row=document.createElement('div');row.className='stor';
     const ph=i===0?'Punct de plecare *':(i===_oSt.length-1?'Destinație finală *':'Oprire '+i);
     const inp=document.createElement('input');inp.type='text';inp.value=s;inp.placeholder=ph;
-    inp.addEventListener('input',e=>{_oSt[i]=e.target.value});
+    inp.addEventListener('input',e=>{_oSt[i]=e.target.value;triggerORSCalc();});
     row.appendChild(inp);
     if(i>0&&i<_oSt.length-1){
       const del=document.createElement('button');del.className='sdel';del.textContent='✕';
@@ -1829,6 +1875,13 @@ function renderStops(){
   });
 }
 window.addStop=()=>{_oSt.splice(_oSt.length-1,0,'');renderStops()};
+window._orsDebounce=null;
+function triggerORSCalc(){
+  clearTimeout(window._orsDebounce);
+  window._orsDebounce=setTimeout(()=>{
+    if(_oSt.filter(Boolean).length>=2)calcOrgPret();
+  },1200);
+}
 
 window.submitOrg=async()=>{
   const desc=document.getElementById('odesc')?.value?.trim()||'';
@@ -2986,6 +3039,27 @@ function rSE(){
   }
 }
 window.addSt=()=>{_eSt.splice(_eSt.length-1,0,{n:'',p:0,m:0});rSE()};
+window.calcStatiiORS=async()=>{
+  const statii=_eSt.filter(s=>s.n);
+  if(statii.length<2){toast('Adaugati cel putin 2 statii','wr');return}
+  toast('Se calculeaza distantele...','in');
+  let totalKm=0;
+  for(let i=1;i<statii.length;i++){
+    const dist=await calcDistantaORS(statii[i-1].n,statii[i].n);
+    if(dist){
+      totalKm+=dist.km;
+      statii[i].p=totalKm;
+      statii[i].m=Math.round(totalKm/70*60);
+    }
+  }
+  // Update _eSt prices and minutes
+  statii.forEach((s,i)=>{
+    const idx=_eSt.findIndex(x=>x.n===s.n);
+    if(idx>0&&s.p){_eSt[idx].m=s.m;}
+  });
+  rSE();
+  toast('Distante calculate: '+totalKm+' km total','ok');
+};
 window.dSt=i=>{if(_eSt.length<=2){toast('Trebuie minim 2 stații','wr');return}_eSt.splice(i,1);rSE()};
 window.tday=btn=>btn.classList.toggle('on');
 // Plecari state
@@ -3219,6 +3293,9 @@ window.openRD=async rId=>{
   document.getElementById('rdinfo').innerHTML='<div style="font-weight:700;margin-bottom:10px;font-size:14px">📋 Date rezervare</div>'+rows.map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">${l}</span><span style="text-align:right;max-width:200px">${v}</span></div>`).join('');
   // Quick replies
   renderQuickReplies(r);
+  // Notif buttons
+  const nb=document.getElementById('notif-btns');
+  if(nb)nb.innerHTML=NOTIF_TEMPLATES.map((t,i)=>`<button class="btn bs bsm" onclick="trimiteNotifAdmin('${rId}',${i})" style="font-size:11px">🔔 ${t.label}</button>`).join('');
   // Thread
   const th=document.getElementById('admth');const msgs=r.mesaje||[];
   th.innerHTML=msgs.length?msgs.map(m=>`<div class="mbub ${m.from==='admin'?'ma':'mc'}"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">${m.from==='admin'?'👑 Admin':'👤 Client'} — ${m.timestamp?new Date(m.timestamp.seconds*1000).toLocaleString('ro'):'...'}</div>${m.text}</div>`).join(''):'<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Nicio conversație încă.</p>';
@@ -3253,6 +3330,8 @@ window.sendReply=async()=>{
     traseu:r.traseu||'',vehicul:upd.vehiculNume||r.vehiculNume||'-',
     obs:`Răspuns echipă LSD Group:\n${text}${pret?'\n\nPreț ofertă: '+pret+' RON':''}`
   });
+  // Auto-notificare push daca statusul s-a schimbat
+  autoNotifStatus(r, status);
   cm('rd');await loadAzT();await loadStats();toast('Răspuns trimis clientului!','ok');
 };
 window.openMR=()=>{
@@ -3953,6 +4032,71 @@ function numeSofer(email){
   return email.split('@')[0];
 }
 
+
+// ── NOTIFICARI INBOX ─────────────────────────────────────
+let _notifListener = null;
+
+function startNotifListener() {
+  const u = window._U;
+  if (!u || _notifListener) return;
+  const bell = document.getElementById('notif-bell');
+  if (bell) bell.style.display = 'flex';
+  _notifListener = onSnapshot(
+    query(collection(db, 'notificari'), where('uid', '==', u.uid)),
+    snap => {
+      const all = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      const necitite = all.filter(n => !n.citita);
+      const badge = document.getElementById('notif-badge');
+      if (badge) {
+        badge.textContent = necitite.length;
+        badge.style.display = necitite.length > 0 ? 'flex' : 'none';
+      }
+      // Update panel
+      const list = document.getElementById('notif-list');
+      if (list) {
+        if (!all.length) {
+          list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Nicio notificare</div>';
+          return;
+        }
+        list.innerHTML = [...all].sort((a,b) => (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0))
+          .slice(0, 20)
+          .map(n => `<div style="padding:10px 12px;border-radius:10px;margin-bottom:6px;background:${n.citita?'var(--bg2)':'rgba(184,134,11,.08)'};border:1px solid ${n.citita?'var(--border)':'rgba(184,134,11,.2)'};cursor:pointer" onclick="citesteNotif('${n.id}')">
+            <div style="font-weight:${n.citita?400:700};font-size:13px;margin-bottom:3px">${n.title||'Notificare'}</div>
+            <div style="font-size:12px;color:var(--muted)">${n.body||''}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">${n.createdAt?new Date(n.createdAt.seconds*1000).toLocaleString('ro'):''}</div>
+          </div>`).join('');
+      }
+      // Trimite notificare push locala pt notificari necitite noi
+      if (necitite.length > 0 && Notification.permission === 'granted') {
+        const ultima = necitite[0];
+        if (ultima && ultima.createdAt) {
+          const age = Date.now() - ultima.createdAt.seconds * 1000;
+          if (age < 30000) { // mai noua de 30 secunde
+            sendLocalNotification(ultima.title, ultima.body);
+          }
+        }
+      }
+    }
+  );
+}
+
+window.toggleNotifPanel = () => {
+  const p = document.getElementById('notif-panel');
+  if (p) p.style.display = p.style.display === 'none' ? 'block' : 'none';
+};
+
+window.citesteNotif = async (notifId) => {
+  await setDoc(doc(db, 'notificari', notifId), {citita: true}, {merge: true});
+};
+
+window.marcheazaToateCitite = async () => {
+  const u = window._U;
+  if (!u) return;
+  const snap = await getDocs(query(collection(db, 'notificari'), where('uid', '==', u.uid), where('citita', '==', false)));
+  await Promise.all(snap.docs.map(d => setDoc(doc(db, 'notificari', d.id), {citita: true}, {merge: true})));
+  toast('Toate notificarile marcate ca citite', 'ok');
+};
+
 function scheduleRefreshes(){
   const now=new Date();
   // Full refresh la 04:00
@@ -4320,7 +4464,22 @@ window.loadProgramSoferi=async()=>{
   for(const c of curseZi){
     const plecari=c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}];
     const statiiMin=c.statii&&c.statii.length>=2?c.statii[c.statii.length-1].minuteDeLaStart||0:0;
-    const kmEst=Math.round(statiiMin/60*70);
+    let kmEst=Math.round(statiiMin/60*70);
+    // Incearca sa obtina km reali din ORS daca avem statii cu nume
+    if(c.statii&&c.statii.length>=2){
+      const prima=c.statii[0].nume,ultima=c.statii[c.statii.length-1].nume;
+      const cacheKey=prima+'|'+ultima;
+      if(window._orsKmCache&&window._orsKmCache[cacheKey]){
+        kmEst=window._orsKmCache[cacheKey];
+      }else{
+        calcDistantaORS(prima,ultima).then(d=>{
+          if(d){
+            if(!window._orsKmCache)window._orsKmCache={};
+            window._orsKmCache[cacheKey]=d.km;
+          }
+        });
+      }
+    }
     const soferOptions='<option value="">— Alege șofer —</option>'+soferi.map(sf=>`<option value="${sf.email}" ${plecari[0]?.soferEmail===sf.email?'selected':''}>${sf.prenume||''} ${sf.nume||''}</option>`).join('');
     html+=`<div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--shadow)">`;
     html+=`<div style="font-family:Syne,sans-serif;font-weight:700;font-size:16px;margin-bottom:4px">${c.ruta}</div>`;
@@ -4435,6 +4594,287 @@ async function loadSoferiPref(){
   }catch(e){}
 }
 
+
+// ══════════════════════════════════════════════════════════
+// OPENROUTESERVICE — geocodare + distanta/timp
+// ══════════════════════════════════════════════════════════
+
+// Cache geocodare pentru a nu repeta cereri
+const _geoCache = {};
+
+async function geocodeORS(localitate) {
+  const key = localitate.trim().toLowerCase();
+  if (_geoCache[key]) return _geoCache[key];
+  try {
+    const resp = await fetch(
+      `https://api.openrouteservice.org/geocode/search?api_key=${ORS_KEY}&text=${encodeURIComponent(localitate + ', Romania')}&boundary.country=RO&size=1`,
+      {headers: {'Accept': 'application/json'}}
+    );
+    const data = await resp.json();
+    if (data.features && data.features.length > 0) {
+      const [lng, lat] = data.features[0].geometry.coordinates;
+      _geoCache[key] = {lat, lng, label: data.features[0].properties.label};
+      return _geoCache[key];
+    }
+    return null;
+  } catch(e) {
+    console.warn('Geocodare eroare:', e);
+    return null;
+  }
+}
+
+async function calcDistantaORS(plecare, destinatie) {
+  try {
+    const [from, to] = await Promise.all([geocodeORS(plecare), geocodeORS(destinatie)]);
+    if (!from || !to) return null;
+    const resp = await fetch(
+      'https://api.openrouteservice.org/v2/directions/driving-car',
+      {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'Authorization': ORS_KEY},
+        body: JSON.stringify({
+          coordinates: [[from.lng, from.lat], [to.lng, to.lat]],
+          units: 'km'
+        })
+      }
+    );
+    const data = await resp.json();
+    if (data.routes && data.routes[0]) {
+      const seg = data.routes[0].summary;
+      const km = Math.round(seg.distance);
+      const minDus = Math.round(seg.duration / 60);
+      // Adauga 20% pentru opriri/trafic pe drum national
+      const minReal = Math.round(minDus * 1.2);
+      return {km, minDus, minReal, durataText: minToTime2(minReal)};
+    }
+    return null;
+  } catch(e) {
+    console.warn('ORS eroare:', e);
+    return null;
+  }
+}
+
+function minToTime2(min) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h > 0 ? `${h}h ${m}min` : `${m}min`;
+}
+
+// Calcul complet dus-intors cu pauze legale
+async function calcDusIntorsORS(plecare, destinatie, oraP) {
+  const dist = await calcDistantaORS(plecare, destinatie);
+  if (!dist) return null;
+  const prog = calcProgram(oraP, dist.km);
+  return {...dist, ...prog, kmDus: dist.km, kmTotal: dist.km * 2};
+}
+
+// ══════════════════════════════════════════════════════════
+// PWA — Service Worker + Push Notifications (FCM)
+// ══════════════════════════════════════════════════════════
+
+// Inregistrare Service Worker
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    // Service worker inline ca blob
+    const swCode = `
+self.addEventListener('push', e => {
+  const data = e.data ? e.data.json() : {};
+  self.registration.showNotification(data.title || 'LSD Group SRL', {
+    body: data.body || 'Ai o notificare noua',
+    icon: 'https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=LSD-Group',
+    badge: 'https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=LSD-Group',
+    data: data,
+    vibrate: [200, 100, 200],
+    tag: data.tag || 'lsd-notif',
+    renotify: true
+  });
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(clients.openWindow(e.notification.data.url || '/'));
+});
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+    `.trim();
+    const blob = new Blob([swCode], {type: 'application/javascript'});
+    const swUrl = URL.createObjectURL(blob);
+    const reg = await navigator.serviceWorker.register(swUrl, {scope: '/'});
+    window._swReg = reg;
+    console.log('SW registered');
+    return reg;
+  } catch(e) {
+    console.warn('SW error:', e);
+  }
+}
+
+// Cerere permisiune push si salvare token
+async function requestPushPermission() {
+  if (!('Notification' in window)) {
+    toast('Browser-ul nu suporta notificari push', 'wr');
+    return false;
+  }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') {
+    toast('Notificarile au fost refuzate', 'wr');
+    return false;
+  }
+  // Salveaza preferinta in localStorage
+  localStorage.setItem('push_accepted', '1');
+  localStorage.setItem('push_accepted_at', Date.now().toString());
+  toast('✅ Notificarile au fost activate!', 'ok');
+  // Salveaza in Firestore daca e autentificat
+  const u = window._U;
+  if (u) {
+    try {
+      await setDoc(doc(db, 'users', u.uid), {
+        pushEnabled: true,
+        pushAcceptedAt: serverTimestamp()
+      }, {merge: true});
+    } catch(e) {}
+  }
+  return true;
+}
+
+// Trimite notificare push locala (pentru demo/test fara server)
+async function sendLocalNotification(title, body, url='') {
+  if (Notification.permission !== 'granted') return;
+  if (window._swReg) {
+    window._swReg.showNotification(title, {
+      body,
+      icon: 'https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=LSD-Group',
+      vibrate: [200, 100, 200],
+      data: {url}
+    });
+  } else {
+    new Notification(title, {body});
+  }
+}
+
+// Prompt periodic pentru notificari (la fiecare 3 zile)
+function checkPushPrompt() {
+  if (localStorage.getItem('push_accepted')) return;
+  const lastPrompt = parseInt(localStorage.getItem('push_prompt_at') || '0');
+  const threeDays = 3 * 24 * 60 * 60 * 1000;
+  if (Date.now() - lastPrompt < threeDays) return;
+  // Arata banner dupa 30 secunde de la deschidere
+  setTimeout(() => {
+    if (localStorage.getItem('push_accepted')) return;
+    showPushBanner();
+    localStorage.setItem('push_prompt_at', Date.now().toString());
+  }, 30000);
+}
+
+function showPushBanner() {
+  const existing = document.getElementById('push-banner');
+  if (existing) return;
+  const banner = document.createElement('div');
+  banner.id = 'push-banner';
+  banner.style.cssText = 'position:fixed;bottom:80px;left:16px;right:16px;max-width:420px;margin:0 auto;background:#fff;border:1.5px solid var(--gold);border-radius:14px;padding:16px;z-index:4000;box-shadow:0 8px 32px rgba(28,23,19,.15);animation:tIn .3s ease';
+  banner.innerHTML = `
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div style="font-size:28px;flex-shrink:0">🔔</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px">Vreți să primiți notificări?</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+          Fiți la curent cu statusul curselor, întârzieri și actualizări importante de la LSD Group SRL.
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn bp bsm" onclick="acceptPushBanner()">🔔 Da, activează</button>
+          <button class="btn bs bsm" onclick="dismissPushBanner()">Nu acum</button>
+        </div>
+      </div>
+      <button onclick="dismissPushBanner()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;flex-shrink:0">✕</button>
+    </div>`;
+  document.body.appendChild(banner);
+}
+
+window.acceptPushBanner = async () => {
+  document.getElementById('push-banner')?.remove();
+  await requestPushPermission();
+};
+window.dismissPushBanner = () => {
+  document.getElementById('push-banner')?.remove();
+  localStorage.setItem('push_prompt_at', Date.now().toString());
+};
+
+// ══════════════════════════════════════════════════════════
+// NOTIFICARI ADMIN — trimite catre clienti
+// ══════════════════════════════════════════════════════════
+
+// Template-uri notificari
+const NOTIF_TEMPLATES = [
+  {label: 'Cursa întârzie', fn: (r) => ({
+    title: '⚠️ Actualizare cursă LSD Group',
+    body: `Cursa ${r.ruta||r.traseu} din ${r.data} întârzie. Vă rugăm să verificați detaliile.`
+  })},
+  {label: 'Șofer atribuit', fn: (r) => ({
+    title: '✅ Șofer confirmat — LSD Group',
+    body: `Șoferul dvs. pentru cursa ${r.ruta} din ${r.data} a fost confirmat: ${numeSofer(r.soferEmail)||'TBD'}.`
+  })},
+  {label: 'Rezervare confirmată', fn: (r) => ({
+    title: '🎟️ Rezervare confirmată — LSD Group',
+    body: `Rezervarea ta pentru ${r.ruta} din ${r.data} ora ${r.ora} a fost confirmată!`
+  })},
+  {label: 'Reminder cursă mâine', fn: (r) => ({
+    title: '📅 Mâine ai cursă — LSD Group',
+    body: `Nu uita! Mâine, ${r.data}, ora ${r.ora}, cursa ${r.ruta}. Fii la îmbarcare cu 10 minute înainte.`
+  })},
+  {label: 'Ofertă trimisă', fn: (r) => ({
+    title: '📩 Ofertă nouă de la LSD Group',
+    body: `Ai primit o ofertă pentru cererea ta de cursă organizată. Verifică detaliile în contul tău.`
+  })},
+];
+
+// Trimite notificare locala catre utilizatorul curent
+// (in productie s-ar folosi FCM server key + backend)
+window.trimiteNotifAdmin = async (rezId, templateIdx) => {
+  const ref = await getDoc(doc(db, 'rezervari', rezId));
+  if (!ref.exists()) return;
+  const r = ref.data();
+  const tmpl = NOTIF_TEMPLATES[templateIdx];
+  if (!tmpl) return;
+  const {title, body} = tmpl.fn(r);
+  // Salveaza notificarea in Firestore pentru clientul cu cont
+  if (r.uid) {
+    try {
+      await addDoc(collection(db, 'notificari'), {
+        uid: r.uid,
+        title,
+        body,
+        rezId,
+        citita: false,
+        createdAt: serverTimestamp()
+      });
+    } catch(e) {}
+  }
+  // Trimite si email
+  await sendEjsClient({
+    to_email: r.email,
+    nume: r.numeClient,
+    subiect: title,
+    mesaj: body,
+    bilet_id: r.biletId||'',
+    ruta: r.ruta||r.traseu||'',
+    data: r.data||'',
+    ora: r.ora||'',
+    status: r.status||''
+  });
+  toast('Notificare trimisă: ' + title, 'ok');
+};
+
+// Auto-notificare la schimbare status
+async function autoNotifStatus(r, newStatus) {
+  const msgs = {
+    'confirmata': {title:'✅ Rezervare confirmată', body:`Rezervarea ta pentru ${r.ruta} din ${r.data} a fost confirmată!`},
+    'oferta_trimisa': {title:'📩 Ofertă nouă', body:`Ai primit o ofertă pentru cererea ta. Verifică detaliile.`},
+    'anulata': {title:'❌ Rezervare anulată', body:`Rezervarea pentru ${r.ruta} din ${r.data} a fost anulată.`}
+  };
+  const n = msgs[newStatus];
+  if (!n) return;
+  await sendLocalNotification(n.title, n.body);
+}
+
 // INIT
 (async()=>{
   try{
@@ -4455,6 +4895,9 @@ async function loadSoferiPref(){
   document.getElementById('hflota').innerHTML=window._F.slice(0,3).map(v=>vCard(v)).join('');
   loadOrgPage();
   scheduleRefreshes();
+  // PWA + push
+  registerSW();
+  checkPushPrompt();
 })();
 </script>
 </body>
