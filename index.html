@@ -285,7 +285,8 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
     <span id="notif-badge" style="display:none;position:absolute;top:0;right:0;background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px">0</span>
   </div>
   <div id="nlinks"></div><div id="ab"></div>
-  <button id="ham" onclick="tmob()"><span></span><span></span><span></span></button>
+  <button id="pwa-install-btn" style="display:none;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1.5px solid var(--gold);background:var(--goldbg);color:var(--gold);cursor:pointer" onclick="installPWA()">📲 Instalează app</button>
+<button id="ham" onclick="tmob()"><span></span><span></span><span></span></button>
 </nav>
 <div id="mob"></div>
 <div id="app">
@@ -351,7 +352,7 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
         </div>
         <div class="fg"><div class="fl">Traseu (opriri în ordine) *</div><div id="stopsc"></div><button class="btn bs bsm" style="margin-top:8px" onclick="addStop()">+ Adaugă oprire</button></div>
         <div class="fr">
-          <div class="fg"><div class="fl">Nr. persoane estimat</div><input type="number" id="opers" min="1" placeholder="Ex: 20"/></div>
+          <div class="fg"><div class="fl">Nr. persoane estimat (opțional)</div><input type="number" id="opers" min="1" placeholder="Ex: 20 — opțional dacă nu știți exact"/></div>
           <div class="fg"><div class="fl">Distanță estimată (km)</div>
             <input type="number" id="okm" min="1" placeholder="Optional — se calculează automat" oninput="calcOrgPret()"/>
             <div id="org-timp-estim" style="margin-top:6px"></div>
@@ -434,33 +435,206 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
   </div>
 </div>
 <!-- GDPR -->
-<div id="pg-gdpr" class="pg"><div style="max-width:760px;margin:0 auto" class="legal">
-  <h1 style="margin-bottom:6px">Politica de Confidențialitate</h1>
-  <p>LSD Group SRL — CUI: RO12345678 — J40/1234/2020 — Actualizat: Ianuarie 2025</p>
-  <h2>1. Cine suntem</h2><p>LSD Group SRL, societate comercială înregistrată în România, furnizor de servicii de transport persoane autorizat ARR. Contact: irimia.teodor.17@gmail.com</p>
-  <h2>2. Ce date colectăm</h2><p>Colectăm: nume și prenume, email, număr de telefon, date privind rezervările (rute, date, vehicule, prețuri) și date tehnice necesare funcționării contului (UID Firebase Auth).</p>
-  <h2>3. Scopul prelucrării</h2><p>Datele sunt utilizate exclusiv pentru: procesarea și gestionarea rezervărilor, comunicarea ofertelor și confirmărilor, asigurarea serviciilor de transport contractate, facturare și contabilitate. Nu utilizăm datele în scopuri de marketing fără consimțământ explicit.</p>
-  <h2>4. Temeiul legal</h2><p>Prelucrarea se bazează pe: executarea unui contract (rezervarea serviciului de transport), obligații legale (păstrarea documentelor contabile), consimțământul dumneavoastră explicit (înregistrare cont).</p>
-  <h2>5. Cât timp păstrăm datele</h2><p>Datele de rezervare se păstrează 5 ani conform legislației contabile române. Datele contului se păstrează până la ștergerea contului sau 3 ani de inactivitate. Puteți solicita ștergerea oricând.</p>
-  <h2>6. Drepturile dumneavoastră (GDPR)</h2>
-  <ul><li>Dreptul de acces la datele personale</li><li>Dreptul la rectificarea datelor incorecte</li><li>Dreptul la ștergerea datelor (dreptul de a fi uitat)</li><li>Dreptul la restricționarea prelucrării</li><li>Dreptul la portabilitatea datelor</li><li>Dreptul la opoziție</li></ul>
-  <p>Pentru exercitarea acestor drepturi, scrieți la: irimia.teodor.17@gmail.com. Veți primi răspuns în maxim 30 de zile.</p>
-  <h2>7. Cookie-uri</h2><p>Folosim cookie-uri strict necesare funcționării (sesiune autentificare Firebase) și localStorage pentru preferințe de interfață. Nu folosim cookie-uri de tracking sau advertising terță parte.</p>
-  <h2>8. Transferuri de date</h2><p>Datele sunt stocate pe serverele Google Firebase (UE/SUA, cu clauze contractuale standard GDPR). Nu vindem și nu transferăm datele altor terți fără consimțământ.</p>
-  <h2>9. Reclamații</h2><p>Dacă considerați că drepturile vă sunt încălcate, puteți depune plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP) — www.dataprotection.ro</p>
+<div id="pg-gdpr" class="pg"><div style="max-width:800px;margin:0 auto" class="legal">
+  <h1 style="margin-bottom:6px;font-size:28px">Politica de Confidențialitate</h1>
+  <p style="color:var(--muted);margin-bottom:8px">LSD Group SRL — Actualizat: Ianuarie 2025</p>
+  <p style="background:rgba(184,134,11,.08);border:1px solid rgba(184,134,11,.2);border-radius:10px;padding:14px;margin-bottom:24px">Această politică se aplică tuturor utilizatorilor site-ului lsdgroup.ro și descrie modul în care prelucrăm datele cu caracter personal în conformitate cu Regulamentul (UE) 2016/679 (GDPR) și legislația națională aplicabilă.</p>
+
+  <h2>1. Identitatea și datele de contact ale operatorului</h2>
+  <p><strong>LSD Group SRL</strong> este operatorul datelor cu caracter personal colectate prin intermediul acestui site.</p>
+  <ul>
+    <li><strong>Denumire:</strong> LSD Group SRL</li>
+    <li><strong>CUI:</strong> RO12345678</li>
+    <li><strong>Nr. Reg. Com.:</strong> J40/1234/2020</li>
+    <li><strong>Sediu:</strong> România</li>
+    <li><strong>Email:</strong> irimia.teodor.17@gmail.com</li>
+    <li><strong>Autorizație ARR:</strong> Transport persoane în trafic național</li>
+  </ul>
+
+  <h2>2. Ce date cu caracter personal colectăm</h2>
+  <p>Colectăm și prelucrăm următoarele categorii de date:</p>
+  <ul>
+    <li><strong>Date de identificare:</strong> Nume, prenume</li>
+    <li><strong>Date de contact:</strong> Adresă de email, număr de telefon</li>
+    <li><strong>Date de rezervare:</strong> Rute, date de călătorie, locuri selectate, vehicule, prețuri</li>
+    <li><strong>Date de cont:</strong> Identificator unic Firebase (UID), parolă criptată</li>
+    <li><strong>Date tehnice:</strong> Adresă IP, tip browser (colectate automat de Firebase)</li>
+    <li><strong>Date de notificare:</strong> Token push notifications (dacă ați acceptat notificările)</li>
+    <li><strong>Date fiscale:</strong> Informațiile necesare emiterii facturilor proformă</li>
+  </ul>
+
+  <h2>3. Scopul și temeiul juridic al prelucrării</h2>
+  <ul>
+    <li><strong>Executarea contractului</strong> (Art. 6(1)(b) GDPR): procesarea rezervărilor, emiterea biletelor, confirmarea curselor, comunicarea cu pasagerii</li>
+    <li><strong>Obligații legale</strong> (Art. 6(1)(c) GDPR): păstrarea documentelor contabile și fiscale conform Legii nr. 82/1991</li>
+    <li><strong>Consimțământ</strong> (Art. 6(1)(a) GDPR): trimiterea notificărilor push, newsletter (dacă ați optat explicit)</li>
+    <li><strong>Interes legitim</strong> (Art. 6(1)(f) GDPR): securitatea platformei, prevenirea fraudelor, îmbunătățirea serviciilor</li>
+  </ul>
+
+  <h2>4. Durata păstrării datelor</h2>
+  <ul>
+    <li><strong>Date de rezervare și bilete:</strong> 5 ani de la data călătoriei (obligație legală contabilă)</li>
+    <li><strong>Date de cont:</strong> Pe durata existenței contului + 3 ani după ultima activitate</li>
+    <li><strong>Date de comunicare (mesaje):</strong> 2 ani de la data trimiterii</li>
+    <li><strong>Date tehnice (log-uri):</strong> Maximum 90 de zile</li>
+    <li><strong>Token-uri push:</strong> Până la retragerea consimțământului</li>
+  </ul>
+
+  <h2>5. Drepturile dumneavoastră conform GDPR</h2>
+  <p>Aveți următoarele drepturi, pe care le puteți exercita oricând prin email la irimia.teodor.17@gmail.com:</p>
+  <ul>
+    <li><strong>Dreptul de acces</strong> (Art. 15): Puteți solicita o copie a tuturor datelor pe care le deținem despre dumneavoastră</li>
+    <li><strong>Dreptul la rectificare</strong> (Art. 16): Puteți solicita corectarea datelor inexacte sau incomplete</li>
+    <li><strong>Dreptul la ștergere</strong> (Art. 17): Puteți solicita ștergerea datelor, cu excepția celor pentru care avem obligații legale de păstrare</li>
+    <li><strong>Dreptul la restricționarea prelucrării</strong> (Art. 18): Puteți solicita limitarea prelucrării în anumite circumstanțe</li>
+    <li><strong>Dreptul la portabilitatea datelor</strong> (Art. 20): Puteți solicita datele dumneavoastră în format structurat, lizibil automat</li>
+    <li><strong>Dreptul la opoziție</strong> (Art. 21): Puteți vă opune prelucrării bazate pe interes legitim</li>
+    <li><strong>Dreptul de retragere a consimțământului</strong> (Art. 7): Puteți retrage oricând consimțământul pentru notificări, fără a afecta legalitatea prelucrărilor anterioare</li>
+  </ul>
+  <p>Veți primi răspuns în maximum <strong>30 de zile calendaristice</strong>.</p>
+
+  <h2>6. Cookie-uri și stocare locală</h2>
+  <ul>
+    <li><strong>Cookie-uri strict necesare:</strong> Sesiunea de autentificare Firebase (obligatorii pentru funcționarea contului)</li>
+    <li><strong>LocalStorage:</strong> Preferințe interfață, acceptare cookies, setări notificări push</li>
+    <li><strong>Cookie-uri de analiză sau publicitate:</strong> NU folosim</li>
+    <li><strong>Cookie-uri terțe:</strong> NU folosim</li>
+  </ul>
+
+  <h2>7. Destinatarii datelor — cui transferăm datele</h2>
+  <ul>
+    <li><strong>Google Firebase</strong> (stocare date, autentificare) — servere UE/SUA cu clauze contractuale standard GDPR (Standard Contractual Clauses)</li>
+    <li><strong>EmailJS</strong> (trimitere emailuri tranzacționale) — date minime necesare (email, nume)</li>
+    <li><strong>OpenRouteService</strong> (calcul distanțe) — nu transferăm date personale, doar coordonate geografice publice</li>
+    <li><strong>Șoferii noștri</strong> — primesc date minime necesare pentru identificarea pasagerilor (nume, loc rezervat, stație urcare/coborâre)</li>
+    <li><strong>Terți comerciali, publicitate:</strong> NU transferăm datele</li>
+  </ul>
+
+  <h2>8. Securitatea datelor</h2>
+  <p>Implementăm măsuri tehnice și organizatorice adecvate pentru protecția datelor: criptare SSL/TLS pentru toate comunicațiile, autentificare Firebase cu parolă criptată bcrypt, acces restricționat la date (doar administratori autorizați), monitorizare continuă a accesului la platformă.</p>
+
+  <h2>9. Soluționarea litigiilor și reclamații</h2>
+  <p>Dacă considerați că drepturile dumneavoastră au fost încălcate, puteți:</p>
+  <ul>
+    <li>Contacta operatorul: irimia.teodor.17@gmail.com</li>
+    <li>Depune plângere la <strong>ANSPDCP</strong> — Autoritatea Națională de Supraveghere: <a href="https://www.dataprotection.ro" target="_blank">www.dataprotection.ro</a></li>
+    <li>Utiliza platforma europeană SOL: <a href="https://ec.europa.eu/consumers/odr" target="_blank">ec.europa.eu/consumers/odr</a></li>
+  </ul>
+
+  <h2>10. Modificări ale politicii</h2>
+  <p>Ne rezervăm dreptul de a modifica această politică. Modificările semnificative vor fi comunicate prin email sau notificare pe site cu cel puțin 15 zile înainte de intrarea în vigoare.</p>
 </div></div>
 <!-- TERMENI -->
-<div id="pg-termeni" class="pg"><div style="max-width:760px;margin:0 auto" class="legal">
-  <h1 style="margin-bottom:6px">Termeni și Condiții</h1>
-  <p>LSD Group SRL — CUI: RO12345678 — Actualizat: Ianuarie 2025</p>
-  <h2>1. Serviciile oferite</h2><p>LSD Group SRL oferă servicii de transport persoane prin curse regulate (cu program fix) și curse organizate (la cerere). Toate serviciile sunt autorizate conform legislației române în vigoare.</p>
-  <h2>2. Rezervări și confirmare</h2><p>Rezervările pentru cursele regulate se confirmă automat la plata biletului online. Rezervările pentru curse organizate devin ferme doar după comunicarea confirmării scrise din partea LSD Group SRL și achitarea avansului convenit.</p>
-  <h2>3. Anulări și rambursări</h2><p>Curse regulate: biletul poate fi anulat cu minim 24h înainte de plecare pentru rambursare integrală. Curse organizate: anularea cu mai mult de 72h înainte = rambursare integrală; 24-72h = 50% rambursare; sub 24h = fără rambursare.</p>
-  <h2>4. Obligațiile pasagerilor</h2>
-  <ul><li>Prezentarea la locul de îmbarcare cu minim 10 minute înainte</li><li>Deținerea unui act de identitate valabil</li><li>Respectarea regulamentului de ordine interioară al vehiculului</li><li>Interzis fumatul, consumul de alcool și comportamentul agresiv</li></ul>
-  <h2>5. Răspundere</h2><p>LSD Group SRL este asigurat RCA și CASCO pentru toate vehiculele din flotă. Răspunderea pentru bagajele pasagerilor este limitată conform legislației în vigoare. Compania nu răspunde pentru întârzieri cauzate de forță majoră (condiții meteo extreme, accidente rutiere independente de voința șoferului etc.)</p>
-  <h2>6. Prețuri</h2><p>Prețurile afișate includ TVA. LSD Group SRL își rezervă dreptul de a modifica prețurile cu notificare prealabilă de 48h pentru cursele regulate.</p>
-  <h2>7. Litigii</h2><p>Litigiile se soluționează pe cale amiabilă. În caz contrar, instanța competentă este cea de la sediul LSD Group SRL, conform legislației române.</p>
+<div id="pg-termeni" class="pg"><div style="max-width:800px;margin:0 auto" class="legal">
+  <h1 style="margin-bottom:6px;font-size:28px">Termeni și Condiții</h1>
+  <p style="color:var(--muted);margin-bottom:8px">LSD Group SRL — Actualizat: Ianuarie 2025</p>
+  <p style="background:rgba(184,134,11,.08);border:1px solid rgba(184,134,11,.2);border-radius:10px;padding:14px;margin-bottom:24px">Prin utilizarea serviciilor LSD Group SRL, acceptați în totalitate prezentele Termeni și Condiții. Vă rugăm să le citiți cu atenție înainte de a efectua o rezervare.</p>
+
+  <h2>1. Părțile contractante</h2>
+  <ul>
+    <li><strong>Prestator:</strong> LSD Group SRL, CUI RO12345678, autorizat ARR pentru transport persoane în trafic național</li>
+    <li><strong>Beneficiar/Pasager:</strong> Orice persoană fizică sau juridică care efectuează o rezervare prin intermediul platformei lsdgroup.ro</li>
+  </ul>
+
+  <h2>2. Serviciile oferite</h2>
+  <p>LSD Group SRL oferă:</p>
+  <ul>
+    <li><strong>Curse regulate:</strong> Rute fixe, cu program prestabilit, tarife pe segmente, rezervare online cu emitere bilet electronic</li>
+    <li><strong>Curse organizate (charter):</strong> Transport la cerere pentru grupuri, excursii, nunți, transferuri corporate, cu vehicul dedicat</li>
+    <li><strong>Servicii conexe:</strong> Emitere bilete electronice cu cod QR, confirmare prin email, notificări push</li>
+  </ul>
+
+  <h2>3. Rezervări și confirmare</h2>
+  <ul>
+    <li><strong>Curse regulate:</strong> Rezervarea se confirmă automat la finalizarea procesului online. Biletul electronic se emite imediat și este valabil pentru data și ora selectate.</li>
+    <li><strong>Curse organizate:</strong> Cererea devine rezervare fermă <strong>exclusiv</strong> după confirmarea scrisă din partea LSD Group SRL și achitarea avansului de 30% din prețul total.</li>
+    <li>LSD Group SRL își rezervă dreptul de a refuza o rezervare în cazul lipsei disponibilității vehiculului sau a șoferului.</li>
+    <li>Confirmarea rezervării se transmite pe email la adresa furnizată. Verificați folderul Spam dacă nu primiți emailul în 15 minute.</li>
+  </ul>
+
+  <h2>4. Prețuri și modalități de plată</h2>
+  <ul>
+    <li>Toate prețurile afișate includ <strong>TVA 21%</strong></li>
+    <li><strong>Plată la șofer:</strong> Cash sau card bancar la îmbarcare. Biletul se emite electronic în avans.</li>
+    <li><strong>Plată online:</strong> Prin metode electronice indicate pe platformă. Plata se confirmă în timp real.</li>
+    <li>LSD Group SRL poate modifica tarifele curselor regulate cu notificare prealabilă de minimum <strong>48 de ore</strong></li>
+    <li>Pentru cursele organizate, prețul final este cel din oferta acceptată. Orice servicii suplimentare față de ofertă se tarifează separat.</li>
+  </ul>
+
+  <h2>5. Anulări și rambursări</h2>
+  <h2 style="font-size:15px;margin-top:0">5.1 Curse regulate</h2>
+  <ul>
+    <li>Anulare cu <strong>minimum 24h înainte</strong> de plecare → rambursare integrală</li>
+    <li>Anulare cu <strong>sub 24h</strong> → fără rambursare; biletul poate fi reprogramat o singură dată fără cost suplimentar</li>
+    <li>Neprezentarea la îmbarcare → fără rambursare</li>
+  </ul>
+  <h2 style="font-size:15px;margin-top:0">5.2 Curse organizate</h2>
+  <ul>
+    <li>Anulare cu <strong>mai mult de 72h</strong> înainte → rambursare integrală (inclusiv avansul)</li>
+    <li>Anulare cu <strong>24-72h</strong> înainte → rambursare 50% din totalul achitat</li>
+    <li>Anulare cu <strong>sub 24h</strong> înainte → fără rambursare</li>
+    <li>Anulare din vina LSD Group SRL → rambursare integrală + despăgubire 10% din valoarea contractului</li>
+  </ul>
+  <p>Cererile de rambursare se transmit la irimia.teodor.17@gmail.com și se procesează în maximum <strong>14 zile lucrătoare</strong>.</p>
+
+  <h2>6. Obligațiile pasagerilor</h2>
+  <ul>
+    <li>Prezentarea la locul de îmbarcare cu <strong>minimum 10 minute</strong> înainte de ora programată</li>
+    <li>Deținerea unui <strong>act de identitate valabil</strong> (BI/CI/Pașaport)</li>
+    <li>Prezentarea biletului electronic (cod QR) la îmbarcare</li>
+    <li><strong>Interzis:</strong> fumatul în vehicul, consumul de alcool, comportamentul agresiv sau perturbator</li>
+    <li><strong>Interzis:</strong> transportul substanțelor periculoase, inflamabile sau ilegale</li>
+    <li>Bagajele voluminoase (peste 10 kg sau dimensiuni mari) trebuie anunțate în avans</li>
+    <li>Pasagerii cu nevoi speciale (dizabilități, mobilitate redusă) sunt rugați să anunțe în avans pentru asigurarea condițiilor adecvate</li>
+  </ul>
+
+  <h2>7. Obligațiile LSD Group SRL</h2>
+  <ul>
+    <li>Asigurarea vehiculului rezervat (sau echivalent) la data și ora confirmate</li>
+    <li>Șoferi autorizați categoria D, cu experiență verificată</li>
+    <li>Vehicule asigurate <strong>RCA și CASCO</strong>, revizionate tehnic conform legislației</li>
+    <li>Respectarea traseului și opririlor convenite</li>
+    <li>Notificarea pasagerilor în caz de întârziere sau modificare a cursei</li>
+  </ul>
+
+  <h2>8. Răspundere și limitări</h2>
+  <ul>
+    <li>LSD Group SRL răspunde pentru pagubele cauzate pasagerilor prin culpa proprie, în limitele asigurării RCA/CASCO</li>
+    <li><strong>Bagaje:</strong> Răspunderea este limitată la 500 RON per bagaj, cu excepția cazurilor în care s-a declarat în scris o valoare superioară</li>
+    <li><strong>Forță majoră:</strong> LSD Group SRL nu răspunde pentru întârzieri sau anulări cauzate de condiții meteo extreme, calamități, restricții de circulație impuse de autorități, pandemii sau alte evenimente în afara controlului companiei</li>
+    <li>În caz de forță majoră, se oferă reprogramarea gratuită sau rambursarea integrală, la alegerea pasagerului</li>
+  </ul>
+
+  <h2>9. Utilizarea platformei online</h2>
+  <ul>
+    <li>Contul este personal și netransferabil. Datele de autentificare sunt confidențiale.</li>
+    <li>Este interzisă utilizarea platformei în scopuri frauduloase sau crearea de rezervări false</li>
+    <li>LSD Group SRL poate suspenda conturile care încalcă acești termeni</li>
+    <li>Biletele electronice sunt nominale și netransferabile. Codul QR poate fi folosit o singură dată.</li>
+  </ul>
+
+  <h2>10. Proprietate intelectuală</h2>
+  <p>Toate elementele platformei (design, cod, text, imagini) sunt proprietatea LSD Group SRL. Este interzisă reproducerea, distribuirea sau modificarea fără acordul scris al companiei.</p>
+
+  <h2>11. Soluționarea litigiilor</h2>
+  <ul>
+    <li>Litigiile se soluționează în primul rând pe cale <strong>amiabilă</strong>, prin contact direct la irimia.teodor.17@gmail.com</li>
+    <li>Dacă soluționarea amiabilă eșuează, puteți apela la <strong>ANPC</strong> (Autoritatea Națională pentru Protecția Consumatorilor): <a href="https://anpc.ro" target="_blank">anpc.ro</a></li>
+    <li>Platforma europeană de soluționare online a litigiilor (SOL): <a href="https://ec.europa.eu/consumers/odr" target="_blank">ec.europa.eu/consumers/odr</a></li>
+    <li>În cazul în care litigiul nu poate fi soluționat pe cale alternativă, instanța competentă este cea de la sediul LSD Group SRL, conform legislației române</li>
+  </ul>
+
+  <h2>12. Legea aplicabilă</h2>
+  <p>Prezentul contract este guvernat de legislația română, inclusiv:</p>
+  <ul>
+    <li>OG nr. 27/2011 privind transporturile rutiere</li>
+    <li>Legea nr. 449/2003 privind vânzarea produselor și garanțiile asociate</li>
+    <li>OUG nr. 34/2014 privind drepturile consumatorilor în contractele la distanță</li>
+    <li>Regulamentul (UE) 2016/679 (GDPR) pentru protecția datelor personale</li>
+  </ul>
+
+  <h2>13. Modificări ale termenilor</h2>
+  <p>LSD Group SRL poate modifica acești termeni cu notificare prealabilă de minimum <strong>15 zile</strong>. Continuarea utilizării serviciilor după această dată constituie acceptarea noilor termeni.</p>
 </div></div>
 <!-- PORTAL SOFER -->
 <div id="pg-sofer" class="pg">
@@ -612,14 +786,25 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
     <table class="tbl"><thead><tr><th>Mesaj</th><th>Activ</th><th></th></tr></thead><tbody id="tktb"></tbody></table>
   </div>
   <div id="tab-program" class="tc">
-    <div style="max-width:900px">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+    <div style="max-width:1100px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
         <div>
           <h3 style="font-size:16px;font-weight:700;margin-bottom:4px">📅 Program Șoferi</h3>
-          <p style="font-size:13px;color:var(--muted)">Atribuie șoferi pe curse și date. Sistemul verifică automat orele de condus (max 9h/zi, pauză 45min după 4.5h).</p>
+          <p style="font-size:13px;color:var(--muted)">Legislație RO: max 9h/zi · max 56h/săptămână · max 90h/2 săptămâni · pauză 45min după 4.5h</p>
         </div>
-        <input type="date" id="prog-data" onchange="loadProgramSoferi()" style="max-width:180px"/>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select id="prog-view" onchange="loadProgramSoferi()" style="max-width:160px">
+            <option value="zi">📅 Ziua</option>
+            <option value="saptamana" selected>📆 Săptămâna</option>
+            <option value="2saptamani">🗓️ 2 Săptămâni</option>
+          </select>
+          <input type="date" id="prog-data" onchange="loadProgramSoferi()" style="max-width:180px"/>
+          <button class="btn bs bsm" onclick="setProgDataAzi()">Azi</button>
+        </div>
       </div>
+      <!-- Sumar ore soferi -->
+      <div id="program-sumar" style="margin-bottom:20px"></div>
+      <!-- Tabel curse -->
       <div id="program-list"></div>
     </div>
   </div>
@@ -657,15 +842,21 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
         <div class="fg"><div class="fl">Email admin (notificări)</div><input type="email" id="eadm"/></div>
       </div>
       <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
-        <div style="font-size:13px;font-weight:600;margin-bottom:10px">📧 Template 1 — Email către CLIENT</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Trimis la: confirmare rezervare, ofertă primită, status schimbat, bilet emis.</div>
-        <div class="fg"><div class="fl">Template ID Client</div><input type="text" id="etid-client" placeholder="template_client_xxx"/></div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px">📧 Template 1 — Curse REGULATE (client)</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Confirmare bilet, status schimbat, reminder cursă regulată.</div>
+        <div class="fg"><div class="fl">Template ID — Regulate</div><input type="text" id="etid-client" placeholder="template_regulate_xxx"/></div>
         <div style="font-size:11px;color:var(--muted)">Variabile: <code>{{to_email}}</code> <code>{{nume}}</code> <code>{{subiect}}</code> <code>{{mesaj}}</code> <code>{{bilet_id}}</code> <code>{{ruta}}</code> <code>{{data}}</code> <code>{{ora}}</code> <code>{{status}}</code></div>
       </div>
       <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
-        <div style="font-size:13px;font-weight:600;margin-bottom:10px">📧 Template 2 — Email către ADMIN</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Trimis la: rezervare nouă, cerere organizată nouă, mesaj de la client.</div>
-        <div class="fg"><div class="fl">Template ID Admin</div><input type="text" id="etid-admin" placeholder="template_admin_xxx"/></div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px">📧 Template 2 — Curse ORGANIZATE (client)</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Confirmare cerere, ofertă primită, actualizare cursă organizată.</div>
+        <div class="fg"><div class="fl">Template ID — Organizate</div><input type="text" id="etid-org" placeholder="template_organizate_xxx"/></div>
+        <div style="font-size:11px;color:var(--muted)">Variabile: <code>{{to_email}}</code> <code>{{nume}}</code> <code>{{subiect}}</code> <code>{{mesaj}}</code> <code>{{traseu}}</code> <code>{{data}}</code> <code>{{ora}}</code> <code>{{vehicul}}</code> <code>{{pret}}</code> <code>{{status}}</code></div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px">📧 Template 3 — Notificări ADMIN</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Rezervare nouă, cerere organizată, mesaj de la client.</div>
+        <div class="fg"><div class="fl">Template ID — Admin</div><input type="text" id="etid-admin" placeholder="template_admin_xxx"/></div>
         <div style="font-size:11px;color:var(--muted)">Variabile: <code>{{to_email}}</code> <code>{{subiect}}</code> <code>{{mesaj}}</code> <code>{{nume_client}}</code> <code>{{telefon}}</code> <code>{{tip}}</code> <code>{{traseu}}</code></div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -696,11 +887,54 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
 </div>
 <!-- FOOTER -->
 <footer id="footer">
-  <div id="footer-content">LSD Group SRL © 2025</div>
-  <div class="footer-links">
-    <a onclick="nav('gdpr')">Politică GDPR</a>
-    <a onclick="nav('termeni')">Termeni și Condiții</a>
-    <a onclick="nav('home')">Acasă</a>
+  <div style="max-width:1200px;margin:0 auto;padding:0 24px">
+    <!-- Main footer content -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:32px;margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid rgba(240,234,216,.15)">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--gold2);margin-bottom:10px">🚌 LSD Group SRL</div>
+        <div id="footer-content" style="font-size:12px;line-height:1.8;color:rgba(240,234,216,.6)">LSD Group SRL © 2025</div>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:13px;color:rgba(240,234,216,.9);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Servicii</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <a onclick="nav('regulate')" style="font-size:13px;color:rgba(240,234,216,.6)">🔄 Curse Regulate</a>
+          <a onclick="nav('organizate')" style="font-size:13px;color:rgba(240,234,216,.6)">🚌 Curse Organizate</a>
+          <a onclick="nav('bilet')" style="font-size:13px;color:rgba(240,234,216,.6)">🎟️ Verificare Bilet</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:13px;color:rgba(240,234,216,.9);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Legal</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <a onclick="nav('gdpr')" style="font-size:13px;color:rgba(240,234,216,.6)">Politică GDPR</a>
+          <a onclick="nav('termeni')" style="font-size:13px;color:rgba(240,234,216,.6)">Termeni și Condiții</a>
+          <a href="https://anpc.ro" target="_blank" style="font-size:13px;color:rgba(240,234,216,.6)">ANPC</a>
+          <a href="https://ec.europa.eu/consumers/odr" target="_blank" style="font-size:13px;color:rgba(240,234,216,.6)">SOL — Soluționare Online Litigii</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:13px;color:rgba(240,234,216,.9);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Contact</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:rgba(240,234,216,.6)" id="footer-contact">
+          <span>📧 irimia.teodor.17@gmail.com</span>
+        </div>
+      </div>
+    </div>
+    <!-- ANPC Banner -->
+    <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center;margin-bottom:20px;padding:14px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid rgba(255,255,255,.08)">
+      <a href="https://anpc.ro/ce-este-sal/" target="_blank" style="display:flex;align-items:center;gap:8px;color:rgba(240,234,216,.7);font-size:12px;font-weight:600">
+        <span style="background:rgba(184,134,11,.3);border:1px solid rgba(184,134,11,.4);color:var(--gold2);padding:4px 10px;border-radius:6px;font-weight:700">ANPC</span>
+        Soluționarea Alternativă a Litigiilor
+      </a>
+      <span style="color:rgba(240,234,216,.2)">|</span>
+      <a href="https://ec.europa.eu/consumers/odr" target="_blank" style="display:flex;align-items:center;gap:8px;color:rgba(240,234,216,.7);font-size:12px;font-weight:600">
+        <span style="background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.3);color:#93c5fd;padding:4px 10px;border-radius:6px;font-weight:700">SOL</span>
+        Platformă Europeană Soluționare Online
+      </a>
+    </div>
+    <!-- Bottom bar -->
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;font-size:11px;color:rgba(240,234,216,.4)">
+      <span>© ${new Date().getFullYear()} LSD Group SRL · Toate drepturile rezervate · Autorizat ARR</span>
+      <span>Transport persoane · Cursuri regulate și organizate în România</span>
+    </div>
   </div>
 </footer>
 <!-- MODALS -->
@@ -722,6 +956,50 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
       <div id="ccon"></div>
     </div>
     <div class="mf"><button class="btn bs" onclick="cm('cinema')">Anulează</button><button class="btn bp" id="cinok" disabled onclick="confSeats()">Confirmă rezervarea</button></div>
+  </div>
+</div>
+<!-- MODAL PLATA -->
+<div class="mo" id="mo-plata">
+  <div class="md">
+    <div class="mh">
+      <div><div class="mt2">💳 Modalitate plată</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px" id="plata-sub"></div>
+      </div>
+      <button class="mx" onclick="cm('plata')">✕</button>
+    </div>
+    <div class="mb2">
+      <div style="background:var(--bg3);border-radius:12px;padding:16px;margin-bottom:16px;text-align:center">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Total de plată</div>
+        <div style="font-size:28px;font-weight:800;color:var(--gold)" id="plata-total">—</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="plata-opt" id="opt-sofer" onclick="selectPlata('sofer')" style="background:#fff;border:2px solid var(--gold);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div style="font-size:32px">💵</div>
+            <div>
+              <div style="font-weight:700;font-size:15px">Plătesc la șofer</div>
+              <div style="font-size:13px;color:var(--muted);margin-top:2px">Cash sau card la îmbarcare · Biletul se emite acum</div>
+            </div>
+          </div>
+        </div>
+        <div class="plata-opt" id="opt-online" onclick="selectPlata('online')" style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div style="font-size:32px">💳</div>
+            <div>
+              <div style="font-weight:700;font-size:15px">Am plătit online</div>
+              <div style="font-size:13px;color:var(--muted);margin-top:2px">Bifează dacă ai efectuat deja plata online</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="background:rgba(184,134,11,.07);border:1px solid rgba(184,134,11,.2);border-radius:10px;padding:12px;margin-top:14px;font-size:12px;color:var(--muted)">
+        ℹ️ Biletul se emite imediat indiferent de modalitatea de plată. Plata la șofer trebuie confirmată de șofer la îmbarcare.
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn bs" onclick="cm('plata')">Anulează</button>
+      <button class="btn bp" id="plata-confirm-btn" onclick="confirmaPlata()">Continuă →</button>
+    </div>
   </div>
 </div>
 <!-- BILET -->
@@ -871,31 +1149,40 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
   <div class="md md-lg"><div class="mh"><div class="mt2" id="sfmt">Adaugă șofer</div><button class="mx" onclick="cm('sofer')">✕</button></div>
   <div class="mb2">
     <input type="hidden" id="sfmid"/>
-    <div class="fr">
-      <div class="fg"><div class="fl">Nume *</div><input type="text" id="smn"/></div>
-      <div class="fg"><div class="fl">Prenume *</div><input type="text" id="smpn"/></div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Date identitate</div>
+      <div class="fr">
+        <div class="fg"><div class="fl">Nume *</div><input type="text" id="smn"/></div>
+        <div class="fg"><div class="fl">Prenume *</div><input type="text" id="smpn"/></div>
+      </div>
+      <div class="fg"><div class="fl">CNP *</div><input type="text" id="smcnp" placeholder="1234567890123" maxlength="13"/>
+        <div class="fh">Folosit intern pentru contract. Nu este afișat public.</div>
+      </div>
     </div>
-    <div class="fr">
-      <div class="fg"><div class="fl">Email (cont Firebase) *</div><input type="email" id="sme"/></div>
-      <div class="fg"><div class="fl">Telefon *</div><input type="tel" id="smt" placeholder="07XX XXX XXX"/></div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Contact & Cont</div>
+      <div class="fr">
+        <div class="fg"><div class="fl">Email (cont Firebase) *</div><input type="email" id="sme"/>
+          <div class="fh">Șoferul se loghează cu acest email</div>
+        </div>
+        <div class="fg"><div class="fl">Telefon *</div><input type="tel" id="smt" placeholder="07XX XXX XXX"/></div>
+      </div>
     </div>
-    <div class="fr">
-      <div class="fg"><div class="fl">CNP</div><input type="text" id="smcnp" placeholder="1234567890123" maxlength="13"/></div>
-      <div class="fg"><div class="fl">Serie / Nr. buletin</div><input type="text" id="smbul" placeholder="IS123456"/></div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Permis conducere</div>
+      <div class="fr">
+        <div class="fg"><div class="fl">Nr. permis *</div><input type="text" id="smperm"/></div>
+        <div class="fg"><div class="fl">Categorie</div><select id="smcat"><option value="D">D (autocar)</option><option value="D+E">D+E</option><option value="D1">D1</option><option value="B">B</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><div class="fl">Dată expirare permis</div><input type="date" id="smexp"/></div>
+        <div class="fg"><div class="fl">Data angajării</div><input type="date" id="smang"/></div>
+      </div>
     </div>
-    <div class="fr">
-      <div class="fg"><div class="fl">Nr. permis conducere</div><input type="text" id="smperm"/></div>
-      <div class="fg"><div class="fl">Categoria permis</div><select id="smcat"><option value="D">D (autocar)</option><option value="D+E">D+E</option><option value="D1">D1</option><option value="B">B (auto mic)</option></select></div>
-    </div>
-    <div class="fr">
-      <div class="fg"><div class="fl">Exp. permis</div><input type="date" id="smexp"/></div>
-      <div class="fg"><div class="fl">Data angajării</div><input type="date" id="smang"/></div>
-    </div>
-    <div class="fg"><div class="fl">Adresă domiciliu</div><input type="text" id="smadr" placeholder="Str. Exemplu, Nr. 1, Iași"/></div>
-    <div class="fg"><div class="fl">Observații</div><textarea id="smobs" rows="2" placeholder="Ex: Cunoaște ruta Iași-Suceava, vorbește engleză..."></textarea></div>
+    <div class="fg"><div class="fl">Observații interne</div><textarea id="smobs" rows="2" placeholder="Ex: Cunoaște ruta Iași-Suceava..."></textarea></div>
     <div class="fg"><div class="fl">Cont activ</div><label class="tog"><input type="checkbox" id="smact" checked/><span class="tosl"></span></label></div>
-    <div style="background:var(--bg3);border:1px solid rgba(249,115,22,.3);border-radius:8px;padding:12px;font-size:12px;color:var(--orange)">
-      ⚠️ Șoferul trebuie să creeze un cont pe site cu <strong>același email</strong> introdus aici. La prima autentificare, rolul de șofer se activează automat.
+    <div style="background:rgba(184,134,11,.08);border:1px solid rgba(184,134,11,.3);border-radius:8px;padding:12px;font-size:12px;color:var(--gold)">
+      💡 Șoferul trebuie să creeze un cont pe site cu <strong>același email</strong>. La prima autentificare, rolul se activează automat.
     </div>
   </div>
   <div class="mf"><button class="btn bs" onclick="cm('sofer')">Anulează</button><button class="btn bp" onclick="saveSofer()">Salvează șofer</button></div></div>
@@ -1069,14 +1356,23 @@ onSnapshot(collection(db,'ticker'),snap=>{
 
 // ── FOOTER ────────────────────────────────────────────────
 function renderFooter(){
-  const f=window._FIRMA;
+  const f=window._FIRMA||{};
   const name=f.name||'LSD Group SRL';
-  const cui=f.cui||'';
+  const cui=f.cui||'RO12345678';
   const reg=f.reg||'';
   const tel=f.tel||'';
   const adr=f.adr||'';
-  document.getElementById('footer-content').innerHTML=
-    `<strong>${name}</strong>${cui?' — CUI: '+cui:''} ${reg?'— '+reg:''}<br>${adr} ${tel?'— Tel: '+tel:''}<br>© ${new Date().getFullYear()} Toate drepturile rezervate`;
+  const iban=f.iban||'';
+  const el=document.getElementById('footer-content');
+  if(el)el.innerHTML=`<strong style="color:rgba(240,234,216,.85)">${name}</strong><br>`
+    +(cui?`CUI: ${cui}<br>`:'')
+    +(reg?`${reg}<br>`:'')
+    +(adr?`${adr}<br>`:'');
+  const contact=document.getElementById('footer-contact');
+  if(contact)contact.innerHTML=
+    (tel?`<span>📞 ${tel}</span>`:'<span>📞 —</span>')
+    +`<span>📧 ${f.email||ADMIN}</span>`
+    +(iban?`<span>🏦 IBAN: ${iban}</span>`:'');
 }
 
 // ── NAV ───────────────────────────────────────────────────
@@ -1113,10 +1409,12 @@ function bNav(role){
   } else if(u){
     ab.innerHTML=`<button class="nb nbo" onclick="nav('cont')">👤 Contul Meu</button><button class="nb nbo" onclick="doSO()">${u.displayName||'Cont'} ↗</button>`;
     const nb=document.getElementById('notif-bell');if(nb)nb.style.display='flex';
+    showPWAInstallBtn();
     mm.innerHTML=`<button class="nl" onclick="nav('home')">🏠 Acasă</button><button class="nl" onclick="nav('regulate')">🔄 Regulate</button><button class="nl" onclick="nav('organizate')">🚌 Organizate</button><button class="nl" onclick="nav('bilet')">🎟️ Biletul meu</button><button class="nl" onclick="nav('cont')">👤 Contul Meu</button><button class="nl" onclick="nav('gdpr')">GDPR</button><button class="nl" onclick="nav('termeni')">Termeni</button><button class="nl" onclick="doSO()">↗ Deconectare</button>`;
   } else {
     ab.innerHTML=`<button class="nb nbg" onclick="nav('auth')">Conectare / Înregistrare</button>`;
     const nbg=document.getElementById('notif-bell');if(nbg)nbg.style.display='none';
+    showPWAInstallBtn();
     mm.innerHTML=`<button class="nl" onclick="nav('home')">🏠 Acasă</button><button class="nl" onclick="nav('regulate')">🔄 Regulate</button><button class="nl" onclick="nav('organizate')">🚌 Organizate</button><button class="nl" onclick="nav('bilet')">🎟️ Biletul meu</button><button class="nl" onclick="nav('gdpr')">GDPR</button><button class="nl" onclick="nav('termeni')">Termeni</button><button class="nl" onclick="nav('auth')">🔐 Conectare</button>`;
   }
 }
@@ -1420,6 +1718,23 @@ window.openCin=async(cId,data,directie='dus',plecareIdx=0)=>{
   document.getElementById('pprev').style.display='none';
   document.getElementById('ssum').style.display='none';
   document.getElementById('cinok').disabled=true;
+  // Daca sunt mai multe plecari, arata selector ora
+  const plecariDisp=(_cC.plecari||[{ora:_cC.ora}]).filter(p=>p.ora);
+  if(plecariDisp.length>1){
+    const oraSel=document.getElementById('cin-ora-sel');
+    if(!oraSel){
+      const div=document.createElement('div');
+      div.id='cin-ora-wrap';
+      div.style.cssText='margin-bottom:14px';
+      div.innerHTML='<div class="fl" style="margin-bottom:8px">Alege ora de plecare</div>'
+        +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+        +plecariDisp.map((p,i)=>`<button class="stbt ${i===plecareIdx?'on':''}" onclick="schimbaOraCin(${i})">${p.ora}</button>`).join('')
+        +'</div>';
+      document.getElementById('cinsub').after(div);
+    }
+  }else{
+    document.getElementById('cin-ora-wrap')?.remove();
+  }
   await loadOcc(cId,data);
   renderSU();
   document.getElementById('scob').innerHTML='<span style="color:var(--muted);font-size:12px">Selectați mai întâi stația de urcare</span>';
@@ -1454,6 +1769,18 @@ function renderSU(){
   const st=_cC.statii||[];
   document.getElementById('suru').innerHTML=st.slice(0,-1).map((s,i)=>`<button class="stbt" onclick="selU(${i})">${s.nume}</button>`).join('');
 }
+window.schimbaOraCin=(pi)=>{
+  // Reinitializeaza cinema cu alta ora de plecare
+  const plecari=_cC.plecari||[{ora:_cC.ora}];
+  const pl=plecari[pi]||plecari[0];
+  _cC={..._cC,ora:pl.ora,plecari:[pl]};
+  document.querySelectorAll('#cin-ora-wrap .stbt').forEach((b,i)=>b.classList.toggle('on',i===pi));
+  const oraCurenta=pl.ora||'-';
+  document.getElementById('cinsub').textContent=`📅 ${_cD} · 🕐 ${oraCurenta} · 🚌 ${_cC.vehiculNume||'-'}`;
+  _cSel=[];renderSeats();updSum();
+  document.getElementById('cinok').disabled=true;
+};
+
 window.selU=idx=>{
   _cIU=idx;_cIC=null;_cSel=[];
   document.getElementById('cinok').disabled=true;
@@ -1789,16 +2116,29 @@ window.printB=()=>{
 window.calcOrgPret=async()=>{
   const vehId=document.getElementById('org-veh-select')?.value;
   let km=parseInt(document.getElementById('okm')?.value)||0;
-  // Auto-calc km din ORS daca avem statii
-  if(!km&&_oSt.filter(Boolean).length>=2){
-    const dist=await calcDistantaORS(_oSt[0],_oSt[_oSt.length-1]);
+  // Auto-calc km din ORS daca avem cel putin plecare si destinatie
+  const stopsValide=_oSt.filter(Boolean);
+  if(stopsValide.length>=2){
+    const timpEl=document.getElementById('org-timp-estim');
+    if(timpEl&&!km)timpEl.innerHTML='<span style="color:var(--muted);font-size:12px">⏱️ Se calculează distanța...</span>';
+    const dist=await calcDistantaORS(stopsValide[0],stopsValide[stopsValide.length-1]);
     if(dist){
-      km=dist.km*2; // dus-intors
+      // Km total = suma segmentelor (simplificat: dus x2 pentru dus-intors)
+      const kmDus=dist.km;
+      km=kmDus*2;
       const kmEl=document.getElementById('okm');
-      if(kmEl)kmEl.value=km;
-      // Afiseaza timp estimat
+      if(kmEl&&!kmEl.value)kmEl.value=km;
       const timpEl=document.getElementById('org-timp-estim');
-      if(timpEl)timpEl.innerHTML=`<span style="color:var(--muted);font-size:12px">⏱️ Timp estimat dus-întors: ~${dist.durataText} × 2 = ~${minToTime2(dist.minReal*2)} · ${dist.km} km × 2 = ${km} km</span>`;
+      if(timpEl)timpEl.innerHTML=`<div style="background:rgba(184,134,11,.06);border:1px solid rgba(184,134,11,.2);border-radius:8px;padding:10px 12px;font-size:12px">
+        <div style="font-weight:600;color:var(--gold);margin-bottom:4px">🗺️ Estimare traseu (OpenRouteService)</div>
+        <div style="color:var(--muted);display:flex;gap:14px;flex-wrap:wrap">
+          <span>📍 ${stopsValide[0]} → ${stopsValide[stopsValide.length-1]}</span>
+          <span>📏 ${kmDus} km (dus) · ${km} km (dus-întors)</span>
+          <span>⏱️ ~${dist.durataText} (dus) · ~${minToTime2(dist.minReal*2)} (dus-întors)</span>
+        </div>
+      </div>`;
+    }else if(timpEl){
+      timpEl.innerHTML='<span style="font-size:12px;color:var(--muted)">Nu s-a putut calcula automat. Introduceți km manual.</span>';
     }
   }
   const el=document.getElementById('org-pret-estim');
@@ -1932,11 +2272,24 @@ window.submitOrg=async()=>{
   };
   try{
     await addDoc(collection(db,'rezervari'),rez);
-    await sendEjs({
-      nume:nc,email:em,telefon:tel,tip:desc,data,ora,
+    // Email client - organizate template
+    sendEjsOrg({
+      to_email:em,
+      nume:nc,
+      subiect:'Cerere primită — LSD Group SRL',
+      mesaj:'Cererea ta de cursa organizata a fost primita! Echipa noastra o va analiza si te va contacta in curand cu o oferta.',
       traseu:stops.join(' → '),
-      vehicul:chosenVeh?chosenVeh.nume+' ('+cap(chosenVeh)+' locuri)':'De confirmat de echipă',
-      obs:(obs?obs+' | ':'')+(pretEstim?'Preț estimativ: '+pretEstim+' RON':'')
+      data,ora,
+      vehicul:chosenVeh?chosenVeh.nume+' ('+cap(chosenVeh)+' locuri)':'De confirmat',
+      pret:pretEstim?pretEstim+' RON (estimativ)':'La cerere',
+      status:'În așteptare'
+    });
+    // Email admin
+    const _adminMsgOrg=[desc,obs?'Obs: '+obs:'',chosenVeh?'Vehicul: '+chosenVeh.nume:'',pretEstim?'Pret estimativ: '+pretEstim+' RON':''].filter(Boolean).join(' | ');
+    sendEjsAdmin({
+      subiect:'Cerere organizata noua - '+stops.join(' - '),
+      mesaj:_adminMsgOrg,
+      nume_client:nc,telefon:tel,tip:desc,traseu:stops.join(' - ')
     });
     toast('✅ Cererea a fost trimisă! Veți fi contactat în curând.','ok');
     _oSt=['',''];
@@ -2426,7 +2779,7 @@ async function bSC(cursa,data){
   rezervari.forEach(rez=>{
     (rez.locuriRezervate||[]).forEach(l=>{
       const iU=statii.findIndex(s=>s.nume===l.statieUrcare);
-      if(iU!==-1)pU[iU].push({numeClient:rez.numeClient,telefon:rez.telefon||'-',locNr:l.locNr,statieCoborare:l.statieCoborare,biletId:rez.biletId||'-'});
+      if(iU!==-1)pU[iU].push({numeClient:rez.numeClient,telefon:rez.telefon||'-',locNr:l.locNr,statieCoborare:l.statieCoborare,biletId:rez.biletId||'-',statusPlata:rez.statusPlata||'',rezId:rez.id});
       const iC=statii.findIndex(s=>s.nume===l.statieCoborare);
       if(iC!==-1)pD[iC].push({numeClient:rez.numeClient,locNr:l.locNr,statieUrcare:l.statieUrcare});
     });
@@ -2474,6 +2827,7 @@ async function bSC(cursa,data){
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span class="pl2">Loc ${p.locNr}</span>
           <span style="font-size:12px;color:var(--muted);background:var(--bg2);padding:3px 8px;border-radius:5px">↓ coboară: ${p.statieCoborare}</span>
+          ${p.statusPlata==="platit_online"?'<span style="color:var(--green);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid rgba(21,128,61,.25);background:rgba(21,128,61,.1)">💳 Online ✓</span>':p.statusPlata==="confirmat_sofer"?'<span style="color:var(--green);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid rgba(21,128,61,.25);background:rgba(21,128,61,.1)">💵 Cash ✓</span>':'<span style="color:var(--orange);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid rgba(194,85,15,.3);background:rgba(194,85,15,.08);cursor:pointer" onclick="confirmaPlataSoferPasager(event,&apos;"+p.rezId+"&apos;)">💵 De încasat</span>'}
         </div>
       </div>`});
     }
@@ -2618,6 +2972,34 @@ window.loadSoferCurse=async()=>{
     const selCursa=document.getElementById('sf-bilete-cursa');
     selCursa.innerHTML='<option value="">— toate cursele —</option>'+curse.map(c=>`<option value="${c.id}">${c.ruta} (${c.ora})</option>`).join('');
   }catch(e){el.innerHTML=`<div style="color:var(--red);padding:16px">❌ ${e.message}</div>`}
+};
+
+window.confirmaPlataSoferPasager=async(event,rezId)=>{
+  event.stopPropagation();
+  if(!rezId){toast('ID rezervare lipsă','wr');return;}
+  if(!confirm('Confirmi că pasagerul a plătit cash?'))return;
+  try{
+    await setDoc(doc(db,'rezervari',rezId),{
+      statusPlata:'confirmat_sofer',
+      plataCofirmataDe:window._U?.email||'sofer',
+      plataCofirmataLa:Timestamp.now()
+    },{merge:true});
+    toast('✅ Plată confirmată!','ok');
+    loadSoferAzi();
+  }catch(e){toast('Eroare: '+e.message,'er')}
+};
+
+window.confirmaPlataSofer=async(rezId)=>{
+  if(!confirm('Confirmi că pasagerul a plătit cash?'))return;
+  try{
+    await setDoc(doc(db,'rezervari',rezId),{
+      statusPlata:'confirmat_sofer',
+      plataCofirmataDe:window._U?.email||'sofer',
+      plataCofirmataLa:Timestamp.now()
+    },{merge:true});
+    toast('✅ Plată confirmată!','ok');
+    loadSoferBilete();
+  }catch(e){toast('Eroare: '+e.message,'er')}
 };
 
 window.loadSoferVehicul=async()=>{
@@ -3041,24 +3423,27 @@ function rSE(){
 window.addSt=()=>{_eSt.splice(_eSt.length-1,0,{n:'',p:0,m:0});rSE()};
 window.calcStatiiORS=async()=>{
   const statii=_eSt.filter(s=>s.n);
-  if(statii.length<2){toast('Adaugati cel putin 2 statii','wr');return}
-  toast('Se calculeaza distantele...','in');
+  if(statii.length<2){toast('Adaugați cel puțin 2 stații','wr');return}
+  toast('Se calculează distanțele pe drumuri reale...','in');
   let totalKm=0;
-  for(let i=1;i<statii.length;i++){
-    const dist=await calcDistantaORS(statii[i-1].n,statii[i].n);
+  // Calculeaza secvential: statie[0]->statie[1], statie[1]->statie[2] etc
+  for(let i=1;i<_eSt.length;i++){
+    if(!_eSt[i-1].n||!_eSt[i].n)continue;
+    const dist=await calcDistantaORS(_eSt[i-1].n,_eSt[i].n);
     if(dist){
       totalKm+=dist.km;
-      statii[i].p=totalKm;
-      statii[i].m=Math.round(totalKm/70*60);
+      _eSt[i].kmCumulat=totalKm;
+      _eSt[i].m=dist.minReal+(i>1?(_eSt[i-1].m||0):0); // minute cumulate de la start
+      // Pret sugerat: 0.5 RON/km (editabil)
+      if(!_eSt[i].p||_eSt[i].p===0){
+        _eSt[i].p=Math.round(totalKm*0.5);
+      }
+    }else{
+      toast('Nu s-a putut calcula distanța pentru "'+_eSt[i-1].n+' → '+_eSt[i].n+'". Verificați numele localităților.','wr');
     }
   }
-  // Update _eSt prices and minutes
-  statii.forEach((s,i)=>{
-    const idx=_eSt.findIndex(x=>x.n===s.n);
-    if(idx>0&&s.p){_eSt[idx].m=s.m;}
-  });
   rSE();
-  toast('Distante calculate: '+totalKm+' km total','ok');
+  toast('✅ Calculat: '+totalKm+' km total pe drumuri reale. Prețurile sunt sugestii — le puteți modifica.','ok');
 };
 window.dSt=i=>{if(_eSt.length<=2){toast('Trebuie minim 2 stații','wr');return}_eSt.splice(i,1);rSE()};
 window.tday=btn=>btn.classList.toggle('on');
@@ -3252,7 +3637,11 @@ async function loadAzT(){
       <td>${r.tipRezervare==='regulata'?'🔄 Regulată':'🚌 Organizată'}</td>
       <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.traseu||r.ruta||r.descriereCursa||'-'}</td>
       <td>${r.data||'-'}</td>
-      <td><span class="sb ${sc}">${sl[sc]||''} ${sc.replace('_',' ')}</span>${hasMsgs?` <span style="font-size:10px;color:var(--blue)">(${(r.mesaje||[]).length} msg)</span>`:''}</td>
+      <td>
+        <span class="sb ${sc}">${sl[sc]||''} ${sc.replace('_',' ')}</span>
+        ${hasMsgs?`<span style="font-size:10px;color:var(--gold);margin-left:4px">(${(r.mesaje||[]).length} msg)</span>`:''}
+        <br>${r.statusPlata==='platit_online'?'<span style="font-size:10px;color:var(--green)">💳 Online</span>':r.statusPlata==='confirmat_sofer'?'<span style="font-size:10px;color:var(--green)">💵 Sofer ✓</span>':r.statusPlata==='de_platit_sofer'?'<span style="font-size:10px;color:var(--orange)">💵 De încasat</span>':''}
+      </td>
       <td><button class="btn bs bsm" onclick="openRD('${d.id}')">💬 Detalii</button></td>
     </tr>`;
   }).join('');
@@ -3471,6 +3860,7 @@ window.loadSetari=async()=>{
     const s=d.emailjs||{};const f=d.firma||{};
     document.getElementById('esid').value=s.serviceId||'';
     document.getElementById('etid-client').value=s.templateIdClient||s.templateId||'';
+    document.getElementById('etid-org').value=s.templateIdOrg||'';
     document.getElementById('etid-admin').value=s.templateIdAdmin||'';
     document.getElementById('ekey').value=s.publicKey||'';
     document.getElementById('eadm').value=s.adminEmail||ADMIN;
@@ -3490,6 +3880,7 @@ window.saveSet=async()=>{
   const ejs={
     serviceId:document.getElementById('esid').value.trim(),
     templateIdClient:document.getElementById('etid-client').value.trim(),
+    templateIdOrg:document.getElementById('etid-org').value.trim(),
     templateIdAdmin:document.getElementById('etid-admin').value.trim(),
     templateId:document.getElementById('etid-client').value.trim(), // backwards compat
     publicKey:document.getElementById('ekey').value.trim(),
@@ -4273,7 +4664,7 @@ async function initEjs(){
   return true;
 }
 
-// Email catre CLIENT
+// Email catre CLIENT — curse regulate
 async function sendEjsClient(params){
   const cfg=window._EJS;
   if(!cfg||!cfg.serviceId||!cfg.templateIdClient||!cfg.publicKey)return false;
@@ -4286,6 +4677,23 @@ async function sendEjsClient(params){
     });
     return true;
   }catch(e){console.error('EJS client error:',e);return false}
+}
+
+// Email catre CLIENT — curse organizate
+async function sendEjsOrg(params){
+  const cfg=window._EJS;
+  // Fallback la templateIdClient daca nu e configurat template separat
+  const tmpl=cfg?.templateIdOrg||cfg?.templateIdClient;
+  if(!cfg||!cfg.serviceId||!tmpl||!cfg.publicKey)return false;
+  try{
+    await initEjs();
+    await window.emailjs.send(cfg.serviceId,tmpl,{
+      to_email:params.to_email||params.email,
+      from_name:'LSD Group SRL',
+      ...params
+    });
+    return true;
+  }catch(e){console.error('EJS org error:',e);return false}
 }
 
 // Email catre ADMIN
@@ -4323,19 +4731,49 @@ async function sendEjs(params){
 
 
 // ── ADMIN VIEW AS ─────────────────────────────────────────
+window._adminMode=false; // true cand admin simuleaza alt rol
+
 window.adminViewAs=(role)=>{
+  window._adminMode=true;
+  window._origRole='admin';
   if(role==='sofer'){
     window._ROLE='sofer';
     bNav('sofer');
     nav('sofer');
     loadSofer();
-    toast('Afișaj șofer activat — apasă Admin pentru a reveni','in');
+    showAdminReturnBar('Afișaj Șofer');
   }else{
     window._ROLE='client';
     bNav('client');
     nav('home');
-    toast('Afișaj client activat','in');
+    showAdminReturnBar('Afișaj Client');
   }
+};
+
+function showAdminReturnBar(label){
+  let bar=document.getElementById('admin-return-bar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='admin-return-bar';
+    bar.style.cssText='position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,var(--gold),var(--gold2));padding:12px 20px;display:flex;justify-content:space-between;align-items:center;z-index:9990;box-shadow:0 -4px 16px rgba(184,134,11,.3)';
+    document.body.appendChild(bar);
+  }
+  bar.innerHTML=`<span style="font-weight:700;color:#fff;font-size:13px">👑 Admin → ${label} (mod previzualizare)</span>
+    <button class="btn" style="background:#fff;color:var(--gold);font-weight:700;padding:7px 16px;border-radius:8px;border:none;cursor:pointer" onclick="revinLaAdmin()">← Revin la Admin</button>`;
+  bar.style.display='flex';
+  // Adauga padding la body ca sa nu ascunda continut
+  document.getElementById('app').style.paddingBottom='60px';
+}
+
+window.revinLaAdmin=()=>{
+  window._ROLE='admin';
+  window._adminMode=false;
+  bNav('admin');
+  nav('admin');
+  const bar=document.getElementById('admin-return-bar');
+  if(bar)bar.style.display='none';
+  document.getElementById('app').style.paddingBottom='';
+  toast('Ai revenit la panoul admin','ok');
 };
 
 // ── PLATA UI ──────────────────────────────────────────────
@@ -4437,83 +4875,224 @@ function minToTime(min){
 function timeToMin(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
 
 // ── PROGRAM SOFERI (admin tab) ─────────────────────────────
+window.setProgDataAzi=()=>{
+  const d=document.getElementById('prog-data');
+  d.value=new Date().toISOString().split('T')[0];
+  loadProgramSoferi();
+};
+
+// Calcul ore condus pentru un sofer intr-o perioada
+async function calcOreSofer(soferEmail, zile){
+  // Fiecare zi: gasim cursele regulate atribuite + calculam km
+  let totalMin=0;
+  const regSnap=await getDocs(collection(db,'curse_regulate'));
+  const curseAll=regSnap.docs.map(d=>({id:d.id,...d.data()}));
+  for(const data of zile){
+    const dow=new Date(data+'T12:00:00').getDay();
+    const curseZi=curseAll.filter(c=>{
+      if(!c.activa)return false;
+      if(c.dateBlocate&&c.dateBlocate.includes(data))return false;
+      if(c.dataStart&&data<c.dataStart)return false;
+      if(c.dataEnd&&data>c.dataEnd)return false;
+      if(!(c.zile||[]).includes(dow))return false;
+      const pl=c.plecari||[{soferEmail:c.soferEmail}];
+      return pl.some(p=>p.soferEmail===soferEmail);
+    });
+    for(const c of curseZi){
+      const statiiMin=c.statii&&c.statii.length>=2?c.statii[c.statii.length-1].minuteDeLaStart||0:0;
+      const minZi=c.tipCursa==='dus-intors'?statiiMin*2:statiiMin;
+      totalMin+=minZi;
+    }
+  }
+  return totalMin;
+}
+
+function getZileInterval(dataRef, view){
+  const ref=new Date(dataRef+'T12:00:00');
+  const zile=[];
+  if(view==='zi'){
+    zile.push(dataRef);
+  }else if(view==='saptamana'){
+    // Luni - Duminica saptamana curenta
+    const dow=ref.getDay();
+    const luni=new Date(ref);
+    luni.setDate(ref.getDate()-(dow===0?6:dow-1));
+    for(let i=0;i<7;i++){
+      const d=new Date(luni);d.setDate(luni.getDate()+i);
+      zile.push(d.toISOString().split('T')[0]);
+    }
+  }else{
+    // 2 saptamani: saptamana curenta + urmatoarea
+    const dow=ref.getDay();
+    const luni=new Date(ref);
+    luni.setDate(ref.getDate()-(dow===0?6:dow-1));
+    for(let i=0;i<14;i++){
+      const d=new Date(luni);d.setDate(luni.getDate()+i);
+      zile.push(d.toISOString().split('T')[0]);
+    }
+  }
+  return zile;
+}
+
+const DAYS_RO=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
+const MONTHS_RO2=['Ian','Feb','Mar','Apr','Mai','Iun','Iul','Aug','Sep','Oct','Nov','Dec'];
+
+function formatDataScurt(data){
+  const d=new Date(data+'T12:00:00');
+  return DAYS_RO[d.getDay()]+' '+d.getDate()+' '+MONTHS_RO2[d.getMonth()];
+}
+
 window.loadProgramSoferi=async()=>{
   const dataEl=document.getElementById('prog-data');
   if(!dataEl.value)dataEl.value=new Date().toISOString().split('T')[0];
   const data=dataEl.value;
-  const dow=new Date(data+'T12:00:00').getDay();
+  const view=document.getElementById('prog-view')?.value||'saptamana';
   const el=document.getElementById('program-list');
+  const sumar=document.getElementById('program-sumar');
   el.innerHTML='<p style="color:var(--muted)">Se încarcă...</p>';
+  if(sumar)sumar.innerHTML='';
+
   await loadFlota();
   const sfSnap=await getDocs(collection(db,'soferi'));
   const soferi=sfSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.activ!==false);
   const regSnap=await getDocs(collection(db,'curse_regulate'));
-  const curseZi=regSnap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>{
-    if(!c.activa)return false;
-    if(!(c.zile||[]).includes(dow))return false;
-    if(c.dataStart&&data<c.dataStart)return false;
-    if(c.dataEnd&&data>c.dataEnd)return false;
-    if(c.dateBlocate&&c.dateBlocate.includes(data))return false;
-    return true;
-  });
-  if(!curseZi.length){
-    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:40px;margin-bottom:10px">😴</div><p>Nu există curse active pentru '+data+'.</p></div>';
-    return;
+  window._R=regSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+  const zile=getZileInterval(data,view);
+  const zile7=getZileInterval(data,'saptamana');
+  const zile14=getZileInterval(data,'2saptamani');
+
+  // ── SUMAR ORE SOFERI ──
+  if(sumar&&soferi.length){
+    sumar.innerHTML='<div style="overflow-x:auto"><table class="tbl" style="min-width:600px"><thead><tr>'
+      +'<th>Șofer</th>'
+      +'<th style="text-align:center">Azi</th>'
+      +'<th style="text-align:center">Săpt. (56h max)</th>'
+      +'<th style="text-align:center">2 Săpt. (90h max)</th>'
+      +'<th>Permis expiră</th>'
+      +'<th>Status</th>'
+      +'</tr></thead><tbody id="sumar-body"></tbody></table></div>';
+    // Calculeaza async pentru fiecare sofer
+    setTimeout(async()=>{
+      const tbody=document.getElementById('sumar-body');
+      if(!tbody)return;
+      const today=new Date().toISOString().split('T')[0];
+      for(const sf of soferi){
+        const [minZi,minS,min2S]=await Promise.all([
+          calcOreSofer(sf.email,[today]),
+          calcOreSofer(sf.email,zile7),
+          calcOreSofer(sf.email,zile14)
+        ]);
+        const h=(m)=>(m/60).toFixed(1)+'h';
+        const pctS=Math.round(minS/56/60*100);
+        const pct2S=Math.round(min2S/90/60*100);
+        const warnS=pctS>=90;const warn2S=pct2S>=90;
+        const expOk=!sf.expPermis||new Date(sf.expPermis)>new Date();
+        const expDays=sf.expPermis?Math.round((new Date(sf.expPermis)-new Date())/86400000):null;
+        const row=document.createElement('tr');
+        row.innerHTML=`<td><strong>${sf.prenume||''} ${sf.nume||''}</strong><br><span style="font-size:11px;color:var(--muted)">${sf.email}</span></td>
+          <td style="text-align:center;font-size:13px">${h(minZi)}</td>
+          <td style="text-align:center">
+            <div style="font-size:13px;font-weight:${warnS?700:400};color:${warnS?'var(--red)':'var(--text)'}">${h(minS)} / 56h</div>
+            <div style="height:6px;background:var(--bg3);border-radius:3px;margin-top:4px;overflow:hidden"><div style="height:100%;border-radius:3px;background:${warnS?'var(--red)':pctS>=70?'var(--orange)':'var(--green)'};width:${Math.min(pctS,100)}%"></div></div>
+          </td>
+          <td style="text-align:center">
+            <div style="font-size:13px;font-weight:${warn2S?700:400};color:${warn2S?'var(--red)':'var(--text)'}">${h(min2S)} / 90h</div>
+            <div style="height:6px;background:var(--bg3);border-radius:3px;margin-top:4px;overflow:hidden"><div style="height:100%;border-radius:3px;background:${warn2S?'var(--red)':pct2S>=70?'var(--orange)':'var(--green)'};width:${Math.min(pct2S,100)}%"></div></div>
+          </td>
+          <td style="font-size:12px;color:${expOk?'var(--green)':'var(--red)'}">${sf.expPermis||'—'}${expDays!==null&&expDays<=30?`<br><span style="font-weight:700">⚠️ ${expDays}z</span>`:''}</td>
+          <td><span class="sb ${sf.activ!==false?'confirmata':'anulata'}">${sf.activ!==false?'Activ':'Inactiv'}</span></td>`;
+        tbody.appendChild(row);
+      }
+    },0);
   }
-  let html='<div style="display:flex;flex-direction:column;gap:16px">';
+
+  // ── TABEL CURSE PE ZILE ──
+  if(view==='zi'){
+    // Afisaj simplu pe o zi (vechea logica)
+    const dow=new Date(data+'T12:00:00').getDay();
+    const curseZi=window._R.filter(c=>{
+      if(!c.activa)return false;
+      if(!(c.zile||[]).includes(dow))return false;
+      if(c.dataStart&&data<c.dataStart)return false;
+      if(c.dataEnd&&data>c.dataEnd)return false;
+      if(c.dateBlocate&&c.dateBlocate.includes(data))return false;
+      return true;
+    });
+    if(!curseZi.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:40px;margin-bottom:10px">😴</div><p>Nu există curse active pentru '+data+'.</p></div>';return;}
+    await renderProgramZi(curseZi,soferi,data,el);
+  }else{
+    // Tabel saptamanal/bilunar
+    await renderProgramSaptamanal(zile,soferi,el);
+  }
+};
+
+async function renderProgramZi(curseZi,soferi,data,el){
+  let html='<div style="display:flex;flex-direction:column;gap:14px">';
   for(const c of curseZi){
     const plecari=c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}];
-    const statiiMin=c.statii&&c.statii.length>=2?c.statii[c.statii.length-1].minuteDeLaStart||0:0;
-    let kmEst=Math.round(statiiMin/60*70);
-    // Incearca sa obtina km reali din ORS daca avem statii cu nume
-    if(c.statii&&c.statii.length>=2){
-      const prima=c.statii[0].nume,ultima=c.statii[c.statii.length-1].nume;
-      const cacheKey=prima+'|'+ultima;
-      if(window._orsKmCache&&window._orsKmCache[cacheKey]){
-        kmEst=window._orsKmCache[cacheKey];
-      }else{
-        calcDistantaORS(prima,ultima).then(d=>{
-          if(d){
-            if(!window._orsKmCache)window._orsKmCache={};
-            window._orsKmCache[cacheKey]=d.km;
-          }
-        });
-      }
-    }
-    const soferOptions='<option value="">— Alege șofer —</option>'+soferi.map(sf=>`<option value="${sf.email}" ${plecari[0]?.soferEmail===sf.email?'selected':''}>${sf.prenume||''} ${sf.nume||''}</option>`).join('');
-    html+=`<div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--shadow)">`;
-    html+=`<div style="font-family:Syne,sans-serif;font-weight:700;font-size:16px;margin-bottom:4px">${c.ruta}</div>`;
-    html+=`<div style="font-size:12px;color:var(--muted);margin-bottom:14px">🚌 ${c.vehiculNume||'-'} · ${c.capacitate} locuri</div>`;
+    html+=`<div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow)">`;
+    html+=`<div style="font-family:Syne,sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">${c.ruta}</div>`;
+    html+=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px">🚌 ${c.vehiculNume||'-'}</div>`;
     plecari.forEach((p,pi)=>{
-      const prog=c.tipCursa==='dus-intors'&&kmEst?calcProgram(p.ora,kmEst):null;
-      const intP=c.intorsPlecari?.[pi];
       const sfOpts='<option value="">— Alege șofer —</option>'+soferi.map(sf=>`<option value="${sf.email}" ${p.soferEmail===sf.email?'selected':''}>${sf.prenume||''} ${sf.nume||''}</option>`).join('');
-      html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">`;
-      html+=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">`;
-      html+=`<div><strong>🕐 Plecare ${p.ora||'-'}</strong>${intP?'  ↩️ Retur '+intP.ora:''}</div>`;
-      html+=`<select style="font-size:12px;padding:4px 8px" data-cursaid="${c.id}" data-pi="${pi}" data-data="${data}" onchange="atribuieSoferEl(this)">${sfOpts}</select>`;
-      html+=`</div>`;
-      if(prog){
-        html+=`<div style="font-size:12px;color:var(--muted);background:rgba(184,134,11,.06);border-radius:8px;padding:10px">`;
-        html+=`<div style="font-weight:600;color:var(--gold);margin-bottom:6px">⏱️ Program estimat (${kmEst} km × 2 = ${kmEst*2} km)</div>`;
-        html+=`<div style="display:flex;flex-wrap:wrap;gap:10px">`;
-        html+=`<span>✈️ Plecare: <strong>${prog.oraPlecare}</strong></span>`;
-        html+=`<span>📍 Sosire: <strong>${prog.oraSosireDus}</strong></span>`;
-        html+=`<span>☕ Pauza capat: <strong>${prog.pauzaCapat}min</strong></span>`;
-        html+=`<span>↩️ Retur: <strong>${prog.oraPlecareDintors}</strong></span>`;
-        html+=`<span>🏠 Acasă: <strong>${prog.oraSosireIntors}</strong></span>`;
-        html+=`<span>⏱️ Total: <strong>${prog.totalOre}h</strong></span>`;
-        html+=`</div>`;
-        if(prog.warning)html+=`<div style="color:var(--red);font-weight:600;margin-top:6px">${prog.warning}</div>`;
-        html+=`</div>`;
-      }
+      const intP=c.intorsPlecari?.[pi];
+      html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">`;
+      html+=`<div><strong>🕐 ${p.ora||'-'}</strong>${intP?` ↩️ ${intP.ora}`:''}</div>`;
+      html+=`<select style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:#fff" data-cursaid="${c.id}" data-pi="${pi}" data-data="${data}" onchange="atribuieSoferEl(this)">${sfOpts}</select>`;
       html+=`</div>`;
     });
     html+=`</div>`;
   }
   html+='</div>';
   el.innerHTML=html;
-};
+}
+
+async function renderProgramSaptamanal(zile,soferi,el){
+  // Header zile
+  let html='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:700px">';
+  html+='<thead><tr><th style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);text-align:left;font-size:12px;color:var(--muted);white-space:nowrap;min-width:160px">Cursă</th>';
+  zile.forEach(z=>{
+    const isToday=z===new Date().toISOString().split('T')[0];
+    html+=`<th style="padding:8px;background:${isToday?'rgba(184,134,11,.12)':'var(--bg3)'};border:1px solid var(--border);text-align:center;font-size:11px;color:${isToday?'var(--gold)':'var(--muted)'};white-space:nowrap;min-width:110px">${formatDataScurt(z)}</th>`;
+  });
+  html+='</tr></thead><tbody>';
+
+  // Curse active in aceasta perioada
+  const curseActive=window._R.filter(c=>c.activa);
+  for(const c of curseActive){
+    const plecari=c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}];
+    plecari.forEach((p,pi)=>{
+      html+=`<tr>`;
+      html+=`<td style="padding:10px 12px;border:1px solid var(--border);background:#fff">`;
+      html+=`<div style="font-weight:600;font-size:13px">${c.ruta}</div>`;
+      html+=`<div style="font-size:11px;color:var(--muted)">🕐 ${p.ora||'-'} · 🚌 ${c.vehiculNume||'-'}</div>`;
+      html+=`</td>`;
+      for(const z of zile){
+        const dow=new Date(z+'T12:00:00').getDay();
+        const activa=(c.zile||[]).includes(dow)
+          &&(!c.dataStart||z>=c.dataStart)
+          &&(!c.dataEnd||z<=c.dataEnd)
+          &&(!c.dateBlocate||!c.dateBlocate.includes(z));
+        const isToday=z===new Date().toISOString().split('T')[0];
+        if(!activa){
+          html+=`<td style="padding:6px;border:1px solid var(--border);background:${isToday?'rgba(184,134,11,.05)':'var(--bg2)'};text-align:center"><span style="color:var(--border);font-size:18px">—</span></td>`;
+        }else{
+          const sfNume=p.soferEmail?numeSofer(p.soferEmail):'';
+          const sfOpts='<option value="">—</option>'+soferi.map(sf=>`<option value="${sf.email}" ${p.soferEmail===sf.email?'selected':''}>${sf.prenume?sf.prenume[0]+'.':''} ${sf.nume||''}</option>`).join('');
+          html+=`<td style="padding:6px;border:1px solid var(--border);background:${isToday?'rgba(184,134,11,.06)':'#fff'};text-align:center">`;
+          html+=`<select style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:#fff;width:100%;max-width:100px" data-cursaid="${c.id}" data-pi="${pi}" data-data="${z}" onchange="atribuieSoferEl(this)">${sfOpts}</select>`;
+          html+=`</td>`;
+        }
+      }
+      html+='</tr>';
+    });
+  }
+  html+='</tbody></table></div>';
+  html+='<div style="margin-top:10px;font-size:11px;color:var(--muted)">— = cursă inactivă în acea zi &nbsp;·&nbsp; Selectați șoferul din dropdown pentru atribuire</div>';
+  el.innerHTML=html;
+}
+
 
 window.atribuieSoferEl=async(el)=>{
   const cursaId=el.dataset.cursaid;
@@ -4673,6 +5252,41 @@ async function calcDusIntorsORS(plecare, destinatie, oraP) {
 // ══════════════════════════════════════════════════════════
 
 // Inregistrare Service Worker
+let _pwaInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _pwaInstallPrompt = e;
+  showPWAInstallBtn();
+});
+
+window.addEventListener('appinstalled', () => {
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'none';
+  toast('✅ Aplicația a fost instalată!', 'ok');
+});
+
+function showPWAInstallBtn() {
+  if (_pwaInstallPrompt) {
+    const btn = document.getElementById('pwa-install-btn');
+    if (btn) btn.style.display = 'block';
+  }
+}
+
+window.installPWA = async () => {
+  if (!_pwaInstallPrompt) {
+    toast('Deschide site-ul în Chrome/Safari și folosește "Adaugă pe ecran principal"', 'in');
+    return;
+  }
+  _pwaInstallPrompt.prompt();
+  const result = await _pwaInstallPrompt.userChoice;
+  if (result.outcome === 'accepted') {
+    _pwaInstallPrompt = null;
+    const btn = document.getElementById('pwa-install-btn');
+    if (btn) btn.style.display = 'none';
+  }
+};
+
 async function registerSW() {
   if (!('serviceWorker' in navigator)) return;
   try {
@@ -4874,6 +5488,63 @@ async function autoNotifStatus(r, newStatus) {
   if (!n) return;
   await sendLocalNotification(n.title, n.body);
 }
+
+
+// ── PLATA ─────────────────────────────────────────────────
+let _plataMod = 'sofer'; // 'sofer' sau 'online'
+
+window.selectPlata = (mod) => {
+  _plataMod = mod;
+  const optSofer = document.getElementById('opt-sofer');
+  const optOnline = document.getElementById('opt-online');
+  if (optSofer) optSofer.style.borderColor = mod === 'sofer' ? 'var(--gold)' : 'var(--border)';
+  if (optOnline) optOnline.style.borderColor = mod === 'online' ? 'var(--gold)' : 'var(--border)';
+};
+
+window.confirmaPlata = async () => {
+  const rezervari = window._pendingRezervari;
+  if (!rezervari || !rezervari.length) return;
+  // Ataseaza statusPlata
+  rezervari.forEach(r => {
+    r.statusPlata = _plataMod === 'online' ? 'platit_online' : 'de_platit_sofer';
+    r.plataMod = _plataMod;
+  });
+  cm('plata');
+  try {
+    const refs = await Promise.all(rezervari.map(r => addDoc(collection(db,'rezervari'), r)));
+    refs.forEach((ref, i) => { rezervari[i].id = ref.id; });
+    // Email client regulate
+    sendEjsClient({
+      to_email: rezervari[0].email,
+      nume: rezervari[0].numeClient,
+      subiect: 'Confirmare rezervare — LSD Group SRL',
+      mesaj: 'Rezervarea ta a fost confirmată! '
+        + rezervari.length + (rezervari.length > 1 ? ' bilete' : ' bilet')
+        + ' pentru ' + rezervari[0].ruta + ' pe data de ' + rezervari[0].data + '.'
+        + (_plataMod === 'sofer' ? ' Plata: Cash la sofer.' : ' Plata online confirmata.'),
+      bilet_id: rezervari.map(r => r.biletId).join(', '),
+      ruta: rezervari[0].ruta,
+      data: rezervari[0].data,
+      ora: rezervari[0].ora,
+      status: 'Confirmată · Plată: ' + (_plataMod === 'sofer' ? 'La șofer' : 'Online')
+    });
+    // Email admin
+    sendEjsAdmin({
+      subiect: 'Rezervare nouă — ' + rezervari[0].ruta,
+      mesaj: 'Rezervare nouă pentru ' + rezervari[0].data + ' ora ' + rezervari[0].ora
+        + '. Plată: ' + (_plataMod === 'sofer' ? 'LA ȘOFER (de încasat)' : 'ONLINE (achitată)'),
+      nume_client: rezervari[0].numeClient,
+      telefon: rezervari[0].telefon || '-',
+      tip: 'Regulată · ' + rezervari.length + ' loc(uri) · ' + (_plataMod === 'sofer' ? 'Plată la șofer' : 'Plătit online'),
+      traseu: rezervari[0].ruta
+    });
+    showBMultiple(rezervari);
+    toast('🎉 ' + rezervari.length + ' bilet' + (rezervari.length > 1 ? 'e rezervate' : ' rezervat') + '!', 'ok');
+    window._pendingRezervari = null;
+  } catch(e) {
+    toast('Eroare la salvare: ' + e.message, 'er');
+  }
+};
 
 // INIT
 (async()=>{
