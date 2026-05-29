@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>LSD Group SRL — Transport Persoane</title>
+<title>LSD Group SRL — Transport Persoane | Curse Regulate & Organizate România</title>
+<meta name="description" content="Rezervă locuri online pentru curse regulate și organizate în România. Flotă modernă, șoferi autorizați, bilete electronice cu QR. LSD Group SRL — transport persoane autorizat ARR."/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -42,7 +43,8 @@ button{cursor:pointer;font-family:"Inter",sans-serif;transition:all .2s}
 #mob{display:none;position:fixed;top:100px;left:0;width:100%;background:#fff;box-shadow:0 8px 24px rgba(28,23,19,.1);border-bottom:1px solid var(--border);padding:12px;z-index:998;flex-direction:column;gap:4px}
 #mob.on{display:flex}
 #app{padding-top:100px;min-height:100vh}
-.pg{display:none;padding:32px 24px;max-width:1200px;margin:0 auto}
+.pg{display:none;padding:32px 24px;max-width:1200px;margin:0 auto;animation:pgIn .2s ease}
+@keyframes pgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .pg.on{display:block}
 /* HERO */
 .hero{text-align:center;padding:60px 0 40px}
@@ -217,6 +219,38 @@ button{cursor:pointer;font-family:"Inter",sans-serif;transition:all .2s}
 .toast.ok{border-left:3px solid var(--green)}.toast.er{border-left:3px solid var(--red)}
 .toast.in{border-left:3px solid var(--blue)}.toast.wr{border-left:3px solid var(--orange)}
 @keyframes tIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+/* LOADING SPINNER */
+.spin{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-state .es-icon{font-size:48px;margin-bottom:12px}
+.empty-state h3{color:var(--text);margin-bottom:8px;font-size:16px}
+/* ADMIN QUICK ACTIONS BAR */
+.qact{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;background:linear-gradient(135deg,rgba(184,134,11,.06),rgba(184,134,11,.02));border:1px solid rgba(184,134,11,.2);border-radius:var(--r);margin-bottom:16px}
+.qact-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;align-self:center;margin-right:4px;white-space:nowrap}
+/* STATUS BADGE INLINE */
+.sbi{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+/* CLIENT STEP INDICATOR */
+.step-bar{display:flex;gap:0;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.step-item{flex:1;padding:10px 8px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);background:var(--bg3);border-right:1px solid var(--border);transition:all .2s}
+.step-item:last-child{border-right:none}
+.step-item.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff}
+.step-item.done{background:rgba(21,128,61,.08);color:var(--green)}
+/* CONFIRM DIALOG */
+.confirm-overlay{position:fixed;inset:0;background:rgba(28,23,19,.5);z-index:3000;display:flex;align-items:center;justify-content:center;padding:16px}
+.confirm-box{background:#fff;border-radius:16px;padding:24px;max-width:380px;width:100%;box-shadow:0 16px 48px rgba(28,23,19,.2);text-align:center}
+/* SEARCH HIGHLIGHT */
+.hl{background:rgba(184,134,11,.2);border-radius:3px;padding:0 2px}
+/* FLOAT ACTION BTN */
+.fab{position:fixed;bottom:80px;right:24px;z-index:990;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;border:none;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(184,134,11,.4);display:none;align-items:center;justify-content:center;transition:transform .2s}
+.fab:hover{transform:scale(1.1)}
+/* ANULARE CONFIRM INLINE */
+.anul-confirm{display:none;background:rgba(185,28,28,.06);border:1px solid rgba(185,28,28,.2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px}
+.anul-confirm.show{display:block}
+/* PROG BAR */
+.pbar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px}
+.pbar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .3s}
 /* LB */
 #lb{position:fixed;inset:0;background:rgba(28,23,19,.75);z-index:9000;display:none;align-items:center;justify-content:center}
 #lb.on{display:flex}
@@ -316,10 +350,16 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
 </div>
 <!-- REGULATE -->
 <div id="pg-regulate" class="pg">
-  <h2 style="font-size:22px;font-weight:700;margin-bottom:8px">Curse Regulate</h2>
-  <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Selectați data pentru a vedea cursele disponibile</p>
+  <h2 style="font-size:22px;font-weight:700;margin-bottom:4px">Curse Regulate</h2>
+  <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Selectați data pentru a vedea cursele disponibile</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+    <button class="btn bs bsm" onclick="setRegDate(0)" id="btn-azi">Azi</button>
+    <button class="btn bs bsm" onclick="setRegDate(1)" id="btn-maine">Mâine</button>
+    <button class="btn bs bsm" onclick="setRegDate(2)">Poimâine</button>
+    <button class="btn bs bsm" onclick="setRegDate(7)">+7 zile</button>
+  </div>
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;align-items:center">
-    <input type="date" id="rdate" onchange="loadReg()" style="max-width:200px"/>
+    <input type="date" id="rdate" onchange="loadReg();updateRegDateBtns()" onkeydown="if(event.key==='Enter')loadReg()" style="max-width:200px"/>
     <input type="text" id="reg-search" placeholder="🔍 Caută destinație... (ex: Bacău)" oninput="filterReg()" style="flex:1;max-width:300px"/>
     <button class="btn bs bsm" onclick="document.getElementById('reg-search').value='';filterReg()">✕</button>
   </div>
@@ -372,7 +412,7 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
             ℹ️ Prin trimiterea cererii ești de acord cu <a onclick="nav('gdpr')">Politica de Confidențialitate</a> și <a onclick="nav('termeni')">Termenii și Condițiile</a> LSD Group SRL.
           </div>
         </div>
-        <button class="btn bp bw" onclick="submitOrg()">Trimite cererea 📨</button>
+        <button class="btn bp bw" id="btn-submit-org" onclick="submitOrg()">Trimite cererea 📨</button>
       </div>
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px">
         <div style="font-weight:600;margin-bottom:10px">📞 Cum funcționează?</div>
@@ -408,6 +448,7 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
 <!-- AUTH -->
 <div id="pg-auth" class="pg">
   <div style="max-width:440px;margin:0 auto">
+    <div id="auth-context-msg" style="display:none;background:rgba(184,134,11,.08);border:1px solid rgba(184,134,11,.25);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--gold)"></div>
     <div class="tbar" style="margin-bottom:0;border-radius:12px 12px 0 0">
       <button class="tb on" onclick="atab('l')" id="tabl">Conectare</button>
       <button class="tb" onclick="atab('r')" id="tabr">Înregistrare</button>
@@ -734,8 +775,12 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
 </div>
 <div id="pg-admin" class="pg">
   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px">
-    <h2 style="font-size:22px;font-weight:700">👑 Panou Administrator</h2>
-    <div style="display:flex;gap:8px">
+    <div>
+      <h2 style="font-size:22px;font-weight:700">👑 Panou Administrator</h2>
+      <div id="admin-last-refresh" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn bs bsm" onclick="refreshAdmin()">🔄 Refresh date</button>
       <button class="btn bs bsm" onclick="adminViewAs('client')">👤 Afișaj Client</button>
       <button class="btn bs bsm" onclick="adminViewAs('sofer')">🚌 Afișaj Șofer</button>
     </div>
@@ -776,19 +821,35 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
     <table class="tbl"><thead><tr><th>Rută</th><th>Vehicul</th><th>Stații / Prețuri</th><th>Plecări / Șoferi</th><th>Activ</th><th></th></tr></thead><tbody id="rtb"></tbody></table>
   </div>
   <div id="tab-rezervari" class="tc">
+    <!-- Quick filter shortcuts -->
+    <div class="qact" style="margin-bottom:12px">
+      <span class="qact-label">Filtre rapide:</span>
+      <button class="btn bs bsm" onclick="quickFilter('')">Toate <span id="qf-total" style="background:var(--bg3);border-radius:10px;padding:1px 7px;margin-left:4px;font-size:11px">0</span></button>
+      <button class="btn bs bsm" onclick="quickFilter('in_asteptare')" style="color:var(--orange);border-color:rgba(194,85,15,.3)">⏳ Așteptare <span id="qf-ast" style="background:rgba(194,85,15,.1);border-radius:10px;padding:1px 7px;margin-left:4px;font-size:11px">0</span></button>
+      <button class="btn bs bsm" onclick="quickFilter('oferta_trimisa')" style="color:var(--gold);border-color:rgba(184,134,11,.3)">📩 Ofertă trimisă <span id="qf-off" style="background:var(--goldbg);border-radius:10px;padding:1px 7px;margin-left:4px;font-size:11px">0</span></button>
+      <button class="btn bs bsm" onclick="quickFilter('confirmata')" style="color:var(--green);border-color:rgba(21,128,61,.3)">✅ Confirmate <span id="qf-conf" style="background:rgba(21,128,61,.08);border-radius:10px;padding:1px 7px;margin-left:4px;font-size:11px">0</span></button>
+      <button class="btn bs bsm" onclick="quickFilter('anulata')" style="color:var(--red);border-color:rgba(185,28,28,.2)">❌ Anulate <span id="qf-anul" style="background:rgba(185,28,28,.06);border-radius:10px;padding:1px 7px;margin-left:4px;font-size:11px">0</span></button>
+      <button class="btn bs bsm" onclick="quickFilter('de_platit_sofer')" style="color:#92400e;border-color:rgba(194,85,15,.3)">💵 De încasat</button>
+    </div>
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-      <div style="display:flex;gap:8px;align-items:center">
-        <input type="text" id="admin-search" placeholder="🔍 Caută client, bilet, email..." oninput="filterRezAdmin()" style="max-width:280px"/>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="admin-search" placeholder="🔍 Caută client, bilet, email, telefon..." oninput="filterRezAdmin()" style="max-width:280px"/>
         <input type="date" id="admin-filter-data" onchange="filterRezAdmin()" style="max-width:160px"/>
-        <button class="btn bs bsm" onclick="document.getElementById('admin-search').value='';document.getElementById('admin-filter-data').value='';filterRezAdmin()">✕</button>
+        <select id="admin-filter-tip" onchange="filterRezAdmin()" style="max-width:160px">
+          <option value="">Toate tipurile</option>
+          <option value="regulata">🔄 Regulate</option>
+          <option value="organizata">🚌 Organizate</option>
+        </select>
+        <button class="btn bs bsm" onclick="resetAdminFilters()">✕ Reset</button>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn bs bsm" onclick="exportCSV()">📊 Export CSV</button>
         <button class="btn bs bsm" onclick="raportZilnic()">🖨️ Raport zilnic</button>
-        <button class="btn bp bsm" onclick="openMR()">+ Manual</button>
+        <button class="btn bp bsm" onclick="openMR()">+ Rezervare manuală</button>
       </div>
     </div>
-    <table class="tbl"><thead><tr><th>Client</th><th>Tip</th><th>Traseu / Descriere</th><th>Data</th><th>Status</th><th></th></tr></thead><tbody id="aztb"></tbody></table>
+    <div id="rez-count" style="font-size:12px;color:var(--muted);margin-bottom:8px"></div>
+    <table class="tbl"><thead><tr><th>Client</th><th>Tip</th><th>Traseu / Descriere</th><th>Data</th><th>Status</th><th>Acțiuni</th></tr></thead><tbody id="aztb"></tbody></table>
   </div>
   <div id="tab-soferi" class="tc">
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn bp bsm" onclick="openSM()">+ Adaugă șofer</button></div>
@@ -879,6 +940,10 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
       </div>
       <div style="margin-top:12px;background:rgba(184,134,11,.06);border:1px solid rgba(184,134,11,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted)">
         ℹ️ Adăugați în Firestore Rules colecția <code style="color:var(--gold)">rezervari_log</code> și <code style="color:var(--gold)">notificari</code> — vezi documentația.
+      </div>
+      <div style="margin-top:12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Variabile disponibile (click = copiază)</div>
+        <div id="evars"></div>
       </div>
     </div>
     <div class="sets">
@@ -1196,6 +1261,10 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
       </div>
     </div>
     <div class="fg"><div class="fl">Observații interne</div><textarea id="smobs" rows="2" placeholder="Ex: Cunoaște ruta Iași-Suceava..."></textarea></div>
+    <div class="fr">
+      <div class="fg"><div class="fl">Serie buletin (opțional)</div><input type="text" id="smbul" placeholder="Ex: XY123456"/></div>
+      <div class="fg"><div class="fl">Adresă domiciliu (opțional)</div><input type="text" id="smadr" placeholder="Str. Exemplu, Nr. 1, Iași"/></div>
+    </div>
     <div class="fg"><div class="fl">Cont activ</div><label class="tog"><input type="checkbox" id="smact" checked/><span class="tosl"></span></label></div>
     <div style="background:rgba(184,134,11,.08);border:1px solid rgba(184,134,11,.3);border-radius:8px;padding:12px;font-size:12px;color:var(--gold)">
       💡 Șoferul trebuie să creeze un cont pe site cu <strong>același email</strong>. La prima autentificare, rolul se activează automat.
@@ -1319,6 +1388,7 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
   <div id="notif-list" style="padding:8px"></div>
 </div>
 <div id="tc"></div>
+<button class="fab" id="fab-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Sus">⬆</button>
 <div id="ckb"><span>🍪 Folosim cookie-uri necesare funcționării. <a onclick="nav('gdpr')">Politică GDPR</a> | <a onclick="nav('termeni')">Termeni</a></span><button class="btn bp bsm" onclick="ack()">Acceptă</button></div>
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -1392,7 +1462,7 @@ function renderFooter(){
 }
 
 // ── NAV ───────────────────────────────────────────────────
-window.nav=page=>{
+window.nav=(page,ctx)=>{
   if(window._ROLE==='sofer'&&!['sofer','gdpr','termeni','auth'].includes(page)){window.nav('sofer');return}
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nl').forEach(l=>l.classList.remove('on'));
@@ -1400,7 +1470,13 @@ window.nav=page=>{
   const ln=document.querySelector(`[data-p="${page}"]`);if(ln)ln.classList.add('on');
   document.getElementById('mob').classList.remove('on');
   window.scrollTo(0,0);
-  if(page==='regulate')loadReg();
+  // Show context message on auth page
+  if(page==='auth'){
+    const ctxEl=document.getElementById('auth-context-msg');
+    if(ctxEl&&ctx){ctxEl.style.display='block';ctxEl.textContent=ctx;}
+    else if(ctxEl){ctxEl.style.display='none';}
+  }
+  if(page==='regulate'){loadReg();updateRegDateBtns();}
   if(page==='organizate')loadOrgPage();
   if(page==='cont')loadContPage();
   if(page==='admin')loadAdmin();
@@ -1481,8 +1557,15 @@ function clearFieldErr(id){
 window.doLogin=async()=>{
   const em=document.getElementById('lem').value.trim(),pw=document.getElementById('lpw').value;
   if(!em||!pw){toast('Completați email și parola','wr');return}
-  try{await signInWithEmailAndPassword(auth,em,pw);toast('Bun venit!','ok');window.nav('home')}
-  catch(e){toast(fErr(e),'er')}
+  const btn=document.querySelector('#alf .btn.bp');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> Se conectează...';}
+  try{
+    await signInWithEmailAndPassword(auth,em,pw);
+    toast('Bun venit!','ok');window.nav('home');
+  }catch(e){
+    if(btn){btn.disabled=false;btn.innerHTML='Conectare';}
+    toast(fErr(e),'er');
+  }
 };
 window.doReg=async()=>{
   const fn=document.getElementById('rname').value.trim();
@@ -1498,6 +1581,8 @@ window.doReg=async()=>{
   if(!pw||pw.length<6){fieldErr('rpw','Parola trebuie să aibă minim 6 caractere');regOk=false}else fieldOk('rpw');
   if(!document.getElementById('rgdpr').checked){toast('Trebuie să acceptați Politica GDPR și Termenii','wr');regOk=false}
   if(!regOk)return;
+  const regBtn=document.querySelector('#arf .btn.bp');
+  if(regBtn){regBtn.disabled=true;regBtn.innerHTML='<span class="spin"></span> Se creează contul...';}
   const name=fn+' '+ln;
   try{
     const uc=await createUserWithEmailAndPassword(auth,em,pw);
@@ -1505,7 +1590,10 @@ window.doReg=async()=>{
     await setDoc(doc(db,'users',uc.user.uid),{name,email:em,tel,createdAt:serverTimestamp(),role:'client'});
     toast('Cont creat cu succes! Bun venit, '+fn+'!','ok');
     window.nav('home');
-  }catch(e){toast(fErr(e),'er')}
+  }catch(e){
+    if(regBtn){regBtn.disabled=false;regBtn.innerHTML='Creare cont';}
+    toast(fErr(e),'er');
+  }
 };
 window.doSO=async()=>{await signOut(auth);toast('Deconectat cu succes','in');window._ROLE='client';bNav('guest');window.nav('home')};
 window.atab=t=>{
@@ -1631,7 +1719,8 @@ window.loadReg=async()=>{
   const di=document.getElementById('rdate');
   if(!di.value){const t=new Date().toISOString().split('T')[0];di.value=t;di.min=t}
   const data=di.value;const dow=new Date(data+'T12:00:00').getDay();
-  const list=document.getElementById('rlist');list.innerHTML='<p style="color:var(--muted)">Se încarcă...</p>';
+  const list=document.getElementById('rlist');
+  list.innerHTML=`<div style="text-align:center;padding:48px;color:var(--muted)"><div class="spin" style="width:32px;height:32px;border-width:3px;margin:0 auto 12px"></div><p>Se încarcă cursele disponibile...</p></div>`;
   await loadFlota();
   const snap=await getDocs(collection(db,'curse_regulate'));
   window._R=snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -1643,7 +1732,11 @@ window.loadReg=async()=>{
     if(c.dateBlocate&&c.dateBlocate.includes(data))return false;
     return true;
   });
-  if(!curse.length){list.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">🔍</div><p>Nu există curse în această zi.</p></div>';return}
+  if(!curse.length){
+    const dayNames=['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'];
+    list.innerHTML=`<div class="empty-state"><div class="es-icon">🔍</div><h3>Nicio cursă în ${dayNames[dow]}</h3><p>Nu există curse active pentru data selectată. Încearcă altă dată sau <a onclick="nav('organizate')" style="color:var(--gold)">solicită o cursă organizată</a>.</p></div>`;
+    return;
+  }
   // Expandam fiecare cursa in plecari individuale
   const carduri=[];
   curse.forEach(c=>{
@@ -1928,7 +2021,7 @@ async function renderCC(){
     cf.innerHTML=`<div style="margin-top:14px">
       <div style="background:rgba(184,134,11,.08);border:1.5px solid rgba(184,134,11,.25);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">
         <div style="font-weight:700;color:var(--gold);margin-bottom:4px">⚠️ Fără cont: maxim 1 loc</div>
-        <div style="color:var(--muted);line-height:1.6">Cu un <a onclick="nav('auth');cm('cinema')" style="color:var(--gold);font-weight:600">cont gratuit</a> poți rezerva mai multe locuri, urmări biletele și descărca factura.</div>
+        <div style="color:var(--muted);line-height:1.6">Cu un <a onclick="nav('auth','💡 Creează un cont gratuit pentru a rezerva mai multe locuri și a urmări biletele tale.');cm('cinema')" style="color:var(--gold);font-weight:600">cont gratuit</a> poți rezerva mai multe locuri, urmări biletele și descărca factura.</div>
       </div>
       <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:10px">Date de contact</div>
       <div class="fr"><div class="fg"><div class="fl">Nume complet *</div><input type="text" id="cnn"/></div><div class="fg"><div class="fl">Telefon *</div><input type="tel" id="cnt"/></div></div>
@@ -2258,17 +2351,12 @@ window.submitOrg=async()=>{
     nc=u.displayName||'';em=u.email||'';
     try{const ud=await getDoc(doc(db,'users',u.uid));tel=ud.exists()?ud.data().tel||'-':'-'}catch(e){tel='-'}
   }else{
-    // Check if user clicked "Continuă fără cont" - else show the recommendation
-    const faraContDiv=document.getElementById('org-fara-cont');
-    if(!faraContDiv||faraContDiv.style.display==='none'){
-      toast('Completați datele de contact sau creați un cont','wr');
-      return;
-    }
+    // Anonymous user - fields rendered by loadOrgPage when no user logged in
     nc=document.getElementById('oname')?.value?.trim()||'';
     tel=document.getElementById('otel')?.value?.trim()||'';
     em=document.getElementById('oemail')?.value?.trim()||'';
     let contactOk=true;
-    if(!nc||!validName(nc)){fieldErr('oname','Introduceți un nume valid');contactOk=false}else fieldOk('oname');
+    if(!nc||!validName(nc)){fieldErr('oname','Introduceți un nume valid (minim 3 litere)');contactOk=false}else fieldOk('oname');
     if(!tel||!validPhone(tel)){fieldErr('otel','Număr de telefon invalid (ex: 0740 123 456)');contactOk=false}else fieldOk('otel');
     if(!em||!validEmail(em)){fieldErr('oemail','Adresă de email invalidă');contactOk=false}else fieldOk('oemail');
     if(!contactOk)return;
@@ -2286,6 +2374,8 @@ window.submitOrg=async()=>{
     pretEstimativ:pretEstim,pretFinal:null,observatii:obs,
     status:'in_asteptare',mesaje:[],adaugataManual:false,createdAt:serverTimestamp()
   };
+  const btn=document.getElementById('btn-submit-org');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> Se trimite...';}
   try{
     await addDoc(collection(db,'rezervari'),rez);
     // Email client - organizate template
@@ -2308,11 +2398,17 @@ window.submitOrg=async()=>{
       nume_client:nc,telefon:tel,tip:desc,traseu:stops.join(' - ')
     });
     toast('✅ Cererea a fost trimisă! Veți fi contactat în curând.','ok');
+    const btn=document.getElementById('btn-submit-org');
+    if(btn){btn.disabled=false;btn.innerHTML='Trimite cererea 📨';}
     _oSt=['',''];
     ['odesc','okm','opers','odata','oobs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
     renderStops();
     if(u)window.nav('cont');
-  }catch(e){toast('Eroare: '+e.message,'er')}
+  }catch(e){
+    const btn=document.getElementById('btn-submit-org');
+    if(btn){btn.disabled=false;btn.innerHTML='Trimite cererea 📨';}
+    toast('Eroare: '+e.message,'er');
+  }
 };
 
 // ── CONTUL MEU ────────────────────────────────────────────
@@ -2343,7 +2439,7 @@ window.loadContPage=async()=>{
   const snap=await getDocs(query(collection(db,'rezervari'),where('uid','==',u.uid)));
   const docs=[...snap.docs].sort((a,b)=>(b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
   const lista=document.getElementById('rez-lista');
-  if(!docs.length){lista.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted)"><div style="font-size:40px;margin-bottom:10px">📋</div><p>Nu aveți rezervări încă.</p></div>';return}
+  if(!docs.length){lista.innerHTML=`<div class="empty-state"><div class="es-icon">📋</div><h3>Nicio rezervare încă</h3><p>Nu aveți rezervări. Rezervați un loc pe o cursă regulată sau solicitați o cursă organizată.</p><div style="display:flex;gap:10px;justify-content:center;margin-top:16px"><button class="btn bp bsm" onclick="nav('regulate')">🔄 Curse regulate</button><button class="btn bs bsm" onclick="nav('organizate')">🚌 Cursă organizată</button></div></div>`;return}
   const sl={'in_asteptare':'⏳ În așteptare','oferta_trimisa':'📩 Ofertă trimisă','confirmata':'✅ Confirmată','anulata':'❌ Anulată'};
   lista.innerHTML=docs.map(d=>{
     const r=d.data();const sc=r.status||'in_asteptare';
@@ -2431,10 +2527,17 @@ window.showBById=async rezId=>{
 };
 
 window.anuleazaRez=async rezId=>{
-  if(!confirm('Sigur doriți să anulați această rezervare?'))return;
-  await setDoc(doc(db,'rezervari',rezId),{status:'anulata'},{merge:true});
-  toast('Rezervare anulată','ok');
-  loadContPage();
+  if(!confirm('Sigur doriți să anulați această rezervare?\n\nAceastă acțiune nu poate fi anulată.'))return;
+  const btn=event?.target;
+  if(btn){btn.disabled=true;btn.textContent='Se anulează...';}
+  try{
+    await setDoc(doc(db,'rezervari',rezId),{status:'anulata'},{merge:true});
+    toast('Rezervare anulată','ok');
+    loadContPage();
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='❌ Anulează';}
+    toast('Eroare: '+e.message,'er');
+  }
 };
 window.acceptaOferta=async rezId=>{
   await setDoc(doc(db,'rezervari',rezId),{status:'confirmata'},{merge:true});
@@ -2755,7 +2858,7 @@ window.loadSoferAzi=async()=>{
   const data=di.value;
   const dow=new Date(data+'T12:00:00').getDay();
   const c=document.getElementById('sflist');
-  c.innerHTML='<p style="color:var(--muted);padding:16px">Se încarcă...</p>';
+  c.innerHTML=`<div style="text-align:center;padding:48px;color:var(--muted)"><div class="spin" style="width:32px;height:32px;border-width:3px;margin:0 auto 12px"></div><p>Se încarcă cursele pentru ${data}...</p></div>`;
   try{
     const snap=await getDocs(collection(db,'curse_regulate'));
     const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
@@ -2773,7 +2876,7 @@ window.loadSoferAzi=async()=>{
       c._myPlecari=pl.filter(p=>p.soferEmail===u.email);
     });
     if(!curse.length){
-      c.innerHTML=`<div style="text-align:center;padding:48px 24px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">😴</div><h3 style="margin-bottom:8px;color:var(--text)">Nicio cursă pentru ${data}</h3><p>Nu aveți curse asignate în această zi.</p></div>`;
+      c.innerHTML=`<div class="empty-state"><div class="es-icon">😴</div><h3>Nicio cursă pentru ${data}</h3><p>Nu aveți curse asignate în această zi. Verificați cu administratorul.</p><button class="btn bs bsm" style="margin-top:12px" onclick="sfTab('calendar')">📆 Vezi calendarul</button></div>`;
       return;
     }
     const cards=await Promise.all(curse.map(cr=>bSC(cr,data)));
@@ -2964,7 +3067,7 @@ window.loadSoferCurse=async()=>{
       const pl=x.plecari||[{ora:x.ora,soferEmail:x.soferEmail}];
       return pl.some(p=>p.soferEmail===u.email);
     });
-    if(!curse.length){el.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">📋</div><p>Nu aveți curse asignate.</p></div>';return}
+    if(!curse.length){el.innerHTML=`<div class="empty-state"><div class="es-icon">📋</div><h3>Nicio cursă asignată</h3><p>Nu aveți curse regulate atribuite. Contactați administratorul.</p></div>`;return}
     const DAYS=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
     el.innerHTML=curse.map(c=>{
       const dc=DAYS.map((d,i)=>`<div class="dc ${(c.zile||[]).includes(i)?'on':''}">${d}</div>`).join('');
@@ -3030,7 +3133,7 @@ window.loadSoferVehicul=async()=>{
       const pl=x.plecari||[{ora:x.ora,soferEmail:x.soferEmail}];
       return pl.some(p=>p.soferEmail===u.email);
     });
-    if(!curse.length){el.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">🚌</div><p>Nu aveți vehicul asignat momentan.</p></div>';return}
+    if(!curse.length){el.innerHTML=`<div class="empty-state"><div class="es-icon">🚌</div><h3>Niciun vehicul asignat</h3><p>Nu aveți vehicul asignat momentan. Contactați administratorul.</p></div>`;return}
     // Get unique vehicles
     const vehIds=[...new Set(curse.map(c=>c.vehiculId).filter(Boolean))];
     const vehs=[];
@@ -3167,10 +3270,22 @@ window.loadSoferBilete=async()=>{
   }catch(e){el.innerHTML=`<div style="color:var(--red);padding:16px">❌ ${e.message}</div>`}
 };
 
+window.refreshAdmin=async()=>{
+  const btn=document.querySelector('[onclick="refreshAdmin()"]');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> Se actualizează...';}
+  await loadFlota();await loadStats();await loadVT();await loadRT();await loadAzT();await loadSfT();await loadTkT();
+  if(btn){btn.disabled=false;btn.innerHTML='🔄 Refresh date';}
+  const el=document.getElementById('admin-last-refresh');
+  if(el)el.textContent='Actualizat la '+new Date().toLocaleTimeString('ro',{hour:'2-digit',minute:'2-digit'});
+  toast('Date actualizate!','ok');
+};
 window.loadAdmin=async()=>{
   await loadFlota();loadStats();loadVT();loadRT();loadAzT();loadSfT();loadTkT();loadSetari();
+  const el=document.getElementById('admin-last-refresh');
+  if(el)el.textContent='Actualizat la '+new Date().toLocaleTimeString('ro',{hour:'2-digit',minute:'2-digit'});
   const vars=['{{nume}}','{{email}}','{{telefon}}','{{tip}}','{{data}}','{{ora}}','{{traseu}}','{{vehicul}}','{{obs}}'];
-  document.getElementById('evars').innerHTML=vars.map(v=>`<span style="display:inline-block;background:var(--bg3);border:1px solid var(--border);color:var(--gold);font-size:11px;padding:3px 8px;border-radius:6px;margin:2px;font-family:monospace;cursor:pointer" onclick="navigator.clipboard.writeText('${v}').then(()=>toast('Copiat!','in'))">${v}</span>`).join('');
+  const evarsEl=document.getElementById('evars');
+  if(evarsEl)evarsEl.innerHTML=vars.map(v=>`<span style="display:inline-block;background:var(--bg3);border:1px solid var(--border);color:var(--gold);font-size:11px;padding:3px 8px;border-radius:6px;margin:2px;font-family:monospace;cursor:pointer" onclick="navigator.clipboard.writeText('${v}').then(()=>toast('Copiat!','in'))">${v}</span>`).join('');
 };
 
 window.atb=tab=>{
@@ -3644,6 +3759,8 @@ window.delR=async id=>{if(!confirm('Ștergeți cursa?'))return;await deleteDoc(d
 async function loadAzT(){
   const snap=await getDocs(collection(db,'rezervari'));
   const docs=[...snap.docs].sort((a,b)=>(b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
+  // FIX: populate _allRezAdmin with correct {d, r} structure
+  _allRezAdmin=docs.map(d=>({d,r:d.data()}));
   const sl={'in_asteptare':'⏳','oferta_trimisa':'📩','confirmata':'✅','anulata':'❌'};
   renderRezAdminTable(_allRezAdmin,sl);
 }
@@ -3776,7 +3893,8 @@ window.tSf=async(id,val)=>await setDoc(doc(db,'soferi',id),{activ:val},{merge:tr
 window.openSM=async(id=null)=>{
   document.getElementById('sfmt').textContent=id?'Editează șofer':'Adaugă șofer nou';
   document.getElementById('sfmid').value=id||'';
-  ['smn','smpn','sme','smt','smcnp','smbul','smperm','smadr','smobs'].forEach(x=>document.getElementById(x).value='');
+  ['smn','smpn','sme','smt','smcnp','smperm','smobs'].forEach(x=>{const el=document.getElementById(x);if(el)el.value=''});
+  ['smbul','smadr'].forEach(x=>{const el=document.getElementById(x);if(el)el.value=''});
   document.getElementById('smcat').value='D';document.getElementById('smact').checked=true;
   document.getElementById('smexp').value='';document.getElementById('smang').value='';
   if(id){
@@ -3788,12 +3906,12 @@ window.openSM=async(id=null)=>{
       document.getElementById('sme').value=s.email||'';
       document.getElementById('smt').value=s.telefon||'';
       document.getElementById('smcnp').value=s.cnp||'';
-      document.getElementById('smbul').value=s.buletin||'';
+      if(document.getElementById('smbul'))document.getElementById('smbul').value=s.buletin||'';
       document.getElementById('smperm').value=s.nrPermis||'';
       document.getElementById('smcat').value=s.categoriePermis||'D';
       document.getElementById('smexp').value=s.expPermis||'';
       document.getElementById('smang').value=s.dataAngajarii||'';
-      document.getElementById('smadr').value=s.adresa||'';
+      if(document.getElementById('smadr'))document.getElementById('smadr').value=s.adresa||'';
       document.getElementById('smobs').value=s.observatii||'';
       document.getElementById('smact').checked=s.activ!==false;
     }
@@ -3812,12 +3930,12 @@ window.saveSofer=async()=>{
   const data={
     nume:name,prenume:pren,email:em,telefon:tel,
     cnp:document.getElementById('smcnp').value.trim(),
-    buletin:document.getElementById('smbul').value.trim(),
+    buletin:document.getElementById('smbul')?.value?.trim()||'',
     nrPermis:document.getElementById('smperm').value.trim(),
     categoriePermis:document.getElementById('smcat').value,
     expPermis:document.getElementById('smexp').value||null,
     dataAngajarii:document.getElementById('smang').value||null,
-    adresa:document.getElementById('smadr').value.trim(),
+    adresa:document.getElementById('smadr')?.value?.trim()||'',
     observatii:document.getElementById('smobs').value.trim(),
     activ:document.getElementById('smact').checked
   };
@@ -4521,6 +4639,24 @@ function scheduleRefreshes(){
 
 // ── ACTUALIZARE openRM pt DUS-INTORS ─────────────────────
 // Override saveReg to handle dus-intors
+
+// ── REGULATE DATE SHORTCUTS ───────────────────────────────
+window.setRegDate=(daysFromNow)=>{
+  const d=new Date();d.setDate(d.getDate()+daysFromNow);
+  const val=d.toISOString().split('T')[0];
+  document.getElementById('rdate').value=val;
+  updateRegDateBtns();
+  loadReg();
+};
+window.updateRegDateBtns=()=>{
+  const val=document.getElementById('rdate')?.value||'';
+  const today=new Date().toISOString().split('T')[0];
+  const tomorrow=new Date(Date.now()+86400000).toISOString().split('T')[0];
+  const btnAzi=document.getElementById('btn-azi');
+  const btnMaine=document.getElementById('btn-maine');
+  if(btnAzi)btnAzi.className=val===today?'btn bp bsm':'btn bs bsm';
+  if(btnMaine)btnMaine.className=val===tomorrow?'btn bp bsm':'btn bs bsm';
+};
 
 // ── SEARCH REGULATE ──────────────────────────────────────
 let _regAllCards=[];
@@ -5652,40 +5788,122 @@ function validCNP(cnp){
 // ══════════════════════════════════════════════════════════
 let _allRezAdmin=[];
 
+// ── QUICK FILTER ─────────────────────────────────────────
+let _qfActive='';
+window.quickFilter=(status)=>{
+  _qfActive=status;
+  document.getElementById('admin-search').value='';
+  document.getElementById('admin-filter-data').value='';
+  if(document.getElementById('admin-filter-tip'))document.getElementById('admin-filter-tip').value='';
+  filterRezAdmin();
+};
+window.resetAdminFilters=()=>{
+  _qfActive='';
+  document.getElementById('admin-search').value='';
+  document.getElementById('admin-filter-data').value='';
+  if(document.getElementById('admin-filter-tip'))document.getElementById('admin-filter-tip').value='';
+  filterRezAdmin();
+};
+// ── QUICK CONFIRM / ANULARE ────────────────────────────────
+window.quickConfirm=async(rezId)=>{
+  if(!confirm('Confirmi această rezervare?'))return;
+  await setDoc(doc(db,'rezervari',rezId),{status:'confirmata'},{merge:true});
+  toast('✅ Rezervare confirmată!','ok');
+  await logModificare(rezId,'status_schimbat','Status: confirmata (quick action)');
+  await loadAzT();await loadStats();
+};
+window.quickAnuleaza=async(rezId)=>{
+  if(!confirm('Anulezi această rezervare? Acțiunea nu poate fi anulată.'))return;
+  await setDoc(doc(db,'rezervari',rezId),{status:'anulata'},{merge:true});
+  toast('Rezervare anulată','ok');
+  await logModificare(rezId,'status_schimbat','Status: anulata (quick action)');
+  await loadAzT();await loadStats();
+};
+
 window.filterRezAdmin=()=>{
   const q=(document.getElementById('admin-search')?.value||'').toLowerCase().trim();
   const data=document.getElementById('admin-filter-data')?.value||'';
+  const tip=document.getElementById('admin-filter-tip')?.value||'';
   const sl={'in_asteptare':'⏳','oferta_trimisa':'📩','confirmata':'✅','anulata':'❌'};
   const filtered=_allRezAdmin.filter(({r})=>{
+    // Quick filter by status
+    if(_qfActive==='de_platit_sofer'){if(r.statusPlata!=='de_platit_sofer')return false}
+    else if(_qfActive){if(r.status!==_qfActive)return false}
+    // Date filter
     if(data&&r.data!==data)return false;
+    // Type filter
+    if(tip&&r.tipRezervare!==tip)return false;
+    // Text search
     if(!q)return true;
     return (r.numeClient||'').toLowerCase().includes(q)
       ||(r.email||'').toLowerCase().includes(q)
       ||(r.biletId||'').toLowerCase().includes(q)
       ||(r.traseu||r.ruta||'').toLowerCase().includes(q)
-      ||(r.telefon||'').includes(q);
+      ||(r.telefon||'').includes(q)
+      ||(r.descriereCursa||'').toLowerCase().includes(q);
   });
   renderRezAdminTable(filtered,sl);
 };
 
 function renderRezAdminTable(docs,sl){
-  document.getElementById('aztb').innerHTML=docs.map(({d,r})=>{
+  // Update quick filter badges
+  const all=_allRezAdmin.map(x=>x.r);
+  const setN=(id,n)=>{const el=document.getElementById(id);if(el)el.textContent=n};
+  setN('qf-total',all.length);
+  setN('qf-ast',all.filter(r=>r.status==='in_asteptare').length);
+  setN('qf-off',all.filter(r=>r.status==='oferta_trimisa').length);
+  setN('qf-conf',all.filter(r=>r.status==='confirmata').length);
+  setN('qf-anul',all.filter(r=>r.status==='anulata').length);
+  // Update count display
+  const countEl=document.getElementById('rez-count');
+  if(countEl)countEl.textContent=docs.length===_allRezAdmin.length?`${docs.length} rezervări totale`:`${docs.length} din ${_allRezAdmin.length} rezervări (filtrate)`;
+  // Render rows
+  document.getElementById('aztb').innerHTML=docs.length?docs.map(({d,r})=>{
     const sc=r.status||'in_asteptare';
     const hasMsgs=(r.mesaje||[]).length>0;
+    const unreadMsgs=(r.mesaje||[]).filter(m=>m.from==='client'&&!m.citit).length;
+    const isOrg=r.tipRezervare==='organizata';
     return `<tr>
-      <td><strong>${r.numeClient||'-'}</strong><br><span style="color:var(--muted);font-size:11px">${r.email||'-'}</span>${r.telefon?`<br><span style="color:var(--muted);font-size:11px">📞 ${r.telefon}</span>`:''}
+      <td>
+        <div style="font-weight:600;font-size:13px">${r.numeClient||'-'}</div>
+        <div style="color:var(--muted);font-size:11px;margin-top:2px">${r.email||'-'}</div>
+        ${r.telefon?`<div style="color:var(--muted);font-size:11px">📞 ${r.telefon}</div>`:''}
+        ${r.biletId?`<div style="font-family:monospace;font-size:10px;color:var(--gold);margin-top:2px">${r.biletId}</div>`:''}
       </td>
-      <td>${r.tipRezervare==='regulata'?'🔄 Regulată':'🚌 Organizată'}</td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.traseu||r.ruta||r.descriereCursa||'-'}</td>
-      <td>${r.data||'-'}</td>
+      <td>
+        <span style="font-size:12px">${isOrg?'🚌 Organizată':'🔄 Regulată'}</span>
+        ${r.adaugataManual?'<br><span style="font-size:10px;color:var(--muted)">manual</span>':''}
+      </td>
+      <td style="max-width:180px">
+        <div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.traseu||r.ruta||r.descriereCursa||'-'}</div>
+        ${r.pretTotal?`<div style="font-size:11px;color:var(--gold);font-weight:700">${r.pretTotal} RON</div>`:''}
+        ${r.pretFinal?`<div style="font-size:11px;color:var(--gold);font-weight:700">Ofertă: ${r.pretFinal} RON</div>`:''}
+      </td>
+      <td style="font-size:12px;white-space:nowrap">
+        <div>${r.data||'-'}</div>
+        <div style="color:var(--muted)">${r.ora||''}</div>
+      </td>
       <td>
         <span class="sb ${sc}">${sl[sc]||''} ${sc.replace('_',' ')}</span>
-        ${hasMsgs?`<span style="font-size:10px;color:var(--gold);margin-left:4px">(${(r.mesaje||[]).length} msg)</span>`:''}
-        <br>${r.statusPlata==='platit_online'?'<span style="font-size:10px;color:var(--green)">💳 Online</span>':r.statusPlata==='confirmat_sofer'?'<span style="font-size:10px;color:var(--green)">💵 Sofer ✓</span>':r.statusPlata==='de_platit_sofer'?'<span style="font-size:10px;color:var(--orange)">💵 De încasat</span>':''}
+        <div style="margin-top:4px">
+          ${r.statusPlata==='platit_online'?'<span style="font-size:10px;color:var(--green);font-weight:600">💳 Online</span>':r.statusPlata==='confirmat_sofer'?'<span style="font-size:10px;color:var(--green);font-weight:600">💵 Cash ✓</span>':r.statusPlata==='de_platit_sofer'?'<span style="font-size:10px;color:var(--orange);font-weight:600">💵 De încasat</span>':''}
+        </div>
+        ${hasMsgs?`<div style="font-size:10px;color:${unreadMsgs?'var(--red)':'var(--gold)'};margin-top:3px;font-weight:600">${unreadMsgs?`🔴 ${unreadMsgs} necitit${unreadMsgs>1?'e':''}`:''} ${hasMsgs?`💬 ${(r.mesaje||[]).length} msg`:''}</div>`:''}
       </td>
-      <td><button class="btn bs bsm" onclick="openRD('${d.id}')">💬 Detalii</button></td>
+      <td>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button class="btn bp bsm" onclick="openRD('${d.id}')" style="padding:5px 10px;font-size:11px">💬 Detalii</button>
+          ${sc==='in_asteptare'?`<button class="btn bs bsm" onclick="quickConfirm('${d.id}')" style="padding:5px 10px;font-size:11px;color:var(--green);border-color:rgba(21,128,61,.3)">✅ Confirmă</button>`:''}
+          ${sc==='oferta_trimisa'?`<button class="btn bs bsm" onclick="quickConfirm('${d.id}')" style="padding:5px 10px;font-size:11px;color:var(--green);border-color:rgba(21,128,61,.3)">✅ Confirmă</button>`:''}
+          ${sc!=='anulata'?`<button class="btn bd bsm" onclick="quickAnuleaza('${d.id}')" style="padding:5px 10px;font-size:11px">❌</button>`:''}
+        </div>
+      </td>
     </tr>`;
-  }).join('');
+  }).join(''):`<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">
+    <div style="font-size:32px;margin-bottom:8px">📋</div>
+    <div>Nicio rezervare găsită</div>
+    ${document.getElementById('admin-search')?.value||document.getElementById('admin-filter-data')?.value?'<div style="font-size:12px;margin-top:6px"><a onclick="resetAdminFilters()" style="color:var(--gold);cursor:pointer">Resetează filtrele</a></div>':''}
+  </td></tr>`;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -5835,6 +6053,27 @@ async function checkReminders(){
   }catch(e){}
 }
 
+// ── FAB SCROLL BUTTON ────────────────────────────────────
+window.addEventListener('scroll',()=>{
+  const fab=document.getElementById('fab-top');
+  if(fab)fab.style.display=window.scrollY>300?'flex':'none';
+});
+
+// ── CONFIRM DIALOG HELPER (replaces browser confirm) ─────
+window.confirmDlg=(msg,onYes,btnLabel='Da, confirmă',danger=false)=>{
+  const ov=document.createElement('div');
+  ov.className='confirm-overlay';
+  ov.innerHTML=`<div class="confirm-box">
+    <div style="font-size:32px;margin-bottom:12px">${danger?'⚠️':'❓'}</div>
+    <div style="font-size:15px;font-weight:600;margin-bottom:8px">${msg}</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:20px">
+      <button class="btn bs" onclick="this.closest('.confirm-overlay').remove()">Anulează</button>
+      <button class="btn ${danger?'bd':'bp'}" onclick="this.closest('.confirm-overlay').remove();(${onYes.toString()})()">${btnLabel}</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+};
+
 // INIT
 (async()=>{
   try{
@@ -5851,6 +6090,7 @@ async function checkReminders(){
   await seedIfEmpty();
   const today=new Date().toISOString().split('T')[0];
   const di=document.getElementById('rdate');di.value=today;di.min=today;
+  updateRegDateBtns();
   renderStops();
   document.getElementById('hflota').innerHTML=window._F.slice(0,3).map(v=>vCard(v)).join('');
   loadOrgPage();
