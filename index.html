@@ -686,7 +686,10 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
       <h2 style="font-size:22px;font-weight:700;margin-bottom:4px">🚌 Portal Șofer</h2>
       <div id="sfgreet" style="color:var(--muted);font-size:14px"></div>
     </div>
-    <button class="btn bs bsm" onclick="loadSofer()">🔄 Refresh</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn bs bsm" id="btn-schimba-sofer" style="display:none" onclick="schimbaPortalSofer()" title="Ești alt șofer?">👤 Schimbă șoferul</button>
+      <button class="btn bs bsm" onclick="loadSofer()">🔄 Refresh</button>
+    </div>
   </div>
   <!-- TABS sofer -->
   <div class="tbar">
@@ -814,7 +817,7 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
   </div>
   <div id="tab-vehicule" class="tc on">
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn bp bsm" onclick="openVM()">+ Adaugă vehicul</button></div>
-    <table class="tbl"><thead><tr><th>Vehicul</th><th>Capacitate</th><th>Nr. înmatriculare</th><th>Disponibil charter</th><th></th></tr></thead><tbody id="vtb"></tbody></table>
+    <table class="tbl"><thead><tr><th>Vehicul</th><th>Capacitate</th><th>Nr. înmatriculare</th><th>Șoferi atribuiți</th><th>Disponibil charter</th><th></th></tr></thead><tbody id="vtb"></tbody></table>
   </div>
   <div id="tab-regulate" class="tc">
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn bp bsm" onclick="openRM()">+ Adaugă cursă</button></div>
@@ -853,7 +856,7 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
   </div>
   <div id="tab-soferi" class="tc">
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn bp bsm" onclick="openSM()">+ Adaugă șofer</button></div>
-    <table class="tbl"><thead><tr><th>Nume</th><th>Email</th><th>Telefon</th><th>Permis / Exp.</th><th>Activ</th><th></th></tr></thead><tbody id="sftb"></tbody></table>
+    <table class="tbl"><thead><tr><th>Nume</th><th>Email</th><th>Telefon</th><th>Permis / Exp.</th><th>Parolă Portal</th><th>Activ</th><th></th></tr></thead><tbody id="sftb"></tbody></table>
   </div>
   <div id="tab-ticker" class="tc">
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn bp bsm" onclick="openTM()">+ Mesaj nou</button></div>
@@ -965,6 +968,40 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
     </div>
   </div>
 </div>
+</div>
+<!-- MODAL SELECTARE SOFER (cont comun firma) -->
+<div class="mo" id="mo-sofer-login">
+  <div class="md" style="max-width:420px">
+    <div class="mh">
+      <div>
+        <div class="mt2">🚌 Portal Șofer — Identificare</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">Selectează-ți numele și introdu parola ta de portal</div>
+      </div>
+    </div>
+    <div class="mb2">
+      <div style="background:rgba(184,134,11,.07);border:1px solid rgba(184,134,11,.2);border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:var(--muted)">
+        Contul firmei este partajat. Fiecare șofer are o <strong>parolă personală de portal</strong> setată de administrator.<br>
+        <span style="font-size:11px">Parole demo: Ion Popescu → <code>sofer1</code> · Maria Ionescu → <code>sofer2</code> · Gheorghe Constantin → <code>sofer3</code> · Teodor Irimia → <code>admin123</code></span>
+      </div>
+      <div class="fg">
+        <div class="fl">Cine ești?</div>
+        <select id="sofer-select-name" style="font-size:15px;padding:12px 14px">
+          <option value="">— Selectează numele tău —</option>
+        </select>
+      </div>
+      <div class="fg" id="sofer-pin-wrap" style="display:none">
+        <div class="fl">Parola ta de portal</div>
+        <input type="password" id="sofer-pin-input" placeholder="Parola ta personală" style="font-size:15px;letter-spacing:2px"
+          onkeydown="if(event.key==='Enter')verificaSoferPin()"/>
+        <div class="fh">Parola este setată de administrator. Dacă o ai uitată, cere-i adminului să o reseteze.</div>
+      </div>
+      <div id="sofer-pin-error" style="display:none;color:var(--red);font-size:13px;font-weight:600;padding:8px 0">❌ Parolă incorectă. Mai încearcă.</div>
+    </div>
+    <div class="mf">
+      <button class="btn bs" onclick="doSO()">↗ Deconectare</button>
+      <button class="btn bp" id="btn-sofer-confirm" onclick="verificaSoferPin()" disabled>Intră în portal →</button>
+    </div>
+  </div>
 </div>
 <!-- FOOTER -->
 <footer id="footer">
@@ -1265,9 +1302,28 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
       <div class="fg"><div class="fl">Serie buletin (opțional)</div><input type="text" id="smbul" placeholder="Ex: XY123456"/></div>
       <div class="fg"><div class="fl">Adresă domiciliu (opțional)</div><input type="text" id="smadr" placeholder="Str. Exemplu, Nr. 1, Iași"/></div>
     </div>
+    <div style="background:rgba(184,134,11,.08);border:1.5px solid rgba(184,134,11,.3);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="font-weight:700;font-size:13px;color:var(--gold);margin-bottom:8px">🔑 Parolă portal șofer</div>
+      <div class="fr">
+        <div class="fg">
+          <div class="fl">Parolă portal (minim 4 caractere)</div>
+          <input type="password" id="smpin" placeholder="Parolă unică pentru acest șofer"/>
+          <div class="fh">Șoferul va folosi această parolă după ce selectează numele din contul comun al firmei.</div>
+        </div>
+        <div class="fg">
+          <div class="fl">Confirmă parola</div>
+          <input type="password" id="smpin2" placeholder="Repetă parola"/>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">💡 Lasă gol dacă nu vrei să schimbi parola existentă.</div>
+    </div>
     <div class="fg"><div class="fl">Cont activ</div><label class="tog"><input type="checkbox" id="smact" checked/><span class="tosl"></span></label></div>
     <div style="background:rgba(184,134,11,.08);border:1px solid rgba(184,134,11,.3);border-radius:8px;padding:12px;font-size:12px;color:var(--gold)">
-      💡 Șoferul trebuie să creeze un cont pe site cu <strong>același email</strong>. La prima autentificare, rolul se activează automat.
+    💡 <strong>Sistem cont comun:</strong> Toți șoferii se loghează cu emailul <code id="sofer-cont-display">soferi@lsdgroup.ro</code> + parola contului Firebase. Apoi fiecare selectează numele și introduce parola sa personală de portal (setată mai sus).
+    <br><br>📋 <strong>Pași setup:</strong><br>
+    1. Creează cont Firebase cu emailul contului comun (ex: <em>soferi@lsdgroup.ro</em>)<br>
+    2. Setează <code>SOFER_CONT_EMAIL</code> în cod cu acel email<br>
+    3. Fiecare șofer din această listă va apărea în modalul de selecție
     </div>
   </div>
   <div class="mf"><button class="btn bs" onclick="cm('sofer')">Anulează</button><button class="btn bp" onclick="saveSofer()">Salvează șofer</button></div></div>
@@ -1397,8 +1453,12 @@ import{getFirestore,collection,doc,addDoc,getDocs,getDoc,setDoc,deleteDoc,query,
 const app=initializeApp({apiKey:"AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",authDomain:"lsd-group-srl.firebaseapp.com",projectId:"lsd-group-srl"});
 const auth=getAuth(app);const db=getFirestore(app);
 const ADMIN='irimia.teodor.17@gmail.com';
+// Emailul contului Firebase COMUN folosit de toti soferii firmei
+// Toata lumea se loghează cu ACEST email + parola contului, apoi selecteaza cine e
+const SOFER_CONT_EMAIL='soferi@lsdgroup.ro'; // ← schimba cu emailul contului tau de soferi
 const ORS_KEY='eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjljMTA5ZGY1ZWU5NTQ2ZjA5Nzc1NGVmYWU0MzNlOTFiIiwiaCI6Im11cm11cjY0In0=';
 const DAYS=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
+const ZILE_LABEL=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm']; // alias
 window._F=[];window._R=[];window._U=null;window._EJS={};window._ROLE='client';window._FIRMA={};
 let _cId=null,_cD=null,_cC=null,_cIU=null,_cIC=null,_cSel=[],_cOcc=new Map(),_cPret=0;
 let _oSt=['',''];
@@ -1496,8 +1556,9 @@ function bNav(role){
   }
   nl.innerHTML=base;
   if(role==='admin'){
-    ab.innerHTML=`<button class="nb nbo" onclick="nav('admin')">👑 Admin</button><button class="nb nbo" onclick="nav('cont')">👤</button><button class="nb nbo" onclick="doSO()">↗</button>`;
-    mm.innerHTML=`<button class="nl" onclick="nav('home')">🏠 Acasă</button><button class="nl" onclick="nav('regulate')">🔄 Regulate</button><button class="nl" onclick="nav('organizate')">🚌 Organizate</button><button class="nl" onclick="nav('admin')">👑 Admin</button><button class="nl" onclick="nav('cont')">👤 Contul Meu</button><button class="nl" onclick="nav('gdpr')">GDPR</button><button class="nl" onclick="nav('termeni')">Termeni</button><button class="nl" onclick="doSO()">↗ Deconectare</button>`;
+    const soferBtn=window._adminIsSofer?`<button class="nb nbo" onclick="intraPortalSofer()">🚌 Portal Șofer</button>`:'';
+    ab.innerHTML=`${soferBtn}<button class="nb nbo" onclick="nav('admin')">👑 Admin</button><button class="nb nbo" onclick="nav('cont')">👤</button><button class="nb nbo" onclick="doSO()">↗</button>`;
+    mm.innerHTML=`<button class="nl" onclick="nav('home')">🏠 Acasă</button><button class="nl" onclick="nav('regulate')">🔄 Regulate</button><button class="nl" onclick="nav('organizate')">🚌 Organizate</button>${window._adminIsSofer?'<button class="nl" onclick="intraPortalSofer()">🚌 Portal Șofer</button>':''}<button class="nl" onclick="nav('admin')">👑 Admin</button><button class="nl" onclick="nav('cont')">👤 Contul Meu</button><button class="nl" onclick="nav('gdpr')">GDPR</button><button class="nl" onclick="nav('termeni')">Termeni</button><button class="nl" onclick="doSO()">↗ Deconectare</button>`;
   } else if(u){
     ab.innerHTML=`<button class="nb nbo" onclick="nav('cont')">👤 Contul Meu</button><button class="nb nbo" onclick="doSO()">${u.displayName||'Cont'} ↗</button>`;
     const nb=document.getElementById('notif-bell');if(nb)nb.style.display='flex';
@@ -1521,9 +1582,25 @@ onAuthStateChanged(auth,async u=>{
     try{const sr=await getDoc(doc(db,'setari','global'));if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{};renderFooter();}}catch(e){}
     return;
   }
-  if(u.email===ADMIN){window._ROLE='admin';bNav('admin');return}
+  if(u.email===ADMIN){
+    window._ROLE='admin';
+    // Admin poate fi si sofer - verifica daca are curse atribuite
+    try{
+      const ssAdmin=await getDocs(query(collection(db,'soferi'),where('email','==',u.email)));
+      window._adminIsSofer=!ssAdmin.empty&&ssAdmin.docs[0].data().activ!==false;
+    }catch(e){window._adminIsSofer=false;}
+    bNav('admin');return;
+  }
+  // Cont comun soferi: daca emailul este contul firmei de soferi → modal selectare
+  if(u.email===SOFER_CONT_EMAIL){
+    window._ROLE='sofer_pending'; // asteptam selectia
+    await deschideSoferLoginModal();
+    return;
+  }
+  // Cont individual sofer (backwards compat)
   const ss=await getDocs(query(collection(db,'soferi'),where('email','==',u.email)));
   if(!ss.empty&&ss.docs[0].data().activ!==false){
+    window._soferDoc={id:ss.docs[0].id,...ss.docs[0].data()};
     window._ROLE='sofer';bNav('sofer');window.nav('sofer');return;
   }
   window._ROLE='client';bNav('client');
@@ -1673,6 +1750,74 @@ async function seedIfEmpty(){
   });
   await addDoc(collection(db,'ticker'),{mesaj:'🚌 Curse regulate zilnice spre Târgu Neamț, Bacău și altele!',activ:true});
   await addDoc(collection(db,'ticker'),{mesaj:'📞 Rezervări online — irimia.teodor.17@gmail.com',activ:true});
+  
+  // ── SEED ȘOFERI DEMO ──────────────────────────────────────────
+  // Parole demo encode (btoa) - admin le poate schimba din panel
+  // 'sofer1' → btoa('sofer1'), 'sofer2' → btoa('sofer2') etc.
+  const soferiDemo=[
+    {
+      nume:'Popescu',prenume:'Ion',
+      telefon:'0740111222',cnp:'1850101123456',
+      nrPermis:'IF001234',categoriePermis:'D',
+      expPermis:'2027-06-30',dataAngajarii:'2022-03-01',
+      observatii:'Cunoaște ruta Iași-Târgu Neamț. Fiabil, punctual.',
+      parolaPortal:btoa('sofer1'),
+      activ:true,createdAt:serverTimestamp()
+    },
+    {
+      nume:'Ionescu',prenume:'Maria',
+      telefon:'0741333444',cnp:'2880215234567',
+      nrPermis:'IS005678',categoriePermis:'D',
+      expPermis:'2026-11-15',dataAngajarii:'2023-01-15',
+      observatii:'Cunoaște ruta Iași-Bacău. Experiență 8 ani.',
+      parolaPortal:btoa('sofer2'),
+      activ:true,createdAt:serverTimestamp()
+    },
+    {
+      nume:'Constantin',prenume:'Gheorghe',
+      telefon:'0742555666',cnp:'1750320345678',
+      nrPermis:'IS009012',categoriePermis:'D+E',
+      expPermis:'2028-03-20',dataAngajarii:'2021-06-01',
+      observatii:'Șofer senior. Toate rutele. Disponibil weekend.',
+      parolaPortal:btoa('sofer3'),
+      activ:true,createdAt:serverTimestamp()
+    },
+    {
+      // Admin = si sofer (poate intra si ca sofer)
+      nume:'Irimia',prenume:'Teodor',email:ADMIN,
+      telefon:'0700000000',cnp:'',
+      nrPermis:'IS000001',categoriePermis:'D',
+      expPermis:'2030-12-31',dataAngajarii:'2020-01-01',
+      observatii:'Administrator sistem. Poate prelua orice cursă.',
+      parolaPortal:btoa('admin123'),
+      activ:true,createdAt:serverTimestamp()
+    }
+  ];
+  
+  // Verifica daca soferii exista deja
+  const sfExist=await getDocs(collection(db,'soferi'));
+  if(sfExist.empty){
+    for(const sf of soferiDemo){
+      await addDoc(collection(db,'soferi'),sf);
+    }
+    toast('✅ Șoferi demo + admin adăugați!','ok');
+    // Atribuie soferi la vehicule
+    if(s43&&s19){
+      // Setra 43 locuri → Ion Popescu (Lun-Vin) + Gheorghe Constantin (Sam-Dum)
+      await setDoc(doc(db,'vehicule',s43.id),{
+        soferiAtribuiti:[
+          {email:'ion.popescu.sofer@lsdgroup.ro',zile:[1,2,3,4,5],dataStart:'',dataEnd:''},
+          {email:'gheorghe.constantin.sofer@lsdgroup.ro',zile:[6,0],dataStart:'',dataEnd:''}
+        ]
+      },{merge:true});
+      // Sprinter 19 locuri → Maria Ionescu (Lun-Sam)
+      await setDoc(doc(db,'vehicule',s19.id),{
+        soferiAtribuiti:[
+          {email:'maria.ionescu.sofer@lsdgroup.ro',zile:[1,2,3,4,5,6],dataStart:'',dataEnd:''}
+        ]
+      },{merge:true});
+    }
+  }
   toast('Date demo adăugate!','ok');
 }
 
@@ -1743,7 +1888,10 @@ window.loadReg=async()=>{
     const plecari=c.plecari&&c.plecari.length?c.plecari:[{ora:c.ora||'-',soferEmail:c.soferEmail||null}];
     const dc=DAYS.map((d,i)=>`<div class="dc ${(c.zile||[]).includes(i)?'on':''}">${d}</div>`).join('');
     plecari.forEach((p,pi)=>{
-      const oraP=p.ora||'-';
+      // Ora reala pentru data selectata (ore per zi + exceptii)
+      const oraInfo=typeof getOraForData==='function'?getOraForData(p,data):{ora:p.ora||'-',soferEmail:p.soferEmail||''};
+      const oraP=oraInfo.ora||'-';
+      const soferEmailP=oraInfo.soferEmail||p.soferEmail||'';
       // Statii DUS cu ore estimate bazate pe ora acestei plecari
       const stbDus=(c.statii||[]).map((s,i)=>{
         const arrTime=i>0&&oraP&&s.minuteDeLaStart?calcArrival(oraP,s.minuteDeLaStart):'';
@@ -1778,7 +1926,7 @@ window.loadReg=async()=>{
           <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">🕐 <span style="color:var(--text);font-weight:600">${oraP}</span></div>
           <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">🚌 <span style="color:var(--text)">${c.vehiculNume||'-'}</span></div>
           <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">👥 <span style="color:var(--text)">${c.capacitate||'?'} locuri</span></div>
-          ${p.soferEmail?`<div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">👨‍✈️ <span style="color:var(--text)">${numeSofer(p.soferEmail)}</span></div>`:''}
+          ${soferEmailP?`<div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">👨‍✈️ <span style="color:var(--text)">${numeSofer(soferEmailP)}</span></div>`:''}
         </div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">${dc}</div>
         <div style="margin-bottom:12px">${stbDus}</div>
@@ -1812,12 +1960,14 @@ window.openCin=async(cId,data,directie='dus',plecareIdx=0)=>{
     }
     _cC.ruta=c.rutaIntors||[...(c.statii||[])].map(s=>s.nume).reverse().join(' – ');
   }else{
-    // Dus: folosim plecare specifica dupa index
+    // Dus: folosim plecare specifica dupa index cu ora corecta pentru data
     _cC={...c};
     if(c.plecari&&c.plecari.length){
       const plD=c.plecari[plecareIdx]||c.plecari[0];
       _cC.plecari=[plD];
-      _cC.ora=plD?.ora||c.ora;
+      // Ora reala (ore per zi + exceptii)
+      const oraInfo=typeof getOraForData==='function'?getOraForData(plD,data):{ora:plD.ora||c.ora};
+      _cC.ora=oraInfo.ora||plD.ora||c.ora;
     }
   }
   const titluDir=directie==='intors'?'↩️ RETUR: ':'';
@@ -2232,18 +2382,22 @@ window.calcOrgPret=async()=>{
     if(timpEl&&!km)timpEl.innerHTML='<span style="color:var(--muted);font-size:12px">⏱️ Se calculează distanța...</span>';
     const dist=await calcDistantaORS(stopsValide[0],stopsValide[stopsValide.length-1]);
     if(dist){
-      // Km total = suma segmentelor (simplificat: dus x2 pentru dus-intors)
+      // FIX: km = DUS doar; afisam dus+intors informativ dar campul = dus
       const kmDus=dist.km;
-      km=kmDus*2;
+      km=kmDus;
       const kmEl=document.getElementById('okm');
       if(kmEl&&!kmEl.value)kmEl.value=km;
       const timpEl=document.getElementById('org-timp-estim');
       if(timpEl)timpEl.innerHTML=`<div style="background:rgba(184,134,11,.06);border:1px solid rgba(184,134,11,.2);border-radius:8px;padding:10px 12px;font-size:12px">
-        <div style="font-weight:600;color:var(--gold);margin-bottom:4px">🗺️ Estimare traseu (OpenRouteService)</div>
-        <div style="color:var(--muted);display:flex;gap:14px;flex-wrap:wrap">
-          <span>📍 ${stopsValide[0]} → ${stopsValide[stopsValide.length-1]}</span>
-          <span>📏 ${kmDus} km (dus) · ${km} km (dus-întors)</span>
-          <span>⏱️ ~${dist.durataText} (dus) · ~${minToTime2(dist.minReal*2)} (dus-întors)</span>
+        <div style="font-weight:600;color:var(--gold);margin-bottom:6px">🗺️ Estimare traseu (OpenRouteService)</div>
+        <div style="color:var(--muted);display:flex;flex-direction:column;gap:4px">
+          <div>📍 ${stopsValide[0]} → ${stopsValide[stopsValide.length-1]}</div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <span>🚌 Dus: <strong style="color:var(--text)">${kmDus} km · ~${dist.durataText}</strong></span>
+            <span>🔄 Întors: <strong style="color:var(--text)">${kmDus} km · ~${dist.durataText}</strong></span>
+          </div>
+          <div>📏 Total dus-întors: <strong style="color:var(--gold)">${kmDus*2} km · ~${minToTime2(dist.minReal*2)}</strong></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">ℹ️ Câmpul km de sus = distanța DUS. Prețul estimativ calculat pe DUS.</div>
         </div>
       </div>`;
     }else if(timpEl){
@@ -2585,13 +2739,23 @@ window.sendClientMsg=async()=>{
 // ── SOFER PORTAL ──────────────────────────────────────────
 window.loadSofer=async()=>{
   const u=window._U;if(!u)return;
-  document.getElementById('sfgreet').textContent='Bună ziua, '+(u.displayName||u.email);
+  // Folosim _soferDoc daca e cont comun (selectat din modal), altfel Firebase displayName
+  const sfName=window._soferDoc
+    ?((window._soferDoc.prenume||'')+' '+(window._soferDoc.nume||'')).trim()
+    :(u.displayName||u.email);
+  document.getElementById('sfgreet').textContent='Bună ziua, '+sfName+'! 🚌';
+  // Actualizeaza display-ul emailului in admin modal
+  const scd=document.getElementById('sofer-cont-display');
+  if(scd)scd.textContent=SOFER_CONT_EMAIL;
   const di=document.getElementById('sfdate');
   if(!di.value)di.value=new Date().toISOString().split('T')[0];
   // Cache sofer data
   try{
-    const ss=await getDocs(query(collection(db,'soferi'),where('email','==',u.email)));
-    if(!ss.empty)window._soferDoc={id:ss.docs[0].id,...ss.docs[0].data()};
+    // Daca _soferDoc deja setat (cont comun), nu refacem query
+    if(!window._soferDoc){
+      const ss=await getDocs(query(collection(db,'soferi'),where('email','==',u.email)));
+      if(!ss.empty)window._soferDoc={id:ss.docs[0].id,...ss.docs[0].data()};
+    }
   }catch(e){}
   loadSoferAzi();
   loadSoferCurse();
@@ -2861,19 +3025,42 @@ window.loadSoferAzi=async()=>{
   c.innerHTML=`<div style="text-align:center;padding:48px;color:var(--muted)"><div class="spin" style="width:32px;height:32px;border-width:3px;margin:0 auto 12px"></div><p>Se încarcă cursele pentru ${data}...</p></div>`;
   try{
     const snap=await getDocs(collection(db,'curse_regulate'));
+    // Incarca vehiculele pentru a verifica soferiAtribuiti
+    await loadFlota();
     const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
       if(!x.activa)return false;
       if(!(x.zile||[]).includes(dow))return false;
       if(x.dataStart&&data<x.dataStart)return false;
       if(x.dataEnd&&data>x.dataEnd)return false;
-      // Check if driver is in any departure
+      // Verifica exceptii blocate
+      if(x.dateBlocate&&x.dateBlocate.includes(data))return false;
+      // Check 1: sofer in plecari (cu exceptii si ore per zi)
       const plecari=x.plecari||[{ora:x.ora,soferEmail:x.soferEmail}];
-      return plecari.some(p=>p.soferEmail===u.email);
+      const inPlecari=plecari.some(p=>{
+        const oraInfo=typeof getOraForData==='function'?getOraForData(p,data):{soferEmail:p.soferEmail};
+        const _azi_se=window._soferDoc?.email||u.email;
+        return oraInfo.soferEmail===_azi_se||p.soferEmail===_azi_se;
+      });
+      if(inPlecari)return true;
+      // Check 2: sofer atribuit vehiculului pentru aceasta zi
+      const veh=window._F.find(v=>v.id===x.vehiculId);
+      const mySoferEmailVeh=window._soferDoc?.email||u.email;
+      if(veh&&veh.soferiAtribuiti){
+        return veh.soferiAtribuiti.some(sa=>{
+          if(sa.email!==mySoferEmailVeh)return false;
+          if(!(sa.zile||[1,2,3,4,5]).includes(dow))return false;
+          if(sa.dataStart&&data<sa.dataStart)return false;
+          if(sa.dataEnd&&data>sa.dataEnd)return false;
+          return true;
+        });
+      }
+      return false;
     });
     // For each cursa, filter to only the plecari for this driver
     curse.forEach(c=>{
       const pl=c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}];
-      c._myPlecari=pl.filter(p=>p.soferEmail===u.email);
+      const _my_se=window._soferDoc?.email||u.email;
+      c._myPlecari=pl.filter(p=>p.soferEmail===_my_se);
     });
     if(!curse.length){
       c.innerHTML=`<div class="empty-state"><div class="es-icon">😴</div><h3>Nicio cursă pentru ${data}</h3><p>Nu aveți curse asignate în această zi. Verificați cu administratorul.</p><button class="btn bs bsm" style="margin-top:12px" onclick="sfTab('calendar')">📆 Vezi calendarul</button></div>`;
@@ -3010,11 +3197,21 @@ window.loadCalendar=async()=>{
   grid.innerHTML='<p style="color:var(--muted);font-size:13px">Se încarcă...</p>';
   // Get driver's regular routes
   const regSnap=await getDocs(collection(db,'curse_regulate'));
-  const curseMele=regSnap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.soferEmail===u.email&&x.activa);
+  const _calSoferEmail=window._soferDoc?.email||u.email;
+  const curseMele=regSnap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
+    if(!x.activa)return false;
+    if(x.soferEmail===_calSoferEmail)return true;
+    const pl=x.plecari||[];
+    if(pl.some(p=>p.soferEmail===_calSoferEmail))return true;
+    const veh=window._F&&window._F.find(v=>v.id===x.vehiculId);
+    if(veh&&veh.soferiAtribuiti)return veh.soferiAtribuiti.some(sa=>sa.email===_calSoferEmail);
+    return false;
+  });
   // Get organized rides assigned to this driver in this month
   let orgRez=[];
   try{
-    const orgSnap=await getDocs(query(collection(db,'rezervari'),where('soferEmail','==',u.email)));
+    const _orgSE=window._soferDoc?.email||u.email;
+    const orgSnap=await getDocs(query(collection(db,'rezervari'),where('soferEmail','==',_orgSE)));
     orgRez=orgSnap.docs.map(d=>d.data()).filter(r=>r.status!=='anulata'&&r.data);
   }catch(e){}
   // Build calendar
@@ -3063,9 +3260,15 @@ window.loadSoferCurse=async()=>{
   el.innerHTML='<p style="color:var(--muted)">Se încarcă...</p>';
   try{
     const snap=await getDocs(collection(db,'curse_regulate'));
+    await loadFlota();
+    const mySoferEmailCurse=window._soferDoc?.email||u.email;
     const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
       const pl=x.plecari||[{ora:x.ora,soferEmail:x.soferEmail}];
-      return pl.some(p=>p.soferEmail===u.email);
+      if(pl.some(p=>p.soferEmail===mySoferEmailCurse))return true;
+      // Check vehicul soferiAtribuiti
+      const veh=window._F.find(v=>v.id===x.vehiculId);
+      if(veh&&veh.soferiAtribuiti)return veh.soferiAtribuiti.some(sa=>sa.email===mySoferEmailCurse);
+      return false;
     });
     if(!curse.length){el.innerHTML=`<div class="empty-state"><div class="es-icon">📋</div><h3>Nicio cursă asignată</h3><p>Nu aveți curse regulate atribuite. Contactați administratorul.</p></div>`;return}
     const DAYS=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
@@ -3128,10 +3331,14 @@ window.loadSoferVehicul=async()=>{
   try{
     // Find vehicle assigned to sofer's routes
     const snap=await getDocs(collection(db,'curse_regulate'));
+    const _vehSE=window._soferDoc?.email||u.email;
     const curse=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>{
       if(!x.activa)return false;
       const pl=x.plecari||[{ora:x.ora,soferEmail:x.soferEmail}];
-      return pl.some(p=>p.soferEmail===u.email);
+      if(pl.some(p=>p.soferEmail===_vehSE))return true;
+      const veh=window._F&&window._F.find(v=>v.id===x.vehiculId);
+      if(veh&&veh.soferiAtribuiti)return veh.soferiAtribuiti.some(sa=>sa.email===_vehSE);
+      return false;
     });
     if(!curse.length){el.innerHTML=`<div class="empty-state"><div class="es-icon">🚌</div><h3>Niciun vehicul asignat</h3><p>Nu aveți vehicul asignat momentan. Contactați administratorul.</p></div>`;return}
     // Get unique vehicles
@@ -3204,7 +3411,8 @@ window.loadSoferBilete=async()=>{
   try{
     // Get all routes for this driver
     const snapR=await getDocs(collection(db,'curse_regulate'));
-    const curseMele=snapR.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.soferEmail===u.email);
+    const _bSE=window._soferDoc?.email||u.email;
+    const curseMele=snapR.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.soferEmail===_bSE||((x.plecari||[]).some(p=>p.soferEmail===_bSE))||((window._F||[]).find(v=>v.id===x.vehiculId)?.soferiAtribuiti||[]).some(sa=>sa.email===_bSE));
     const cursaIds=cursaId?[cursaId]:curseMele.map(c=>c.id);
     // Query reservations
     let allRez=[];
@@ -3421,15 +3629,24 @@ window.delSeatRow=ri=>{_seatRows.splice(ri,1);renderSeatBuilder()};
 
 // VEHICULE ADMIN
 function loadVT(){
-  document.getElementById('vtb').innerHTML=window._F.map(v=>`<tr>
+  document.getElementById('vtb').innerHTML=window._F.map(v=>{
+    const sofAtr=v.soferiAtribuiti||[];
+    const sofNames=sofAtr.filter(s=>s.email).map(s=>{
+      const zileStr=(s.zile||[]).map(d=>ZILE_LABEL[d]).join(',');
+      return `<span style="display:inline-block;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:2px 7px;font-size:10px;margin:1px" title="${zileStr}">${numeSofer(s.email).split(' ')[0]} <span style="color:var(--muted)">(${zileStr})</span></span>`;
+    }).join('');
+    return `<tr>
     <td><strong>${v.icon||''} ${v.nume}</strong><br><span style="color:var(--muted);font-size:11px">${v.model||''} ${v.anFab||''}</span></td>
     <td>${cap(v)} locuri${v.pretPerKm?' · '+v.pretPerKm+' RON/km':''}</td>
     <td style="font-size:12px">${v.nrInmatr||'-'}</td>
+    <td style="max-width:160px">${sofNames||'<span style="color:var(--muted);font-size:12px">Neatribuit</span>'}</td>
     <td><label class="tog"><input type="checkbox" ${v.disponibil?'checked':''} onchange="tVD('${v.id}',this.checked)"/><span class="tosl"></span></label></td>
-    <td style="display:flex;gap:6px;padding:10px 12px">
+    <td style="display:flex;gap:6px;padding:10px 12px;flex-wrap:wrap">
+      <button class="btn bs bsm" onclick="openVehiculeAtribuire('${v.id}')" title="Atribuie șoferi">👨‍✈️</button>
       <button class="btn bs bsm" onclick="openVM('${v.id}')">✏️</button>
       <button class="btn bd bsm" onclick="delV('${v.id}')">🗑️</button>
-    </td></tr>`).join('');
+    </td></tr>`;
+  }).join('');
 }
 window.tVD=async(id,val)=>{await setDoc(doc(db,'vehicule',id),{disponibil:val},{merge:true});const v=window._F.find(x=>x.id===id);if(v)v.disponibil=val};
 window.openVM=async(id=null)=>{
@@ -3583,21 +3800,228 @@ let _soferiList=[];
 
 window.calcCapRM=()=>{};
 
+// ── SISTEM ORE PER ZI SAPTAMANA + EXCEPTII DATE ─────────────
+const ZILE_LABEL=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
+
 function rPL(){
   const el=document.getElementById('plecari-list');if(!el)return;
-  el.innerHTML=_plecari.map((p,i)=>`
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
-      <div style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
-      <input type="time" value="${p.ora||''}" style="width:100px;flex-shrink:0" onchange="_plecari[${i}].ora=this.value"/>
-      <select style="flex:1" onchange="_plecari[${i}].soferEmail=this.value">
-        <option value="">— fără șofer —</option>
-        ${_soferiList.map(sf=>`<option value="${sf.email}" ${p.soferEmail===sf.email?'selected':''}>${sf.prenume||''} ${sf.nume||''}</option>`).join('')}
-      </select>
-      ${_plecari.length>1?`<button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;flex-shrink:0" onclick="delPlecare(${i})">✕</button>`:'<div style="width:20px"></div>'}
-    </div>`).join('');
+  el.innerHTML=_plecari.map((p,i)=>{
+    const orePerZi=p.orePerZi||{};
+    const exceptii=p.exceptii||[];
+    const oreDiferite=Object.values(orePerZi).some(o=>o&&o!==p.ora);
+    const sfOpts=_soferiList.map(sf=>`<option value="${sf.email}" ${p.soferEmail===sf.email?'selected':''}>${sf.prenume||''} ${sf.nume||''}</option>`).join('');
+    return `<div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <div style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Oră default</div>
+        <input type="time" value="${p.ora||''}" style="width:110px;flex-shrink:0" onchange="_plecari[${i}].ora=this.value;rPL()"/>
+        <select style="flex:1;min-width:140px" onchange="_plecari[${i}].soferEmail=this.value">
+          <option value="">— fără șofer default —</option>${sfOpts}
+        </select>
+        ${_plecari.length>1?`<button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px" onclick="delPlecare(${i})">✕</button>`:''}
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Oră specifică per zi a săptămânii</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+          ${[1,2,3,4,5,6,0].map(d=>{
+            const oz=orePerZi[d]||'';
+            const isDiff=oz&&oz!==p.ora;
+            return `<div style="text-align:center">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:3px">${ZILE_LABEL[d]}</div>
+              <input type="time" value="${oz}"
+                style="width:100%;font-size:11px;padding:4px 2px;border-radius:6px;border:1px solid ${isDiff?'var(--gold)':'var(--border)'};background:${isDiff?'rgba(184,134,11,.08)':'#fff'}"
+                title="Ora pentru ${ZILE_LABEL[d]} (gol = ora default)"
+                onchange="if(!_plecari[${i}].orePerZi)_plecari[${i}].orePerZi={};_plecari[${i}].orePerZi[${d}]=this.value;rPL()"/>
+            </div>`;
+          }).join('')}
+        </div>
+        ${oreDiferite?`<div style="font-size:11px;color:var(--gold);margin-top:4px;font-weight:600">⚡ Ore diferite configurate pentru unele zile</div>`:''}
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">
+          Excepții date specifice <span style="font-weight:400;text-transform:none;color:var(--muted)">(sărbători, modificări punctuale)</span>
+        </div>
+        ${exceptii.map((ex,ei)=>{
+          const sfExOpts=_soferiList.map(sf=>`<option value="${sf.email}" ${ex.soferEmail===sf.email?'selected':''}>${sf.prenume||''} ${sf.nume||''}</option>`).join('');
+          return `<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+            <input type="date" value="${ex.data||''}" style="width:140px;font-size:12px" onchange="_plecari[${i}].exceptii[${ei}].data=this.value"/>
+            <input type="time" value="${ex.ora||''}" style="width:100px;font-size:12px" title="Ora excepție" onchange="_plecari[${i}].exceptii[${ei}].ora=this.value"/>
+            <select style="flex:1;font-size:12px;min-width:120px" onchange="_plecari[${i}].exceptii[${ei}].soferEmail=this.value">
+              <option value="">— șofer default —</option>${sfExOpts}
+            </select>
+            <button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px" onclick="_plecari[${i}].exceptii.splice(${ei},1);rPL()">✕</button>
+          </div>`;
+        }).join('')}
+        <button class="btn bs bsm" style="margin-top:4px;font-size:11px" onclick="addExceptie(${i})">+ Excepție dată</button>
+      </div>
+    </div>`;
+  }).join('');
 }
-window.addPlecare=()=>{_plecari.push({ora:'',soferEmail:''});rPL()};
+window.addExceptie=(i)=>{
+  if(!_plecari[i].exceptii)_plecari[i].exceptii=[];
+  _plecari[i].exceptii.push({data:'',ora:'',soferEmail:''});
+  rPL();
+};
+window.addPlecare=()=>{_plecari.push({ora:'',soferEmail:'',orePerZi:{},exceptii:[]});rPL()};
 window.delPlecare=i=>{if(_plecari.length<=1)return;_plecari.splice(i,1);rPL()};
+
+// Helper: ora reala pentru plecare la o data specifica
+function getOraForData(plecare, dataStr){
+  const dow=new Date(dataStr+'T12:00:00').getDay();
+  const exc=(plecare.exceptii||[]).find(e=>e.data===dataStr);
+  if(exc&&exc.ora)return{ora:exc.ora,soferEmail:exc.soferEmail||plecare.soferEmail||''};
+  const orazi=(plecare.orePerZi||{})[dow];
+  if(orazi)return{ora:orazi,soferEmail:plecare.soferEmail||''};
+  return{ora:plecare.ora||'',soferEmail:plecare.soferEmail||''};
+}
+window.getOraForData=getOraForData;
+
+// ══════════════════════════════════════════════════════════
+// SISTEM CONT COMUN SOFERI — selectare nume + parola portal
+// ══════════════════════════════════════════════════════════
+
+async function deschideSoferLoginModal(){
+  // Incarca lista soferi activi din Firestore
+  try{
+    const snap=await getDocs(collection(db,'soferi'));
+    const soferiActivi=snap.docs
+      .filter(d=>d.data().activ!==false)
+      .map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>((a.prenume||'')+(a.nume||'')).localeCompare((b.prenume||'')+(b.nume||'')));
+    
+    const sel=document.getElementById('sofer-select-name');
+    if(!sel)return;
+    sel.innerHTML='<option value="">— Selectează numele tău —</option>'
+      +soferiActivi.map(s=>`<option value="${s.id}" data-has-pin="${!!s.parolaPortal}">${s.prenume||''} ${s.nume||''}</option>`).join('');
+    
+    // Reset state
+    document.getElementById('sofer-pin-wrap').style.display='none';
+    document.getElementById('sofer-pin-input').value='';
+    document.getElementById('sofer-pin-error').style.display='none';
+    document.getElementById('btn-sofer-confirm').disabled=true;
+    
+    // Store soferi list for verification
+    window._soferiLoginList=soferiActivi;
+    
+    // Event listener pe select
+    sel.onchange=()=>{
+      const sfId=sel.value;
+      const sf=soferiActivi.find(s=>s.id===sfId);
+      const pinWrap=document.getElementById('sofer-pin-wrap');
+      const btnConfirm=document.getElementById('btn-sofer-confirm');
+      const pinErr=document.getElementById('sofer-pin-error');
+      pinErr.style.display='none';
+      if(!sfId){
+        pinWrap.style.display='none';
+        btnConfirm.disabled=true;
+        return;
+      }
+      if(sf&&sf.parolaPortal){
+        // Are parola setata → cere parola
+        pinWrap.style.display='block';
+        document.getElementById('sofer-pin-input').value='';
+        document.getElementById('sofer-pin-input').focus();
+        btnConfirm.disabled=false;
+      }else{
+        // Nu are parola → admin nu a setat-o inca
+        pinWrap.style.display='none';
+        pinWrap.innerHTML=`<div style="background:rgba(185,28,28,.08);border:1px solid rgba(185,28,28,.2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red)">
+          ⚠️ Parola de portal nu a fost setată pentru acest șofer. Contactați administratorul.
+        </div>`;
+        pinWrap.style.display='block';
+        btnConfirm.disabled=true;
+      }
+    };
+    
+    document.getElementById('mo-sofer-login').classList.add('on');
+  }catch(e){
+    toast('Eroare la încărcarea listei de șoferi: '+e.message,'er');
+    doSO(); // deconecteaza daca nu poate incarca
+  }
+}
+
+window.verificaSoferPin=async()=>{
+  const sel=document.getElementById('sofer-select-name');
+  const pin=document.getElementById('sofer-pin-input').value;
+  const sfId=sel?.value;
+  
+  if(!sfId){toast('Selectează-ți numele','wr');return}
+  
+  const sf=(window._soferiLoginList||[]).find(s=>s.id===sfId);
+  if(!sf){toast('Șofer negăsit','er');return}
+  
+  if(!sf.parolaPortal){toast('Parola nu a fost setată. Contactați administratorul.','wr');return}
+  
+  // Verificam parola (btoa encoding)
+  const pinEncoded=btoa(unescape(encodeURIComponent(pin)));
+  const errEl=document.getElementById('sofer-pin-error');
+  const btn=document.getElementById('btn-sofer-confirm');
+  
+  if(pinEncoded!==sf.parolaPortal){
+    errEl.style.display='block';
+    document.getElementById('sofer-pin-input').value='';
+    document.getElementById('sofer-pin-input').focus();
+    // Animatie shake
+    const input=document.getElementById('sofer-pin-input');
+    input.style.borderColor='var(--red)';
+    input.style.animation='shake .3s ease';
+    setTimeout(()=>{input.style.animation='';},400);
+    return;
+  }
+  
+  // Parola corecta!
+  errEl.style.display='none';
+  btn.disabled=true;
+  btn.innerHTML='<span class="spin"></span> Se încarcă...';
+  
+  // Seteaza soferul curent in memorie
+  window._soferDoc={id:sf.id,...sf};
+  window._ROLE='sofer';
+  
+  // Inchide modalul
+  document.getElementById('mo-sofer-login').classList.remove('on');
+  
+  // Arata butonul "Schimbă șoferul" (cont comun)
+  const btnSch=document.getElementById('btn-schimba-sofer');
+  if(btnSch)btnSch.style.display='flex';
+  
+  // Construieste nav si redirecteaza
+  bNav('sofer');
+  nav('sofer');
+  toast('Bun venit, '+(sf.prenume||sf.nume||'')+'! 👋','ok');
+  
+  // Reset buton
+  btn.disabled=false;
+  btn.innerHTML='Intră în portal →';
+};
+
+// Shake animation CSS (inject)
+if(!document.getElementById('shake-style')){
+  const st=document.createElement('style');
+  st.id='shake-style';
+  st.textContent='@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}';
+  document.head.appendChild(st);
+}
+
+// Permite deconectarea din modalul de sofer
+// Schimba soferul fara deconectare (pentru cont comun firma)
+window.schimbaPortalSofer=async()=>{
+  window._soferDoc=null;
+  window._ROLE='sofer_pending';
+  await deschideSoferLoginModal();
+};
+
+window._origDoSO=window.doSO;
+window.doSO=async()=>{
+  document.getElementById('mo-sofer-login')?.classList.remove('on');
+  await signOut(auth);
+  toast('Deconectat cu succes','in');
+  window._ROLE='client';
+  window._soferDoc=null;
+  window._soferiLoginList=null;
+  bNav('guest');
+  window.nav('home');
+};
 
 window.openRM=async(id=null)=>{
   document.getElementById('rmt').textContent=id?'Editează cursă':'Adaugă cursă regulată';
@@ -3611,7 +4035,7 @@ window.openRM=async(id=null)=>{
   // Load soferi
   const sfSnap=await getDocs(collection(db,'soferi'));
   _soferiList=sfSnap.docs.filter(d=>d.data().activ!==false).map(d=>d.data());
-  _plecari=[{ora:'',soferEmail:''}];
+  _plecari=[{ora:'',soferEmail:'',orePerZi:{},exceptii:[]}];
   _intorsPlecari=[{ora:'',soferEmail:''}];
   _dateBlocate=[];
   _eSt=[{n:'',p:0},{n:'',p:0}];
@@ -3631,9 +4055,14 @@ window.openRM=async(id=null)=>{
       document.getElementById('rma').checked=c.activa!==false;
       if(c.vehiculId)vS.value=c.vehiculId;
       if(c.plecari&&c.plecari.length){
-        _plecari=c.plecari.map(p=>({ora:p.ora||'',soferEmail:p.soferEmail||''}));
+        _plecari=c.plecari.map(p=>({
+          ora:p.ora||'',
+          soferEmail:p.soferEmail||'',
+          orePerZi:p.orePerZi||{},
+          exceptii:p.exceptii||[]
+        }));
       }else{
-        _plecari=[{ora:c.ora||'',soferEmail:c.soferEmail||''}];
+        _plecari=[{ora:c.ora||'',soferEmail:c.soferEmail||'',orePerZi:{},exceptii:[]}];
       }
       // Load intors if exists
       if(c.tipCursa==='dus-intors'&&c.intorsPlecari){
@@ -3678,14 +4107,18 @@ window.saveReg=async()=>{
     if(statii[i].pretDeLaStart<=statii[i-1].pretDeLaStart){toast(`Prețul stației "${statii[i].nume}" trebuie să fie mai mare decât "${statii[i-1].nume}"`,'wr');return}
   }
   // Read plecari from DOM (selects may have changed)
-  const plecariRows=document.querySelectorAll('#plecari-list > div');
-  const plecariSaved=[];
-  plecariRows.forEach((row,i)=>{
-    const oraEl=row.querySelector('input[type="time"]');
-    const sfEl=row.querySelector('select');
-    plecariSaved.push({ora:oraEl?oraEl.value:'',soferEmail:sfEl?sfEl.value:''});
+  // Folosim _plecari direct (contine orePerZi si exceptii actualizate via rPL())
+  // Citim doar ora default si soferEmail din DOM daca s-au schimbat
+  const plecariFinale=_plecari.map((p,i)=>{
+    const rows=document.querySelectorAll('#plecari-list > div');
+    if(rows[i]){
+      const oraEl=rows[i].querySelector('input[type="time"]');
+      const sfEl=rows[i].querySelector('select');
+      if(oraEl)p.ora=oraEl.value;
+      if(sfEl)p.soferEmail=sfEl.value;
+    }
+    return p;
   });
-  const plecariFinale=plecariSaved.length?plecariSaved:_plecari;
   if(plecariFinale.every(p=>!p.ora)){toast('Adăugați cel puțin o oră de plecare','wr');return}
   const firstP=plecariFinale.find(p=>p.ora)||plecariFinale[0];
   const tipCursa=document.getElementById('tip-di').checked?'dus-intors':'dus';
@@ -3882,11 +4315,13 @@ async function loadSfT(){
       <td>${s.email}</td>
       <td>${s.telefon||'-'}</td>
       <td style="font-size:12px">${s.nrPermis||'-'} / Cat.${s.categoriePermis||'-'}<br><span style="color:${expOk?'var(--green)':'var(--red)'}">${exp?'Exp: '+exp:''}</span></td>
+      <td><span style="font-size:11px;padding:3px 8px;border-radius:6px;font-weight:600;${s.parolaPortal?'background:rgba(21,128,61,.08);color:var(--green);border:1px solid rgba(21,128,61,.25)':'background:rgba(185,28,28,.08);color:var(--red);border:1px solid rgba(185,28,28,.2)'}">${s.parolaPortal?'🔑 Setată':'⚠️ Lipsă'}</span></td>
       <td><label class="tog"><input type="checkbox" ${s.activ!==false?'checked':''} onchange="tSf('${d.id}',this.checked)"/><span class="tosl"></span></label></td>
-      <td style="display:flex;gap:6px;padding:10px 12px">
-        <button class="btn bs bsm" onclick="openSM('${d.id}')">✏️</button>
-        <button class="btn bd bsm" onclick="delSf('${d.id}')">🗑️</button>
-      </td></tr>`;
+      <td style="display:flex;gap:4px;padding:10px 12px;flex-wrap:wrap">
+        <button class="btn bs bsm" onclick="openSM('${d.id}')" title="Editează">✏️</button>
+        <button class="btn bs bsm" onclick="resetPinSofer('${d.id}','${s.prenume||''} ${s.nume||''}')" title="Resetează parola portal" style="color:var(--orange);border-color:rgba(194,85,15,.3)">🔑</button>
+        <button class="btn bd bsm" onclick="delSf('${d.id}')" title="Șterge">🗑️</button>
+      </td></tr>`);
   }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Niciun șofer înregistrat</td></tr>';
 }
 window.tSf=async(id,val)=>await setDoc(doc(db,'soferi',id),{activ:val},{merge:true});
@@ -3894,7 +4329,7 @@ window.openSM=async(id=null)=>{
   document.getElementById('sfmt').textContent=id?'Editează șofer':'Adaugă șofer nou';
   document.getElementById('sfmid').value=id||'';
   ['smn','smpn','sme','smt','smcnp','smperm','smobs'].forEach(x=>{const el=document.getElementById(x);if(el)el.value=''});
-  ['smbul','smadr'].forEach(x=>{const el=document.getElementById(x);if(el)el.value=''});
+  ['smbul','smadr','smpin','smpin2'].forEach(x=>{const el=document.getElementById(x);if(el)el.value=''});
   document.getElementById('smcat').value='D';document.getElementById('smact').checked=true;
   document.getElementById('smexp').value='';document.getElementById('smang').value='';
   if(id){
@@ -3914,6 +4349,9 @@ window.openSM=async(id=null)=>{
       if(document.getElementById('smadr'))document.getElementById('smadr').value=s.adresa||'';
       document.getElementById('smobs').value=s.observatii||'';
       document.getElementById('smact').checked=s.activ!==false;
+      // Nu incarcam parola existenta (securitate)
+      const pinHint=document.getElementById('smpin');
+      if(pinHint)pinHint.placeholder=s.parolaPortal?'••••••• (setată — lasă gol pt a nu schimba)':'Setează parola de portal';
     }
   }
   om('sofer');
@@ -3927,6 +4365,13 @@ window.saveSofer=async()=>{
   if(!name||!pren||!em||!tel){toast('Completați: Nume, Prenume, Email și Telefon','wr');return}
   const cnpVal=document.getElementById('smcnp').value.trim();
   if(cnpVal&&!validCNP(cnpVal)){toast('CNP invalid — verificați numărul introdus','wr');return}
+  // Parolă portal
+  const pin=document.getElementById('smpin')?.value||'';
+  const pin2=document.getElementById('smpin2')?.value||'';
+  if(pin){
+    if(pin.length<4){toast('Parola de portal trebuie să aibă minim 4 caractere','wr');return}
+    if(pin!==pin2){toast('Parolele nu coincid','wr');return}
+  }
   const data={
     nume:name,prenume:pren,email:em,telefon:tel,
     cnp:document.getElementById('smcnp').value.trim(),
@@ -3939,12 +4384,28 @@ window.saveSofer=async()=>{
     observatii:document.getElementById('smobs').value.trim(),
     activ:document.getElementById('smact').checked
   };
+  // Salvam parola portal doar daca a fost completata (btoa = encoding simplu, nu criptare puternica)
+  if(pin)data.parolaPortal=btoa(unescape(encodeURIComponent(pin)));
   try{
     if(id)await setDoc(doc(db,'soferi',id),data,{merge:true});
     else{data.createdAt=serverTimestamp();await addDoc(collection(db,'soferi'),data)}
     cm('sofer');await loadSfT();toast('Șofer salvat!','ok');
   }catch(e){toast('Eroare: '+e.message,'er')}
 };
+window.resetPinSofer=async(sfId,sfName)=>{
+  const nouaParola=prompt(`Setează parola nouă de portal pentru ${sfName}:
+(minim 4 caractere)`);
+  if(!nouaParola)return;
+  if(nouaParola.length<4){toast('Minim 4 caractere','wr');return}
+  try{
+    await setDoc(doc(db,'soferi',sfId),{
+      parolaPortal:btoa(unescape(encodeURIComponent(nouaParola)))
+    },{merge:true});
+    toast('✅ Parola de portal resetată pentru '+sfName,'ok');
+    await loadSfT();
+  }catch(e){toast('Eroare: '+e.message,'er')}
+};
+
 window.delSf=async id=>{if(!confirm('Ștergeți șoferul din sistem?'))return;await deleteDoc(doc(db,'soferi',id));await loadSfT();toast('Șofer șters','ok')};
 
 // TICKER ADMIN
@@ -4904,6 +5365,178 @@ function showAdminReturnBar(label){
   // Adauga padding la body ca sa nu ascunda continut
   document.getElementById('app').style.paddingBottom='60px';
 }
+
+// ── ADMIN INTRA CA SOFER ─────────────────────────────────
+window.intraPortalSofer=()=>{
+  // Admin intra in portalul sofer fara sa isi schimbe rolul permanent
+  const prevRole=window._ROLE;
+  window._ROLE='sofer';
+  bNav('sofer');
+  nav('sofer');
+  loadSofer();
+  // Bara de return la admin
+  let bar=document.getElementById('admin-return-bar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='admin-return-bar';
+    bar.style.cssText='position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,var(--gold),var(--gold2));padding:12px 20px;display:flex;justify-content:space-between;align-items:center;z-index:9990;box-shadow:0 -4px 16px rgba(184,134,11,.3)';
+    document.body.appendChild(bar);
+  }
+  bar.innerHTML=`<span style="font-weight:700;color:#fff;font-size:13px">👑 Admin → 🚌 Portal Șofer</span>
+    <button class="btn" style="background:#fff;color:var(--gold);font-weight:700;padding:7px 16px;border-radius:8px;border:none;cursor:pointer" onclick="revinLaAdmin()">← Revin la Admin</button>`;
+  bar.style.display='flex';
+  document.getElementById('app').style.paddingBottom='60px';
+};
+
+// ── VEHICUL → SOFERI ASSIGNMENT SYSTEM ───────────────────
+// Structura vehicul: {soferiAtribuiti:[{email, zile:[1,2,3,4,5], dataStart, dataEnd}]}
+// Un sofer poate fi pe mai multe vehicule, cu zile diferite
+
+window.openVehiculeAtribuire=async(vehId)=>{
+  const v=window._F.find(x=>x.id===vehId);
+  if(!v)return;
+  const sfSnap=await getDocs(collection(db,'soferi'));
+  const totiSoferii=sfSnap.docs.filter(d=>d.data().activ!==false).map(d=>({id:d.id,...d.data()}));
+  const soferiAtribuiti=v.soferiAtribuiti||[];
+  
+  // Build modal content
+  const modal=document.getElementById('mo-veh-atribuire')||createVehAtribuireModal();
+  document.getElementById('va-title').textContent='👨‍✈️ Atribuire șoferi — '+v.icon+' '+v.nume;
+  document.getElementById('va-veh-id').value=vehId;
+  
+  const el=document.getElementById('va-list');
+  el.innerHTML=soferiAtribuiti.map((sa,i)=>{
+    const sfOpts=totiSoferii.map(sf=>`<option value="${sf.email}" ${sa.email===sf.email?'selected':''}>${sf.prenume||''} ${sf.nume||''} (${sf.email})</option>`).join('');
+    const zileBtns=[1,2,3,4,5,6,0].map(d=>`<button type="button" class="dc ${(sa.zile||[1,2,3,4,5]).includes(d)?'on':''}" data-sa="${i}" data-day="${d}" onclick="toggleVaSaZi(this,${i},${d})" style="font-size:10px">${ZILE_LABEL[d]}</button>`).join('');
+    return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <select style="flex:1;min-width:180px" onchange="window._vaSoferiAtribuiti[${i}].email=this.value">
+          <option value="">— alege șoferul —</option>${sfOpts}
+        </select>
+        <button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px" onclick="window._vaSoferiAtribuiti.splice(${i},1);openVehiculeAtribuire('${vehId}')">✕</button>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">${zileBtns}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div style="flex:1"><div class="fl">De la (opțional)</div><input type="date" value="${sa.dataStart||''}" style="font-size:12px" onchange="window._vaSoferiAtribuiti[${i}].dataStart=this.value"/></div>
+        <div style="flex:1"><div class="fl">Până la (opțional)</div><input type="date" value="${sa.dataEnd||''}" style="font-size:12px" onchange="window._vaSoferiAtribuiti[${i}].dataEnd=this.value"/></div>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--muted)">
+        ⚠️ Program săptămânal: <span id="va-prog-${i}" style="color:var(--text);font-weight:600">se calculează...</span>
+      </div>
+    </div>`;
+  }).join('')+'<button class="btn bs bsm" onclick="addVaSofer(''+vehId+'')">+ Adaugă șofer la vehicul</button>';
+  
+  window._vaSoferiAtribuiti=JSON.parse(JSON.stringify(soferiAtribuiti));
+  window._vaVehId=vehId;
+  
+  // Calculate hours for each sofer
+  setTimeout(()=>calcVaProgram(vehId,totiSoferii),100);
+  
+  document.getElementById('mo-veh-atribuire').classList.add('on');
+};
+
+function createVehAtribuireModal(){
+  const mo=document.createElement('div');
+  mo.className='mo';mo.id='mo-veh-atribuire';
+  mo.innerHTML=`<div class="md md-lg">
+    <div class="mh"><div><div class="mt2" id="va-title">Atribuire șoferi</div><div style="font-size:12px;color:var(--muted);margin-top:3px">Atribuiți șoferi la acest vehicul per zi a săptămânii</div></div><button class="mx" onclick="cm('veh-atribuire')">✕</button></div>
+    <div class="mb2">
+      <input type="hidden" id="va-veh-id"/>
+      <div style="background:rgba(184,134,11,.07);border:1px solid rgba(184,134,11,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:14px">
+        ℹ️ Un vehicul poate avea mai mulți șoferi în zile diferite. Șoferul va vedea automat cursele vehiculului în portalul său, în zilele selectate.
+      </div>
+      <div id="va-list"></div>
+      <div id="va-avertizari" style="margin-top:12px"></div>
+    </div>
+    <div class="mf"><button class="btn bs" onclick="cm('veh-atribuire')">Anulează</button><button class="btn bp" onclick="saveVehAtribuire()">💾 Salvează atribuirile</button></div>
+  </div>`;
+  mo.addEventListener('click',e=>{if(e.target===mo)mo.classList.remove('on')});
+  document.body.appendChild(mo);
+  return mo;
+}
+
+window.toggleVaSaZi=(btn,saIdx,day)=>{
+  btn.classList.toggle('on');
+  if(!window._vaSoferiAtribuiti[saIdx].zile)window._vaSoferiAtribuiti[saIdx].zile=[1,2,3,4,5];
+  const idx=window._vaSoferiAtribuiti[saIdx].zile.indexOf(day);
+  if(idx>-1)window._vaSoferiAtribuiti[saIdx].zile.splice(idx,1);
+  else window._vaSoferiAtribuiti[saIdx].zile.push(day);
+};
+
+window.addVaSofer=(vehId)=>{
+  if(!window._vaSoferiAtribuiti)window._vaSoferiAtribuiti=[];
+  window._vaSoferiAtribuiti.push({email:'',zile:[1,2,3,4,5],dataStart:'',dataEnd:''});
+  openVehiculeAtribuire(vehId);
+};
+
+async function calcVaProgram(vehId,soferi){
+  // Pentru fiecare sofer atribuit, calculeaza ore saptamanale pe vehiculul asta
+  const v=window._F.find(x=>x.id===vehId);
+  const curseVeh=(window._R||[]).filter(c=>c.vehiculId===vehId&&c.activa);
+  const zile7=getZileInterval(new Date().toISOString().split('T')[0],'saptamana');
+  
+  (window._vaSoferiAtribuiti||[]).forEach(async(sa,i)=>{
+    if(!sa.email)return;
+    let minSapt=0;
+    for(const data of zile7){
+      const dow=new Date(data+'T12:00:00').getDay();
+      if(!(sa.zile||[]).includes(dow))continue;
+      for(const c of curseVeh){
+        if(!(c.zile||[]).includes(dow))continue;
+        const statMin=c.statii&&c.statii.length>=2?c.statii[c.statii.length-1].minuteDeLaStart||0:0;
+        minSapt+=c.tipCursa==='dus-intors'?statMin*2:statMin;
+      }
+    }
+    const h=(minSapt/60).toFixed(1);
+    const pct=Math.round(minSapt/56/60*100);
+    const warn=pct>=90;
+    const el=document.getElementById('va-prog-'+i);
+    if(el)el.innerHTML=`${h}h/săpt (${pct}% din max 56h) ${warn?'⚠️ APROAPE DE LIMITĂ':'✅'}`;
+  });
+}
+
+window.saveVehAtribuire=async()=>{
+  const vehId=window._vaVehId;
+  if(!vehId)return;
+  const soferiAtribuiti=(window._vaSoferiAtribuiti||[]).filter(sa=>sa.email);
+  
+  // Salveaza pe vehicul
+  await setDoc(doc(db,'vehicule',vehId),{soferiAtribuiti},{merge:true});
+  
+  // Acum sincronizeaza curse: pentru fiecare cursa cu vehiculul asta,
+  // atribuie soferii corespunzatori zilelor
+  const curseVeh=(window._R||[]).filter(c=>c.vehiculId===vehId);
+  for(const c of curseVeh){
+    const plecariNoi=(c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}]).map(p=>{
+      // Gaseste soferul default pentru zilele active ale cursei
+      const zileCursa=c.zile||[];
+      // Soferul care acopera cele mai multe zile
+      let soferPotrivit='';
+      let maxZileComune=0;
+      soferiAtribuiti.forEach(sa=>{
+        const zileComune=(sa.zile||[]).filter(z=>zileCursa.includes(z)).length;
+        if(zileComune>maxZileComune){maxZileComune=zileComune;soferPotrivit=sa.email;}
+      });
+      // Construieste orePerZi din soferiAtribuiti
+      const orePerZiNoi={};
+      // Pastreaza ora existenta, doar actualizeaza soferul
+      return{...p,soferEmail:soferPotrivit};
+    });
+    await setDoc(doc(db,'curse_regulate',c.id),{
+      plecari:plecariNoi,
+      soferEmail:plecariNoi[0]?.soferEmail||null
+    },{merge:true});
+  }
+  
+  await loadFlota();
+  const idx=window._F.findIndex(x=>x.id===vehId);
+  if(idx>-1)window._F[idx].soferiAtribuiti=soferiAtribuiti;
+  
+  cm('veh-atribuire');
+  toast('✅ Șoferi atribuiți la vehicul! Cursele au fost actualizate.','ok');
+  await loadRT();
+  await loadVT();
+};
 
 window.revinLaAdmin=()=>{
   window._ROLE='admin';
