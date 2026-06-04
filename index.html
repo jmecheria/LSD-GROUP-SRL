@@ -43,8 +43,9 @@ button{cursor:pointer;font-family:"Inter",sans-serif;transition:all .2s}
 #mob{display:none;position:fixed;top:100px;left:0;width:100%;background:#fff;box-shadow:0 8px 24px rgba(28,23,19,.1);border-bottom:1px solid var(--border);padding:12px;z-index:998;flex-direction:column;gap:4px}
 #mob.on{display:flex}
 #app{padding-top:100px;min-height:100vh}
-.pg{display:none;padding:32px 24px;max-width:1200px;margin:0 auto;animation:pgIn .2s ease}
-@keyframes pgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.pg{display:none;padding:32px 24px;max-width:1200px;margin:0 auto}
+.pg.on{animation:pgIn .18s ease}
+@keyframes pgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .pg.on{display:block}
 /* HERO */
 .hero{text-align:center;padding:60px 0 40px}
@@ -1050,7 +1051,7 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
     </div>
     <!-- Bottom bar -->
     <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;font-size:11px;color:rgba(240,234,216,.4)">
-      <span>© ${new Date().getFullYear()} LSD Group SRL · Toate drepturile rezervate · Autorizat ARR</span>
+      <span id="footer-year">© 2025 LSD Group SRL · Toate drepturile rezervate · Autorizat ARR</span>
       <span>Transport persoane · Cursuri regulate și organizate în România</span>
     </div>
   </div>
@@ -1455,7 +1456,7 @@ const auth=getAuth(app);const db=getFirestore(app);
 const ADMIN='irimia.teodor.17@gmail.com';
 // Emailul contului Firebase COMUN folosit de toti soferii firmei
 // Toata lumea se loghează cu ACEST email + parola contului, apoi selecteaza cine e
-const SOFER_CONT_EMAIL='soferi@lsdgroup.ro'; // ← schimba cu emailul contului tau de soferi
+const SOFER_CONT_EMAIL='renaultromaniaofficial@gmail.com'; // cont comun soferi
 const ORS_KEY='eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjljMTA5ZGY1ZWU5NTQ2ZjA5Nzc1NGVmYWU0MzNlOTFiIiwiaCI6Im11cm11cjY0In0=';
 const DAYS=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
 const ZILE_LABEL=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm']; // alias
@@ -1519,17 +1520,30 @@ function renderFooter(){
     (tel?`<span>📞 ${tel}</span>`:'<span>📞 —</span>')
     +`<span>📧 ${f.email||ADMIN}</span>`
     +(iban?`<span>🏦 IBAN: ${iban}</span>`:'');
+  // Update year
+  const yrEl=document.getElementById('footer-year');
+  if(yrEl)yrEl.textContent='© '+new Date().getFullYear()+' LSD Group SRL · Toate drepturile rezervate · Autorizat ARR';
 }
 
 // ── NAV ───────────────────────────────────────────────────
 window.nav=(page,ctx)=>{
-  if(window._ROLE==='sofer'&&!['sofer','gdpr','termeni','auth'].includes(page)){window.nav('sofer');return}
+  // Sofer (sau in asteptare selectie) nu poate accesa alte pagini decat portalul
+  if((window._ROLE==='sofer'||window._ROLE==='sofer_pending')&&!['sofer','gdpr','termeni','auth'].includes(page)){
+    if(window._ROLE==='sofer')window.nav('sofer');
+    return;
+  }
+  // Hide all pages
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nl').forEach(l=>l.classList.remove('on'));
-  const el=document.getElementById('pg-'+page);if(el)el.classList.add('on');
-  const ln=document.querySelector(`[data-p="${page}"]`);if(ln)ln.classList.add('on');
-  document.getElementById('mob').classList.remove('on');
-  window.scrollTo(0,0);
+  // Show requested page
+  const el=document.getElementById('pg-'+page);
+  if(!el){console.warn('Page not found: pg-'+page);return;}
+  el.classList.add('on');
+  const ln=document.querySelector('[data-p="'+page+'"]');
+  if(ln)ln.classList.add('on');
+  const mobEl=document.getElementById('mob');
+  if(mobEl)mobEl.classList.remove('on');
+  window.scrollTo({top:0,behavior:'auto'});
   // Show context message on auth page
   if(page==='auth'){
     const ctxEl=document.getElementById('auth-context-msg');
@@ -1568,6 +1582,7 @@ function bNav(role){
     ab.innerHTML=`<button class="nb nbg" onclick="nav('auth')">Conectare / Înregistrare</button>`;
     const nbg=document.getElementById('notif-bell');if(nbg)nbg.style.display='none';
     showPWAInstallBtn();
+    nl.innerHTML=base;
     mm.innerHTML=`<button class="nl" onclick="nav('home')">🏠 Acasă</button><button class="nl" onclick="nav('regulate')">🔄 Regulate</button><button class="nl" onclick="nav('organizate')">🚌 Organizate</button><button class="nl" onclick="nav('bilet')">🎟️ Biletul meu</button><button class="nl" onclick="nav('gdpr')">GDPR</button><button class="nl" onclick="nav('termeni')">Termeni</button><button class="nl" onclick="nav('auth')">🔐 Conectare</button>`;
   }
 }
@@ -1672,7 +1687,7 @@ window.doReg=async()=>{
     toast(fErr(e),'er');
   }
 };
-window.doSO=async()=>{await signOut(auth);toast('Deconectat cu succes','in');window._ROLE='client';bNav('guest');window.nav('home')};
+// doSO unified version defined later in code
 window.atab=t=>{
   document.getElementById('alf').style.display=t==='l'?'block':'none';
   document.getElementById('arf').style.display=t==='r'?'block':'none';
@@ -1889,9 +1904,15 @@ window.loadReg=async()=>{
     const dc=DAYS.map((d,i)=>`<div class="dc ${(c.zile||[]).includes(i)?'on':''}">${d}</div>`).join('');
     plecari.forEach((p,pi)=>{
       // Ora reala pentru data selectata (ore per zi + exceptii)
-      const oraInfo=typeof getOraForData==='function'?getOraForData(p,data):{ora:p.ora||'-',soferEmail:p.soferEmail||''};
-      const oraP=oraInfo.ora||'-';
-      const soferEmailP=oraInfo.soferEmail||p.soferEmail||'';
+      let oraP=p.ora||'-';
+      let soferEmailP=p.soferEmail||'';
+      try{
+        if(typeof getOraForData==='function'){
+          const oraInfo=getOraForData(p,data);
+          oraP=oraInfo.ora||oraP;
+          soferEmailP=oraInfo.soferEmail||soferEmailP;
+        }
+      }catch(e){}
       // Statii DUS cu ore estimate bazate pe ora acestei plecari
       const stbDus=(c.statii||[]).map((s,i)=>{
         const arrTime=i>0&&oraP&&s.minuteDeLaStart?calcArrival(oraP,s.minuteDeLaStart):'';
@@ -4011,7 +4032,7 @@ window.schimbaPortalSofer=async()=>{
   await deschideSoferLoginModal();
 };
 
-window._origDoSO=window.doSO;
+// doSO unified - handles both sofer and admin/client logout
 window.doSO=async()=>{
   document.getElementById('mo-sofer-login')?.classList.remove('on');
   await signOut(auth);
@@ -4019,6 +4040,7 @@ window.doSO=async()=>{
   window._ROLE='client';
   window._soferDoc=null;
   window._soferiLoginList=null;
+  window._adminIsSofer=false;
   bNav('guest');
   window.nav('home');
 };
@@ -5125,9 +5147,11 @@ window.filterReg=()=>{
   const q=(document.getElementById('reg-search')?.value||'').toLowerCase().trim();
   const list=document.getElementById('rlist');
   if(!list)return;
+  if(!_regAllCards||!_regAllCards.length){return;}
   if(!q){list.innerHTML=_regAllCards.join('');return}
   const filtered=_regAllCards.filter(card=>card.toLowerCase().includes(q));
-  list.innerHTML=filtered.length?filtered.join(''):'<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:36px;margin-bottom:10px">🔍</div><p>Nicio cursă găsită pentru "<strong>'+q+'</strong>"</p></div>';
+  list.innerHTML=filtered.length?filtered.join(''):
+    `<div class="empty-state"><div class="es-icon">🔍</div><h3>Nicio cursă pentru "${q}"</h3><p><a onclick="document.getElementById('reg-search').value='';filterReg()" style="cursor:pointer">Șterge filtrul</a></p></div>`;
 };
 
 // ── DATE BLOCATE ──────────────────────────────────────────
