@@ -1587,6 +1587,13 @@ function bNav(role){
     nl.innerHTML=base;
     mm.innerHTML=`<button class="nl" onclick="nav('home')">🏠 Acasă</button><button class="nl" onclick="nav('regulate')">🔄 Regulate</button><button class="nl" onclick="nav('organizate')">🚌 Organizate</button><button class="nl" onclick="nav('bilet')">🎟️ Biletul meu</button><button class="nl" onclick="nav('gdpr')">GDPR</button><button class="nl" onclick="nav('termeni')">Termeni</button><button class="nl" onclick="nav('auth')">🔐 Conectare</button>`;
   }
+  // Dupa rebuild nav, re-marcheaza pagina activa
+  const curActivePg=document.querySelector('.pg.on');
+  if(curActivePg){
+    const curPage=curActivePg.id.replace('pg-','');
+    const curLink=document.querySelector('.nl[data-p="'+curPage+'"]');
+    if(curLink)curLink.classList.add('on');
+  }
 }
 
 // ── AUTH ──────────────────────────────────────────────────
@@ -1893,9 +1900,14 @@ window.loadReg=async()=>{
   const data=di.value;const dow=new Date(data+'T12:00:00').getDay();
   const list=document.getElementById('rlist');
   list.innerHTML=`<div style="text-align:center;padding:48px;color:var(--muted)"><div class="spin" style="width:32px;height:32px;border-width:3px;margin:0 auto 12px"></div><p>Se încarcă cursele disponibile...</p></div>`;
-  await loadFlota();
-  const snap=await getDocs(collection(db,'curse_regulate'));
-  window._R=snap.docs.map(d=>({id:d.id,...d.data()}));
+  try{await loadFlota();}catch(e){}
+  try{
+    const snap=await getDocs(collection(db,'curse_regulate'));
+    window._R=snap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){
+    list.innerHTML='<div class="empty-state"><div class="es-icon">⚠️</div><h3>Eroare la încărcarea curselor</h3><p>'+e.message+'</p></div>';
+    return;
+  }
   const curse=window._R.filter(c=>{
     if(!c.activa)return false;
     if(!(c.zile||[]).includes(dow))return false;
@@ -6748,23 +6760,22 @@ window.confirmDlg=(msg,onYes,btnLabel='Da, confirmă',danger=false)=>{
   try{
     const sr=await getDoc(doc(db,'setari','global'));
     if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{}}
-  }catch(e){
-    // Anon may not have access - use defaults
-    console.warn('Could not load settings:', e.message);
-  }
+  }catch(e){console.warn('Settings load error:', e.message);}
   renderFooter();
-  await loadFlota();
-  const rs=await getDocs(collection(db,'curse_regulate'));
-  window._R=rs.docs.map(d=>({id:d.id,...d.data()}));
-  await seedIfEmpty();
+  try{await loadFlota();}catch(e){console.warn('loadFlota error:', e.message);}
+  try{
+    const rs=await getDocs(collection(db,'curse_regulate'));
+    window._R=rs.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){console.warn('curse_regulate load error:', e.message);}
+  try{await seedIfEmpty();}catch(e){console.warn('seed error:', e.message);}
   const today=new Date().toISOString().split('T')[0];
-  const di=document.getElementById('rdate');di.value=today;di.min=today;
+  const di=document.getElementById('rdate');if(di){di.value=today;di.min=today;}
   updateRegDateBtns();
   renderStops();
-  document.getElementById('hflota').innerHTML=window._F.slice(0,3).map(v=>vCard(v)).join('');
-  loadOrgPage();
+  const hflota=document.getElementById('hflota');
+  if(hflota)hflota.innerHTML=window._F.slice(0,3).map(v=>vCard(v)).join('');
+  try{loadOrgPage();}catch(e){console.warn('loadOrgPage error:', e.message);}
   scheduleRefreshes();
-  // PWA + push
   registerSW();
   checkPushPrompt();
   setTimeout(checkReminders, 5000);
