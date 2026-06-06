@@ -44,9 +44,8 @@ button{cursor:pointer;font-family:"Inter",sans-serif;transition:all .2s}
 #mob.on{display:flex}
 #app{padding-top:100px;min-height:100vh}
 .pg{display:none;padding:32px 24px;max-width:1200px;margin:0 auto}
-.pg.on{animation:pgIn .18s ease}
 @keyframes pgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-.pg.on{display:block}
+.pg.on{display:block;animation:pgIn .18s ease}
 /* HERO */
 .hero{text-align:center;padding:60px 0 40px}
 .hbg{background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -1527,24 +1526,27 @@ function renderFooter(){
 
 // ── NAV ───────────────────────────────────────────────────
 window.nav=(page,ctx)=>{
-  // Sofer (sau in asteptare selectie) nu poate accesa alte pagini decat portalul
+  // Sofer nu poate accesa alte pagini decat portalul — fara recursivitate
   if((window._ROLE==='sofer'||window._ROLE==='sofer_pending')&&!['sofer','gdpr','termeni','auth'].includes(page)){
-    if(window._ROLE==='sofer')window.nav('sofer');
+    if(window._ROLE==='sofer'&&page!=='sofer')window.nav('sofer');
     return;
   }
   // Hide all pages
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.nl').forEach(l=>l.classList.remove('on'));
+  // Clear active nav links (folosim .nl cu data-p)
+  document.querySelectorAll('.nl[data-p]').forEach(l=>l.classList.remove('on'));
   // Show requested page
   const el=document.getElementById('pg-'+page);
   if(!el){console.warn('Page not found: pg-'+page);return;}
   el.classList.add('on');
-  const ln=document.querySelector('[data-p="'+page+'"]');
+  // Marcheaza link-ul activ dupa data-p
+  const ln=document.querySelector('.nl[data-p="'+page+'"]');
   if(ln)ln.classList.add('on');
+  // Inchide meniul mobil
   const mobEl=document.getElementById('mob');
   if(mobEl)mobEl.classList.remove('on');
   window.scrollTo({top:0,behavior:'auto'});
-  // Show context message on auth page
+  // Mesaj context pe pagina auth
   if(page==='auth'){
     const ctxEl=document.getElementById('auth-context-msg');
     if(ctxEl&&ctx){ctxEl.style.display='block';ctxEl.textContent=ctx;}
@@ -1561,11 +1563,11 @@ window.tmob=()=>document.getElementById('mob').classList.toggle('on');
 function bNav(role){
   const nl=document.getElementById('nlinks'),ab=document.getElementById('ab'),mm=document.getElementById('mob');
   const u=window._U;
-  const base=`<button class="nl on" data-p="home" onclick="nav('home')">Acasă</button><button class="nl" data-p="regulate" onclick="nav('regulate')">Regulate</button><button class="nl" data-p="organizate" onclick="nav('organizate')">Organizate</button><button class="nl" data-p="bilet" onclick="nav('bilet')">🎟️ Biletul meu</button><button class="nl" data-p="gdpr" onclick="nav('gdpr')">GDPR</button><button class="nl" data-p="termeni" onclick="nav('termeni')">Termeni</button>`;
+  const base=`<button class="nl" data-p="home" onclick="nav('home')">Acasă</button><button class="nl" data-p="regulate" onclick="nav('regulate')">Regulate</button><button class="nl" data-p="organizate" onclick="nav('organizate')">Organizate</button><button class="nl" data-p="bilet" onclick="nav('bilet')">🎟️ Biletul meu</button><button class="nl" data-p="gdpr" onclick="nav('gdpr')">GDPR</button><button class="nl" data-p="termeni" onclick="nav('termeni')">Termeni</button>`;
   if(role==='sofer'){
     nl.innerHTML=`<button class="nl" data-p="sofer" onclick="nav('sofer')">🚌 Cursele Mele</button><button class="nl" onclick="nav('gdpr')">GDPR</button>`;
     ab.innerHTML=`<button class="nb nbo" onclick="doSO()">${u?.displayName||'Șofer'} ↗</button>`;
-    mm.innerHTML=`<button class="nl" onclick="nav('sofer')">🚌 Cursele Mele</button><button class="nl" onclick="nav('gdpr')">GDPR</button><button class="nl" onclick="doSO()">↗ Deconectare</button>`;
+    mm.innerHTML=`<button class="nl" data-p="sofer" onclick="nav('sofer')">🚌 Cursele Mele</button><button class="nl" data-p="gdpr" onclick="nav('gdpr')">GDPR</button><button class="nl" onclick="doSO()">↗ Deconectare</button>`;
     return;
   }
   nl.innerHTML=base;
@@ -1595,6 +1597,9 @@ onAuthStateChanged(auth,async u=>{
     bNav('guest');
     // Load public settings for anon too
     try{const sr=await getDoc(doc(db,'setari','global'));if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{};renderFooter();}}catch(e){}
+    // Initializeaza pagina curenta
+    const activePg=document.querySelector('.pg.on');
+    if(!activePg||activePg.id==='pg-home')nav('home');
     return;
   }
   if(u.email===ADMIN){
@@ -1604,7 +1609,11 @@ onAuthStateChanged(auth,async u=>{
       const ssAdmin=await getDocs(query(collection(db,'soferi'),where('email','==',u.email)));
       window._adminIsSofer=!ssAdmin.empty&&ssAdmin.docs[0].data().activ!==false;
     }catch(e){window._adminIsSofer=false;}
-    bNav('admin');return;
+    bNav('admin');
+    const activePgAdmin=document.querySelector('.pg.on');
+    const curPageAdmin=activePgAdmin?activePgAdmin.id.replace('pg-',''):'home';
+    nav(curPageAdmin);
+    return;
   }
   // Cont comun soferi: daca emailul este contul firmei de soferi → modal selectare
   if(u.email===SOFER_CONT_EMAIL){
@@ -1622,6 +1631,9 @@ onAuthStateChanged(auth,async u=>{
   startNotifListener();
   try{const sr=await getDoc(doc(db,'setari','global'));if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{}}}catch(e){}
   renderFooter();
+  const activePgClient=document.querySelector('.pg.on');
+  const curPageClient=activePgClient?activePgClient.id.replace('pg-',''):'home';
+  nav(curPageClient);
 });
 
 // ── VALIDATION HELPERS ──────────────────────────────────
