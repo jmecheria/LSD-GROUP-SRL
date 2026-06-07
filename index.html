@@ -1498,7 +1498,7 @@ onSnapshot(collection(db,'ticker'),snap=>{
   if(!msgs.length){w.classList.add('h');return}
   w.classList.remove('h');
   document.getElementById('ti').innerHTML=[...msgs,...msgs].map(m=>`<span>● ${m}</span>`).join('');
-});
+},(err)=>{console.warn('Ticker listener error:',err.message);});
 
 // ── FOOTER ────────────────────────────────────────────────
 function renderFooter(){
@@ -1628,11 +1628,15 @@ onAuthStateChanged(auth,async u=>{
     await deschideSoferLoginModal();
     return;
   }
-  // Cont individual sofer (backwards compat)
-  const ss=await getDocs(query(collection(db,'soferi'),where('email','==',u.email)));
-  if(!ss.empty&&ss.docs[0].data().activ!==false){
-    window._soferDoc={id:ss.docs[0].id,...ss.docs[0].data()};
-    window._ROLE='sofer';bNav('sofer');window.nav('sofer');return;
+  // Cont individual sofer (backwards compat) - cu try/catch pentru clienti normali
+  try{
+    const ss=await getDocs(query(collection(db,'soferi'),where('email','==',u.email)));
+    if(!ss.empty&&ss.docs[0].data().activ!==false){
+      window._soferDoc={id:ss.docs[0].id,...ss.docs[0].data()};
+      window._ROLE='sofer';bNav('sofer');window.nav('sofer');return;
+    }
+  }catch(e){
+    // Clientul normal nu are acces la colectia soferi - e OK, continuam ca client
   }
   window._ROLE='client';bNav('client');
   startNotifListener();
@@ -5096,6 +5100,9 @@ function startNotifListener() {
           }
         }
       }
+    },
+    (error) => {
+      console.warn('Notificari listener error:', error.message);
     }
   );
 }
