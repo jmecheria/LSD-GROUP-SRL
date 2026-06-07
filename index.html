@@ -320,11 +320,29 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
     <span style="font-size:20px">🔔</span>
     <span id="notif-badge" style="display:none;position:absolute;top:0;right:0;background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px">0</span>
   </div>
-  <div id="nlinks"></div><div id="ab"></div>
+  <div id="nlinks">
+    <button class="nl" data-p="home" onclick="nav('home')">Acasă</button>
+    <button class="nl" data-p="regulate" onclick="nav('regulate')">Regulate</button>
+    <button class="nl" data-p="organizate" onclick="nav('organizate')">Organizate</button>
+    <button class="nl" data-p="bilet" onclick="nav('bilet')">🎟️ Biletul meu</button>
+    <button class="nl" data-p="gdpr" onclick="nav('gdpr')">GDPR</button>
+    <button class="nl" data-p="termeni" onclick="nav('termeni')">Termeni</button>
+  </div>
+  <div id="ab">
+    <button class="nb nbg" onclick="nav('auth')">Conectare / Înregistrare</button>
+  </div>
   <button id="pwa-install-btn" style="display:none;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1.5px solid var(--gold);background:var(--goldbg);color:var(--gold);cursor:pointer" onclick="installPWA()">📲 Instalează app</button>
 <button id="ham" onclick="tmob()"><span></span><span></span><span></span></button>
 </nav>
-<div id="mob"></div>
+<div id="mob">
+  <button class="nl" onclick="nav('home')">🏠 Acasă</button>
+  <button class="nl" onclick="nav('regulate')">🔄 Regulate</button>
+  <button class="nl" onclick="nav('organizate')">🚌 Organizate</button>
+  <button class="nl" onclick="nav('bilet')">🎟️ Biletul meu</button>
+  <button class="nl" onclick="nav('gdpr')">GDPR</button>
+  <button class="nl" onclick="nav('termeni')">Termeni</button>
+  <button class="nl" onclick="nav('auth')">🔐 Conectare</button>
+</div>
 <div id="app">
 <!-- HOME -->
 <div id="pg-home" class="pg on">
@@ -1446,12 +1464,79 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
 <div id="tc"></div>
 <button class="fab" id="fab-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Sus">⬆</button>
 <div id="ckb"><span>🍪 Folosim cookie-uri necesare funcționării. <a onclick="nav('gdpr')">Politică GDPR</a> | <a onclick="nav('termeni')">Termeni</a></span><button class="btn bp bsm" onclick="ack()">Acceptă</button></div>
+<script>
+// ── NAVIGARE — disponibila imediat, independent de Firebase ──
+(function() {
+  // Functia principala de navigare
+  window.nav = function(page, ctx) {
+    // Daca rolul e sofer, restrictionam paginile
+    if ((window._ROLE === 'sofer' || window._ROLE === 'sofer_pending') &&
+        !['sofer','gdpr','termeni','auth'].includes(page)) {
+      if (window._ROLE === 'sofer' && page !== 'sofer') window.nav('sofer');
+      return;
+    }
+    // Ascunde toate paginile
+    var pgs = document.querySelectorAll('.pg');
+    for (var i = 0; i < pgs.length; i++) pgs[i].classList.remove('on');
+    // Sterge clasa activa din nav links
+    var nls = document.querySelectorAll('.nl[data-p]');
+    for (var i = 0; i < nls.length; i++) nls[i].classList.remove('on');
+    // Arata pagina ceruta
+    var el = document.getElementById('pg-' + page);
+    if (!el) { console.warn('Pagina nu exista: pg-' + page); return; }
+    el.classList.add('on');
+    // Marcheaza link-ul activ
+    var ln = document.querySelector('.nl[data-p="' + page + '"]');
+    if (ln) ln.classList.add('on');
+    // Inchide meniul mobil
+    var mob = document.getElementById('mob');
+    if (mob) mob.classList.remove('on');
+    // Scroll sus
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    // Mesaj context auth
+    if (page === 'auth') {
+      var ctxEl = document.getElementById('auth-context-msg');
+      if (ctxEl && ctx) { ctxEl.style.display = 'block'; ctxEl.textContent = ctx; }
+      else if (ctxEl) { ctxEl.style.display = 'none'; }
+    }
+    // Apeleaza loadere specifice daca Firebase e gata
+    if (window._firebaseReady) {
+      if (page === 'regulate') { window.loadReg && window.loadReg(); window.updateRegDateBtns && window.updateRegDateBtns(); }
+      if (page === 'organizate') window.loadOrgPage && window.loadOrgPage();
+      if (page === 'cont') window.loadContPage && window.loadContPage();
+      if (page === 'admin') window.loadAdmin && window.loadAdmin();
+      if (page === 'sofer') window.loadSofer && window.loadSofer();
+    } else {
+      // Firebase nu e gata inca - salveaza pentru executie ulterioara
+      window._pendingPageLoad = page;
+    }
+  };
+
+  // Toggle meniu mobil
+  window.tmob = function() {
+    var mob = document.getElementById('mob');
+    if (mob) mob.classList.toggle('on');
+  };
+
+  // Initializeaza rolul implicit
+  window._ROLE = 'client';
+  window._firebaseReady = false;
+  window._pendingPageLoad = null;
+})();
+</script>
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,updateProfile,updatePassword}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import{getFirestore,collection,doc,addDoc,getDocs,getDoc,setDoc,deleteDoc,query,where,onSnapshot,Timestamp,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 const app=initializeApp({apiKey:"AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",authDomain:"lsd-group-srl.firebaseapp.com",projectId:"lsd-group-srl"});
 const auth=getAuth(app);const db=getFirestore(app);
+// Firebase initializat - marcheaza ca gata si proceseaza navigare pending
+window._firebaseReady=true;
+if(window._pendingPageLoad){
+  const pp=window._pendingPageLoad;window._pendingPageLoad=null;
+  // Va fi procesat dupa ce loadReg/loadAdmin etc. sunt definite
+  setTimeout(()=>{if(window.loadReg)window.nav(pp);},0);
+}
 const ADMIN='irimia.teodor.17@gmail.com';
 // Emailul contului Firebase COMUN folosit de toti soferii firmei
 // Toata lumea se loghează cu ACEST email + parola contului, apoi selecteaza cine e
@@ -1525,39 +1610,7 @@ function renderFooter(){
 }
 
 // ── NAV ───────────────────────────────────────────────────
-window.nav=(page,ctx)=>{
-  // Sofer nu poate accesa alte pagini decat portalul — fara recursivitate
-  if((window._ROLE==='sofer'||window._ROLE==='sofer_pending')&&!['sofer','gdpr','termeni','auth'].includes(page)){
-    if(window._ROLE==='sofer'&&page!=='sofer')window.nav('sofer');
-    return;
-  }
-  // Hide all pages
-  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
-  // Clear active nav links (folosim .nl cu data-p)
-  document.querySelectorAll('.nl[data-p]').forEach(l=>l.classList.remove('on'));
-  // Show requested page
-  const el=document.getElementById('pg-'+page);
-  if(!el){console.warn('Page not found: pg-'+page);return;}
-  el.classList.add('on');
-  // Marcheaza link-ul activ dupa data-p
-  const ln=document.querySelector('.nl[data-p="'+page+'"]');
-  if(ln)ln.classList.add('on');
-  // Inchide meniul mobil
-  const mobEl=document.getElementById('mob');
-  if(mobEl)mobEl.classList.remove('on');
-  window.scrollTo({top:0,behavior:'auto'});
-  // Mesaj context pe pagina auth
-  if(page==='auth'){
-    const ctxEl=document.getElementById('auth-context-msg');
-    if(ctxEl&&ctx){ctxEl.style.display='block';ctxEl.textContent=ctx;}
-    else if(ctxEl){ctxEl.style.display='none';}
-  }
-  if(page==='regulate'){loadReg();updateRegDateBtns();}
-  if(page==='organizate')loadOrgPage();
-  if(page==='cont')loadContPage();
-  if(page==='admin')loadAdmin();
-  if(page==='sofer')loadSofer();
-};
+
 window.tmob=()=>document.getElementById('mob').classList.toggle('on');
 
 function bNav(role){
@@ -2476,7 +2529,7 @@ window.calcOrgPret=async()=>{
   }
 };
 
-async function loadOrgPage(){
+window.loadOrgPage=async function loadOrgPage(){
   renderStops();
   const u=window._U;
   // Populate vehicle selection
