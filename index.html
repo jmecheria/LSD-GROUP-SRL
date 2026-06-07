@@ -4427,7 +4427,7 @@ async function loadSfT(){
       <td><label class="tog"><input type="checkbox" ${s.activ!==false?'checked':''} onchange="tSf('${d.id}',this.checked)"/><span class="tosl"></span></label></td>
       <td style="display:flex;gap:4px;padding:10px 12px;flex-wrap:wrap">
         <button class="btn bs bsm" onclick="openSM('${d.id}')" title="Editează">✏️</button>
-        <button class="btn bs bsm" onclick="resetPinSofer('${d.id}','${s.prenume||''} ${s.nume||''}')" title="Resetează parola portal" style="color:var(--orange);border-color:rgba(194,85,15,.3)">🔑</button>
+        <button class="btn bs bsm" onclick="resetPinSofer('${d.id}','${[s.prenume,s.nume].filter(Boolean).join(' ')}')" title="Resetează parola portal" style="color:var(--orange);border-color:rgba(194,85,15,.3)">🔑</button>
         <button class="btn bd bsm" onclick="delSf('${d.id}')" title="Șterge">🗑️</button>
       </td></tr>`);
   }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Niciun șofer înregistrat</td></tr>';
@@ -5537,7 +5537,7 @@ window.openVehiculeAtribuire=async(vehId)=>{
         ⚠️ Program săptămânal: <span id="va-prog-${i}" style="color:var(--text);font-weight:600">se calculează...</span>
       </div>
     </div>`;
-  }).join('')+'<button class="btn bs bsm" onclick="addVaSofer(''+vehId+'')">+ Adaugă șofer la vehicul</button>';
+  }).join('')+`<button class="btn bs bsm" onclick="addVaSofer('${vehId}')">+ Adaugă șofer la vehicul</button>`;
   
   window._vaSoferiAtribuiti=JSON.parse(JSON.stringify(soferiAtribuiti));
   window._vaVehId=vehId;
