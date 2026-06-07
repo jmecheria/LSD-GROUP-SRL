@@ -1732,7 +1732,8 @@ window.doLogin=async()=>{
     toast('Bun venit!','ok');window.nav('home');
   }catch(e){
     if(btn){btn.disabled=false;btn.innerHTML='Conectare';}
-    toast(fErr(e),'er');
+    console.error('LOGIN ERROR code:',e.code,'message:',e.message);
+    toast(fErr(e)+' ['+e.code+']','er');
   }
 };
 window.doReg=async()=>{
@@ -1779,7 +1780,11 @@ function fErr(e){
     'auth/invalid-email':'Adresa de email nu este validă.',
     'auth/invalid-credential':'Email sau parolă incorectă.',
     'auth/too-many-requests':'Prea multe încercări. Încercați mai târziu.',
-    'auth/network-request-failed':'Eroare de rețea. Verificați conexiunea.'
+    'auth/network-request-failed':'Eroare de rețea. Verificați conexiunea.',
+    'auth/unauthorized-domain':'Domeniul nu este autorizat în Firebase Console. Mergeți la Authentication → Settings → Authorized domains și adăugați domeniul site-ului.',
+    'auth/operation-not-allowed':'Autentificarea cu email/parolă nu este activată. Mergeți la Firebase Console → Authentication → Sign-in method și activați Email/Password.',
+    'auth/internal-error':'Eroare internă Firebase. Verificați configurația proiectului.',
+    'auth/configuration-not-found':'Configurație Firebase lipsă. Verificați authDomain în cod.'
   };
   return m[e.code]||'Eroare: '+e.message;
 }
