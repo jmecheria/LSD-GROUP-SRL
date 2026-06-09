@@ -896,8 +896,9 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
       .tl-label-main{font-weight:700;font-size:13px;color:var(--text)}
       .tl-label-sub{font-size:11px;color:var(--muted)}
       .tl-track{flex:1;position:relative;background:repeating-linear-gradient(90deg,transparent,transparent calc(100%/18 - 1px),var(--border) calc(100%/18 - 1px),var(--border) calc(100%/18))}
-      .tl-block{position:absolute;top:6px;bottom:6px;border-radius:6px;cursor:pointer;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:filter .15s;border:1.5px solid transparent}
+      .tl-block{position:absolute;top:6px;bottom:6px;border-radius:6px;cursor:grab;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:filter .15s;border:1.5px solid transparent}
       .tl-block:hover{filter:brightness(1.08);z-index:5}
+      .tl-block.dragging{opacity:.4;cursor:grabbing}
       .tl-block.type-dus{background:rgba(184,134,11,.18);border-color:var(--gold);color:#7a5c00}
       .tl-block.type-intors{background:rgba(184,134,11,.1);border-color:rgba(184,134,11,.4);color:#9a7010;border-style:dashed}
       .tl-block.type-pauza{background:rgba(100,100,100,.1);border-color:rgba(150,150,150,.4);color:var(--muted)}
@@ -3992,7 +3993,7 @@ function rPL(){
         <div style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
         <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Oră default</div>
         <input type="time" value="${p.ora||''}" style="width:110px;flex-shrink:0" onchange="_plecari[${i}].ora=this.value;rPL()"/>
-        <select style="flex:1;min-width:140px" onchange="_plecari[${i}].soferEmail=this.value">
+        <select data-sofer-main style="flex:1;min-width:140px" onchange="_plecari[${i}].soferEmail=this.value;window._plecari[${i}].soferEmail=this.value">
           <option value="">— fără șofer default —</option>${sfOpts}
         </select>
         ${_plecari.length>1?`<button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px" onclick="delPlecare(${i})">✕</button>`:''}
@@ -4284,19 +4285,10 @@ window.saveReg=async()=>{
   for(let i=1;i<statii.length;i++){
     if(statii[i].pretDeLaStart<=statii[i-1].pretDeLaStart){toast(`Prețul stației "${statii[i].nume}" trebuie să fie mai mare decât "${statii[i-1].nume}"`,'wr');return}
   }
-  // Read plecari from DOM (selects may have changed)
-  // Folosim _plecari direct (contine orePerZi si exceptii actualizate via rPL())
-  // Citim doar ora default si soferEmail din DOM daca s-au schimbat
-  const plecariFinale=_plecari.map((p,i)=>{
-    const rows=document.querySelectorAll('#plecari-list > div');
-    if(rows[i]){
-      const oraEl=rows[i].querySelector('input[type="time"]');
-      const sfEl=rows[i].querySelector('select');
-      if(oraEl)p.ora=oraEl.value;
-      if(sfEl)p.soferEmail=sfEl.value;
-    }
-    return p;
-  });
+  // _plecari este deja actualizat live via onchange in rPL()
+  // Nu re-citim din DOM (riscam sa luam selectul gresit dintr-un rand cu exceptii)
+  // Doar copiem _plecari asa cum e
+  const plecariFinale=_plecari.map(p=>({...p}));
   if(plecariFinale.every(p=>!p.ora)){toast('Adăugați cel puțin o oră de plecare','wr');return}
   const firstP=plecariFinale.find(p=>p.ora)||plecariFinale[0];
   const tipCursa=document.getElementById('tip-di').checked?'dus-intors':'dus';
@@ -5603,58 +5595,147 @@ window.openVehiculeAtribuire=async(vehId)=>{
   const sfSnap=await getDocs(collection(db,'soferi'));
   const totiSoferii=sfSnap.docs.filter(d=>d.data().activ!==false).map(d=>({id:d.id,...d.data()}));
   const soferiAtribuiti=v.soferiAtribuiti||[];
-  
-  // Build modal content
-  const modal=document.getElementById('mo-veh-atribuire')||createVehAtribuireModal();
-  document.getElementById('va-title').textContent='👨‍✈️ Atribuire șoferi — '+v.icon+' '+v.nume;
-  document.getElementById('va-veh-id').value=vehId;
-  
-  const el=document.getElementById('va-list');
-  el.innerHTML=soferiAtribuiti.map((sa,i)=>{
-    const sfOpts=totiSoferii.map(sf=>`<option value="${sf.email}" ${sa.email===sf.email?'selected':''}>${sf.prenume||''} ${sf.nume||''} (${sf.email})</option>`).join('');
-    const zileBtns=[1,2,3,4,5,6,0].map(d=>`<button type="button" class="dc ${(sa.zile||[1,2,3,4,5]).includes(d)?'on':''}" data-sa="${i}" data-day="${d}" onclick="toggleVaSaZi(this,${i},${d})" style="font-size:10px">${ZILE_LABEL[d]}</button>`).join('');
-    return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-        <select style="flex:1;min-width:180px" onchange="window._vaSoferiAtribuiti[${i}].email=this.value">
-          <option value="">— alege șoferul —</option>${sfOpts}
-        </select>
-        <button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px" onclick="window._vaSoferiAtribuiti.splice(${i},1);openVehiculeAtribuire('${vehId}')">✕</button>
-      </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">${zileBtns}</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <div style="flex:1"><div class="fl">De la (opțional)</div><input type="date" value="${sa.dataStart||''}" style="font-size:12px" onchange="window._vaSoferiAtribuiti[${i}].dataStart=this.value"/></div>
-        <div style="flex:1"><div class="fl">Până la (opțional)</div><input type="date" value="${sa.dataEnd||''}" style="font-size:12px" onchange="window._vaSoferiAtribuiti[${i}].dataEnd=this.value"/></div>
-      </div>
-      <div style="margin-top:8px;font-size:12px;color:var(--muted)">
-        ⚠️ Program săptămânal: <span id="va-prog-${i}" style="color:var(--text);font-weight:600">se calculează...</span>
-      </div>
-    </div>`;
-  }).join('')+`<button class="btn bs bsm" onclick="addVaSofer('${vehId}')">+ Adaugă șofer la vehicul</button>`;
-  
   window._vaSoferiAtribuiti=JSON.parse(JSON.stringify(soferiAtribuiti));
   window._vaVehId=vehId;
-  
-  // Calculate hours for each sofer
-  setTimeout(()=>calcVaProgram(vehId,totiSoferii),100);
-  
+
+  // Creeaza modal daca nu exista
+  if(!document.getElementById('mo-veh-atribuire'))createVehAtribuireModal();
+  document.getElementById('va-title').textContent='👨‍✈️ Atribuire șoferi — '+(v.icon||'')+ ' '+(v.nume||'');
+  document.getElementById('va-veh-id').value=vehId;
+
+  renderVaList(totiSoferii, vehId);
   document.getElementById('mo-veh-atribuire').classList.add('on');
 };
+
+function renderVaList(totiSoferii, vehId){
+  const el=document.getElementById('va-list');
+  if(!el)return;
+  const rows=(window._vaSoferiAtribuiti||[]).map((sa,i)=>{
+    const sfNume=[sa.prenume,sa.nume].filter(Boolean).join(' ')||sa.email||'';
+    const zileActuale=sa.zile||[1,2,3,4,5];
+    let html='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px">';
+    // Header cu select sofer
+    html+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">';
+    html+='<select class="va-sf-sel" data-idx="'+i+'" style="flex:1;min-width:180px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff">';
+    html+='<option value="">— alege șoferul —</option>';
+    totiSoferii.forEach(sf=>{
+      const name=[sf.prenume,sf.nume].filter(Boolean).join(' ');
+      const sel=sa.email===sf.email?'selected':'';
+      html+='<option value="'+sf.email+'" '+sel+'>'+name+' ('+sf.email+')</option>';
+    });
+    html+='</select>';
+    html+='<button type="button" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;padding:4px" data-del="'+i+'">✕</button>';
+    html+='</div>';
+    // Zile
+    html+='<div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase">Zile active</div>';
+    html+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">';
+    [1,2,3,4,5,6,0].forEach(d=>{
+      const on=zileActuale.includes(d)?'on':'';
+      html+='<button type="button" class="dc '+on+'" data-sa="'+i+'" data-day="'+d+'" style="font-size:10px">'+ZILE_LABEL[d]+'</button>';
+    });
+    html+='</div>';
+    // Date optionale
+    html+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    html+='<div style="flex:1"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">De la (opțional)</div>';
+    html+='<input type="date" class="va-ds" data-idx="'+i+'" value="'+(sa.dataStart||'')+'" style="font-size:12px;width:100%;padding:6px;border:1px solid var(--border);border-radius:6px"/></div>';
+    html+='<div style="flex:1"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">Până la (opțional)</div>';
+    html+='<input type="date" class="va-de" data-idx="'+i+'" value="'+(sa.dataEnd||'')+'" style="font-size:12px;width:100%;padding:6px;border:1px solid var(--border);border-radius:6px"/></div>';
+    html+='</div>';
+    // Ore sapt
+    html+='<div style="margin-top:8px;font-size:12px;color:var(--muted)">⏱️ Ore/săpt: <span class="va-prog" data-idx="'+i+'" style="color:var(--text);font-weight:600">se calculează...</span></div>';
+    html+='</div>';
+    return html;
+  }).join('');
+  el.innerHTML=rows+'<button class="btn bs bsm" id="va-add-btn" style="margin-top:4px">+ Adaugă șofer la vehicul</button>';
+
+  // Ataseaza event listeners (no inline onclick)
+  el.querySelectorAll('.va-sf-sel').forEach(sel=>{
+    sel.addEventListener('change',e=>{
+      const idx=parseInt(e.target.dataset.idx);
+      window._vaSoferiAtribuiti[idx].email=e.target.value;
+      // Calculeaza ore
+      calcVaSoferOre(idx);
+    });
+  });
+  el.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      const idx=parseInt(e.target.dataset.del);
+      window._vaSoferiAtribuiti.splice(idx,1);
+      renderVaList(totiSoferii, vehId);
+    });
+  });
+  el.querySelectorAll('[data-sa]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      const saIdx=parseInt(e.target.dataset.sa);
+      const day=parseInt(e.target.dataset.day);
+      btn.classList.toggle('on');
+      if(!window._vaSoferiAtribuiti[saIdx].zile)window._vaSoferiAtribuiti[saIdx].zile=[1,2,3,4,5];
+      const arr=window._vaSoferiAtribuiti[saIdx].zile;
+      const pos=arr.indexOf(day);
+      if(pos>-1)arr.splice(pos,1);
+      else arr.push(day);
+    });
+  });
+  el.querySelectorAll('.va-ds').forEach(inp=>{
+    inp.addEventListener('change',e=>{window._vaSoferiAtribuiti[parseInt(e.target.dataset.idx)].dataStart=e.target.value;});
+  });
+  el.querySelectorAll('.va-de').forEach(inp=>{
+    inp.addEventListener('change',e=>{window._vaSoferiAtribuiti[parseInt(e.target.dataset.idx)].dataEnd=e.target.value;});
+  });
+  const addBtn=el.querySelector('#va-add-btn');
+  if(addBtn)addBtn.addEventListener('click',()=>{
+    window._vaSoferiAtribuiti.push({email:'',zile:[1,2,3,4,5],dataStart:'',dataEnd:''});
+    renderVaList(totiSoferii, vehId);
+  });
+
+  // Calculeaza ore pt toti
+  (window._vaSoferiAtribuiti||[]).forEach((_,i)=>calcVaSoferOre(i));
+}
+
+async function calcVaSoferOre(idx){
+  const sa=window._vaSoferiAtribuiti&&window._vaSoferiAtribuiti[idx];
+  if(!sa||!sa.email)return;
+  const el=document.querySelector('.va-prog[data-idx="'+idx+'"]');
+  if(!el)return;
+  const vehId=window._vaVehId;
+  const curseVeh=(window._R||[]).filter(c=>c.vehiculId===vehId&&c.activa);
+  const zile7=getZileInterval(new Date().toISOString().split('T')[0],'saptamana');
+  let min=0;
+  for(const data of zile7){
+    const dow=new Date(data+'T12:00:00').getDay();
+    if(!(sa.zile||[]).includes(dow))continue;
+    for(const c of curseVeh){
+      if(!(c.zile||[]).includes(dow))continue;
+      const sm=c.statii&&c.statii.length>=2?c.statii[c.statii.length-1].minuteDeLaStart||0:0;
+      min+=c.tipCursa==='dus-intors'?sm*2:sm;
+    }
+  }
+  const h=(min/60).toFixed(1);
+  const pct=Math.round(min/56/60*100);
+  const col=pct>=90?'var(--red)':pct>=70?'var(--orange)':'var(--green)';
+  el.style.color=col;
+  el.textContent=h+'h/săpt ('+pct+'% din 56h) '+(pct>=90?'⚠️ APROAPE DE LIMITĂ':'✅');
+}
 
 function createVehAtribuireModal(){
   const mo=document.createElement('div');
   mo.className='mo';mo.id='mo-veh-atribuire';
-  mo.innerHTML=`<div class="md md-lg">
-    <div class="mh"><div><div class="mt2" id="va-title">Atribuire șoferi</div><div style="font-size:12px;color:var(--muted);margin-top:3px">Atribuiți șoferi la acest vehicul per zi a săptămânii</div></div><button class="mx" onclick="cm('veh-atribuire')">✕</button></div>
-    <div class="mb2">
-      <input type="hidden" id="va-veh-id"/>
-      <div style="background:rgba(184,134,11,.07);border:1px solid rgba(184,134,11,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:14px">
-        ℹ️ Un vehicul poate avea mai mulți șoferi în zile diferite. Șoferul va vedea automat cursele vehiculului în portalul său, în zilele selectate.
-      </div>
-      <div id="va-list"></div>
-      <div id="va-avertizari" style="margin-top:12px"></div>
-    </div>
-    <div class="mf"><button class="btn bs" onclick="cm('veh-atribuire')">Anulează</button><button class="btn bp" onclick="saveVehAtribuire()">💾 Salvează atribuirile</button></div>
-  </div>`;
+  mo.innerHTML='<div class="md md-lg">'
+    +'<div class="mh"><div><div class="mt2" id="va-title">Atribuire șoferi</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-top:3px">Setează șoferul default per zi a săptămânii pentru acest vehicul</div>'
+    +'</div><button class="mx" onclick="cm(\'veh-atribuire\')">✕</button></div>'
+    +'<div class="mb2">'
+    +'<input type="hidden" id="va-veh-id"/>'
+    +'<div style="background:rgba(184,134,11,.07);border:1px solid rgba(184,134,11,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:14px">'
+    +'ℹ️ Șoferul atribuit vehiculului devine <strong>șoferul default</strong> al curselor cu acel vehicul, pentru zilele selectate. '
+    +'Poți seta excepții per dată din tab-ul <strong>Program Șoferi</strong>.'
+    +'</div>'
+    +'<div id="va-list"></div>'
+    +'<div id="va-avertizari" style="margin-top:12px"></div>'
+    +'</div>'
+    +'<div class="mf"><button class="btn bs" onclick="cm(\'veh-atribuire\')">Anulează</button>'
+    +'<button class="btn bp" onclick="saveVehAtribuire()">💾 Salvează atribuirile</button></div>'
+    +'</div>';
   mo.addEventListener('click',e=>{if(e.target===mo)mo.classList.remove('on')});
   document.body.appendChild(mo);
   return mo;
@@ -5675,73 +5756,54 @@ window.addVaSofer=(vehId)=>{
 };
 
 async function calcVaProgram(vehId,soferi){
-  // Pentru fiecare sofer atribuit, calculeaza ore saptamanale pe vehiculul asta
-  const v=window._F.find(x=>x.id===vehId);
-  const curseVeh=(window._R||[]).filter(c=>c.vehiculId===vehId&&c.activa);
-  const zile7=getZileInterval(new Date().toISOString().split('T')[0],'saptamana');
-  
-  (window._vaSoferiAtribuiti||[]).forEach(async(sa,i)=>{
-    if(!sa.email)return;
-    let minSapt=0;
-    for(const data of zile7){
-      const dow=new Date(data+'T12:00:00').getDay();
-      if(!(sa.zile||[]).includes(dow))continue;
-      for(const c of curseVeh){
-        if(!(c.zile||[]).includes(dow))continue;
-        const statMin=c.statii&&c.statii.length>=2?c.statii[c.statii.length-1].minuteDeLaStart||0:0;
-        minSapt+=c.tipCursa==='dus-intors'?statMin*2:statMin;
-      }
-    }
-    const h=(minSapt/60).toFixed(1);
-    const pct=Math.round(minSapt/56/60*100);
-    const warn=pct>=90;
-    const el=document.getElementById('va-prog-'+i);
-    if(el)el.innerHTML=`${h}h/săpt (${pct}% din max 56h) ${warn?'⚠️ APROAPE DE LIMITĂ':'✅'}`;
-  });
+  (window._vaSoferiAtribuiti||[]).forEach((_,i)=>calcVaSoferOre(i));
 }
 
 window.saveVehAtribuire=async()=>{
   const vehId=window._vaVehId;
-  if(!vehId)return;
+  if(!vehId){toast('ID vehicul lipsă','er');return;}
   const soferiAtribuiti=(window._vaSoferiAtribuiti||[]).filter(sa=>sa.email);
-  
-  // Salveaza pe vehicul
-  await setDoc(doc(db,'vehicule',vehId),{soferiAtribuiti},{merge:true});
-  
-  // Acum sincronizeaza curse: pentru fiecare cursa cu vehiculul asta,
-  // atribuie soferii corespunzatori zilelor
-  const curseVeh=(window._R||[]).filter(c=>c.vehiculId===vehId);
-  for(const c of curseVeh){
-    const plecariNoi=(c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}]).map(p=>{
-      // Gaseste soferul default pentru zilele active ale cursei
-      const zileCursa=c.zile||[];
-      // Soferul care acopera cele mai multe zile
-      let soferPotrivit='';
-      let maxZileComune=0;
-      soferiAtribuiti.forEach(sa=>{
-        const zileComune=(sa.zile||[]).filter(z=>zileCursa.includes(z)).length;
-        if(zileComune>maxZileComune){maxZileComune=zileComune;soferPotrivit=sa.email;}
-      });
-      // Construieste orePerZi din soferiAtribuiti
-      const orePerZiNoi={};
-      // Pastreaza ora existenta, doar actualizeaza soferul
-      return{...p,soferEmail:soferPotrivit};
-    });
-    await setDoc(doc(db,'curse_regulate',c.id),{
-      plecari:plecariNoi,
-      soferEmail:plecariNoi[0]?.soferEmail||null
-    },{merge:true});
+  if(!soferiAtribuiti.length){
+    // Permite stergerea tuturor soferilor
+    if(!confirm('Ștergi toți șoferii atribuiți acestui vehicul?'))return;
   }
-  
-  await loadFlota();
-  const idx=window._F.findIndex(x=>x.id===vehId);
-  if(idx>-1)window._F[idx].soferiAtribuiti=soferiAtribuiti;
-  
-  cm('veh-atribuire');
-  toast('✅ Șoferi atribuiți la vehicul! Cursele au fost actualizate.','ok');
-  await loadRT();
-  await loadVT();
+  try{
+    // 1. Salvează pe vehicul
+    await setDoc(doc(db,'vehicule',vehId),{soferiAtribuiti},{merge:true});
+    const vidx=window._F.findIndex(x=>x.id===vehId);
+    if(vidx>-1)window._F[vidx].soferiAtribuiti=soferiAtribuiti;
+
+    // 2. Sincronizează cursele: setează soferEmail default pe fiecare plecare
+    const curseVeh=(window._R||[]).filter(c=>c.vehiculId===vehId);
+    for(const c of curseVeh){
+      const plecariNoi=(c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}]).map(p=>{
+        // Pentru fiecare zi din cursă, găsește șoferul care o acoperă
+        // Folosim primul șofer care are cea mai mare acoperire pe zilele cursei
+        const zileCursa=c.zile||[];
+        let soferPotrivit=p.soferEmail||''; // păstrăm ce era
+        let maxComun=0;
+        soferiAtribuiti.forEach(sa=>{
+          const comun=(sa.zile||[]).filter(z=>zileCursa.includes(z)).length;
+          if(comun>maxComun){maxComun=comun;soferPotrivit=sa.email;}
+        });
+        return{...p,soferEmail:soferPotrivit||null};
+      });
+      await setDoc(doc(db,'curse_regulate',c.id),{
+        plecari:plecariNoi,
+        soferEmail:plecariNoi[0]?.soferEmail||null
+      },{merge:true});
+      // Update local cache
+      const cidx=window._R.findIndex(x=>x.id===c.id);
+      if(cidx>-1){window._R[cidx].plecari=plecariNoi;window._R[cidx].soferEmail=plecariNoi[0]?.soferEmail||null;}
+    }
+
+    cm('veh-atribuire');
+    toast('✅ Șoferi salvați! '+(curseVeh.length?curseVeh.length+' curse actualizate.':''),'ok');
+    await loadVT();
+    await loadRT();
+  }catch(e){toast('Eroare: '+e.message,'er');}
 };
+
 
 window.revinLaAdmin=()=>{
   window._ROLE='admin';
@@ -6165,7 +6227,7 @@ function renderTimeline(curse, soferi, data, oreMap, el){
     if(overlaps.size>0)html+='<div style="font-size:10px;color:var(--red);font-weight:700;margin-top:2px">⚠️ Suprapunere!</div>';
     html+='</div>';
     // Track
-    html+='<div class="tl-track">';
+    html+='<div class="tl-track" ondragover="tlDragOver(event)" ondragleave="tlDragLeave(event)" ondrop="tlDrop(event,this.dataset.date)" data-date="'+data+'">';
     // Linie limita 9h
     const limit9Min=Math.min(...blocks.map(b=>b.startMin))+(9*60);
     if(blocks.length&&limit9Min<TL_END&&limit9Min>TL_START){
@@ -6182,9 +6244,11 @@ function renderTimeline(curse, soferi, data, oreMap, el){
       const isNear=!isOver&&pctZi>=78;
       const cls='tl-block type-dus'+(isOver?' warn-over':isNear?' warn-near':'');
       html+='<div class="'+cls+'" '
-        +'style="left:'+tlPct(b.startMin)+';width:'+tlWidth(b.startMin,b.isDusIntors?b.endTotal:b.endMin)+'" '
+        +'draggable="true" '
+        +'data-cursaid="'+b.cursaId+'" data-pi="'+b.pi+'" data-data="'+data+'" data-startmin="'+b.startMin+'" data-durmin="'+b.durMin+'" '
+        +'style="cursor:grab;left:'+tlPct(b.startMin)+';width:'+tlWidth(b.startMin,b.isDusIntors?b.endTotal:b.endMin)+'" '
         +'onclick="tlClickBlock(event,\''+b.cursaId+'\','+b.pi+',\''+data+'\')" '
-        +'title="'+b.ruta+' | '+b.ora+' | '+(b.isDusIntors?'Dus-Întors':'Dus')+' | '+Math.round(b.durMin/60*10)/10+'h">'
+        +'title="'+b.ruta+' | '+b.ora+' — Trage pentru a schimba ora">'
         +b.ruta.split('–')[0].trim()
         +'</div>';
       // Daca e dus-intors, afiseaza separat blocul de intors
@@ -6216,15 +6280,17 @@ function renderTimeline(curse, soferi, data, oreMap, el){
   if(nealocat.length){
     html+='<div class="tl-row" style="background:rgba(185,28,28,.03)">';
     html+='<div class="tl-label"><div class="tl-label-main" style="color:var(--red)">⚠️ Nealocat</div><div class="tl-label-sub">Fără șofer</div></div>';
-    html+='<div class="tl-track">';
+    html+='<div class="tl-track" ondragover="tlDragOver(event)" ondragleave="tlDragLeave(event)" ondrop="tlDrop(event,this.dataset.date)" data-date="'+data+'">';
     if(isToday&&nowMin!==null&&nowMin>=TL_START&&nowMin<=TL_END){
       html+='<div class="tl-nowline" style="left:'+tlPct(nowMin)+'"></div>';
     }
     nealocat.forEach(b=>{
       html+='<div class="tl-block unset" '
-        +'style="left:'+tlPct(b.startMin)+';width:'+tlWidth(b.startMin,b.endTotal||b.endMin)+'" '
+        +'draggable="true" '
+        +'data-cursaid="'+b.cursaId+'" data-pi="'+b.pi+'" data-data="'+data+'" data-startmin="'+b.startMin+'" data-durmin="'+b.durMin+'" '
+        +'style="cursor:grab;left:'+tlPct(b.startMin)+';width:'+tlWidth(b.startMin,b.endTotal||b.endMin)+'" '
         +'onclick="tlClickBlock(event,\''+b.cursaId+'\','+b.pi+',\''+data+'\')" '
-        +'title="'+b.ruta+' — Click pentru atribuire">'
+        +'title="'+b.ruta+' — Trage pentru a schimba ora sau click pentru atribuire">'
         +'👆 '+b.ruta.split('–')[0].trim()
         +'</div>';
     });
@@ -6267,7 +6333,7 @@ function renderTimeline(curse, soferi, data, oreMap, el){
       html+='<div class="tl-label-sub">'+(v.nrInmatr||'')+'</div>';
       if(conflicteV.size>0)html+='<div style="font-size:10px;color:var(--red);font-weight:700">🚨 Conflict!</div>';
       html+='</div>';
-      html+='<div class="tl-track">';
+      html+='<div class="tl-track" ondragover="tlDragOver(event)" ondragleave="tlDragLeave(event)" ondrop="tlDrop(event,this.dataset.date)" data-date="'+data+'">';
       if(isToday&&nowMin!==null&&nowMin>=TL_START&&nowMin<=TL_END)
         html+='<div class="tl-nowline" style="left:'+tlPct(nowMin)+'"></div>';
 
@@ -6288,6 +6354,7 @@ function renderTimeline(curse, soferi, data, oreMap, el){
 
   html+='</div></div>'; // end tl-grid + tl-wrap
   el.innerHTML=html;
+  setTimeout(tlInitDrag,50);
 }
 
 // ── CLICK PE BLOC — PANEL ATRIBUIRE ──────────────────────────
@@ -6380,6 +6447,94 @@ window.tlSaveAssign=async(cursaId,pi,data)=>{
   if(sf2)await salveazaExceptieSofer(cursaId,pi,data,'s2',sf2);
   else await salveazaExceptieSofer(cursaId,pi,data,'s2','');
 };
+
+// ── DRAG & DROP TIMELINE ──────────────────────────────────────
+let _tlDrag=null;
+
+window.tlInitDrag=()=>{
+  document.querySelectorAll('.tl-block[draggable]').forEach(el=>{
+    el.addEventListener('dragstart',e=>{
+      const cursaId=el.dataset.cursaid;
+      const pi=parseInt(el.dataset.pi)||0;
+      const data=el.dataset.data;
+      const startMin=parseInt(el.dataset.startmin)||0;
+      const durMin=parseInt(el.dataset.durmin)||60;
+      const track=el.closest('.tl-track');
+      const trackRect=track?track.getBoundingClientRect():{left:0,width:1};
+      const clickMin=TL_START+((e.clientX-trackRect.left)/trackRect.width)*TL_SPAN;
+      const offsetMin=Math.round(clickMin-startMin);
+      _tlDrag={cursaId,pi,data,startMin,durMin,offsetMin};
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain',cursaId);
+    });
+    el.addEventListener('dragend',()=>{el.classList.remove('dragging');});
+  });
+};
+
+window.tlDragOver=(e)=>{
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  // Afiseaza preview linie de timp
+  const track=e.currentTarget;
+  const trackRect=track.getBoundingClientRect();
+  const pct=(e.clientX-trackRect.left)/trackRect.width;
+  let newMin=Math.round(TL_START+pct*TL_SPAN-(_tlDrag?_tlDrag.offsetMin:0));
+  newMin=Math.round(newMin/5)*5;
+  newMin=Math.max(4*60,Math.min(23*60+55,newMin));
+  // Update preview line
+  let preview=track.querySelector('.tl-drag-preview');
+  if(!preview){
+    preview=document.createElement('div');
+    preview.className='tl-drag-preview';
+    preview.style.cssText='position:absolute;top:0;bottom:0;width:2px;background:var(--gold);z-index:20;pointer-events:none';
+    track.appendChild(preview);
+  }
+  preview.style.left=tlPct(newMin);
+  // Arata ora in preview
+  preview.title=minToTime(newMin);
+};
+
+window.tlDragLeave=(e)=>{
+  const preview=e.currentTarget.querySelector('.tl-drag-preview');
+  if(preview)preview.remove();
+};
+
+window.tlDrop=async(e,data)=>{
+  e.preventDefault();
+  const track=e.currentTarget;
+  if(!data)data=track.dataset.date||'';
+  const preview=track.querySelector('.tl-drag-preview');
+  if(preview)preview.remove();
+  if(!_tlDrag)return;
+  const trackRect=track.getBoundingClientRect();
+  let newStartMin=Math.round(TL_START+((e.clientX-trackRect.left)/trackRect.width)*TL_SPAN-_tlDrag.offsetMin);
+  newStartMin=Math.round(newStartMin/5)*5;
+  newStartMin=Math.max(4*60,Math.min(23*60+55,newStartMin));
+  const novaOra=minToTime(newStartMin);
+  const {cursaId,pi,startMin}=_tlDrag;
+  _tlDrag=null;
+  if(novaOra===minToTime(startMin)){return;} // nu s-a schimbat
+  toast('⏱️ Se mută la '+novaOra+'...','in');
+  await tlSchimbaOra(cursaId,pi,data,novaOra);
+};
+
+async function tlSchimbaOra(cursaId,pi,data,novaOra){
+  const c=window._R.find(x=>x.id===cursaId);
+  if(!c){toast('Cursa nu a fost găsită','er');return;}
+  const plecari=JSON.parse(JSON.stringify(c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}]));
+  const vecheaOra=plecari[pi]?.ora||c.ora||'?';
+  plecari[pi].ora=novaOra;
+  const upd={plecari};
+  if(pi===0)upd.ora=novaOra;
+  await setDoc(doc(db,'curse_regulate',cursaId),upd,{merge:true});
+  const idx=window._R.findIndex(x=>x.id===cursaId);
+  if(idx>-1){window._R[idx].plecari=plecari;if(pi===0)window._R[idx].ora=novaOra;}
+  toast('✅ '+c.ruta+': '+vecheaOra+' → '+novaOra,'ok');
+  loadProgramSoferi();
+  if(document.getElementById('tab-regulate')?.classList.contains('on'))loadRT();
+}
+
 
 // Backward compat
 window.atribuieSoferMulti=async(el)=>{
