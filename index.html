@@ -881,76 +881,84 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
     <table class="tbl"><thead><tr><th>Mesaj</th><th>Activ</th><th></th></tr></thead><tbody id="tktb"></tbody></table>
   </div>
   <div id="tab-program" class="tc">
-    <style>
-      .tl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-      .tl-grid{min-width:900px;position:relative}
-      .tl-header{display:flex;border-bottom:2px solid var(--border);margin-bottom:0;position:sticky;top:0;z-index:10;background:var(--bg)}
-      .tl-rowlabel{width:160px;flex-shrink:0;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;background:var(--bg);border-right:2px solid var(--border)}
-      .tl-hours{flex:1;display:flex;position:relative}
-      .tl-hcell{flex:1;text-align:center;font-size:10px;color:var(--muted);padding:6px 0;border-right:1px solid var(--border);min-width:40px}
-      .tl-hcell.now-h{color:var(--gold);font-weight:700}
-      .tl-row{display:flex;border-bottom:1px solid var(--border);min-height:52px;position:relative}
-      .tl-row:hover{background:rgba(184,134,11,.02)}
-      .tl-row.tl-row-sub{min-height:44px;background:rgba(253,252,248,.6)}
-      .tl-label{width:160px;flex-shrink:0;padding:8px 12px;border-right:2px solid var(--border);display:flex;flex-direction:column;justify-content:center;gap:2px}
-      .tl-label-main{font-weight:700;font-size:13px;color:var(--text)}
-      .tl-label-sub{font-size:11px;color:var(--muted)}
-      .tl-track{flex:1;position:relative;background:repeating-linear-gradient(90deg,transparent,transparent calc(100%/18 - 1px),var(--border) calc(100%/18 - 1px),var(--border) calc(100%/18))}
-      .tl-block{position:absolute;top:6px;bottom:6px;border-radius:6px;cursor:grab;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:filter .15s;border:1.5px solid transparent}
-      .tl-block:hover{filter:brightness(1.08);z-index:5}
-      .tl-block.dragging{opacity:.4;cursor:grabbing}
-      .tl-block.type-dus{background:rgba(184,134,11,.18);border-color:var(--gold);color:#7a5c00}
-      .tl-block.type-intors{background:rgba(184,134,11,.1);border-color:rgba(184,134,11,.4);color:#9a7010;border-style:dashed}
-      .tl-block.type-pauza{background:rgba(100,100,100,.1);border-color:rgba(150,150,150,.4);color:var(--muted)}
-      .tl-block.warn-over{background:rgba(185,28,28,.15);border-color:var(--red);color:var(--red)}
-      .tl-block.warn-near{background:rgba(194,85,15,.15);border-color:var(--orange);color:#8b3a00}
-      .tl-block.unset{background:rgba(200,200,200,.15);border-color:rgba(200,200,200,.4);border-style:dashed;color:var(--muted)}
-      .tl-nowline{position:absolute;top:0;bottom:0;width:2px;background:var(--red);z-index:8;pointer-events:none}
-      .tl-nowline::before{content:'';position:absolute;top:-4px;left:-4px;width:10px;height:10px;background:var(--red);border-radius:50%}
-      .tl-limit{position:absolute;top:0;bottom:0;width:2px;background:rgba(185,28,28,.3);z-index:6;pointer-events:none}
-      .tl-limit-9{background:rgba(185,28,28,.5)}
-      .tl-section{margin-bottom:20px}
-      .tl-section-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:6px 0;margin-bottom:0;display:flex;align-items:center;gap:8px}
-      .ore-bar-wrap{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:3px;width:80px}
-      .ore-bar{height:100%;border-radius:4px;transition:width .3s}
-      .sf-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .15s}
-      .sf-pill:hover{filter:brightness(.95)}
-      .assign-panel{position:absolute;z-index:100;background:#fff;border:1.5px solid var(--gold);border-radius:12px;box-shadow:0 8px 32px rgba(28,23,19,.15);padding:14px;min-width:220px;top:calc(100% + 4px);left:0}
-      .assign-panel select{width:100%;margin-bottom:8px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff}
-    </style>
+  <style>
+    .tl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:var(--r);background:#fff;box-shadow:var(--shadow)}
+    .tl-grid{min-width:900px;position:relative;font-family:'Inter',sans-serif}
+    .tl-header{display:flex;border-bottom:2px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:10}
+    .tl-rowlabel{width:170px;min-width:170px;flex-shrink:0;padding:8px 12px;border-right:2px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center}
+    .tl-hours{flex:1;display:flex}
+    .tl-hcell{flex:1;text-align:center;font-size:10px;color:var(--muted);padding:6px 2px;border-right:1px solid var(--border);min-width:36px}
+    .tl-hcell.now-col{color:var(--gold);font-weight:700;background:rgba(184,134,11,.06)}
+    .tl-row{display:flex;border-bottom:1px solid var(--border);min-height:56px;position:relative}
+    .tl-row:hover{background:rgba(184,134,11,.02)}
+    .tl-row.tl-nealocat{background:rgba(185,28,28,.02)}
+    .tl-row.tl-veh{background:var(--bg2);min-height:44px}
+    .tl-label{width:170px;min-width:170px;flex-shrink:0;padding:8px 10px;border-right:2px solid var(--border);display:flex;flex-direction:column;justify-content:center;gap:2px;cursor:default}
+    .tl-lname{font-weight:700;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .tl-lsub{font-size:10px;color:var(--muted)}
+    .tl-ore-bar{height:4px;background:var(--bg3);border-radius:2px;margin-top:3px;overflow:hidden;width:80px}
+    .tl-ore-fill{height:100%;border-radius:2px;transition:width .3s}
+    .tl-track{flex:1;position:relative;background:repeating-linear-gradient(90deg,transparent,transparent calc(100%/22 - 1px),var(--border) calc(100%/22 - 1px),var(--border) calc(100%/22))}
+    .tl-track.drop-target{background:rgba(184,134,11,.06)}
+    .tl-block{position:absolute;top:7px;bottom:7px;border-radius:6px;cursor:pointer;display:flex;align-items:center;padding:0 7px;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:filter .15s,transform .1s;border:1.5px solid;user-select:none}
+    .tl-block:hover{filter:brightness(1.08);transform:translateY(-1px);z-index:5}
+    .tl-block[draggable=true]{cursor:grab}
+    .tl-block[draggable=true]:active{cursor:grabbing}
+    .tl-block.dragging{opacity:.35;transform:scale(.98)}
+    .tl-block.b-dus{background:rgba(184,134,11,.15);border-color:var(--gold);color:#6b4c00}
+    .tl-block.b-intors{background:rgba(184,134,11,.08);border-color:rgba(184,134,11,.35);color:#8b6500;border-style:dashed}
+    .tl-block.b-pauza{background:rgba(120,120,120,.1);border-color:rgba(150,150,150,.35);color:var(--muted);font-size:10px}
+    .tl-block.b-warn{background:rgba(194,85,15,.15);border-color:var(--orange);color:#7c3200}
+    .tl-block.b-over{background:rgba(185,28,28,.15);border-color:var(--red);color:#7a0000}
+    .tl-block.b-unset{background:rgba(200,200,200,.12);border-color:rgba(180,180,180,.4);border-style:dashed;color:var(--muted)}
+    .tl-block.b-veh{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.35);color:#1e3a8a;font-size:10px}
+    .tl-block.b-veh-conflict{background:rgba(185,28,28,.12);border-color:var(--red);color:var(--red)}
+    .tl-nowline{position:absolute;top:0;bottom:0;width:2px;background:var(--red);z-index:8;pointer-events:none}
+    .tl-nowline::before{content:'';position:absolute;top:-4px;left:-4px;width:10px;height:10px;background:var(--red);border-radius:50%}
+    .tl-limit{position:absolute;top:0;bottom:0;width:1px;background:rgba(185,28,28,.4);z-index:6;pointer-events:none;border-right:1px dashed rgba(185,28,28,.4)}
+    .tl-drag-preview{position:absolute;top:0;bottom:0;width:2px;background:var(--gold);z-index:20;pointer-events:none}
+    .tl-section-hdr{padding:6px 12px 6px 182px;background:var(--bg3);border-bottom:1px solid var(--border);border-top:2px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+    /* Panel atribuire */
+    .assign-panel{position:fixed;z-index:9999;background:#fff;border:2px solid var(--gold);border-radius:14px;box-shadow:0 8px 40px rgba(28,23,19,.2);padding:18px;width:300px;max-width:calc(100vw - 20px)}
+    .assign-sf-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .assign-sf-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .assign-sf-select{flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:#fff}
+    .assign-sf-select:focus{border-color:var(--gold);outline:none}
+    .assign-range{background:var(--bg3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px}
+    .assign-range-row{display:flex;gap:8px;align-items:center;margin-top:6px}
+    .assign-range-row input{flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px}
+  </style>
 
-    <!-- CONTROLS -->
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
-      <div>
-        <h3 style="font-size:16px;font-weight:700;margin-bottom:2px">📅 Program Șoferi — Timeline</h3>
-        <p style="font-size:12px;color:var(--muted)">Legislație RO: max 9h/zi · max 56h/săpt · pauză 45min după 4.5h continuu</p>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn bs bsm" onclick="tlPrevDay()">← Zi anterioară</button>
-        <input type="date" id="prog-data" onchange="loadProgramSoferi()" style="width:160px"/>
-        <button class="btn bs bsm" onclick="setProgDataAzi()">Azi</button>
-        <button class="btn bs bsm" onclick="tlNextDay()">Zi următoare →</button>
-        <button class="btn bp bsm" onclick="loadProgramSoferi()">🔄 Refresh</button>
-      </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+    <div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:2px">📅 Program Șoferi — Timeline</h3>
+      <p style="font-size:12px;color:var(--muted)">Max 9h/zi · 56h/săpt · pauză 45min după 4.5h · Click pe cursă → atribuie șofer + autobuz</p>
     </div>
-
-    <!-- LEGENDA -->
-    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;margin-bottom:14px;padding:10px 14px;background:var(--bg2);border-radius:10px;border:1px solid var(--border)">
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:3px;background:rgba(184,134,11,.18);border:1.5px solid var(--gold);flex-shrink:0"></span>Dus</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:3px;background:rgba(184,134,11,.1);border:1.5px dashed rgba(184,134,11,.4);flex-shrink:0"></span>Întors</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:3px;background:rgba(100,100,100,.1);border:1.5px solid rgba(150,150,150,.4);flex-shrink:0"></span>Pauză</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:3px;background:rgba(194,85,15,.15);border:1.5px solid var(--orange);flex-shrink:0"></span>Aproape de limită (&gt;7h)</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:3px;background:rgba(185,28,28,.15);border:1.5px solid var(--red);flex-shrink:0"></span>Depășire (&gt;9h)</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:2px;height:14px;background:var(--red);flex-shrink:0"></span>Ora curentă</span>
-      <span style="color:var(--muted)">Click pe o cursă → atribuie șofer</span>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn bs bsm" onclick="tlPrevDay()">← Prev</button>
+      <input type="date" id="prog-data" onchange="loadProgramSoferi()" style="width:155px;font-size:13px"/>
+      <button class="btn bs bsm" onclick="setProgDataAzi()">Azi</button>
+      <button class="btn bs bsm" onclick="tlNextDay()">Next →</button>
+      <button class="btn bp bsm" onclick="loadProgramSoferi()">🔄</button>
     </div>
-
-    <!-- SUMAR SOFERI -->
-    <div id="program-sumar" style="margin-bottom:16px"></div>
-
-    <!-- TIMELINE -->
-    <div id="program-list"></div>
   </div>
+
+  <!-- Legenda -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;margin-bottom:12px;padding:8px 12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:10px;border-radius:2px;background:rgba(184,134,11,.15);border:1.5px solid var(--gold);display:inline-block"></span>Dus</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:10px;border-radius:2px;background:rgba(184,134,11,.08);border:1.5px dashed rgba(184,134,11,.35);display:inline-block"></span>Retur</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:10px;border-radius:2px;background:rgba(194,85,15,.15);border:1.5px solid var(--orange);display:inline-block"></span>&gt;7h (atenție)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:10px;border-radius:2px;background:rgba(185,28,28,.15);border:1.5px solid var(--red);display:inline-block"></span>Depășit 9h</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:10px;border-radius:2px;border:1.5px dashed rgba(180,180,180,.4);display:inline-block"></span>Nealocat</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:var(--red);display:inline-block"></span>Ora curentă</span>
+    <span style="color:var(--muted)">🖱️ Click cursă → atribuie · ↔ Drag → schimbă ora</span>
+  </div>
+
+  <!-- Sumar ore -->
+  <div id="program-sumar" style="margin-bottom:12px"></div>
+  <!-- Timeline -->
+  <div id="program-list"></div>
+</div>
   <div id="tab-broadcast" class="tc">
     <div style="max-width:600px">
       <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow)">
@@ -1723,12 +1731,22 @@ function bNav(role){
 // ── AUTH ──────────────────────────────────────────────────
 onAuthStateChanged(auth,async u=>{
   window._U=u;
+  // Incarca setarile MEREU PRIMUL - SOFER_CONT_EMAIL trebuie sa fie setat
+  // inainte de orice verificare de rol
+  try{
+    const sr=await getDoc(doc(db,'setari','global'));
+    if(sr.exists()){
+      const sd=sr.data();
+      window._EJS=sd.emailjs||{};
+      window._FIRMA=sd.firma||{};
+      if(sd.soferContEmail)SOFER_CONT_EMAIL=sd.soferContEmail;
+      renderFooter();
+    }
+  }catch(e){console.warn('Settings load:',e.message);}
+
   if(!u){
     window._ROLE='client';
     bNav('guest');
-    // Load public settings for anon too
-    try{const sr=await getDoc(doc(db,'setari','global'));if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{};if(sr.data().soferContEmail)SOFER_CONT_EMAIL=sr.data().soferContEmail;renderFooter();}}catch(e){}
-    // Initializeaza pagina curenta
     const activePg=document.querySelector('.pg.on');
     if(!activePg||activePg.id==='pg-home')nav('home');
     return;
@@ -1764,8 +1782,7 @@ onAuthStateChanged(auth,async u=>{
   }
   window._ROLE='client';bNav('client');
   startNotifListener();
-  try{const sr=await getDoc(doc(db,'setari','global'));if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{};if(sr.data().soferContEmail)SOFER_CONT_EMAIL=sr.data().soferContEmail;}}catch(e){}
-  renderFooter();
+  // Setarile deja incarcate la inceput
   const activePgClient=document.querySelector('.pg.on');
   const curPageClient=activePgClient?activePgClient.id.replace('pg-',''):'home';
   nav(curPageClient);
@@ -4010,8 +4027,8 @@ function rPL(){
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <div style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
         <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Oră default</div>
-        <input type="time" value="${p.ora||''}" style="width:110px;flex-shrink:0" onchange="_plecari[${i}].ora=this.value;rPL()"/>
-        <select data-sofer-main style="flex:1;min-width:140px" onchange="var _sf=window._soferiById&&window._soferiById[this.value];_plecari[${i}].soferId=this.value;_plecari[${i}].soferEmail=_sf?_sf.email:this.value">
+        <input type="time" value="${p.ora||''}" data-idx="${i}" style="width:110px;flex-shrink:0" onchange="window._plecari[parseInt(this.dataset.idx)].ora=this.value;updatePlecareOreHeader(parseInt(this.dataset.idx),this.value)"/>
+        <select data-sofer-main data-idx="${i}" style="flex:1;min-width:140px" onchange="var _sf=window._soferiById&&window._soferiById[this.value];window._plecari[parseInt(this.dataset.idx)].soferId=this.value;window._plecari[parseInt(this.dataset.idx)].soferEmail=_sf?_sf.email:this.value">
           <option value="">— fără șofer default —</option>${sfOpts}
         </select>
         ${_plecari.length>1?`<button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px" onclick="delPlecare(${i})">✕</button>`:''}
@@ -4042,7 +4059,7 @@ function rPL(){
           return `<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
             <input type="date" value="${ex.data||''}" style="width:140px;font-size:12px" onchange="_plecari[${i}].exceptii[${ei}].data=this.value"/>
             <input type="time" value="${ex.ora||''}" style="width:100px;font-size:12px" title="Ora excepție" onchange="_plecari[${i}].exceptii[${ei}].ora=this.value"/>
-            <select style="flex:1;font-size:12px;min-width:120px" onchange="var _sf2=window._soferiById&&window._soferiById[this.value];_plecari[${i}].exceptii[${ei}].soferId=this.value;_plecari[${i}].exceptii[${ei}].soferEmail=_sf2?_sf2.email:this.value">
+            <select style="flex:1;font-size:12px;min-width:120px" data-pi="${i}" data-ei="${ei}" onchange="var _sf2=window._soferiById&&window._soferiById[this.value];var _pi2=parseInt(this.dataset.pi);var _ei2=parseInt(this.dataset.ei);window._plecari[_pi2].exceptii[_ei2].soferId=this.value;window._plecari[_pi2].exceptii[_ei2].soferEmail=_sf2?_sf2.email:this.value">
               <option value="">— șofer default —</option>${sfExOpts}
             </select>
             <button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px" onclick="_plecari[${i}].exceptii.splice(${ei},1);rPL()">✕</button>
@@ -4053,6 +4070,12 @@ function rPL(){
     </div>`;
   }).join('');
 }
+// Actualizeaza header ora in plecari fara re-render complet
+window.updatePlecareOreHeader=(idx,val)=>{
+  // Nimic de facut vizual - valoarea e deja in _plecari[idx].ora
+  // rPL() va fi chemat explicit cand e nevoie (ex: addPlecare, delPlecare)
+};
+
 window.addExceptie=(i)=>{
   if(!_plecari[i].exceptii)_plecari[i].exceptii=[];
   _plecari[i].exceptii.push({data:'',ora:'',soferEmail:''});
@@ -4231,11 +4254,9 @@ window.openRM=async(id=null)=>{
   vS.innerHTML=window._F.map(v=>`<option value="${v.id}">${v.icon||''} ${v.nume} (${cap(v)} locuri)</option>`).join('');
   // Load soferi
   const sfSnap=await getDocs(collection(db,'soferi'));
+  // Reconstruieste mereu cache-ul cand deschidem modalul - asigura date fresh
   _soferiList=sfSnap.docs.filter(d=>d.data().activ!==false).map(d=>({id:d.id,...d.data()}));
-  // Actualizeaza cache global cu soferii activi
-  if(!window._soferiById||Object.keys(window._soferiById).length===0){
-    _buildSoferiCache(sfSnap);
-  }
+  _buildSoferiCache(sfSnap);
   _plecari=[{ora:'',soferEmail:'',orePerZi:{},exceptii:[]}];
   _intorsPlecari=[{ora:'',soferEmail:''}];
   _dateBlocate=[];
@@ -5106,7 +5127,7 @@ function rIntorsPL(){
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
       <div style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
       <input type="time" value="${p.ora||''}" style="width:100px;flex-shrink:0" onchange="_intorsPlecari[${i}].ora=this.value"/>
-      <select style="flex:1" onchange="_intorsPlecari[${i}].soferEmail=this.value">
+      <select data-idx="${i}" style="flex:1" onchange="window._intorsPlecari[parseInt(this.dataset.idx)].soferEmail=this.value">
         <option value="">— fără șofer —</option>
         ${_soferiList.map(sf=>`<option value="${sf.email}" ${p.soferEmail===sf.email?'selected':''}>${sf.prenume||''} ${sf.nume||''}</option>`).join('')}
       </select>
@@ -5654,9 +5675,18 @@ window.openVehiculeAtribuire=async(vehId)=>{
   const v=window._F.find(x=>x.id===vehId);
   if(!v)return;
   const sfSnap=await getDocs(collection(db,'soferi'));
+  // Rebuild cache fresh - esential pentru soferId lookup
+  _buildSoferiCache(sfSnap);
   const totiSoferii=sfSnap.docs.filter(d=>d.data().activ!==false).map(d=>({id:d.id,...d.data()}));
   const soferiAtribuiti=v.soferiAtribuiti||[];
-  window._vaSoferiAtribuiti=JSON.parse(JSON.stringify(soferiAtribuiti));
+  // Normalizeaza: adauga soferId bazat pe email daca lipseste
+  window._vaSoferiAtribuiti=soferiAtribuiti.map(sa=>{
+    const out={...sa};
+    if(!out.soferId&&out.email&&window._soferiByEmail&&window._soferiByEmail[out.email]){
+      out.soferId=window._soferiByEmail[out.email].id||'';
+    }
+    return out;
+  });
   window._vaVehId=vehId;
 
   // Creeaza modal daca nu exista
@@ -5681,7 +5711,10 @@ function renderVaList(totiSoferii, vehId){
     html+='<option value="">— alege șoferul —</option>';
     totiSoferii.forEach(sf=>{
       const name=[sf.prenume,sf.nume].filter(Boolean).join(' ');
-      const sel=(sa.soferId===sf.id||sa.email===sf.email)?'selected':'';
+      // Match dupa soferId (nou) SAU dupa email (date vechi din Firestore)
+      const matchId=sa.soferId&&sf.id&&sa.soferId===sf.id;
+      const matchEmail=!matchId&&sa.email&&sf.email&&sa.email===sf.email;
+      const sel=(matchId||matchEmail)?'selected':'';
       html+='<option value="'+sf.id+'" '+sel+'>'+name+(sf.email?' ('+sf.email+')':'')+'</option>';
     });
     html+='</select>';
@@ -5825,10 +5858,26 @@ async function calcVaProgram(vehId,soferi){
 window.saveVehAtribuire=async()=>{
   const vehId=window._vaVehId;
   if(!vehId){toast('ID vehicul lipsă','er');return;}
-  const soferiAtribuiti=(window._vaSoferiAtribuiti||[]).filter(sa=>sa.email);
+  // Filtreaza si normalizeaza - asigura ca avem atat soferId cat si email
+  const soferiAtribuiti=(window._vaSoferiAtribuiti||[])
+    .filter(sa=>sa.soferId||sa.email)
+    .map(sa=>{
+      const out={...sa};
+      // Populeaza email din cache daca lipseste
+      if(out.soferId&&(!out.email||out.email===out.soferId)){
+        const sfObj=window._soferiById&&window._soferiById[out.soferId];
+        if(sfObj)out.email=sfObj.email||'';
+      }
+      // Populeaza soferId din cache daca lipseste
+      if(out.email&&!out.soferId){
+        const sfObj=window._soferiByEmail&&window._soferiByEmail[out.email];
+        if(sfObj)out.soferId=sfObj.id||'';
+      }
+      return out;
+    });
   if(!soferiAtribuiti.length){
-    // Permite stergerea tuturor soferilor
-    if(!confirm('Ștergi toți șoferii atribuiți acestui vehicul?'))return;
+    toast('Nu ai selectat niciun șofer. Adaugă cel puțin un șofer.','wr');
+    return;
   }
   try{
     // 1. Salvează pe vehicul
@@ -5984,167 +6033,156 @@ window.setProgDataAzi=()=>{
   d.value=new Date().toISOString().split('T')[0];
   loadProgramSoferi();
 };
-
-// Calcul ore condus pentru un sofer intr-o perioada
-// soferEmail poate fi de fapt soferId (ID Firestore) - acceptam ambele
-async function calcOreSofer(soferIdOrEmail, zile){
-  let totalMin=0;
-  const regSnap=await getDocs(collection(db,'curse_regulate'));
-  const curseAll=regSnap.docs.map(d=>({id:d.id,...d.data()}));
-  // Rezolvam ID <-> email
-  const sfById=window._soferiById&&window._soferiById[soferIdOrEmail];
-  const sfByEmail=window._soferiByEmail&&window._soferiByEmail[soferIdOrEmail];
-  const sfId=sfById?soferIdOrEmail:(sfByEmail?sfByEmail.id:'');
-  const sfEmail=sfById?sfById.email:soferIdOrEmail;
-  const matchesSofer=(p)=>{
-    if(sfId&&(p.soferId===sfId||p.soferEmail===sfEmail))return true;
-    if(!sfId&&p.soferEmail===sfEmail)return true;
-    return false;
-  };
-  for(const data of zile){
-    const dow=new Date(data+'T12:00:00').getDay();
-    const curseZi=curseAll.filter(c=>{
-      if(!c.activa)return false;
-      if(c.dateBlocate&&c.dateBlocate.includes(data))return false;
-      if(c.dataStart&&data<c.dataStart)return false;
-      if(c.dataEnd&&data>c.dataEnd)return false;
-      if(!(c.zile||[]).includes(dow))return false;
-      const pl=c.plecari||[{soferEmail:c.soferEmail,soferId:c.soferId}];
-      return pl.some(p=>matchesSofer(p));
-    });
-    for(const c of curseZi){
-      const statiiMin=c.statii&&c.statii.length>=2?c.statii[c.statii.length-1].minuteDeLaStart||0:0;
-      const minZi=c.tipCursa==='dus-intors'?statiiMin*2:statiiMin;
-      totalMin+=minZi;
-    }
-  }
-  return totalMin;
-}
-
-function getZileInterval(dataRef, view){
-  const ref=new Date(dataRef+'T12:00:00');
-  const zile=[];
-  if(view==='zi'){
-    zile.push(dataRef);
-  }else if(view==='saptamana'){
-    // Luni - Duminica saptamana curenta
-    const dow=ref.getDay();
-    const luni=new Date(ref);
-    luni.setDate(ref.getDate()-(dow===0?6:dow-1));
-    for(let i=0;i<7;i++){
-      const d=new Date(luni);d.setDate(luni.getDate()+i);
-      zile.push(d.toISOString().split('T')[0]);
-    }
-  }else{
-    // 2 saptamani: saptamana curenta + urmatoarea
-    const dow=ref.getDay();
-    const luni=new Date(ref);
-    luni.setDate(ref.getDate()-(dow===0?6:dow-1));
-    for(let i=0;i<14;i++){
-      const d=new Date(luni);d.setDate(luni.getDate()+i);
-      zile.push(d.toISOString().split('T')[0]);
-    }
-  }
-  return zile;
-}
-
-const DAYS_RO=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
-const MONTHS_RO2=['Ian','Feb','Mar','Apr','Mai','Iun','Iul','Aug','Sep','Oct','Nov','Dec'];
-
-function formatDataScurt(data){
-  const d=new Date(data+'T12:00:00');
-  return DAYS_RO[d.getDay()]+' '+d.getDate()+' '+MONTHS_RO2[d.getMonth()];
-}
-
-// ── SOFER PENTRU O PLECARE LA O DATA SPECIFICA ───────────────
-// Structura noua: cursa.exceptiiSoferi = {'2025-07-15': {s1:'email', s2:'email'}}
-// Default (fara exceptie): plecare.soferEmail (soferul default saptamanal)
-function getSoferiPlecare(plecare, dataStr){
-  const exc=(plecare.exceptiiSoferi||{})[dataStr];
-  if(exc!==undefined){
-    const r=[];
-    if(exc.s1)r.push(exc.s1);
-    if(exc.s2)r.push(exc.s2);
-    return r;
-  }
-  // Returnam soferId daca exista, altfel soferEmail (backward compat)
-  const id=plecare.soferId||plecare.soferEmail||'';
-  return id?[id]:[];
-}
-
-// ── SALVARE EXCEPTIE SOFER PENTRU O ZI ───────────────────────
-window.salveazaExceptieSofer=async(cursaId, pi, dataStr, slot, email)=>{
-  const c=window._R.find(x=>x.id===cursaId);
-  if(!c)return;
-  const plecari=JSON.parse(JSON.stringify(c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}]));
-  if(!plecari[pi].exceptiiSoferi)plecari[pi].exceptiiSoferi={};
-  if(!plecari[pi].exceptiiSoferi[dataStr])plecari[pi].exceptiiSoferi[dataStr]={};
-  plecari[pi].exceptiiSoferi[dataStr][slot]=email||null;
-  // Sterge exceptia daca e identica cu defaultul
-  const sf=getSoferiPlecare({...plecari[pi],exceptiiSoferi:{}},dataStr);
-  const exc=plecari[pi].exceptiiSoferi[dataStr];
-  if((exc.s1||'')===(sf[0]||'')&&(exc.s2||'')===(sf[1]||'')){
-    delete plecari[pi].exceptiiSoferi[dataStr];
-  }
-  await setDoc(doc(db,'curse_regulate',cursaId),{plecari},{merge:true});
-  const idx=window._R.findIndex(x=>x.id===cursaId);
-  if(idx>-1)window._R[idx].plecari=plecari;
-  toast('Șofer atribuit pentru '+dataStr,'ok');
-  loadProgramSoferi();
-};
-
-// ── TIMELINE HELPERS ──────────────────────────────────────────
-const TL_START=4*60;  // 04:00
-const TL_END=26*60;   // 02:00 next day (26h)
-const TL_SPAN=TL_END-TL_START; // 1320 min
-
-function tlPct(min){
-  const clamped=Math.max(TL_START,Math.min(TL_END,min));
-  return ((clamped-TL_START)/TL_SPAN*100).toFixed(3)+'%';
-}
-function tlWidth(startMin,endMin){
-  const s=Math.max(TL_START,startMin);
-  const e=Math.min(TL_END,endMin);
-  if(e<=s)return '0%';
-  return ((e-s)/TL_SPAN*100).toFixed(3)+'%';
-}
-
 window.tlPrevDay=()=>{
   const el=document.getElementById('prog-data');
   if(!el.value)el.value=new Date().toISOString().split('T')[0];
-  const d=new Date(el.value+'T12:00:00');
-  d.setDate(d.getDate()-1);
-  el.value=d.toISOString().split('T')[0];
-  loadProgramSoferi();
+  const d=new Date(el.value+'T12:00:00');d.setDate(d.getDate()-1);
+  el.value=d.toISOString().split('T')[0];loadProgramSoferi();
 };
 window.tlNextDay=()=>{
   const el=document.getElementById('prog-data');
   if(!el.value)el.value=new Date().toISOString().split('T')[0];
-  const d=new Date(el.value+'T12:00:00');
-  d.setDate(d.getDate()+1);
-  el.value=d.toISOString().split('T')[0];
-  loadProgramSoferi();
+  const d=new Date(el.value+'T12:00:00');d.setDate(d.getDate()+1);
+  el.value=d.toISOString().split('T')[0];loadProgramSoferi();
 };
 
-// ── MAIN LOAD ─────────────────────────────────────────────────
+// ── CONSTANTE TIMELINE ────────────────────────────────────────
+const TL_START=4*60;   // 04:00
+const TL_END=26*60;    // 02:00 urmatoarea zi
+const TL_SPAN=TL_END-TL_START; // 1320 min
+const MAX_ZI=9*60;     // 540 min/zi
+const MAX_SAPT=56*60;  // 3360 min/sapt
+const MAX_CONT=4.5*60; // 270 min condus continuu
+const PAUZA=45;        // min pauza obligatorie
+
+function tlPct(min){return(Math.max(TL_START,Math.min(TL_END,min))-TL_START)/TL_SPAN*100+'%';}
+function tlW(s,e){const a=Math.max(TL_START,s),b=Math.min(TL_END,e);return b<=a?'0%':(b-a)/TL_SPAN*100+'%';}
+function minToTime(m){const h=Math.floor(m/60)%24,mm=m%60;return(h<10?'0':'')+h+':'+(mm<10?'0':'')+mm;}
+function timeToMin(t){if(!t)return 0;const[h,m]=t.split(':').map(Number);return h*60+m;}
+
+// Rezolva id/email -> obiect sofer din cache
+function resSf(val){
+  if(!val)return null;
+  if(window._soferiById&&window._soferiById[val])return window._soferiById[val];
+  if(window._soferiByEmail&&window._soferiByEmail[val])return window._soferiByEmail[val];
+  return{id:val,email:val,numeFull:val};
+}
+
+// Soferii pentru o plecare la o data specifica
+// Stocam in c.plecari[pi].alocareProg = {'2025-07-15':{s1:'sfId',s2:'sfId',vehId:'vId'}}
+function getSfPlecare(p, dataStr){
+  const aloc=(p.alocareProg||{})[dataStr];
+  if(aloc){
+    const r=[];
+    if(aloc.s1)r.push(aloc.s1);
+    if(aloc.s2)r.push(aloc.s2);
+    if(r.length)return{sfIds:r,vehId:aloc.vehId||null,dinProg:true};
+  }
+  // Fallback la soferul default
+  const sf=p.soferId||p.soferEmail||null;
+  return{sfIds:sf?[sf]:[],vehId:null,dinProg:false};
+}
+
+// Vehiculul pentru o plecare la o data specifica
+function getVehPlecare(p, dataStr, cursaVehId){
+  const aloc=(p.alocareProg||{})[dataStr];
+  if(aloc&&aloc.vehId)return aloc.vehId;
+  return cursaVehId||null;
+}
+
+// Salveaza alocarea (soferi + vehicul) pentru o plecare la o data
+window.salveazaAlocare=async(cursaId,pi,dataStr,s1Id,s2Id,vehId)=>{
+  const c=window._R.find(x=>x.id===cursaId);
+  if(!c)return;
+  const plecari=JSON.parse(JSON.stringify(c.plecari||[{ora:c.ora}]));
+  if(!plecari[pi])return;
+  if(!plecari[pi].alocareProg)plecari[pi].alocareProg={};
+  const aloc={};
+  if(s1Id)aloc.s1=s1Id;
+  if(s2Id)aloc.s2=s2Id;
+  if(vehId)aloc.vehId=vehId;
+  plecari[pi].alocareProg[dataStr]=aloc;
+  await setDoc(doc(db,'curse_regulate',cursaId),{plecari},{merge:true});
+  const idx=window._R.findIndex(x=>x.id===cursaId);
+  if(idx>-1)window._R[idx].plecari=plecari;
+};
+
+// Calcul ore sofer pentru zile date
+async function calcOreSofer(sfId,zile){
+  if(!sfId||!zile||!zile.length)return 0;
+  if(!window._R||!window._R.length){
+    const s=await getDocs(collection(db,'curse_regulate'));
+    window._R=s.docs.map(d=>({id:d.id,...d.data()}));
+  }
+  let total=0;
+  for(const data of zile){
+    const dow=new Date(data+'T12:00:00').getDay();
+    window._R.forEach(c=>{
+      if(!c.activa)return;
+      if(!(c.zile||[]).includes(dow))return;
+      if(c.dataStart&&data<c.dataStart)return;
+      if(c.dataEnd&&data>c.dataEnd)return;
+      if(c.dateBlocate&&c.dateBlocate.includes(data))return;
+      const pl=c.plecari||[{soferId:c.soferId,soferEmail:c.soferEmail}];
+      pl.forEach(p=>{
+        const aInfo=getSfPlecare(p,data);
+        const sfIds=aInfo.sfIds;
+        const esteMeu=sfIds.some(v=>{
+          const obj=resSf(v);
+          return obj&&(obj.id===sfId||obj.email===sfId);
+        });
+        if(!esteMeu)return;
+        const sm=c.statii&&c.statii.length>=2?(c.statii[c.statii.length-1].minuteDeLaStart||0):60;
+        total+=c.tipCursa==='dus-intors'?sm*2:sm;
+      });
+    });
+  }
+  return total;
+}
+
+function getZileInterval(dataRef,view){
+  const ref=new Date(dataRef+'T12:00:00');
+  const zile=[];
+  if(view==='zi'){zile.push(dataRef);}
+  else{
+    const dow=ref.getDay();
+    const luni=new Date(ref);
+    luni.setDate(ref.getDate()-(dow===0?6:dow-1));
+    const n=view==='2saptamani'?14:7;
+    for(let i=0;i<n;i++){const d=new Date(luni);d.setDate(luni.getDate()+i);zile.push(d.toISOString().split('T')[0]);}
+  }
+  return zile;
+}
+
+// ── LOAD PRINCIPAL ────────────────────────────────────────────
 window.loadProgramSoferi=async()=>{
   const dataEl=document.getElementById('prog-data');
   if(!dataEl.value)dataEl.value=new Date().toISOString().split('T')[0];
   const data=dataEl.value;
-  const el=document.getElementById('program-list');
-  const sumar=document.getElementById('program-sumar');
-  el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)"><div class="spin" style="width:32px;height:32px;border-width:3px;margin:0 auto 12px"></div><p>Se calculează timeline...</p></div>';
-  if(sumar)sumar.innerHTML='';
+  const listEl=document.getElementById('program-list');
+  const sumarEl=document.getElementById('program-sumar');
+  listEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)"><div class="spin" style="width:30px;height:30px;border-width:3px;margin:0 auto 10px"></div>Se incarca...</div>';
+  if(sumarEl)sumarEl.innerHTML='';
 
+  // Incarca date
   await loadFlota();
   const sfSnap=await getDocs(collection(db,'soferi'));
+  _buildSoferiCache(sfSnap);
   const soferi=sfSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.activ!==false);
   const regSnap=await getDocs(collection(db,'curse_regulate'));
   window._R=regSnap.docs.map(d=>({id:d.id,...d.data()}));
-  const zile7=getZileInterval(data,'saptamana');
-  const zile14=getZileInterval(data,'2saptamani');
 
+  // Ore soferi (zi curenta + saptamana)
   const dow=new Date(data+'T12:00:00').getDay();
+  const zile7=getZileInterval(data,'saptamana');
+  const oreMap={};
+  for(const sf of soferi){
+    const k=sf.id;
+    const[minZi,minS]=await Promise.all([calcOreSofer(k,[data]),calcOreSofer(k,zile7)]);
+    oreMap[k]={minZi,minS};
+  }
+
+  // Curse active azi
   const curseAzi=window._R.filter(c=>{
     if(!c.activa)return false;
     if(!(c.zile||[]).includes(dow))return false;
@@ -6154,950 +6192,446 @@ window.loadProgramSoferi=async()=>{
     return true;
   });
 
-  // ── CALCUL ORE PENTRU FIECARE SOFER ──
-  const oreMap={};  // email -> {minZi, minS, minS2}
-  for(const sf of soferi){
-    const sfKey=sf.id||sf.email;
-    const [minZi,minS,min2S]=await Promise.all([
-      calcOreSofer(sfKey,[data]),
-      calcOreSofer(sfKey,zile7),
-      calcOreSofer(sfKey,zile14)
-    ]);
-    oreMap[sfKey]={minZi,minS,min2S};
-    oreMap[sf.email]=oreMap[sfKey]; // alias pt backward compat
-  }
-
-  // ── SUMAR SOFERI ──
-  if(sumar&&soferi.length){
-    const today=new Date().toISOString().split('T')[0];
-    const isToday=data===today;
-    sumar.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">'
-      +soferi.map(sf=>{
-        const ore=oreMap[sf.id||sf.email]||oreMap[sf.email]||{};
-        const hZi=(ore.minZi/60).toFixed(1);
-        const hS=(ore.minS/60).toFixed(1);
-        const pctS=Math.min(Math.round((ore.minS||0)/56/60*100),100);
-        const col=pctS>=100?'var(--red)':pctS>=80?'var(--orange)':'var(--green)';
-        const expOk=!sf.expPermis||new Date(sf.expPermis)>new Date();
-        const expDays=sf.expPermis?Math.round((new Date(sf.expPermis)-new Date())/86400000):null;
-        return '<div style="background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;min-width:180px;flex:1">'
-          +'<div style="font-weight:700;font-size:13px;margin-bottom:2px">'+[sf.prenume,sf.nume].filter(Boolean).join(' ')+'</div>'
-          +'<div style="font-size:11px;color:var(--muted);margin-bottom:6px">'
-          +(isToday?'Azi: <strong>'+hZi+'h</strong> · ':'')
-          +'Săpt: <strong style="color:'+col+'">'+hS+'h / 56h</strong></div>'
-          +'<div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden">'
-          +'<div style="height:100%;border-radius:3px;background:'+col+';width:'+pctS+'%"></div></div>'
-          +(!expOk?'<div style="font-size:10px;color:var(--red);margin-top:4px;font-weight:700">⚠️ Permis exp.'+(expDays!==null?' în '+expDays+'z':'')+'</div>':'')
-          +'</div>';
-      }).join('')
-      +'</div>';
-  }
-
-  // ── BUILD TIMELINE ──
-  renderTimeline(curseAzi, soferi, data, oreMap, el);
+  // Sumar
+  renderSumarOre(soferi,oreMap,sumarEl);
+  // Timeline
+  renderTimeline(curseAzi,soferi,data,oreMap,listEl);
 };
 
-// ── RENDER TIMELINE ───────────────────────────────────────────
-function renderTimeline(curse, soferi, data, oreMap, el){
+// Sumar ore soferi
+function renderSumarOre(soferi,oreMap,el){
+  if(!el||!soferi.length)return;
+  el.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    +soferi.map(sf=>{
+      const o=oreMap[sf.id]||{};
+      const hZ=(o.minZi/60).toFixed(1);
+      const hS=(o.minS/60).toFixed(1);
+      const pS=Math.min(Math.round((o.minS||0)/MAX_SAPT*100),100);
+      const pZ=Math.min(Math.round((o.minZi||0)/MAX_ZI*100),100);
+      const col=pZ>=100?'var(--red)':pZ>=78?'var(--orange)':'var(--green)';
+      const expOk=!sf.expPermis||new Date(sf.expPermis)>new Date();
+      return '<div style="background:#fff;border:1.5px solid '+(pZ>=100?'var(--red)':pZ>=78?'var(--orange)':'var(--border)')+';border-radius:10px;padding:10px 14px;min-width:160px;flex:1">'
+        +'<div style="font-weight:700;font-size:13px">'+(sf.numeFull||[sf.prenume,sf.nume].filter(Boolean).join(' '))+'</div>'
+        +'<div style="font-size:11px;margin-top:4px;color:var(--muted)">Azi: <strong style="color:'+col+'">'+hZ+'h / 9h</strong>'
+        +' &nbsp; Săpt: <strong style="color:'+(pS>=100?'var(--red)':pS>=80?'var(--orange)':'var(--text)')+'">'+hS+'h / 56h</strong></div>'
+        +'<div class="tl-ore-bar" style="margin-top:5px;width:100%"><div class="tl-ore-fill" style="width:'+pZ+'%;background:'+col+'"></div></div>'
+        +(!expOk?'<div style="font-size:10px;color:var(--red);font-weight:700;margin-top:3px">⚠️ Permis expirat</div>':'')
+        +'</div>';
+    }).join('')+'</div>';
+}
+
+// ── TIMELINE ──────────────────────────────────────────────────
+function renderTimeline(curse,soferi,data,oreMap,el){
   const today=new Date().toISOString().split('T')[0];
   const isToday=data===today;
   const nowMin=isToday?(new Date().getHours()*60+new Date().getMinutes()):null;
 
-  // Ore header: 04-26
-  const hours=[];
-  for(let h=4;h<=26;h++)hours.push(h%24);
-
-  // Construieste header ore
+  // Header ore
+  const hours=[];for(let h=4;h<=26;h++)hours.push(h%24);
   const hdrCells=hours.map(h=>{
-    const isNow=isToday&&nowMin!==null&&Math.abs(h*60-nowMin)<30;
-    return '<div class="tl-hcell'+(isNow?' now-h':'')+'">'+(h<10?'0':'')+h+':00</div>';
+    const isNow=isToday&&nowMin!==null&&Math.abs(h*60-nowMin)<35;
+    return '<div class="tl-hcell'+(isNow?' now-col':'')+'">'+(h<10?'0':'')+h+'</div>';
   }).join('');
 
   let html='<div class="tl-wrap"><div class="tl-grid">';
-  
-  // Header
-  html+='<div class="tl-header">';
-  html+='<div class="tl-rowlabel">Șofer / Cursă</div>';
-  html+='<div class="tl-hours">'+hdrCells+'</div>';
-  html+='</div>';
+  html+='<div class="tl-header"><div class="tl-rowlabel">Șofer</div>';
+  html+='<div class="tl-hours">'+hdrCells+'</div></div>';
 
   if(!curse.length){
-    html+='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">😴</div><p>Nu există curse active pentru '+data+'.</p></div>';
+    html+='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:40px;margin-bottom:10px">😴</div>Nicio cursă activă pentru '+data+'<br><small style="color:var(--muted)">Verificați zilele active ale curselor</small></div>';
     html+='</div></div>';
-    el.innerHTML=html;
-    return;
+    el.innerHTML=html;return;
   }
 
-  // Grupeaza cursele per sofer pentru ziua data
-  // soferCurse: Map<email, [{cursa, plecare, pi, startMin, endMin, tipCursa}]>
-  const soferBlocks={}; // email -> blocks[]
+  // Construieste blocuri per sofer (key=sfId)
+  // sfBlocks: Map<sfId, [{...}]>
+  const sfBlocks=new Map();
   const nealocat=[];
 
-  for(const c of curse){
-    const plecari=c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}];
-    const statiiMin=c.statii&&c.statii.length>=2?c.statii[c.statii.length-1].minuteDeLaStart||0:60;
-    const km=Math.round(statiiMin/60*70)||50;
-
-    plecari.forEach((p,pi)=>{
+  curse.forEach(c=>{
+    const pl=c.plecari||[{ora:c.ora,soferId:c.soferId,soferEmail:c.soferEmail}];
+    const sm=c.statii&&c.statii.length>=2?(c.statii[c.statii.length-1].minuteDeLaStart||0):60;
+    pl.forEach((p,pi)=>{
       if(!p.ora)return;
-      const startMin=timeToMin(p.ora);
-      const durMin=statiiMin||Math.round(km/70*60);
-      const endMin=startMin+durMin;
-      // Pauza capat + intors
-      const pauzaMin=45;
-      const endTotal=c.tipCursa==='dus-intors'?(endMin+pauzaMin+durMin):(endMin);
-
-      const sferi=getSoferiPlecare(p,data);
-      const block={
-        cursaId:c.id,ruta:c.ruta,pi,ora:p.ora,
-        vehiculNume:c.vehiculNume||'',
-        startMin,endMin,endTotal,durMin,statiiMin,
-        tipCursa:c.tipCursa||'dus',
-        isDusIntors:c.tipCursa==='dus-intors',
-        sfDefault:p.soferEmail||'',
-        sfList:sferi,
-        cursa:c,plecare:p
-      };
-
-      if(sferi.length===0){
-        nealocat.push(block);
+      const sMin=timeToMin(p.ora);
+      const dMin=sm||60;
+      const eMin=sMin+dMin;
+      const eTotal=c.tipCursa==='dus-intors'?eMin+PAUZA+dMin:eMin;
+      const aInfo=getSfPlecare(p,data);
+      const vehId=getVehPlecare(p,data,c.vehiculId);
+      const bd={cursaId:c.id,ruta:c.ruta,pi,ora:p.ora,
+        sMin,eMin,eTotal,dMin,sm,isDI:c.tipCursa==='dus-intors',
+        vehId,vehNume:c.vehiculNume||'',aInfo};
+      if(!aInfo.sfIds.length){
+        nealocat.push(bd);
       } else {
-        sferi.forEach(email=>{
-          if(!soferBlocks[email])soferBlocks[email]=[];
-          soferBlocks[email].push(block);
+        aInfo.sfIds.forEach(v=>{
+          const obj=resSf(v);if(!obj)return;
+          const k=obj.id||obj.email;
+          if(!sfBlocks.has(k))sfBlocks.set(k,[]);
+          sfBlocks.get(k).push(bd);
         });
       }
     });
-  }
-
-  // Sorteaza soferii dupa ore (cei cu mai putine ore primii)
-  const soferiOrdonati=soferi.filter(sf=>soferBlocks[sf.email]||true);
-
-  soferiOrdonati.forEach(sf=>{
-    const blocks=soferBlocks[sf.email]||[];
-    const ore=oreMap[sf.id||sf.email]||oreMap[sf.email]||{};
-    const hZi=(ore.minZi/60).toFixed(1);
-    const pctZi=Math.min(Math.round((ore.minZi||0)/9/60*100),100);
-    const colZi=pctZi>=100?'var(--red)':pctZi>=78?'var(--orange)':'var(--green)';
-    const sfNume=[sf.prenume,sf.nume].filter(Boolean).join(' ');
-
-    // Detecteaza suprapuneri
-    const sortedBlocks=[...blocks].sort((a,b)=>a.startMin-b.startMin);
-    const overlaps=new Set();
-    for(let i=0;i<sortedBlocks.length;i++){
-      for(let j=i+1;j<sortedBlocks.length;j++){
-        if(sortedBlocks[j].startMin<sortedBlocks[i].endTotal){
-          overlaps.add(sortedBlocks[i].cursaId+'_'+sortedBlocks[i].pi);
-          overlaps.add(sortedBlocks[j].cursaId+'_'+sortedBlocks[j].pi);
-        }
-      }
-    }
-
-    html+='<div class="tl-row">';
-    // Label
-    html+='<div class="tl-label">';
-    html+='<div class="tl-label-main">'+sfNume+'</div>';
-    html+='<div style="display:flex;align-items:center;gap:6px;margin-top:3px">';
-    html+='<div class="ore-bar-wrap"><div class="ore-bar" style="width:'+pctZi+'%;background:'+colZi+'"></div></div>';
-    html+='<span style="font-size:10px;color:'+colZi+';font-weight:600">'+hZi+'h</span>';
-    html+='</div>';
-    if(overlaps.size>0)html+='<div style="font-size:10px;color:var(--red);font-weight:700;margin-top:2px">⚠️ Suprapunere!</div>';
-    html+='</div>';
-    // Track
-    html+='<div class="tl-track" ondragover="tlDragOver(event)" ondragleave="tlDragLeave(event)" ondrop="tlDrop(event,this.dataset.date)" data-date="'+data+'">';
-    // Linie limita 9h
-    const limit9Min=Math.min(...blocks.map(b=>b.startMin))+(9*60);
-    if(blocks.length&&limit9Min<TL_END&&limit9Min>TL_START){
-      html+='<div class="tl-limit tl-limit-9" style="left:'+tlPct(limit9Min)+'" title="Limita 9h"></div>';
-    }
-    // Linie ora curenta
-    if(isToday&&nowMin!==null&&nowMin>=TL_START&&nowMin<=TL_END){
-      html+='<div class="tl-nowline" style="left:'+tlPct(nowMin)+'"></div>';
-    }
-    // Blocuri curse
-    blocks.forEach(b=>{
-      const key=b.cursaId+'_'+b.pi;
-      const isOver=pctZi>=100||overlaps.has(key);
-      const isNear=!isOver&&pctZi>=78;
-      const cls='tl-block type-dus'+(isOver?' warn-over':isNear?' warn-near':'');
-      html+='<div class="'+cls+'" '
-        +'draggable="true" '
-        +'data-cursaid="'+b.cursaId+'" data-pi="'+b.pi+'" data-data="'+data+'" data-startmin="'+b.startMin+'" data-durmin="'+b.durMin+'" '
-        +'style="cursor:grab;left:'+tlPct(b.startMin)+';width:'+tlWidth(b.startMin,b.isDusIntors?b.endTotal:b.endMin)+'" '
-        +'onclick="tlClickBlock(event,\''+b.cursaId+'\','+b.pi+',\''+data+'\')" '
-        +'title="'+b.ruta+' | '+b.ora+' — Trage pentru a schimba ora">'
-        +b.ruta.split('–')[0].trim()
-        +'</div>';
-      // Daca e dus-intors, afiseaza separat blocul de intors
-      if(b.isDusIntors){
-        const intorsStart=b.endMin+45;
-        html+='<div class="tl-block type-intors" '
-          +'style="left:'+tlPct(intorsStart)+';width:'+tlWidth(intorsStart,b.endTotal)+'" '
-          +'title="↩️ Retur '+b.ruta+'">'
-          +'↩️ '+b.ruta.split('–').pop().trim()
-          +'</div>';
-        // Pauza capat
-        html+='<div class="tl-block type-pauza" '
-          +'style="left:'+tlPct(b.endMin)+';width:'+tlWidth(b.endMin,intorsStart)+'" '
-          +'title="Pauză capăt 45min">'
-          +'☕ 45min'
-          +'</div>';
-      }
-    });
-
-    // Daca nu are curse azi
-    if(!blocks.length){
-      html+='<div style="position:absolute;top:50%;transform:translateY(-50%);left:10px;font-size:11px;color:var(--muted)">Liber azi</div>';
-    }
-
-    html+='</div></div>';  // end track + row
   });
 
-  // Rând nealocat
-  if(nealocat.length){
-    html+='<div class="tl-row" style="background:rgba(185,28,28,.03)">';
-    html+='<div class="tl-label"><div class="tl-label-main" style="color:var(--red)">⚠️ Nealocat</div><div class="tl-label-sub">Fără șofer</div></div>';
-    html+='<div class="tl-track" ondragover="tlDragOver(event)" ondragleave="tlDragLeave(event)" ondrop="tlDrop(event,this.dataset.date)" data-date="'+data+'">';
-    if(isToday&&nowMin!==null&&nowMin>=TL_START&&nowMin<=TL_END){
-      html+='<div class="tl-nowline" style="left:'+tlPct(nowMin)+'"></div>';
+  // Rands per sofer
+  soferi.forEach(sf=>{
+    const k=sf.id;
+    const blocks=sfBlocks.get(k)||[];
+    const o=oreMap[k]||{};
+    const pZ=Math.min(Math.round((o.minZi||0)/MAX_ZI*100),100);
+    const hZ=(o.minZi/60).toFixed(1);
+    const col=pZ>=100?'var(--red)':pZ>=78?'var(--orange)':'var(--green)';
+    const sfN=sf.numeFull||[sf.prenume,sf.nume].filter(Boolean).join(' ');
+
+    // Detecteaza suprapuneri
+    const sorted=[...blocks].sort((a,b)=>a.sMin-b.sMin);
+    const ov=new Set();
+    for(let i=0;i<sorted.length;i++)for(let j=i+1;j<sorted.length;j++)
+      if(sorted[j].sMin<sorted[i].eTotal){ov.add(sorted[i].cursaId+'_'+sorted[i].pi);ov.add(sorted[j].cursaId+'_'+sorted[j].pi);}
+
+    html+='<div class="tl-row">';
+    html+='<div class="tl-label">';
+    html+='<div class="tl-lname">'+sfN+'</div>';
+    html+='<div style="display:flex;align-items:center;gap:5px;margin-top:2px">';
+    html+='<div class="tl-ore-bar"><div class="tl-ore-fill" style="width:'+pZ+'%;background:'+col+'"></div></div>';
+    html+='<span style="font-size:10px;color:'+col+';font-weight:600">'+hZ+'h</span>';
+    html+='</div>';
+    if(ov.size)html+='<div style="font-size:9px;color:var(--red);font-weight:700">⚠️ Suprapunere</div>';
+    html+='</div>';
+
+    html+='<div class="tl-track" data-date="'+data+'" ondragover="tlDragOver(event)" ondragleave="tlDragLeave(event)" ondrop="tlDrop(event)">';
+    if(isToday&&nowMin>=TL_START&&nowMin<=TL_END)html+='<div class="tl-nowline" style="left:'+tlPct(nowMin)+'"></div>';
+    if(blocks.length){
+      const fl=Math.min(...blocks.map(b=>b.sMin));
+      const lim=fl+MAX_ZI;
+      if(lim>TL_START&&lim<TL_END)html+='<div class="tl-limit" style="left:'+tlPct(lim)+'" title="Limita 9h de la prima cursa"></div>';
     }
+
+    blocks.forEach(b=>{
+      const bk=b.cursaId+'_'+b.pi;
+      const isO=pZ>=100||ov.has(bk);
+      const isW=!isO&&pZ>=78;
+      const cls='tl-block '+(isO?'b-over':isW?'b-warn':'b-dus');
+      html+=mkBlock(cls,b.sMin,b.isDI?b.eTotal:b.eMin,b,data,b.ruta.split('–')[0].trim());
+      if(b.isDI){
+        html+=mkBlock('tl-block b-pauza',b.eMin,b.eMin+PAUZA,b,data,'☕');
+        html+=mkBlock('tl-block b-intors',b.eMin+PAUZA,b.eTotal,b,data,'↩ '+b.ruta.split('–').pop().trim());
+      }
+    });
+    if(!blocks.length)html+='<div style="position:absolute;top:50%;transform:translateY(-50%);left:8px;font-size:11px;color:var(--muted)">Liber azi</div>';
+    html+='</div></div>';
+  });
+
+  // ── Nealocat ──
+  if(nealocat.length){
+    html+='<div class="tl-section-hdr">⚠️ Neatribuite — click pentru atribuire</div>';
+    html+='<div class="tl-row tl-nealocat">';
+    html+='<div class="tl-label"><div class="tl-lname" style="color:var(--red)">Neatribuite</div><div class="tl-lsub">'+nealocat.length+' curse</div></div>';
+    html+='<div class="tl-track" data-date="'+data+'" ondragover="tlDragOver(event)" ondragleave="tlDragLeave(event)" ondrop="tlDrop(event)">';
+    if(isToday&&nowMin>=TL_START&&nowMin<=TL_END)html+='<div class="tl-nowline" style="left:'+tlPct(nowMin)+'"></div>';
     nealocat.forEach(b=>{
-      html+='<div class="tl-block unset" '
-        +'draggable="true" '
-        +'data-cursaid="'+b.cursaId+'" data-pi="'+b.pi+'" data-data="'+data+'" data-startmin="'+b.startMin+'" data-durmin="'+b.durMin+'" '
-        +'style="cursor:grab;left:'+tlPct(b.startMin)+';width:'+tlWidth(b.startMin,b.endTotal||b.endMin)+'" '
-        +'onclick="tlClickBlock(event,\''+b.cursaId+'\','+b.pi+',\''+data+'\')" '
-        +'title="'+b.ruta+' — Trage pentru a schimba ora sau click pentru atribuire">'
-        +'👆 '+b.ruta.split('–')[0].trim()
-        +'</div>';
+      html+=mkBlock('tl-block b-unset',b.sMin,b.eTotal||b.eMin,b,data,'👆 '+b.ruta.split('–')[0].trim());
     });
     html+='</div></div>';
   }
 
-  // Separatoare rânduri vehicule
+  // ── Autobuze ──
   if(window._F&&window._F.length){
-    html+='<div style="margin-top:20px">';
-    html+='<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:8px 0 6px;border-top:2px solid var(--border);margin-top:4px">🚌 Autobuze</div>';
-    // Timeline per autobus
+    html+='<div class="tl-section-hdr">🚌 Autobuze — verificare conflicte</div>';
     window._F.forEach(v=>{
-      const curseBus=curse.filter(c=>c.vehiculId===v.id);
+      const cB=curse.filter(c=>c.vehiculId===v.id||curse.some(cx=>cx.id===c.id&&getVehPlecare(cx.plecari&&cx.plecari[0]||{},data,cx.vehiculId)===v.id));
+      // Gasim cursele unde vehiculul e alocat (din alocareProg sau default)
+      const curseBus=curse.filter(c=>{
+        const pl=c.plecari||[{}];
+        return pl.some(p=>getVehPlecare(p,data,c.vehiculId)===v.id);
+      });
       if(!curseBus.length)return;
-
-      const blocksV=[];
+      const bV=[];
       curseBus.forEach(c=>{
-        const plecari=c.plecari||[{ora:c.ora}];
-        const statiiMin=c.statii&&c.statii.length>=2?c.statii[c.statii.length-1].minuteDeLaStart||0:60;
-        plecari.forEach((p,pi)=>{
+        const pl=c.plecari||[{ora:c.ora}];
+        const sm=c.statii&&c.statii.length>=2?(c.statii[c.statii.length-1].minuteDeLaStart||0):60;
+        pl.forEach((p,pi)=>{
           if(!p.ora)return;
-          const startMin=timeToMin(p.ora);
-          const durMin=statiiMin||60;
-          const endMin=startMin+durMin;
-          const endTotal=c.tipCursa==='dus-intors'?endMin+45+durMin:endMin;
-          const sferi=getSoferiPlecare(p,data);
-          blocksV.push({ruta:c.ruta,startMin,endMin,endTotal,durMin,isDusIntors:c.tipCursa==='dus-intors',sferi,cursaId:c.id,pi,ora:p.ora});
+          const sM=timeToMin(p.ora),dM=sm||60,eM=sM+dM;
+          const eT=c.tipCursa==='dus-intors'?eM+PAUZA+dM:eM;
+          const aInfo=getSfPlecare(p,data);
+          bV.push({ruta:c.ruta,sMin:sM,eMin:eM,eTotal:eT,sfIds:aInfo.sfIds,cursaId:c.id,pi,ora:p.ora});
         });
       });
+      const sV=[...bV].sort((a,b)=>a.sMin-b.sMin);
+      const cV=new Set();
+      for(let i=0;i<sV.length;i++)for(let j=i+1;j<sV.length;j++)
+        if(sV[j].sMin<sV[i].eTotal){cV.add(i);cV.add(j);}
 
-      // Detecteaza conflict pe autobuz (acelasi autobuz, doua curse suprapuse)
-      const sortV=[...blocksV].sort((a,b)=>a.startMin-b.startMin);
-      const conflicteV=new Set();
-      for(let i=0;i<sortV.length;i++)for(let j=i+1;j<sortV.length;j++)
-        if(sortV[j].startMin<sortV[i].endTotal){conflicteV.add(i);conflicteV.add(j);}
-
-      html+='<div class="tl-row tl-row-sub">';
-      html+='<div class="tl-label">';
-      html+='<div class="tl-label-main" style="font-size:12px">'+(v.icon||'🚌')+' '+v.nume+'</div>';
-      html+='<div class="tl-label-sub">'+(v.nrInmatr||'')+'</div>';
-      if(conflicteV.size>0)html+='<div style="font-size:10px;color:var(--red);font-weight:700">🚨 Conflict!</div>';
+      html+='<div class="tl-row tl-veh">';
+      html+='<div class="tl-label"><div class="tl-lname" style="font-size:11px">'+(v.icon||'🚌')+' '+v.nume+'</div>';
+      html+='<div class="tl-lsub">'+(v.nrInmatr||'')+'</div>';
+      if(cV.size)html+='<div style="font-size:9px;color:var(--red);font-weight:700">🚨 Conflict!</div>';
       html+='</div>';
-      html+='<div class="tl-track" ondragover="tlDragOver(event)" ondragleave="tlDragLeave(event)" ondrop="tlDrop(event,this.dataset.date)" data-date="'+data+'">';
-      if(isToday&&nowMin!==null&&nowMin>=TL_START&&nowMin<=TL_END)
-        html+='<div class="tl-nowline" style="left:'+tlPct(nowMin)+'"></div>';
-
-      blocksV.forEach((b,bi)=>{
-        const isConflict=conflicteV.has(bi);
-        const sfNume=b.sferi.length?b.sferi.map(e=>numeSofer(e).split(' ')[0]).join('+'):'?';
-        html+='<div class="tl-block'+(isConflict?' warn-over':' type-dus')+'" '
-          +'style="left:'+tlPct(b.startMin)+';width:'+tlWidth(b.startMin,b.endTotal)+'" '
-          +'onclick="tlClickBlock(event,\''+b.cursaId+'\','+b.pi+',\''+data+'\')" '
-          +'title="'+b.ruta+' '+b.ora+' | Șofer: '+sfNume+'">'
-          +b.ruta.split('–')[0].trim()+' ('+sfNume+')'
-          +'</div>';
+      html+='<div class="tl-track" data-date="'+data+'">';
+      if(isToday&&nowMin>=TL_START&&nowMin<=TL_END)html+='<div class="tl-nowline" style="left:'+tlPct(nowMin)+'"></div>';
+      bV.forEach((b,bi)=>{
+        const iC=cV.has(bi);
+        const sfN=b.sfIds.map(v2=>numeSofer(v2).split(' ')[0]).filter(Boolean).join('+');
+        html+=mkBlock('tl-block '+(iC?'b-veh-conflict':'b-veh'),b.sMin,b.eTotal,b,data,b.ruta.split('–')[0].trim()+(sfN?' ('+sfN+')':''));
       });
       html+='</div></div>';
     });
-    html+='</div>';
   }
 
-  html+='</div></div>'; // end tl-grid + tl-wrap
+  html+='</div></div>';
   el.innerHTML=html;
-  setTimeout(tlInitDrag,50);
+  setTimeout(tlInitDrag,30);
 }
 
-// ── CLICK PE BLOC — PANEL ATRIBUIRE ──────────────────────────
-let _tlOpenPanel=null;
-window.tlClickBlock=async(event,cursaId,pi,data)=>{
-  event.stopPropagation();
-  // Inchide orice panel deschis
-  if(_tlOpenPanel){_tlOpenPanel.remove();_tlOpenPanel=null;}
+function mkBlock(cls,sMin,eMin,b,data,label){
+  return '<div class="'+cls+'" draggable="true"'
+    +' data-cursaid="'+b.cursaId+'" data-pi="'+b.pi+'" data-data="'+data
+    +'" data-startmin="'+b.sMin+'" data-durmin="'+b.dMin+'"'
+    +' style="left:'+tlPct(sMin)+';width:'+tlW(sMin,eMin)+'"'
+    +' onclick="tlClickBlock(event,this.dataset.cursaid,this.dataset.pi,this.dataset.data)"'
+    +' title="'+b.ruta+' | '+b.ora+(b.isDI?' | Dus-Intors':'')+'">'+label+'</div>';
+}
 
-  const c=window._R.find(x=>x.id===cursaId);
-  if(!c)return;
-  const plecari=c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}];
-  const p=plecari[pi]||plecari[0];
-  const sfCurenti=getSoferiPlecare(p,data);
-  const sfDefault=p.soferEmail||'';
-
-  // Calculeaza ore pentru fiecare sofer pentru a afisa in dropdown
-  const sfSnap=await getDocs(collection(db,'soferi'));
-  const soferi=sfSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.activ!==false);
-  const zile7=getZileInterval(data,'saptamana');
-  const oreS={};
-  for(const sf of soferi){
-    const sfKey=sf.id||sf.email;
-    const min=await calcOreSofer(sfKey,zile7);
-    oreS[sfKey]=min;
-    oreS[sf.email]=min; // alias
-  }
-
-  const statiiMin=c.statii&&c.statii.length>=2?c.statii[c.statii.length-1].minuteDeLaStart||0:60;
-  const durMin=statiiMin||60;
-  const durText=Math.round(durMin/60*10)/10+'h';
-
-  // Construieste panel
-  const panel=document.createElement('div');
-  panel.className='assign-panel';
-  panel.style.cssText='position:fixed;z-index:9999;background:#fff;border:2px solid var(--gold);border-radius:14px;box-shadow:0 8px 32px rgba(28,23,19,.2);padding:16px;min-width:260px;max-width:320px';
-
-  // Pozitioneaza langa click
-  const rect=event.target.getBoundingClientRect();
-  let top=rect.bottom+8;let left=rect.left;
-  if(top+300>window.innerHeight)top=rect.top-310;
-  if(left+320>window.innerWidth)left=window.innerWidth-330;
-  panel.style.top=top+'px';
-  panel.style.left=left+'px';
-
-  const sfOpts=(slot)=>'<option value="">— Fără șofer —</option>'
-    +soferi.map(sf=>{
-      const oreKey=sf.id||sf.email;
-      const ore=oreS[oreKey]||oreS[sf.email]||0;
-      const h=(ore/60).toFixed(1);
-      const pct=Math.round(ore/56/60*100);
-      const warn=pct>=90?'⚠️ ':pct>=70?'○ ':'● ';
-      const col=pct>=90?'color:#b91c1c':pct>=70?'color:#c2550f':'color:#15803d';
-      const curVal=sfCurenti[slot]||'';
-      const sel=(curVal===sf.id)||(curVal===sf.email)||(slot===0&&!curVal&&(sfDefault===sf.id||sfDefault===sf.email));
-      return '<option value="'+sf.id+'" '+(sel?'selected':'')+' style="'+col+'">'
-        +warn+[sf.prenume,sf.nume].filter(Boolean).join(' ')+' ('+h+'h/56h)</option>';
-    }).join('');
-
-  panel.innerHTML='<div style="font-weight:700;font-size:14px;margin-bottom:2px">🚌 '+c.ruta+'</div>'
-    +'<div style="font-size:12px;color:var(--muted);margin-bottom:12px">'+p.ora+' · '+durText+(c.tipCursa==='dus-intors'?' · Dus-Întors':'')+'</div>'
-    +'<div style="margin-bottom:10px">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:5px">👨‍✈️ Șofer 1 (principal)</div>'
-      +'<select id="tl-sf1" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:#fff">'+sfOpts(0)+'</select>'
-    +'</div>'
-    +'<div style="margin-bottom:12px">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:5px">👨‍✈️ Șofer 2 (co-pilot / opțional)</div>'
-      +'<select id="tl-sf2" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:#fff">'+sfOpts(1)+'</select>'
-    +'</div>'
-    +'<div style="background:var(--bg3);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--muted);margin-bottom:12px">'
-      +'ℹ️ Atribuirea e valabilă <strong>doar pentru '+data+'</strong>.<br>Șoferul default rămâne neschimbat pentru celelalte zile.'
-    +'</div>'
-    +'<div style="display:flex;gap:8px">'
-      +'<button class="btn bp" style="flex:1;font-size:13px" onclick="tlSaveAssign(\''+cursaId+'\','+pi+',\''+data+'\')">💾 Salvează</button>'
-      +'<button class="btn bs bsm" onclick="this.closest(\'.assign-panel\').remove();window._tlOpenPanel=null">✕</button>'
-    +'</div>';
-
-  document.body.appendChild(panel);
-  _tlOpenPanel=panel;
-
-  // Inchide la click in afara
-  setTimeout(()=>{
-    document.addEventListener('click',function handler(e){
-      if(!panel.contains(e.target)){panel.remove();_tlOpenPanel=null;document.removeEventListener('click',handler);}
-    });
-  },100);
-};
-
-window.tlSaveAssign=async(cursaId,pi,data)=>{
-  const sf1=document.getElementById('tl-sf1')?.value||'';
-  const sf2=document.getElementById('tl-sf2')?.value||'';
-  if(_tlOpenPanel){_tlOpenPanel.remove();_tlOpenPanel=null;}
-  await salveazaExceptieSofer(cursaId,pi,data,'s1',sf1);
-  if(sf2)await salveazaExceptieSofer(cursaId,pi,data,'s2',sf2);
-  else await salveazaExceptieSofer(cursaId,pi,data,'s2','');
-};
-
-// ── DRAG & DROP TIMELINE ──────────────────────────────────────
+// ── DRAG & DROP ────────────────────────────────────────────────
 let _tlDrag=null;
 
 window.tlInitDrag=()=>{
   document.querySelectorAll('.tl-block[draggable]').forEach(el=>{
     el.addEventListener('dragstart',e=>{
-      const cursaId=el.dataset.cursaid;
-      const pi=parseInt(el.dataset.pi)||0;
-      const data=el.dataset.data;
-      const startMin=parseInt(el.dataset.startmin)||0;
-      const durMin=parseInt(el.dataset.durmin)||60;
+      const sMin=parseInt(el.dataset.startmin)||0;
       const track=el.closest('.tl-track');
-      const trackRect=track?track.getBoundingClientRect():{left:0,width:1};
-      const clickMin=TL_START+((e.clientX-trackRect.left)/trackRect.width)*TL_SPAN;
-      const offsetMin=Math.round(clickMin-startMin);
-      _tlDrag={cursaId,pi,data,startMin,durMin,offsetMin};
+      const tR=track?track.getBoundingClientRect():{left:0,width:1};
+      const cMin=TL_START+((e.clientX-tR.left)/tR.width)*TL_SPAN;
+      _tlDrag={
+        cursaId:el.dataset.cursaid,pi:parseInt(el.dataset.pi)||0,
+        data:el.dataset.data,sMin,dMin:parseInt(el.dataset.durmin)||60,
+        offset:Math.round(cMin-sMin)
+      };
       el.classList.add('dragging');
       e.dataTransfer.effectAllowed='move';
-      e.dataTransfer.setData('text/plain',cursaId);
+      e.dataTransfer.setData('text/plain',el.dataset.cursaid);
     });
-    el.addEventListener('dragend',()=>{el.classList.remove('dragging');});
+    el.addEventListener('dragend',()=>el.classList.remove('dragging'));
   });
 };
-
 window.tlDragOver=(e)=>{
-  e.preventDefault();
-  e.dataTransfer.dropEffect='move';
-  // Afiseaza preview linie de timp
-  const track=e.currentTarget;
-  const trackRect=track.getBoundingClientRect();
-  const pct=(e.clientX-trackRect.left)/trackRect.width;
-  let newMin=Math.round(TL_START+pct*TL_SPAN-(_tlDrag?_tlDrag.offsetMin:0));
-  newMin=Math.round(newMin/5)*5;
-  newMin=Math.max(4*60,Math.min(23*60+55,newMin));
-  // Update preview line
-  let preview=track.querySelector('.tl-drag-preview');
-  if(!preview){
-    preview=document.createElement('div');
-    preview.className='tl-drag-preview';
-    preview.style.cssText='position:absolute;top:0;bottom:0;width:2px;background:var(--gold);z-index:20;pointer-events:none';
-    track.appendChild(preview);
-  }
-  preview.style.left=tlPct(newMin);
-  // Arata ora in preview
-  preview.title=minToTime(newMin);
-};
-
-window.tlDragLeave=(e)=>{
-  const preview=e.currentTarget.querySelector('.tl-drag-preview');
-  if(preview)preview.remove();
-};
-
-window.tlDrop=async(e,data)=>{
-  e.preventDefault();
-  const track=e.currentTarget;
-  if(!data)data=track.dataset.date||'';
-  const preview=track.querySelector('.tl-drag-preview');
-  if(preview)preview.remove();
+  e.preventDefault();e.dataTransfer.dropEffect='move';
   if(!_tlDrag)return;
-  const trackRect=track.getBoundingClientRect();
-  let newStartMin=Math.round(TL_START+((e.clientX-trackRect.left)/trackRect.width)*TL_SPAN-_tlDrag.offsetMin);
-  newStartMin=Math.round(newStartMin/5)*5;
-  newStartMin=Math.max(4*60,Math.min(23*60+55,newStartMin));
-  const novaOra=minToTime(newStartMin);
-  const {cursaId,pi,startMin}=_tlDrag;
-  _tlDrag=null;
-  if(novaOra===minToTime(startMin)){return;} // nu s-a schimbat
-  toast('⏱️ Se mută la '+novaOra+'...','in');
-  await tlSchimbaOra(cursaId,pi,data,novaOra);
+  const track=e.currentTarget;
+  const tR=track.getBoundingClientRect();
+  let nMin=Math.round(TL_START+((e.clientX-tR.left)/tR.width)*TL_SPAN-_tlDrag.offset);
+  nMin=Math.round(nMin/5)*5;nMin=Math.max(4*60,Math.min(23*60,nMin));
+  let prev=track.querySelector('.tl-drag-preview');
+  if(!prev){prev=document.createElement('div');prev.className='tl-drag-preview';track.appendChild(prev);}
+  prev.style.left=tlPct(nMin);prev.title=minToTime(nMin);
 };
-
-async function tlSchimbaOra(cursaId,pi,data,novaOra){
-  const c=window._R.find(x=>x.id===cursaId);
-  if(!c){toast('Cursa nu a fost găsită','er');return;}
-  const plecari=JSON.parse(JSON.stringify(c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}]));
-  const vecheaOra=plecari[pi]?.ora||c.ora||'?';
+window.tlDragLeave=(e)=>{
+  e.currentTarget.querySelector('.tl-drag-preview')?.remove();
+};
+window.tlDrop=async(e)=>{
+  e.preventDefault();
+  const track=e.currentTarget;
+  track.querySelector('.tl-drag-preview')?.remove();
+  if(!_tlDrag)return;
+  const data=track.dataset.date||_tlDrag.data;
+  const tR=track.getBoundingClientRect();
+  let nMin=Math.round(TL_START+((e.clientX-tR.left)/tR.width)*TL_SPAN-_tlDrag.offset);
+  nMin=Math.round(nMin/5)*5;nMin=Math.max(4*60,Math.min(23*60,nMin));
+  const novaOra=minToTime(nMin);
+  const{cursaId,pi,sMin}=_tlDrag;_tlDrag=null;
+  if(novaOra===minToTime(sMin))return;
+  toast('⏱️ Ora → '+novaOra+'...','in');
+  const c=window._R.find(x=>x.id===cursaId);if(!c)return;
+  const plecari=JSON.parse(JSON.stringify(c.plecari||[{ora:c.ora}]));
+  const vecheaOra=plecari[pi]?.ora||'?';
   plecari[pi].ora=novaOra;
-  const upd={plecari};
-  if(pi===0)upd.ora=novaOra;
-  await setDoc(doc(db,'curse_regulate',cursaId),upd,{merge:true});
+  await setDoc(doc(db,'curse_regulate',cursaId),{plecari,...(pi===0?{ora:novaOra}:{})},{merge:true});
   const idx=window._R.findIndex(x=>x.id===cursaId);
   if(idx>-1){window._R[idx].plecari=plecari;if(pi===0)window._R[idx].ora=novaOra;}
   toast('✅ '+c.ruta+': '+vecheaOra+' → '+novaOra,'ok');
   loadProgramSoferi();
-  if(document.getElementById('tab-regulate')?.classList.contains('on'))loadRT();
-}
-
-
-// Backward compat
-window.atribuieSoferMulti=async(el)=>{
-  const cursaId=el.dataset.cursaid;
-  const pi=parseInt(el.dataset.pi)||0;
-  const soferIdx=parseInt(el.dataset.soferidx)||0;
-  const sfIdOrEmail=el.value; // poate fi ID sau email
-  const data=el.dataset.data;
-  if(!cursaId||!data)return;
-  await salveazaExceptieSofer(cursaId,pi,data,soferIdx===0?'s1':'s2',sfIdOrEmail);
-};
-window.atribuieSoferEl=async(el)=>{
-  await window.atribuieSoferMulti(el);
-};
-window.atribuieSofer=async(cursaId,plecareIdx,sfIdOrEmail,data)=>{
-  // Rezolva ID vs email
-  const sfObj=window._soferiById&&window._soferiById[sfIdOrEmail];
-  const sfByEmail=window._soferiByEmail&&window._soferiByEmail[sfIdOrEmail];
-  const sfId=sfObj?sfIdOrEmail:(sfByEmail?sfByEmail.id:'');
-  const sfEmail=sfObj?sfObj.email:(sfByEmail?sfIdOrEmail:sfIdOrEmail);
-  if(data)await salveazaExceptieSofer(cursaId,plecareIdx,data,'s1',sfId||sfEmail);
-  else{
-    const c=window._R.find(x=>x.id===cursaId);if(!c)return;
-    const plecari=JSON.parse(JSON.stringify(c.plecari||[{ora:c.ora,soferEmail:c.soferEmail}]));
-    plecari[plecareIdx]={...plecari[plecareIdx],soferId:sfId||null,soferEmail:sfEmail||null};
-    await setDoc(doc(db,'curse_regulate',cursaId),{plecari,soferId:plecari[0]?.soferId||null,soferEmail:plecari[0]?.soferEmail||null},{merge:true});
-    const idx=window._R.findIndex(x=>x.id===cursaId);
-    if(idx>-1){window._R[idx].plecari=plecari;window._R[idx].soferEmail=sfEmail||null;window._R[idx].soferId=sfId||null;}
-    toast('Șofer default actualizat: '+numeSofer(sfId||sfEmail),'ok');
-  }
 };
 
+// ── PANEL ATRIBUIRE (click pe bloc) ───────────────────────────
+let _tlPanel=null;
 
-// ── RASPUNSURI PRESTABILITE ───────────────────────────────
-const QUICK_REPLIES=[
-  {label:'Sofer atribuit',fn:(r)=>{
-    const sf=r.soferEmail?numeSofer(r.soferEmail):'TBD';
-    const pl=r.plecari?.[0]||{ora:r.ora};
-    return 'Bună ziua! Șoferul atribuit cursei dvs. este '+sf+'. Plecarea este programată la ora '+( pl.ora||r.ora||'TBD')+'. Vă rugăm să fiți la locul de îmbarcare cu 10 minute înainte.';
-  }},
-  {label:'Ora estimată sosire',fn:(r)=>{
-    const statii=r.statii||[];const ultima=statii[statii.length-1];
-    if(ultima?.minuteDeLaStart&&r.ora){
-      return 'Ora estimată de sosire la '+ultima.nume+' este aproximativ '+calcArrival(r.ora,ultima.minuteDeLaStart)+'. Orele pot varia ușor în funcție de trafic.';
-    }
-    return 'Vă vom comunica ora estimată de sosire cât mai curând. Vă mulțumim pentru răbdare!';
-  }},
-  {label:'Alternative disponibile',fn:(r)=>{
-    const curse=window._R.filter(c=>c.activa&&c.id!==r.cursaId);
-    if(!curse.length)return 'Momentan nu avem alte curse disponibile pe această rută. Vă vom contacta imediat ce apare o disponibilitate.';
-    const alt=curse.slice(0,2).map(c=>{const pl=c.plecari?.[0]||{ora:c.ora};return c.ruta+' la ora '+pl.ora;}).join(', ');
-    return 'Alte disponibilități: '+alt+'. Suntem disponibili și pentru curse organizate special pentru dvs. Contactați-ne pentru detalii.';
-  }},
-  {label:'Vehicul disponibil',fn:(r)=>{
-    const v=window._F.find(x=>x.id===r.vehiculId);
-    if(v)return 'Vehiculul alocat este '+v.nume+' ('+v.nrInmatr+'), cu '+(v.capacitate||cap(v))+' locuri. Dotări: '+(v.dotari||[]).join(', ')+'.';
-    return 'Vehiculul va fi confirmat în scurt timp. Vă vom anunța detaliile.';
-  }},
-  {label:'Confirmare ofertă',fn:(r)=>{
-    if(r.pretFinal)return 'Oferta noastră pentru cursa solicitată este de '+r.pretFinal+' RON (TVA inclus). Oferta este valabilă 48 de ore. Confirmați prin apăsarea butonului "Accept oferta" sau contactați-ne telefonic.';
-    return 'Analizăm cererea dvs. și vă vom transmite oferta în cel mai scurt timp. Mulțumim pentru încredere!';
-  }},
-];
+window.tlClickBlock=async(event,cursaId,piStr,data)=>{
+  event.stopPropagation();
+  const pi=parseInt(piStr)||0;
+  if(_tlPanel){_tlPanel.remove();_tlPanel=null;}
+  const c=window._R.find(x=>x.id===cursaId);if(!c)return;
+  const plecari=c.plecari||[{ora:c.ora}];
+  const p=plecari[pi]||plecari[0];
+  const aInfo=getSfPlecare(p,data);
+  const vehActual=getVehPlecare(p,data,c.vehiculId);
 
-function renderQuickReplies(r){
-  const el=document.getElementById('quick-replies');if(!el)return;
-  el.innerHTML=QUICK_REPLIES.map((qr,i)=>
-    `<button class="btn bs bsm" onclick="applyQR(${i})" style="font-size:11px">${qr.label}</button>`
-  ).join('');
-  window._currentRezForQR=r;
-}
-window.applyQR=(i)=>{
-  const r=window._currentRezForQR;if(!r)return;
-  const text=QUICK_REPLIES[i].fn(r);
-  const ta=document.getElementById('admmsg');
-  if(ta)ta.value=text;
-};
-
-// ── SOFER PREF in organizate ──────────────────────────────
-async function loadSoferiPref(){
-  const sel=document.getElementById('org-sofer-pref');if(!sel)return;
-  try{
-    const snap=await getDocs(collection(db,'soferi'));
-    sel.innerHTML='<option value="">— fără preferință —</option>'
-      +snap.docs.filter(d=>d.data().activ!==false).map(d=>{
-        const s=d.data();
-        return '<option value="'+s.email+'">'+(s.prenume||'')+' '+(s.nume||'')+'</option>';
-      }).join('');
-  }catch(e){}
-}
-
-
-// ══════════════════════════════════════════════════════════
-// OPENROUTESERVICE — geocodare + distanta/timp
-// ══════════════════════════════════════════════════════════
-
-// Cache geocodare pentru a nu repeta cereri
-const _geoCache = {};
-
-async function geocodeORS(localitate) {
-  const key = localitate.trim().toLowerCase();
-  if (_geoCache[key]) return _geoCache[key];
-  try {
-    const resp = await fetch(
-      `https://api.openrouteservice.org/geocode/search?api_key=${ORS_KEY}&text=${encodeURIComponent(localitate + ', Romania')}&boundary.country=RO&size=1`,
-      {headers: {'Accept': 'application/json'}}
-    );
-    const data = await resp.json();
-    if (data.features && data.features.length > 0) {
-      const [lng, lat] = data.features[0].geometry.coordinates;
-      _geoCache[key] = {lat, lng, label: data.features[0].properties.label};
-      return _geoCache[key];
-    }
-    return null;
-  } catch(e) {
-    console.warn('Geocodare eroare:', e);
-    return null;
+  // Incarca soferi si calculeaza ore
+  const sfSnap=await getDocs(collection(db,'soferi'));
+  _buildSoferiCache(sfSnap);
+  const soferi=sfSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.activ!==false);
+  const zile7=getZileInterval(data,'saptamana');
+  const oreS={};
+  for(const sf of soferi){
+    oreS[sf.id]=await calcOreSofer(sf.id,[data]);
   }
-}
 
-async function calcDistantaORS(plecare, destinatie) {
-  try {
-    const [from, to] = await Promise.all([geocodeORS(plecare), geocodeORS(destinatie)]);
-    if (!from || !to) return null;
-    const resp = await fetch(
-      'https://api.openrouteservice.org/v2/directions/driving-car',
-      {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'Authorization': ORS_KEY},
-        body: JSON.stringify({
-          coordinates: [[from.lng, from.lat], [to.lng, to.lat]],
-          units: 'km'
-        })
-      }
-    );
-    const data = await resp.json();
-    if (data.routes && data.routes[0]) {
-      const seg = data.routes[0].summary;
-      const km = Math.round(seg.distance);
-      const minDus = Math.round(seg.duration / 60);
-      // Adauga 20% pentru opriri/trafic pe drum national
-      const minReal = Math.round(minDus * 1.2);
-      return {km, minDus, minReal, durataText: minToTime2(minReal)};
-    }
-    return null;
-  } catch(e) {
-    console.warn('ORS eroare:', e);
-    return null;
-  }
-}
+  const sm=c.statii&&c.statii.length>=2?(c.statii[c.statii.length-1].minuteDeLaStart||0):60;
+  const durMin=sm||60;
+  const durText=(durMin/60).toFixed(1)+'h';
 
-function minToTime2(min) {
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return h > 0 ? `${h}h ${m}min` : `${m}min`;
-}
-
-// Calcul complet dus-intors cu pauze legale
-async function calcDusIntorsORS(plecare, destinatie, oraP) {
-  const dist = await calcDistantaORS(plecare, destinatie);
-  if (!dist) return null;
-  const prog = calcProgram(oraP, dist.km);
-  return {...dist, ...prog, kmDus: dist.km, kmTotal: dist.km * 2};
-}
-
-// ══════════════════════════════════════════════════════════
-// PWA — Service Worker + Push Notifications (FCM)
-// ══════════════════════════════════════════════════════════
-
-// Inregistrare Service Worker
-let _pwaInstallPrompt = null;
-
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  _pwaInstallPrompt = e;
-  showPWAInstallBtn();
-});
-
-window.addEventListener('appinstalled', () => {
-  const btn = document.getElementById('pwa-install-btn');
-  if (btn) btn.style.display = 'none';
-  toast('✅ Aplicația a fost instalată!', 'ok');
-});
-
-function showPWAInstallBtn() {
-  if (_pwaInstallPrompt) {
-    const btn = document.getElementById('pwa-install-btn');
-    if (btn) btn.style.display = 'block';
-  }
-}
-
-window.installPWA = async () => {
-  if (!_pwaInstallPrompt) {
-    toast('Deschide site-ul în Chrome/Safari și folosește "Adaugă pe ecran principal"', 'in');
-    return;
-  }
-  _pwaInstallPrompt.prompt();
-  const result = await _pwaInstallPrompt.userChoice;
-  if (result.outcome === 'accepted') {
-    _pwaInstallPrompt = null;
-    const btn = document.getElementById('pwa-install-btn');
-    if (btn) btn.style.display = 'none';
-  }
-};
-
-async function registerSW() {
-  if (!('serviceWorker' in navigator)) return;
-  try {
-    // Service worker inline ca blob
-    const swCode = `
-self.addEventListener('push', e => {
-  const data = e.data ? e.data.json() : {};
-  self.registration.showNotification(data.title || 'LSD Group SRL', {
-    body: data.body || 'Ai o notificare noua',
-    icon: 'https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=LSD-Group',
-    badge: 'https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=LSD-Group',
-    data: data,
-    vibrate: [200, 100, 200],
-    tag: data.tag || 'lsd-notif',
-    renotify: true
-  });
-});
-self.addEventListener('notificationclick', e => {
-  e.notification.close();
-  e.waitUntil(clients.openWindow(e.notification.data.url || '/'));
-});
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-    `.trim();
-    const blob = new Blob([swCode], {type: 'application/javascript'});
-    const swUrl = URL.createObjectURL(blob);
-    const reg = await navigator.serviceWorker.register(swUrl, {scope: '/'});
-    window._swReg = reg;
-    console.log('SW registered');
-    return reg;
-  } catch(e) {
-    console.warn('SW error:', e);
-  }
-}
-
-// Cerere permisiune push si salvare token
-async function requestPushPermission() {
-  if (!('Notification' in window)) {
-    toast('Browser-ul nu suporta notificari push', 'wr');
-    return false;
-  }
-  const perm = await Notification.requestPermission();
-  if (perm !== 'granted') {
-    toast('Notificarile au fost refuzate', 'wr');
-    return false;
-  }
-  // Salveaza preferinta in localStorage
-  localStorage.setItem('push_accepted', '1');
-  localStorage.setItem('push_accepted_at', Date.now().toString());
-  toast('✅ Notificarile au fost activate!', 'ok');
-  // Salveaza in Firestore daca e autentificat
-  const u = window._U;
-  if (u) {
-    try {
-      await setDoc(doc(db, 'users', u.uid), {
-        pushEnabled: true,
-        pushAcceptedAt: serverTimestamp()
-      }, {merge: true});
-    } catch(e) {}
-  }
-  return true;
-}
-
-// Trimite notificare push locala (pentru demo/test fara server)
-async function sendLocalNotification(title, body, url='') {
-  if (Notification.permission !== 'granted') return;
-  if (window._swReg) {
-    window._swReg.showNotification(title, {
-      body,
-      icon: 'https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=LSD-Group',
-      vibrate: [200, 100, 200],
-      data: {url}
+  // Construieste dropdown soferi cu ore afisate
+  const sfOpt=(slot)=>{
+    const curVal=aInfo.sfIds[slot]||'';
+    const curObj=curVal?resSf(curVal):null;
+    let opts='<option value="">— Fără șofer —</option>';
+    soferi.forEach(sf=>{
+      const minZi=oreS[sf.id]||0;
+      const minDupaAdaugare=minZi+durMin*(c.tipCursa==='dus-intors'?2:1);
+      const depaseste=minDupaAdaugare>MAX_ZI;
+      const aproape=!depaseste&&minZi+durMin>MAX_ZI*0.78;
+      const h=(minZi/60).toFixed(1);
+      const icon=depaseste?'⚠️':aproape?'○':'●';
+      const col=depaseste?'color:#b91c1c':aproape?'color:#c2550f':'color:#15803d';
+      const sel=(curObj&&(curObj.id===sf.id||curObj.email===sf.email))?'selected':'';
+      opts+='<option value="'+sf.id+'" '+sel+' style="'+col+'">'+icon+' '+[sf.prenume,sf.nume].filter(Boolean).join(' ')+'  ('+h+'h azi)</option>';
     });
-  } else {
-    new Notification(title, {body});
-  }
-}
-
-// Prompt periodic pentru notificari (la fiecare 3 zile)
-function checkPushPrompt() {
-  if (localStorage.getItem('push_accepted')) return;
-  const lastPrompt = parseInt(localStorage.getItem('push_prompt_at') || '0');
-  const threeDays = 3 * 24 * 60 * 60 * 1000;
-  if (Date.now() - lastPrompt < threeDays) return;
-  // Arata banner dupa 30 secunde de la deschidere
-  setTimeout(() => {
-    if (localStorage.getItem('push_accepted')) return;
-    showPushBanner();
-    localStorage.setItem('push_prompt_at', Date.now().toString());
-  }, 30000);
-}
-
-function showPushBanner() {
-  const existing = document.getElementById('push-banner');
-  if (existing) return;
-  const banner = document.createElement('div');
-  banner.id = 'push-banner';
-  banner.style.cssText = 'position:fixed;bottom:80px;left:16px;right:16px;max-width:420px;margin:0 auto;background:#fff;border:1.5px solid var(--gold);border-radius:14px;padding:16px;z-index:4000;box-shadow:0 8px 32px rgba(28,23,19,.15);animation:tIn .3s ease';
-  banner.innerHTML = `
-    <div style="display:flex;gap:12px;align-items:flex-start">
-      <div style="font-size:28px;flex-shrink:0">🔔</div>
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:14px;margin-bottom:4px">Vreți să primiți notificări?</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
-          Fiți la curent cu statusul curselor, întârzieri și actualizări importante de la LSD Group SRL.
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn bp bsm" onclick="acceptPushBanner()">🔔 Da, activează</button>
-          <button class="btn bs bsm" onclick="dismissPushBanner()">Nu acum</button>
-        </div>
-      </div>
-      <button onclick="dismissPushBanner()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;flex-shrink:0">✕</button>
-    </div>`;
-  document.body.appendChild(banner);
-}
-
-window.acceptPushBanner = async () => {
-  document.getElementById('push-banner')?.remove();
-  await requestPushPermission();
-};
-window.dismissPushBanner = () => {
-  document.getElementById('push-banner')?.remove();
-  localStorage.setItem('push_prompt_at', Date.now().toString());
-};
-
-// ══════════════════════════════════════════════════════════
-// NOTIFICARI ADMIN — trimite catre clienti
-// ══════════════════════════════════════════════════════════
-
-// Template-uri notificari
-const NOTIF_TEMPLATES = [
-  {label: 'Cursa întârzie', fn: (r) => ({
-    title: '⚠️ Actualizare cursă LSD Group',
-    body: `Cursa ${r.ruta||r.traseu} din ${r.data} întârzie. Vă rugăm să verificați detaliile.`
-  })},
-  {label: 'Șofer atribuit', fn: (r) => ({
-    title: '✅ Șofer confirmat — LSD Group',
-    body: `Șoferul dvs. pentru cursa ${r.ruta} din ${r.data} a fost confirmat: ${numeSofer(r.soferEmail)||'TBD'}.`
-  })},
-  {label: 'Rezervare confirmată', fn: (r) => ({
-    title: '🎟️ Rezervare confirmată — LSD Group',
-    body: `Rezervarea ta pentru ${r.ruta} din ${r.data} ora ${r.ora} a fost confirmată!`
-  })},
-  {label: 'Reminder cursă mâine', fn: (r) => ({
-    title: '📅 Mâine ai cursă — LSD Group',
-    body: `Nu uita! Mâine, ${r.data}, ora ${r.ora}, cursa ${r.ruta}. Fii la îmbarcare cu 10 minute înainte.`
-  })},
-  {label: 'Ofertă trimisă', fn: (r) => ({
-    title: '📩 Ofertă nouă de la LSD Group',
-    body: `Ai primit o ofertă pentru cererea ta de cursă organizată. Verifică detaliile în contul tău.`
-  })},
-];
-
-// Trimite notificare locala catre utilizatorul curent
-// (in productie s-ar folosi FCM server key + backend)
-window.trimiteNotifAdmin = async (rezId, templateIdx) => {
-  const ref = await getDoc(doc(db, 'rezervari', rezId));
-  if (!ref.exists()) return;
-  const r = ref.data();
-  const tmpl = NOTIF_TEMPLATES[templateIdx];
-  if (!tmpl) return;
-  const {title, body} = tmpl.fn(r);
-  // Salveaza notificarea in Firestore pentru clientul cu cont
-  if (r.uid) {
-    try {
-      await addDoc(collection(db, 'notificari'), {
-        uid: r.uid,
-        title,
-        body,
-        rezId,
-        citita: false,
-        createdAt: serverTimestamp()
-      });
-    } catch(e) {}
-  }
-  // Trimite si email
-  await sendEjsClient({
-    to_email: r.email,
-    nume: r.numeClient,
-    subiect: title,
-    mesaj: body,
-    bilet_id: r.biletId||'',
-    ruta: r.ruta||r.traseu||'',
-    data: r.data||'',
-    ora: r.ora||'',
-    status: r.status||''
-  });
-  toast('Notificare trimisă: ' + title, 'ok');
-};
-
-// Auto-notificare la schimbare status
-async function autoNotifStatus(r, newStatus) {
-  const msgs = {
-    'confirmata': {title:'✅ Rezervare confirmată', body:`Rezervarea ta pentru ${r.ruta} din ${r.data} a fost confirmată!`},
-    'oferta_trimisa': {title:'📩 Ofertă nouă', body:`Ai primit o ofertă pentru cererea ta. Verifică detaliile.`},
-    'anulata': {title:'❌ Rezervare anulată', body:`Rezervarea pentru ${r.ruta} din ${r.data} a fost anulată.`}
+    return opts;
   };
-  const n = msgs[newStatus];
-  if (!n) return;
-  await sendLocalNotification(n.title, n.body);
-}
 
-
-// ── PLATA ─────────────────────────────────────────────────
-let _plataMod = 'sofer'; // 'sofer' sau 'online'
-
-window.selectPlata = (mod) => {
-  _plataMod = mod;
-  const optSofer = document.getElementById('opt-sofer');
-  const optOnline = document.getElementById('opt-online');
-  if (optSofer) optSofer.style.borderColor = mod === 'sofer' ? 'var(--gold)' : 'var(--border)';
-  if (optOnline) optOnline.style.borderColor = mod === 'online' ? 'var(--gold)' : 'var(--border)';
-};
-
-window.confirmaPlata = async () => {
-  const rezervari = window._pendingRezervari;
-  if (!rezervari || !rezervari.length) return;
-  // Ataseaza statusPlata
-  rezervari.forEach(r => {
-    r.statusPlata = _plataMod === 'online' ? 'platit_online' : 'de_platit_sofer';
-    r.plataMod = _plataMod;
+  // Vehiule dropdown
+  let vehOpts='<option value="">— Fără schimbare vehicul —</option>';
+  (window._F||[]).forEach(v=>{
+    const sel=vehActual===v.id?'selected':'';
+    vehOpts+='<option value="'+v.id+'" '+sel+'>'+(v.icon||'🚌')+' '+v.nume+' ('+v.nrInmatr+')</option>';
   });
-  cm('plata');
-  try {
-    const refs = await Promise.all(rezervari.map(r => addDoc(collection(db,'rezervari'), r)));
-    refs.forEach((ref, i) => { rezervari[i].id = ref.id; });
-    // Email client regulate
-    sendEjsClient({
-      to_email: rezervari[0].email,
-      nume: rezervari[0].numeClient,
-      subiect: 'Confirmare rezervare — LSD Group SRL',
-      mesaj: 'Rezervarea ta a fost confirmată! '
-        + rezervari.length + (rezervari.length > 1 ? ' bilete' : ' bilet')
-        + ' pentru ' + rezervari[0].ruta + ' pe data de ' + rezervari[0].data + '.'
-        + (_plataMod === 'sofer' ? ' Plata: Cash la sofer.' : ' Plata online confirmata.'),
-      bilet_id: rezervari.map(r => r.biletId).join(', '),
-      ruta: rezervari[0].ruta,
-      data: rezervari[0].data,
-      ora: rezervari[0].ora,
-      status: 'Confirmată · Plată: ' + (_plataMod === 'sofer' ? 'La șofer' : 'Online')
+
+  const panel=document.createElement('div');
+  panel.className='assign-panel';
+  const rect=event.target.getBoundingClientRect();
+  let top=rect.bottom+8,left=rect.left;
+  if(top+360>window.innerHeight)top=Math.max(10,rect.top-370);
+  if(left+310>window.innerWidth)left=window.innerWidth-315;
+  panel.style.cssText='top:'+top+'px;left:'+left+'px';
+
+  panel.innerHTML=
+    '<div style="font-weight:700;font-size:14px;margin-bottom:2px">'+c.ruta+'</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:12px">'+p.ora+' · '+durText+(c.tipCursa==='dus-intors'?' · Dus-Întors':'')+' · '+data+'</div>'
+
+    +'<div class="assign-sf-row">'
+    +'<div class="assign-sf-dot" style="background:var(--gold)"></div>'
+    +'<select id="asgn-s1" class="assign-sf-select">'+sfOpt(0)+'</select>'
+    +'</div>'
+    +'<div class="assign-sf-row">'
+    +'<div class="assign-sf-dot" style="background:rgba(184,134,11,.4)"></div>'
+    +'<select id="asgn-s2" class="assign-sf-select">'+sfOpt(1)+'</select>'
+    +'</div>'
+    +'<div id="asgn-warn" style="font-size:11px;color:var(--orange);margin-bottom:8px;min-height:16px"></div>'
+
+    +'<div class="assign-range">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--muted)">Aplică pe interval de date</div>'
+    +'<div class="assign-range-row">'
+    +'<input type="date" id="asgn-date-from" value="'+data+'" style="flex:1"/>'
+    +'<span style="color:var(--muted)">→</span>'
+    +'<input type="date" id="asgn-date-to" value="'+data+'" style="flex:1"/>'
+    +'</div>'
+    +'<div style="font-size:10px;color:var(--muted);margin-top:4px">Lasă aceeași dată = doar azi</div>'
+    +'</div>'
+
+    +'<div style="margin-bottom:12px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">🚌 Autobuz alocat</div>'
+    +'<select id="asgn-veh" class="assign-sf-select" style="width:100%">'+vehOpts+'</select>'
+    +'</div>'
+
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn bp" style="flex:1;font-size:13px" onclick="tlSaveAssign(\''+cursaId+'\','+pi+')">💾 Salvează</button>'
+    +'<button class="btn bs bsm" onclick="this.closest(\'.assign-panel\').remove();window._tlPanel=null">✕</button>'
+    +'</div>';
+
+  document.body.appendChild(panel);
+  _tlPanel=panel;
+  window._tlPanel=panel;
+
+  // Warning in timp real
+  const warnUpdate=()=>{
+    const s1=document.getElementById('asgn-s1')?.value;
+    const s2=document.getElementById('asgn-s2')?.value;
+    const warnEl=document.getElementById('asgn-warn');
+    if(!warnEl)return;
+    let msgs=[];
+    [s1,s2].filter(Boolean).forEach((sfId,si)=>{
+      const minZi=oreS[sfId]||0;
+      const added=durMin*(c.tipCursa==='dus-intors'?2:1);
+      const total=minZi+added;
+      if(total>MAX_ZI){
+        const dep=Math.round((total-MAX_ZI)/60*10)/10;
+        const sfN=numeSofer(sfId).split(' ')[0];
+        const cont=MAX_ZI-minZi;
+        const oraStart=timeToMin(p.ora);
+        const oraLimit=minToTime(oraStart+cont);
+        msgs.push('⚠️ '+sfN+' depășește 9h cu '+dep+'h! Lucrează până la '+oraLimit+'. Adaugă Șofer '+(si===0?'2':'3')+' din '+oraLimit+'.');
+      }
     });
-    // Email admin
-    sendEjsAdmin({
-      subiect: 'Rezervare nouă — ' + rezervari[0].ruta,
-      mesaj: 'Rezervare nouă pentru ' + rezervari[0].data + ' ora ' + rezervari[0].ora
-        + '. Plată: ' + (_plataMod === 'sofer' ? 'LA ȘOFER (de încasat)' : 'ONLINE (achitată)'),
-      nume_client: rezervari[0].numeClient,
-      telefon: rezervari[0].telefon || '-',
-      tip: 'Regulată · ' + rezervari.length + ' loc(uri) · ' + (_plataMod === 'sofer' ? 'Plată la șofer' : 'Plătit online'),
-      traseu: rezervari[0].ruta
+    warnEl.innerHTML=msgs.join('<br>');
+  };
+  setTimeout(()=>{
+    document.getElementById('asgn-s1')?.addEventListener('change',warnUpdate);
+    document.getElementById('asgn-s2')?.addEventListener('change',warnUpdate);
+    warnUpdate();
+  },50);
+
+  setTimeout(()=>{
+    document.addEventListener('click',function h(e){
+      if(!panel.contains(e.target)){panel.remove();_tlPanel=null;window._tlPanel=null;document.removeEventListener('click',h);}
     });
-    showBMultiple(rezervari);
-    toast('🎉 ' + rezervari.length + ' bilet' + (rezervari.length > 1 ? 'e rezervate' : ' rezervat') + '!', 'ok');
-    window._pendingRezervari = null;
-  } catch(e) {
-    toast('Eroare la salvare: ' + e.message, 'er');
-  }
+  },100);
 };
 
+window.tlSaveAssign=async(cursaId,pi)=>{
+  const s1=document.getElementById('asgn-s1')?.value||'';
+  const s2=document.getElementById('asgn-s2')?.value||'';
+  const vehId=document.getElementById('asgn-veh')?.value||'';
+  const dateFrom=document.getElementById('asgn-date-from')?.value||'';
+  const dateTo=document.getElementById('asgn-date-to')?.value||dateFrom;
+  if(!dateFrom){toast('Selectați data','wr');return;}
 
-// ══════════════════════════════════════════════════════════
-// VALIDARE CNP
-// ══════════════════════════════════════════════════════════
-function validCNP(cnp){
-  if(!cnp||cnp.length!==13||!/^\d{13}$/.test(cnp))return false;
-  const w=[2,7,9,1,4,6,3,5,8,2,7,9];
-  let s=0;
-  for(let i=0;i<12;i++)s+=parseInt(cnp[i])*w[i];
-  const r=s%11;
-  const ctrl=r===10?1:r;
-  return ctrl===parseInt(cnp[12]);
-}
+  if(_tlPanel){_tlPanel.remove();_tlPanel=null;window._tlPanel=null;}
 
-// ══════════════════════════════════════════════════════════
-// CAUTARE GLOBALA ADMIN
-// ══════════════════════════════════════════════════════════
-let _allRezAdmin=[];
+  // Calculeaza toate datele din interval
+  const zile=[];
+  const d=new Date(dateFrom+'T12:00:00');
+  const dEnd=new Date(dateTo+'T12:00:00');
+  while(d<=dEnd){zile.push(d.toISOString().split('T')[0]);d.setDate(d.getDate()+1);}
+  if(zile.length>60){toast('Intervalul e prea mare (max 60 zile)','wr');return;}
+
+  // Salveaza pentru fiecare zi
+  const c=window._R.find(x=>x.id===cursaId);if(!c)return;
+  const plecari=JSON.parse(JSON.stringify(c.plecari||[{ora:c.ora}]));
+  if(!plecari[pi].alocareProg)plecari[pi].alocareProg={};
+
+  for(const data of zile){
+    const aloc={};
+    if(s1)aloc.s1=s1;
+    if(s2)aloc.s2=s2;
+    if(vehId)aloc.vehId=vehId;
+    if(Object.keys(aloc).length)plecari[pi].alocareProg[data]=aloc;
+  }
+
+  await setDoc(doc(db,'curse_regulate',cursaId),{plecari},{merge:true});
+  const idx=window._R.findIndex(x=>x.id===cursaId);
+  if(idx>-1)window._R[idx].plecari=plecari;
+
+  const nrZile=zile.length;
+  const s1N=s1?numeSofer(s1).split(' ')[0]:'';
+  const s2N=s2?numeSofer(s2).split(' ')[0]:'';
+  const sfStr=[s1N,s2N].filter(Boolean).join(' + ');
+  toast('✅ '+c.ruta+' → '+sfStr+(vehId?' + 🚌':'')+' ('+(nrZile===1?dateFrom:nrZile+' zile')+')', 'ok');
+  loadProgramSoferi();
+  if(document.getElementById('tab-regulate')?.classList.contains('on'))loadRT();
+};
+
 
 // ── QUICK FILTER ─────────────────────────────────────────
 let _qfActive='';
