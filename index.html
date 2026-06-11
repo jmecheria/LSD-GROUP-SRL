@@ -6165,12 +6165,27 @@ window.loadProgramSoferi=async()=>{
   if(sumarEl)sumarEl.innerHTML='';
 
   // Incarca date
-  await loadFlota();
-  const sfSnap=await getDocs(collection(db,'soferi'));
-  _buildSoferiCache(sfSnap);
-  const soferi=sfSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.activ!==false);
-  const regSnap=await getDocs(collection(db,'curse_regulate'));
-  window._R=regSnap.docs.map(d=>({id:d.id,...d.data()}));
+  try{
+    await loadFlota();
+  }catch(e){console.warn('loadFlota:',e.message);}
+
+  let soferi=[];
+  try{
+    const sfSnap=await getDocs(collection(db,'soferi'));
+    _buildSoferiCache(sfSnap);
+    soferi=sfSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.activ!==false);
+  }catch(e){
+    listEl.innerHTML='<div style="background:rgba(185,28,28,.08);border:1px solid rgba(185,28,28,.2);border-radius:10px;padding:14px;color:var(--red);font-size:13px">❌ Nu s-au putut incarca soferii: '+e.message+'<br><small>Verificati regulile Firestore (soferi: allow read if isLoggedIn())</small></div>';
+    return;
+  }
+
+  try{
+    const regSnap=await getDocs(collection(db,'curse_regulate'));
+    window._R=regSnap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){
+    listEl.innerHTML='<div style="background:rgba(185,28,28,.08);border:1px solid rgba(185,28,28,.2);border-radius:10px;padding:14px;color:var(--red);font-size:13px">❌ Nu s-au putut incarca cursele: '+e.message+'<br><small>Verificati regulile Firestore (curse_regulate: allow read if true)</small></div>';
+    return;
+  }
 
   // Ore soferi (zi curenta + saptamana)
   const dow=new Date(data+'T12:00:00').getDay();
