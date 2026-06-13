@@ -929,18 +929,27 @@ footer a{color:rgba(240,234,216,.6)}.footer-links{display:flex;gap:16px;justify-
     .assign-range-row input{flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px}
   </style>
 
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
     <div>
       <h3 style="font-size:16px;font-weight:700;margin-bottom:2px">📅 Program Șoferi — Timeline</h3>
-      <p style="font-size:12px;color:var(--muted)">Max 9h/zi · 56h/săpt · pauză 45min după 4.5h · Click pe cursă → atribuie șofer + autobuz</p>
+      <p style="font-size:12px;color:var(--muted)">Max 9h/zi · 56h/săpt · pauză 45min după 4.5h · Click cursă → atribuie · Drag → schimbă ora</p>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <button class="btn bs bsm" onclick="tlPrevDay()">← Prev</button>
-      <input type="date" id="prog-data" onchange="loadProgramSoferi()" style="width:155px;font-size:13px"/>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <button class="btn bs bsm" onclick="tlPrevDay()">←</button>
+      <input type="date" id="prog-data" onchange="loadProgramSoferi()" style="width:150px;font-size:13px"/>
       <button class="btn bs bsm" onclick="setProgDataAzi()">Azi</button>
-      <button class="btn bs bsm" onclick="tlNextDay()">Next →</button>
+      <button class="btn bs bsm" onclick="tlNextDay()">→</button>
       <button class="btn bp bsm" onclick="loadProgramSoferi()">🔄</button>
     </div>
+  </div>
+  <!-- Butoane rapide -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px">
+    <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;align-self:center;margin-right:4px">Adaugă rapid:</span>
+    <button class="btn bp bsm" onclick="openRM()">+ Cursă regulată</button>
+    <button class="btn bs bsm" onclick="openVM()">+ Autobuz</button>
+    <button class="btn bs bsm" onclick="openSM()">+ Șofer</button>
+    <div style="flex:1"></div>
+    <button class="btn bs bsm" onclick="printProgram()">🖨️ Print lunar</button>
   </div>
 
   <!-- Legenda -->
@@ -1619,7 +1628,7 @@ if(window._pendingPageLoad){
 const ADMIN='irimia.teodor.17@gmail.com';
 // Emailul contului Firebase COMUN folosit de toti soferii firmei
 // Toata lumea se loghează cu ACEST email + parola contului, apoi selecteaza cine e
-let SOFER_CONT_EMAIL=''; // Se seteaza din Firestore setari.global.soferContEmail
+let SOFER_CONT_EMAIL='renaultromaniaofficial@gmail.com'; // fallback - se suprascrie din Firestore setari
 const ORS_KEY='eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjljMTA5ZGY1ZWU5NTQ2ZjA5Nzc1NGVmYWU0MzNlOTFiIiwiaCI6Im11cm11cjY0In0=';
 const DAYS=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
 const ZILE_LABEL=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm']; // alias
@@ -1753,6 +1762,12 @@ onAuthStateChanged(auth,async u=>{
   }
   if(u.email===ADMIN){
     window._ROLE='admin';
+    // Incarca soferi in cache imediat dupa login admin
+    try{
+      const sfAll=await getDocs(collection(db,'soferi'));
+      _buildSoferiCache(sfAll);
+      window._soferiList=sfAll.docs.filter(d=>d.data().activ!==false).map(d=>({id:d.id,...d.data()}));
+    }catch(e){console.warn('soferi cache la login:',e.message);}
     // Admin poate fi si sofer - verifica daca are curse atribuite
     try{
       const ssAdmin=await getDocs(query(collection(db,'soferi'),where('email','==',u.email)));
@@ -2622,6 +2637,24 @@ window.calcOrgPret=async()=>{
   }
 };
 
+async function loadSoferiPref(){
+  const sel=document.getElementById('org-sofer-pref');if(!sel)return;
+  try{
+    let soferi=window._soferiList&&window._soferiList.length?window._soferiList:[];
+    if(!soferi.length){
+      const snap=await getDocs(collection(db,'soferi'));
+      _buildSoferiCache(snap);
+      soferi=snap.docs.filter(d=>d.data().activ!==false).map(d=>({id:d.id,...d.data()}));
+      window._soferiList=soferi;
+    }
+    sel.innerHTML='<option value="">— fără preferință —</option>'
+      +soferi.map(s=>{
+        const nm=[s.prenume,s.nume].filter(Boolean).join(' ');
+        return '<option value="'+(s.id||s.email||'')+'">'+nm+'</option>';
+      }).join('');
+  }catch(e){console.warn('loadSoferiPref:',e.message);}
+}
+
 window.loadOrgPage=async function loadOrgPage(){
   renderStops();
   const u=window._U;
@@ -3243,9 +3276,11 @@ window.loadSoferAzi=async()=>{
       // Check 2: sofer atribuit vehiculului pentru aceasta zi
       const veh=window._F.find(v=>v.id===x.vehiculId);
       const mySoferEmailVeh=window._soferDoc?.email||u.email;
+      const mySoferIdVeh=window._soferDoc?.id||'';
       if(veh&&veh.soferiAtribuiti){
         return veh.soferiAtribuiti.some(sa=>{
-          if(sa.email!==mySoferEmailVeh)return false;
+          if(mySoferIdVeh&&sa.soferId&&sa.soferId!==mySoferIdVeh&&sa.email!==mySoferEmailVeh)return false;
+          if(!mySoferIdVeh&&sa.email!==mySoferEmailVeh)return false;
           if(!(sa.zile||[1,2,3,4,5]).includes(dow))return false;
           if(sa.dataStart&&data<sa.dataStart)return false;
           if(sa.dataEnd&&data>sa.dataEnd)return false;
@@ -3942,7 +3977,7 @@ async function loadRT(){
   const snap=await getDocs(collection(db,'curse_regulate'));window._R=snap.docs.map(d=>({id:d.id,...d.data()}));
   document.getElementById('rtb').innerHTML=window._R.map(c=>{
     const plecari=c.plecari||[{ora:c.ora||'-',soferEmail:c.soferEmail||null}];
-    const plecariHtml=plecari.map(p=>`<div style="font-size:12px"><strong>${p.ora||'-'}</strong>${p.soferEmail?` <span style="color:var(--muted)">(${numeSofer(p.soferEmail)})</span>`:''}</div>`).join('');
+    const plecariHtml=plecari.map(p=>{const sfN=p.soferId||p.soferEmail?numeSofer(p.soferId||p.soferEmail):'';return`<div style="font-size:12px"><strong>${p.ora||'-'}</strong>${sfN?` <span style="color:var(--muted)">(${sfN})</span>`:''}</div>`;}).join('');
     const diiBadge=c.tipCursa==='dus-intors'?`<span style="display:inline-block;background:rgba(184,134,11,.12);color:var(--gold);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-bottom:4px;border:1px solid rgba(184,134,11,.25)">↔️ Dus-Întors</span><br>`:'';
     return `<tr>
     <td><strong>${c.ruta}</strong></td><td>${c.vehiculNume||'-'}</td>
@@ -6019,14 +6054,6 @@ function calcProgram(oraP,km,viteza=70){
   };
 }
 
-function minToTime(min){
-  const h=Math.floor(min/60)%24;
-  const m=min%60;
-  return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;
-}
-
-function timeToMin(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
-
 // ── PROGRAM SOFERI (admin tab) ─────────────────────────────
 window.setProgDataAzi=()=>{
   const d=document.getElementById('prog-data');
@@ -6387,6 +6414,20 @@ function renderTimeline(curse,soferi,data,oreMap,el){
       html+='</div>';
       html+='<div class="tl-track" data-date="'+data+'">';
       if(isToday&&nowMin>=TL_START&&nowMin<=TL_END)html+='<div class="tl-nowline" style="left:'+tlPct(nowMin)+'"></div>';
+      // Afiseaza detalii conflict
+      if(cV.size){
+        const confPairs=[];
+        for(let i=0;i<sV.length;i++)for(let j=i+1;j<sV.length;j++){
+          if(sV[j].sMin<sV[i].eTotal){
+            const overlap=Math.round((Math.min(sV[i].eTotal,sV[j].eTotal)-sV[j].sMin)/60*10)/10;
+            confPairs.push(sV[i].ruta+' + '+sV[j].ruta+' suprapuse '+overlap+'h ('+minToTime(sV[j].sMin)+'-'+minToTime(Math.min(sV[i].eTotal,sV[j].eTotal))+')');
+          }
+        }
+        html+='<div style="position:absolute;right:0;top:0;bottom:0;display:flex;align-items:center;z-index:10;pointer-events:none">'
+          +'<div style="background:rgba(185,28,28,.95);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;white-space:nowrap;margin-right:4px">'
+          +'🚨 '+confPairs.join(' | ')
+          +'</div></div>';
+      }
       bV.forEach((b,bi)=>{
         const iC=cV.has(bi);
         const sfN=b.sfIds.map(v2=>numeSofer(v2).split(' ')[0]).filter(Boolean).join('+');
@@ -6409,6 +6450,138 @@ function mkBlock(cls,sMin,eMin,b,data,label){
     +' onclick="tlClickBlock(event,this.dataset.cursaid,this.dataset.pi,this.dataset.data)"'
     +' title="'+b.ruta+' | '+b.ora+(b.isDI?' | Dus-Intors':'')+'">'+label+'</div>';
 }
+
+// ── PRINT PROGRAM LUNAR ──────────────────────────────────────
+window.printProgram=async()=>{
+  const dataEl=document.getElementById('prog-data');
+  if(!dataEl.value)dataEl.value=new Date().toISOString().split('T')[0];
+  const dataRef=dataEl.value;
+  const refDate=new Date(dataRef+'T12:00:00');
+  const an=refDate.getFullYear();
+  const luna=refDate.getMonth();
+  const LUNI_RO=['Ianuarie','Februarie','Martie','Aprilie','Mai','Iunie','Iulie','August','Septembrie','Octombrie','Noiembrie','Decembrie'];
+  const ZILE_RO=['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
+
+  // Incarca date
+  const sfSnap=await getDocs(collection(db,'soferi'));
+  _buildSoferiCache(sfSnap);
+  const soferi=sfSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.activ!==false);
+  if(!window._R||!window._R.length){
+    const rs=await getDocs(collection(db,'curse_regulate'));
+    window._R=rs.docs.map(d=>({id:d.id,...d.data()}));
+  }
+
+  toast('Se generează raportul...','in');
+
+  // Construieste toate zilele lunii
+  const nrZile=new Date(an,luna+1,0).getDate();
+  const zile=[];
+  for(let d=1;d<=nrZile;d++){
+    const ds=an+'-'+String(luna+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    zile.push(ds);
+  }
+
+  // Calculeaza pentru fiecare sofer x zi
+  const grid={}; // sfId -> {data -> [{ruta,ora,isDI}]}
+  for(const sf of soferi){
+    grid[sf.id]={};
+    for(const data of zile){
+      const dow=new Date(data+'T12:00:00').getDay();
+      const curse=window._R.filter(c=>{
+        if(!c.activa)return false;
+        if(!(c.zile||[]).includes(dow))return false;
+        if(c.dataStart&&data<c.dataStart)return false;
+        if(c.dataEnd&&data>c.dataEnd)return false;
+        if(c.dateBlocate&&c.dateBlocate.includes(data))return false;
+        return true;
+      });
+      const curseSf=[];
+      curse.forEach(c=>{
+        const pl=c.plecari||[{ora:c.ora,soferId:c.soferId,soferEmail:c.soferEmail}];
+        pl.forEach((p,pi)=>{
+          if(!p.ora)return;
+          const aInfo=getSfPlecare(p,data);
+          const esteMeu=aInfo.sfIds.some(v=>{
+            const obj=resSf(v);
+            return obj&&(obj.id===sf.id||obj.email===sf.email);
+          });
+          if(esteMeu)curseSf.push({ruta:c.ruta,ora:p.ora,isDI:c.tipCursa==='dus-intors'});
+        });
+      });
+      if(curseSf.length)grid[sf.id][data]=curseSf;
+    }
+  }
+
+  // Calculeaza ore per sofer pe luna
+  const oreLuna={};
+  for(const sf of soferi){
+    let total=0;
+    zile.forEach(data=>{
+      const curse=grid[sf.id][data]||[];
+      curse.forEach(c=>{
+        const sm=window._R.find(x=>x.ruta===c.ruta&&x.activa)?.statii?.slice(-1)[0]?.minuteDeLaStart||60;
+        total+=c.isDI?sm*2:sm;
+      });
+    });
+    oreLuna[sf.id]=total;
+  }
+
+  const firma=window._FIRMA||{};
+  const w=window.open('','_blank');
+  w.document.write('<!DOCTYPE html><html><head><title>Program '+LUNI_RO[luna]+' '+an+'</title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Arial,sans-serif;font-size:11px;color:#1c1713;padding:16px}'
+    +'h1{font-size:16px;font-weight:800;color:#b8860b;margin-bottom:2px}'
+    +'.sub{font-size:11px;color:#6b6b6b;margin-bottom:14px}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:20px}'
+    +'th{background:#b8860b;color:#fff;padding:5px 4px;text-align:center;font-size:10px;border:1px solid #9a7010}'
+    +'td{padding:4px;border:1px solid #e2d9c4;text-align:center;font-size:10px;vertical-align:top}'
+    +'.sf-name{text-align:left;font-weight:700;white-space:nowrap;background:#fef9ed;font-size:11px}'
+    +'.has-cursa{background:#fef3c7;color:#7c4b00}'
+    +'.liber{color:#ccc}'
+    +'.ore-total{font-weight:700;background:#fef9ed;color:#b8860b}'
+    +'.warn-ore{color:#b91c1c;font-weight:700}'
+    +'th.weekend{background:#9a7010}'
+    +'td.weekend{background:#fdfcf8}'
+    +'@media print{body{padding:6px}@page{margin:6mm;size:A4 landscape}}'
+    +'</style></head><body>'
+    +'<h1>'+( firma.name||'LSD Group SRL')+' — Program Șoferi</h1>'
+    +'<div class="sub">'+LUNI_RO[luna]+' '+an+(firma.cui?' · CUI: '+firma.cui:'')+' · Generat: '+new Date().toLocaleString('ro')+'</div>'
+    +'<table><thead><tr>'
+    +'<th style="min-width:100px;text-align:left">Șofer</th>'
+    +zile.map(d=>{
+      const dow=new Date(d+'T12:00:00').getDay();
+      const isWe=dow===0||dow===6;
+      const isToday=d===new Date().toISOString().split('T')[0];
+      return '<th class="'+(isWe?'weekend':'')+(isToday?' now':'')+'" style="min-width:28px;'+(isToday?'background:#d4a017':'')+'">'+String(new Date(d+'T12:00:00').getDate()).padStart(2,'0')+'<br><span style="font-weight:400;font-size:9px">'+ZILE_RO[dow]+'</span></th>';
+    }).join('')
+    +'<th>Total ore</th>'
+    +'</tr></thead><tbody>'
+    +soferi.map(sf=>{
+      const nm=sf.numeFull||[sf.prenume,sf.nume].filter(Boolean).join(' ');
+      const oreH=Math.round(oreLuna[sf.id]/60*10)/10;
+      const oreWarn=oreLuna[sf.id]>MAX_SAPT*4; // mai mult de 4 sapt
+      return '<tr>'
+        +'<td class="sf-name">'+nm+'</td>'
+        +zile.map(data=>{
+          const curse=grid[sf.id][data]||[];
+          const dow=new Date(data+'T12:00:00').getDay();
+          const isWe=dow===0||dow===6;
+          if(!curse.length)return '<td class="liber'+(isWe?' weekend':'')+'">—</td>';
+          const text=curse.map(c=>c.ora+(c.isDI?'↔':'')).join('<br>');
+          return '<td class="has-cursa'+(isWe?' weekend':'')+'">'+text+'</td>';
+        }).join('')
+        +'<td class="ore-total'+(oreWarn?' warn-ore':'')+'">'+oreH+'h</td>'
+        +'</tr>';
+    }).join('')
+    +'</tbody></table>'
+    +'<div style="font-size:10px;color:#6b6b6b">Legenda: ora = plecare · ↔ = dus-întors · — = liber · <span style="background:#fef3c7;padding:1px 4px">galben = are cursă</span></div>'
+    +'<script>setTimeout(()=>window.print(),500)<\/script>'
+    +'</body></html>');
+  w.document.close();
+};
+
 
 // ── DRAG & DROP ────────────────────────────────────────────────
 let _tlDrag=null;
@@ -6541,9 +6714,12 @@ window.tlClickBlock=async(event,cursaId,piStr,data)=>{
     +'</div>'
     +'<div class="assign-sf-row">'
     +'<div class="assign-sf-dot" style="background:rgba(184,134,11,.4)"></div>'
-    +'<select id="asgn-s2" class="assign-sf-select">'+sfOpt(1)+'</select>'
+    +'<div style="flex:1">'
+    +'<select id="asgn-s2" class="assign-sf-select" style="width:100%">'+sfOpt(1)+'</select>'
+    +'<div id="asgn-s2-info" style="display:none;margin-top:4px;padding:4px 8px;background:rgba(184,134,11,.08);border-radius:6px"></div>'
     +'</div>'
-    +'<div id="asgn-warn" style="font-size:11px;color:var(--orange);margin-bottom:8px;min-height:16px"></div>'
+    +'</div>'
+    +'<div id="asgn-warn" style="font-size:11px;margin-bottom:8px;min-height:16px"></div>'
 
     +'<div class="assign-range">'
     +'<div style="font-size:11px;font-weight:700;color:var(--muted)">Aplică pe interval de date</div>'
@@ -6569,26 +6745,61 @@ window.tlClickBlock=async(event,cursaId,piStr,data)=>{
   _tlPanel=panel;
   window._tlPanel=panel;
 
-  // Warning in timp real
+  // Warning + calcul ora continuare sofer 2
   const warnUpdate=()=>{
-    const s1=document.getElementById('asgn-s1')?.value;
-    const s2=document.getElementById('asgn-s2')?.value;
+    const s1Val=document.getElementById('asgn-s1')?.value||'';
+    const s2Val=document.getElementById('asgn-s2')?.value||'';
     const warnEl=document.getElementById('asgn-warn');
+    const s2InfoEl=document.getElementById('asgn-s2-info');
     if(!warnEl)return;
+
+    const oraStartMin=timeToMin(p.ora);
+    const durTotal=durMin*(c.tipCursa==='dus-intors'?2:1);
     let msgs=[];
-    [s1,s2].filter(Boolean).forEach((sfId,si)=>{
-      const minZi=oreS[sfId]||0;
-      const added=durMin*(c.tipCursa==='dus-intors'?2:1);
-      const total=minZi+added;
-      if(total>MAX_ZI){
-        const dep=Math.round((total-MAX_ZI)/60*10)/10;
-        const sfN=numeSofer(sfId).split(' ')[0];
-        const cont=MAX_ZI-minZi;
-        const oraStart=timeToMin(p.ora);
-        const oraLimit=minToTime(oraStart+cont);
-        msgs.push('⚠️ '+sfN+' depășește 9h cu '+dep+'h! Lucrează până la '+oraLimit+'. Adaugă Șofer '+(si===0?'2':'3')+' din '+oraLimit+'.');
+    let oraHandover=null; // ora la care sofer1 trebuie inlocuit
+
+    if(s1Val){
+      const minZi=oreS[s1Val]||0;
+      const disponibil=MAX_ZI-minZi; // cat mai poate lucra sofer1 azi
+      if(disponibil<=0){
+        const sfN=numeSofer(s1Val).split(' ')[0];
+        msgs.push('<span style="color:var(--red)">⛔ '+sfN+' a atins deja limita de 9h azi! Alege alt șofer.</span>');
+        oraHandover=oraStartMin; // sofer2 preia de la inceput
+      } else if(disponibil<durTotal){
+        const sfN=numeSofer(s1Val).split(' ')[0];
+        const oraHandoverMin=oraStartMin+disponibil;
+        oraHandover=oraHandoverMin;
+        const dep=Math.round((durTotal-disponibil)/60*10)/10;
+        msgs.push('<span style="color:var(--orange)">⚠️ '+sfN+' poate lucra doar până la <strong>'+minToTime(oraHandoverMin)+'</strong> ('+Math.round(disponibil/60*10)/10+'h rămase din 9h). Depășire: '+dep+'h — Șofer 2 preia din '+minToTime(oraHandoverMin)+'</span>');
+      } else {
+        const sfN=numeSofer(s1Val).split(' ')[0];
+        msgs.push('<span style="color:var(--green)">✅ '+sfN+' poate face toată cursa ('+Math.round(durTotal/60*10)/10+'h)</span>');
       }
-    });
+    }
+
+    // Afiseaza info sofer 2
+    if(s2InfoEl){
+      if(oraHandover!==null){
+        const s2N=s2Val?numeSofer(s2Val).split(' ')[0]:'Șofer 2';
+        s2InfoEl.innerHTML='<span style="font-size:11px;color:var(--gold);font-weight:600">▶ '+s2N+' preia de la <strong>'+minToTime(oraHandover)+'</strong></span>';
+        s2InfoEl.style.display='block';
+        // Seteaza si data-handover pt salvare
+        if(s2InfoEl.dataset)s2InfoEl.dataset.handover=oraHandover;
+      } else {
+        s2InfoEl.style.display='none';
+        if(s2InfoEl.dataset)s2InfoEl.dataset.handover='';
+      }
+    }
+
+    if(s2Val&&oraHandover===null){
+      const minZi2=oreS[s2Val]||0;
+      const sfN2=numeSofer(s2Val).split(' ')[0];
+      if(minZi2+durTotal>MAX_ZI){
+        const dep2=Math.round((minZi2+durTotal-MAX_ZI)/60*10)/10;
+        msgs.push('<span style="color:var(--orange)">⚠️ '+sfN2+' de asemenea depășește 9h cu '+dep2+'h!</span>');
+      }
+    }
+
     warnEl.innerHTML=msgs.join('<br>');
   };
   setTimeout(()=>{
