@@ -5230,7 +5230,17 @@ window.openVehHome=async(vehId)=>{
   btnReg.style.display=curseCuVehicul.length?'flex':'none';
   om('veh-home');
 };
-window.vhGoReg=()=>{cm('veh-home');nav('regulate')};
+window.vhGoReg=()=>{
+  const v=window._F.find(x=>x.id===_vhId);
+  cm('veh-home');
+  nav('regulate');
+  if(v){
+    setTimeout(()=>{
+      const inp=document.getElementById('reg-search');
+      if(inp){inp.value=v.nume;filterReg();}
+    },150);
+  }
+};
 window.vhGoOrg=()=>{
   cm('veh-home');
   nav('organizate');
@@ -6444,31 +6454,35 @@ function renderTimeline(curse,soferi,data,oreMap,el){
       const s1Id=aInfo.sfIds[0]?resSf(aInfo.sfIds[0]):null;
       const s2Id=aInfo.sfIds[1]?resSf(aInfo.sfIds[1]):null;
 
-      // Calculeaza handover: cate minute mai poate lucra S1 azi
-      const s1Key=s1Id?(s1Id.id||s1Id.email):null;
-      // oreMap include deja cursa curenta in calcul
-      // Scadem durata cursei pentru a obtine ore INAINTE de aceasta cursa
-      const durCurenta=c.tipCursa==='dus-intors'?sm*2:sm;
-      const oreS1Azi=s1Key?Math.max(0,(oreMap[s1Key]?.minZi||0)-durCurenta):0;
-      const s1Disponibil=MAX_ZI-oreS1Azi; // minute pe care S1 le mai poate conduce
+      if(s2Id){
+        // 2 soferi alocati explicit pe aceasta cursa = INTENTIA e sa o imparta intre ei
+        // Calculeaza handover: cate minute mai poate lucra S1 azi TOTAL (alte curse + asta)
+        const s1Key=s1Id?(s1Id.id||s1Id.email):null;
+        const s2Key=s2Id.id||s2Id.email;
+        // oreMap include deja durata acestei curse calculata ca fiind a lui S1 (din getSfPlecare/calcOreSofer)
+        // Scadem durata cursei curente ca sa obtinem orele lui S1 din ALTE curse
+        const durCurenta=c.tipCursa==='dus-intors'?sm*2:sm;
+        const oreS1AlteCurse=s1Key?Math.max(0,(oreMap[s1Key]?.minZi||0)-durCurenta):0;
+        const s1Disponibil=MAX_ZI-oreS1AlteCurse; // minute pe care S1 le mai poate conduce azi, incluzand aceasta cursa
 
-      if(s2Id&&s1Disponibil>0&&s1Disponibil<durTotal){
-        // HANDOVER: S1 conduce primele s1Disponibil minute, S2 restul
-        const handoverMin=sMin+s1Disponibil;
-        // Bloc S1 — de la start pana la handover
-        const bd1={...base,eTotal:handoverMin,eMin:Math.min(eMin,handoverMin),handover:true,handoverLa:minToTime(handoverMin)};
-        if(s1Key){if(!sfBlocks.has(s1Key))sfBlocks.set(s1Key,[]);sfBlocks.get(s1Key).push(bd1);}
-        // Bloc S2 — de la handover pana la final
-        const s2Key=s2Id.id||s2Id.email;
-        const bd2={...base,sMin:handoverMin,eTotal,eMin:Math.max(eMin,handoverMin),handoverDe:minToTime(handoverMin),handoverFrom:true};
-        if(!sfBlocks.has(s2Key))sfBlocks.set(s2Key,[]);sfBlocks.get(s2Key).push(bd2);
-      } else if(s2Id&&s1Disponibil<=0){
-        // S1 deja la limita — S2 face toata cursa
-        const s2Key=s2Id.id||s2Id.email;
-        const bd2={...base,handoverDe:p.ora,handoverFrom:true,handoverFullS2:true};
-        if(!sfBlocks.has(s2Key))sfBlocks.set(s2Key,[]);sfBlocks.get(s2Key).push(bd2);
+        // Daca S1 are suficient timp pentru toata cursa, impartim totusi pe la mijloc
+        // ca sa respectam intentia "2 soferi pe aceasta cursa" (legislatie: max 4.5h condus continuu)
+        const handoverDorit=Math.min(s1Disponibil,Math.ceil(durTotal/2));
+        const handoverMin=sMin+Math.max(30,Math.min(handoverDorit,durTotal-15)); // min 30min pt S1, las cel putin 15min pt S2
+
+        if(s1Disponibil<=0){
+          // S1 deja la limita din alte curse — S2 face toata cursa asta
+          const bd2={...base,handoverDe:p.ora,handoverFrom:true,handoverFullS2:true};
+          if(!sfBlocks.has(s2Key))sfBlocks.set(s2Key,[]);sfBlocks.get(s2Key).push(bd2);
+        }else{
+          // Imparte cursa: S1 primele minute, S2 restul
+          const bd1={...base,eTotal:handoverMin,eMin:Math.min(eMin,handoverMin),handover:true,handoverLa:minToTime(handoverMin)};
+          if(s1Key){if(!sfBlocks.has(s1Key))sfBlocks.set(s1Key,[]);sfBlocks.get(s1Key).push(bd1);}
+          const bd2={...base,sMin:handoverMin,eTotal,eMin:Math.max(eMin,handoverMin),handoverDe:minToTime(handoverMin),handoverFrom:true};
+          if(!sfBlocks.has(s2Key))sfBlocks.set(s2Key,[]);sfBlocks.get(s2Key).push(bd2);
+        }
       } else {
-        // Fara handover — fiecare sofer vede toata cursa pe randul sau
+        // Un singur sofer alocat — vede toata cursa pe randul sau
         aInfo.sfIds.forEach(v=>{
           const obj=resSf(v);if(!obj)return;
           const k=obj.id||obj.email;
@@ -6881,9 +6895,12 @@ window.tlClickBlock=async(event,cursaId,piStr,data)=>{
   const panel=document.createElement('div');
   panel.className='assign-panel';
   const rect=event.target.getBoundingClientRect();
+  // getBoundingClientRect e relativ la viewport; position:fixed e la fel,
+  // deci NU adaugam scrollY/scrollX. Problema reala e ca panelul nu se inchide la scroll.
   let top=rect.bottom+8,left=rect.left;
   if(top+360>window.innerHeight)top=Math.max(10,rect.top-370);
   if(left+310>window.innerWidth)left=window.innerWidth-315;
+  if(left<10)left=10;
   panel.style.cssText='top:'+top+'px;left:'+left+'px';
 
   panel.innerHTML=
@@ -6994,6 +7011,14 @@ window.tlClickBlock=async(event,cursaId,piStr,data)=>{
     document.addEventListener('click',function h(e){
       if(!panel.contains(e.target)){panel.remove();_tlPanel=null;window._tlPanel=null;document.removeEventListener('click',h);}
     });
+    // Inchide panelul la scroll (fixed nu urmareste elementul - evita suprapunere vizuala)
+    const closeOnScroll=()=>{
+      if(panel.isConnected){panel.remove();_tlPanel=null;window._tlPanel=null;}
+      window.removeEventListener('scroll',closeOnScroll,true);
+      document.querySelector('.tl-wrap')?.removeEventListener('scroll',closeOnScroll,true);
+    };
+    window.addEventListener('scroll',closeOnScroll,true);
+    document.querySelector('.tl-wrap')?.addEventListener('scroll',closeOnScroll,true);
   },100);
 };
 
