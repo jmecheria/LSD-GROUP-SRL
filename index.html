@@ -6390,6 +6390,32 @@ function resSf(val){
 
 // Soferii pentru o plecare la o data specifica
 // Stocam in c.plecari[pi].alocareProg = {'2025-07-15':{s1:'sfId',s2:'sfId',vehId:'vId'}}
+// Calculeaza minutele REALE conduse de un sofer specific pe o plecare data,
+// luand in calcul handover-ul (daca exista S1+S2, fiecare conduce doar segmentul lui).
+// oreAlteCurseS1 = minutele pe care S1 le-a lucrat deja din ALTE plecari/curse (pt calcul handover corect)
+function calcMinuteSoferPePlecare(sfId,p,c,data,oreAlteCurseS1){
+  const aInfo=getSfPlecare(p,data);
+  const sfIds=aInfo.sfIds;
+  if(!sfIds.length)return 0;
+  const sm=c.statii&&c.statii.length>=2?(c.statii[c.statii.length-1].minuteDeLaStart||0):60;
+  const durTotal=c.tipCursa==='dus-intors'?sm*2+PAUZA:sm;
+  const s1Obj=sfIds[0]?resSf(sfIds[0]):null;
+  const s2Obj=sfIds[1]?resSf(sfIds[1]):null;
+  const esteS1=s1Obj&&(s1Obj.id===sfId||s1Obj.email===sfId);
+  const esteS2=s2Obj&&(s2Obj.id===sfId||s2Obj.email===sfId);
+  if(!esteS1&&!esteS2)return 0;
+  if(!s2Obj){
+    // Un singur sofer pe aceasta plecare — conduce toata durata (chiar daca >9h, e responsabilitatea lui/alertat separat)
+    return esteS1?durTotal:0;
+  }
+  // 2 soferi: calculeaza handover strict pe ora_start + (9h - ore deja lucrate de S1)
+  const sMin=timeToMin(p.ora||'00:00');
+  const s1Disponibil=Math.max(0,MAX_ZI-(oreAlteCurseS1||0));
+  const minS1=Math.max(0,Math.min(durTotal,s1Disponibil));
+  const minS2=durTotal-minS1;
+  return esteS1?minS1:minS2;
+}
+
 function getSfPlecare(p, dataStr){
   const aloc=(p.alocareProg||{})[dataStr];
   if(aloc){
@@ -6441,24 +6467,37 @@ async function calcOreSofer(sfId,zile){
   let total=0;
   for(const data of zile){
     const dow=new Date(data+'T12:00:00').getDay();
+    // Pasul 1: gaseste toate plecarile relevante (unde sfId apare ca S1 sau S2) in aceasta zi
+    const plecariZi=[]; // {c, p}
     window._R.forEach(c=>{
       if(!c.activa)return;
       if(!(c.zile||[]).includes(dow))return;
       if(c.dataStart&&data<c.dataStart)return;
       if(c.dataEnd&&data>c.dataEnd)return;
       if(c.dateBlocate&&c.dateBlocate.includes(data))return;
-      const pl=c.plecari||[{soferId:c.soferId,soferEmail:c.soferEmail}];
+      const pl=c.plecari||[{soferId:c.soferId,soferEmail:c.soferEmail,ora:c.ora}];
       pl.forEach(p=>{
         const aInfo=getSfPlecare(p,data);
-        const sfIds=aInfo.sfIds;
-        const esteMeu=sfIds.some(v=>{
+        const esteMeu=aInfo.sfIds.some(v=>{
           const obj=resSf(v);
           return obj&&(obj.id===sfId||obj.email===sfId);
         });
-        if(!esteMeu)return;
-        const sm=c.statii&&c.statii.length>=2?(c.statii[c.statii.length-1].minuteDeLaStart||0):60;
-        total+=c.tipCursa==='dus-intors'?sm*2:sm;
+        if(esteMeu)plecariZi.push({c,p});
       });
+    });
+    if(!plecariZi.length)continue;
+    // Pasul 2: pentru fiecare plecare unde sfId e S1 (prima pozitie), calculeaza orele
+    // lui DIN ALTE plecari ale aceleiasi zile (estimare simpla: suma duratelor complete
+    // ale plecarilor anterioare unde e S1, ordonate cronologic) — folosit doar pentru handover
+    plecariZi.sort((a,b)=>timeToMin(a.p.ora||'00:00')-timeToMin(b.p.ora||'00:00'));
+    let oreAcumulateS1=0;
+    plecariZi.forEach(({c,p})=>{
+      const minute=calcMinuteSoferPePlecare(sfId,p,c,data,oreAcumulateS1);
+      total+=minute;
+      // Actualizeaza acumularea DOAR daca sfId e S1 pe aceasta plecare (pt handover-ul plecarilor urmatoare)
+      const aInfo=getSfPlecare(p,data);
+      const s1Obj=aInfo.sfIds[0]?resSf(aInfo.sfIds[0]):null;
+      if(s1Obj&&(s1Obj.id===sfId||s1Obj.email===sfId))oreAcumulateS1+=minute;
     });
   }
   return total;
@@ -6618,36 +6657,36 @@ function renderTimeline(curse,soferi,data,oreMap,el){
       const s2Id=aInfo.sfIds[1]?resSf(aInfo.sfIds[1]):null;
       const s1Key=s1Id?(s1Id.id||s1Id.email):null;
 
-      // Ore deja lucrate de S1 din ALTE curse azi (oreMap include si cursa curenta, o scadem)
-      const oreS1AlteCurse=s1Key?Math.max(0,(oreMap[s1Key]?.minZi||0)-durTotal):0;
-      // Minutul absolut (de la ora 00:00) la care S1 atinge limita de 9h CONDUSE TOTAL azi
-      const s1LimitaAbsoluta=sMin-oreS1AlteCurse+MAX_ZI;
-      // Handover = strict ora_start_cursa + timpul ramas lui S1, dar nu mai tarziu decat sfarsitul cursei
-      const handoverMin=Math.min(eTotal,s1LimitaAbsoluta);
-      const necesitaS2=eTotal>s1LimitaAbsoluta; // cursa continua dupa ce S1 a atins 9h
+      if(s2Id){
+        // ── 2 soferi alocati explicit = admin a decis sa imparta cursa intre ei ──
+        // Indiferent cat de lunga e cursa, S1 conduce strict de la start până la
+        // limita lui de 9h (ore deja lucrate azi din alte curse), apoi S2 preia restul.
+        // oreMap[s1Key].minZi e deja calculat cu calcOreSofer (minute REALE, post-split),
+        // deci scadem minutele estimate ale LUI S1 pe aceasta cursa specifica (nu durTotal intreg)
+        const s1EstimatPeCursaAsta=Math.min(durTotal,MAX_ZI); // estimare: ce ar conduce S1 normal
+        const oreS1AlteCurse=s1Key?Math.max(0,(oreMap[s1Key]?.minZi||0)-Math.min(s1EstimatPeCursaAsta,oreMap[s1Key]?.minZi||0)):0;
+        const s1LimitaAbsoluta=sMin-oreS1AlteCurse+MAX_ZI;
+        // handoverMin = momentul predarii; clamp intre [sMin, eTotal]
+        const handoverMin=Math.max(sMin,Math.min(eTotal,s1LimitaAbsoluta));
+        const s1AreTimp=handoverMin>sMin; // S1 mai poate conduce deloc?
 
-      if(necesitaS2&&s2Id){
-        // S1 conduce de la start strict pana la limita lui de 9h
-        if(handoverMin>sMin){
+        if(s1AreTimp){
           const bd1={...base,eTotal:handoverMin,eMin:Math.min(eMin,handoverMin),handover:true,handoverLa:minToTime(handoverMin)};
           if(s1Key){if(!sfBlocks.has(s1Key))sfBlocks.set(s1Key,[]);sfBlocks.get(s1Key).push(bd1);}
         }
-        // S2 preia EXACT de unde s-a oprit S1, strict pe ora, pana la finalul cursei
         const s2Key=s2Id.id||s2Id.email;
-        const startS2=Math.max(sMin,handoverMin);
-        const bd2={...base,sMin:startS2,eTotal,eMin:Math.max(eMin,startS2),handoverDe:minToTime(startS2),handoverFrom:true,handoverFullS2:startS2<=sMin};
+        const bd2={...base,sMin:handoverMin,eTotal,eMin:Math.max(eMin,handoverMin),handoverDe:minToTime(handoverMin),handoverFrom:true,handoverFullS2:!s1AreTimp};
         if(!sfBlocks.has(s2Key))sfBlocks.set(s2Key,[]);sfBlocks.get(s2Key).push(bd2);
-      } else if(necesitaS2&&!s2Id){
-        // Cursa cere al 2-lea sofer dar nu e alocat — S1 vede tot blocul, dar marcat ca alerta
-        const bd1={...base,necesitaDoiSoferi:true,limitaS1:minToTime(handoverMin)};
-        if(s1Key){if(!sfBlocks.has(s1Key))sfBlocks.set(s1Key,[]);sfBlocks.get(s1Key).push(bd1);}
       } else {
-        // Cursa se incadreaza in 9h pentru S1 — fara handover necesar
-        if(s1Key){if(!sfBlocks.has(s1Key))sfBlocks.set(s1Key,[]);sfBlocks.get(s1Key).push(base);}
-        // Daca exista totusi S2 alocat manual desi nu e necesar, il aratam si pe el (informativ)
-        if(s2Id){
-          const s2Key=s2Id.id||s2Id.email;
-          if(!sfBlocks.has(s2Key))sfBlocks.set(s2Key,[]);sfBlocks.get(s2Key).push({...base,coSofer:true});
+        // Un singur sofer (S1) — verifica daca cursa singura depaseste 9h fara S2 alocat
+        const oreS1AlteCurse=s1Key?Math.max(0,(oreMap[s1Key]?.minZi||0)-Math.min(durTotal,oreMap[s1Key]?.minZi||0)):0;
+        const s1LimitaAbsoluta=sMin-oreS1AlteCurse+MAX_ZI;
+        const necesitaS2=eTotal>s1LimitaAbsoluta;
+        if(necesitaS2){
+          const bd1={...base,necesitaDoiSoferi:true,limitaS1:minToTime(Math.max(sMin,Math.min(eTotal,s1LimitaAbsoluta)))};
+          if(s1Key){if(!sfBlocks.has(s1Key))sfBlocks.set(s1Key,[]);sfBlocks.get(s1Key).push(bd1);}
+        } else if(s1Key){
+          if(!sfBlocks.has(s1Key))sfBlocks.set(s1Key,[]);sfBlocks.get(s1Key).push(base);
         }
       }
     });
