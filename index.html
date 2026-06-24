@@ -675,8 +675,12 @@ footer{
 
 <!-- ── NAV ── -->
 <nav id="nav">
-  <div class="nav-logo" onclick="nav('home')" style="display:flex;align-items:center">
+  <div class="nav-logo" onclick="nav('home')" style="display:flex;align-items:center;gap:9px">
     <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJYAAABkCAIAAADrOV6nAAAoIUlEQVR42u19eZhdVZXvWnvvc849d666NaYyVmVmSGQKAcQGGRxAGWyfiMgoTqivnw99dmsD7Sytbbe2NqIiSkCBhAAyhkkChEkJYUqFkIQMNd15OOeeae/1/jj3VipAMIkhpKROvi/f/e6tM9z922vttX7rt/ZFpRRMHOP5YBNDML4PxHEDIRHtqzuNH/gAgIiNn9mG+3Bgxsm0HneOdN8Z4rhcC2mXhnBX3xzvhjguIcRdGsJdfXPimIhI941fnoBwAokJCPfSCrmvT5yAcMLyJiAEmoihxjuE71AAd+J72MQIjvdVf08gnFiIJhzpROo5AeHffcIzAeG4MlSagHC8Gyq+IyDEiSLFOIaQAACCIJBK7Rscx11Vku33CBIilkply7b/aoy3VzAedwa/v0OIiEopKYNYNEpEYYyHgAi4wwEIAFLK0IYa743nIGXXD7H/Q0hEBMA5DweGiJSSikg1j3C8pJSGYQghgiBARMYY44whQ0QC2sd8xFsygZozeBcg3Mmfvg1DQECKqtWq6zj1uhMEPhFttzMAZCx87XpexDA0TWsYIgIR+L4PBIjIOWeMMcbeyD5o3DCGOwFFvF0J6Zt7Tt/3pZS+7xtGZNu2bYyx0BzDF+H/IcyIGATS0PVIJFKv10lRaHFCUPiXoYFKKQGAccYZC6WX4ekECAQAo3ro8Rf5iv3NbbquW6/XAQAZAgEi/OjH/3HkoiNnz57j+x4yhg1LIkWIAFwIz3Nj0RgBmaapFLme43u+ECwIqIE6YwyRMaakUlIhIiAysDn4gBxZjJjetEnViJgQxwucuF8J8qvVqut5hmEwRM65aZqVSuXeFSs+dOqpuq6/4Sme73mup2maVbMAQdM0Xddd141GTaWIiJRSUqlw5RRcIEfWsEKGVAdZ5KrMqA48Clob6JO2X1oFTSzZBIR/bZ1WinFer9cZ44bRgMpxnHKlYlkWYzg8PDw0PFIqFvOFfLVaq1artVqNlBrJZs8848zTPvwhy7Ic1yWlTNPkXFhWrbu7S9eNRuwjlWqGPOHBGAqhMcYZ14F8UBa6G5g3AO5WpqfAmAGx+SBSY0xTAQAg2w9N8+2HMPR1tVpt27ZtlUp528Dg+vUvb9m6rVKtDg8N5wr5crnCGHIhfM8PAt/3fc/zAxlI3w/84JZlN/f19v37D3+0actmMxKpVionnXDCJZdcMpId6V+7bvLkno6OjtbW1tHb+b6vlFKkAj8IHTLngjHBNAOIUFbAeharT4hgMzJBsYWQWATRueEiSaOmCQhvVy/D64LNtxlCpRTn/K677/7TwyuHh4cHhgbrtu26rh8EnudpmsYY41wwxqQMgiAI/MAPAiklIoyMjJz1vz72wyt/8P/++V/+cNNNmfY2IKjZVnd7+0P33//nZ565+NOfbW9v6+zsmDZ16ty5c+bOmdszaVJ3d7dhGOHdA9mYCQBESiJjjGtMRBgH8GtYfQILf2T1P4OSkDoW0idC8nAmEs2R3F9M8+2EMMTvoYceuuHGmyJmJNOakVLWrNrmzVvK5VK9XgfEwPdd1/N9rwGfL6UMlFSe7wvB77r9dsd1P3PJF4BUNB5XiqQM0onkDdf9Ll8ofPnSS6u1WnhiuKa1ZTKTJ/fMmD7jwPnze/v6eiZNSqUa3lIq5bmuUlJJiQwZ05kWYRzILbHKQ6xwCxXuY0Kj2ALMnIotJ0Bk+utWzd3Akoj2Vu4o3l781jy75t777u/q6pw/f35XZ1e5UhZCu3np0q1btyBjnuuFpuf7vud5vu8HQaCkAoR8NnvJJZfMmTPn65ddxhgDAoaMa8g1AUC+77e3tbW0tJTK5Vg0Rs1Eya7X1zz3wupnn1t6yy3xeHxyT8+M6dMXLljQ19s7dcqUlqa/9Twv8H3fKSMiF1HKnBa0nhbBIhQeUEO/gQ1fBmVD9EBsPw3S74P4ocCaw6gkAO0Klnsx9xdvI36bNm264cY/JNNpp17XND1fLDh1p2ZZwyMjvh94noeInu+5jiOlRMYZ4wRBEPh+EEyeMvmSz3/uqaef/vPqZxOplF2r6oahlNI4E0JIKePxeM+kSetfeUWRIkUhBye4iMc1IgJSvudv2Ljp5fXr71lxXywe6+ro6J0+/eCDD541a1Zvb28qmQxtpV6vg+cpJaXZIjrOxI4zmZ+nwp2Q/T1t/ja8cjlGJ0PmA9B6BiaPoqab3QO7HDcQhvQK57xUKl235Hqu6W2ZtuHhId/3Pd/3fa+Qz+VyWbtuB76PiJZlBUEQBIFhRIjIqdc5547jXHjBBX19vddce23dqYc5HwEITWOcKSmllEKIaVOnEAAiUxQoUiGVSkSKVJjM67rOeQQIJKlXN2/ZsGHj3fetiEfjk3t6Zs+adfDBB82ZM7uvt0/XdUXke47gOgcALQOd50DnOeQOQPFuyF4Pg7+gzb8gsxVaToH2j2DqOBDxBvNDwVualuC+hzCkS3zf/93vritVyr19M5PJRP+6fsd1q9Uqkdo2OFgqlZSUjuMIIXzfD5kaLgQpYgytaqV32owvfP7zTz7x5PLlt0ql4rFYWyazbWio7joykNOnTDEMw/P9yVOmWtWa4BwABBeEhCFDPporSBmGAgxR1zUSAhkqpdatX//i2rXLb7+tva1tcs/kgw866MQTT2hva7MtK5lKRc2IYeiADI1J1HUBdF1AzmYo3E4j17Ph38LgbyHaBW1nQuajkHp3w8eSBKK3wihpX0IYJg/ZkewV3/qmkrKjq5tx3jNp0oaNGzVN50L4vu/53tZtWx3HCfxAKel6nlOvK0VccBlIAhK67rn+F7/4hdbW1utvuGFoaLCzs7Pu1POFvFOvBzJw6nUpZdQ0lVIt6XShUKg7dURkyLjgjHPBuSY0zjkRcc4YF5wxBUQESKCkIiLTjDDGiahqWc+98PyTTz9194p7f/6Tn4SpqqZppmnGY/FozDQNAznHyFSa9Hmc9Hmw10PhVjX8e3j1v/HV/4b4LOy+ANo+CmZvIymhYK8DKfbl+gcAj6167E8P/enEk08qlsvbtm7p6Zm86vHHK+Xyxk2bisXixo0bLMuOmBHOuZISEKPRaOAHVq1Wq1V0Ta+WK0cuPvL8885b89xzd959dyKecByHgHzPjcfj5apVs2wheDyRLJWKbZlMR2dnNpfVuJBKERA2czpAZAwF54DY4FuRMcYIKCxjMc6w8djEBX/llVdeWtt/wLy5nusGQVCtVKqVChc8EjHj8Vg8GouYBuMaRGdS9MvY82Wwnsf8bZS7idZ/DTd9DVo/CF2fhdb3N4xS7U0g9x2EyBhjTJGaPmOa67qO47Sm0xs3vNLT1dXV3mYYxqzeGe99z7Ej2ezatWvDwkIYeXPOjl581MELFtRqtVKx2NfXxzlfcv2Sbdu2taTTnDTbsQ864MDjjll0xTe/p0djH/3IRxhDy7K7urqiZiQ/MmKa0XD9G40DRylyxhggIgE0KVnA8EWDTQdEwXm1Vlvbv/akE08Quu57nuu4QeDLQFq1Wq1W0zSh60YsFo3HYtFohHEd4gdS/ECY8jWw1lB+KWb/QC+cguY06LwYus5r0HhKNkOecQAhIgIo9diqVfff/2AsGp87e/ZpH/5we3s7Z0wbQ36OjIzcvHRZPBbTNA0RXc8lRYsXL168eHHEMKRUhqFLKXP53B/vuNOt10c8r6WlJfC87s7OGTPn/vSnP128ePHChQtrliWV1A1j2pSpj61cyRgqSRiWDxukd6PuAYCAhIioCBCAEIiQMQAK2XQEIsLA99atW+c4Tldnl1KSiEI63nEcx3F837dty6rVCkIzDD0WjyXiMdOMMK5DYgElFtDUy6D2F8ougYH/gW0/wsypMOkLGD+EQvYOCIjtsU3uo9Te9/1KpdLf3x+PJzKZTHd3F+fc830gUoqoaSIEZEbM15zrOE69XteE4EIUCoXOjo5ly5f/+L/+a87s2W2ZzJGLFh100EEtLS2trRnOGQC4rhsEQalUbmlJr1y58pxzPlGtVaUMAilJ7vjlOQpNCC54yJcyZIwzznG0iogIAJzxWq16wvHHX/e738VisbFXkFIqpTzXq9dtx3HqjuN5rpRKcG4YRiKZSMRjkYiBTGvEp8qH0gMwci1af6HoQuy+GNPHU0ib7Wnl8q2FEBGDIPB8n5QSmmY0Dc7zvAY9Ef6DhgEAQRAEnucDUEiDVSoV0zQjkYjrur4faJowdN2ybcMwEFEI4bqOacb8wPdc1/N9hjg0NJRMpRiQpvFYPDUwlB8eKdQsp1yulsvlSrVcLlcKxXK+kC/ks/l8LpcbtqsV13fcet1xLJABADCBQtM1oXEhhNAcx1l85KIvXPLFtf39CxcsmD1rZldXl2mar4FTSum6ruu6tm07ddsPJAKYUTORSCTiccPQAXmIJfglyt0MxftQb4eOsyCxGBD3TP39FkKolPI8DwA451wIhqiIIHRfzcdVYRWeCBGlkiGcQggAzOdzxWIxmUxywZVU8XiccxHKLQCQSJVKJcMwfN/XdSMsI2q6XigUrvzBlbFY5KKLv9A9aarGA10NQbAe/C0gC0A1ABcIgThAjCjlBaarkkXLyJZoaKQ6nKsMjZSGs9WRXH5g2+ahwa2Vct7z3GJ2aNbsvq989Svf/d4PWtLpaCzW2dk1d86cWTNnzp8/f9bMmaNEXYN9DaRSMvQftmW5nkdEUdNMp1PxeJwLDsAacNWeheoTgBqkjoZILwDfvyDknAOAVNJzPdu2AUgITamwPsAZY5qmhVx2GOCEtaR63fa9IFfI9697OR6Pv9TfP3Xy5K/+3y+Xy+Wwph/ml7VaTdcNTROjVQQAIhVYdYUipgebW+R9rHSrLK4kx8PmihP6KuSADJABCz0AB+AMIu0QnQZaN7BJgF226vSwe6QSG8h6mwdKBGZ+cOTWe+8KArdcyrmOJQOXMUwkE22Z9nlz586bN/+gAw+cN3dua2vrWP4spCZs27Ysq16vI2IikUilkqZphICFRgnuJhAp0HsAtd2FkPZ6rxIiuq63cuXDS5cuzefz5XLZsq1IxPQ8d2QkyznnnAkuGOemaUZN89Of+cwB8+dfdfUvM5nWvr6ZZiRimub8+fM3btp009Klz6157uv//LX3HHtMrWaFYQgAcC7KlbIZiWia1pTDEAIontRpKFr+Ze6Fn+nucCwCGE1DdC7FDsboLNC7QWtlPArISXmkPFAOqCr4BfKKFOTIHQBvBL1B9PMMfGCEggOPQ3IGsO6nHhtun31czs4MlKIDWX8o67y6NTcwsLVSzhcKI3Wrkogb6XRy9uzZh7zrkMMOPWze3HnpdHpsZuz7fr1et23bcRzBRTKVSMTjjHMAbFSydp/KEW9BrxkRgW1bt//xj7csXx4xI5rQ4om4oUcMPcI1oaRSvrTr9SCQiFitVl59ddOhhx4qlero6Jg+fdr69a/EYrG2tsyza9asXr36fSee+O5jjq5Zdji1Q8smUpwxIQQRITLOiGsJJhjPLqEN/yewRuJmhiZ9EjtPYamjwOhpRBPhotWY+UCNJLHJHDUpq9CHgMyjP0LuILnbpL0BvC0HHVyNyGumt0joMuGAVlAp4r1VOWuwumikkhgY8ddvrm7YnN269dXnrr/tF7+6PhE3Dpw/e8GCBUccdvi8uXPjiaSu67qup1KpwA8s27Jt27Js0zTj8ZimacDEHqgX974jDYP1J5588sorr3z66aekVH7gd7S1z5w5s1As5PKFTRs3IqCma7qhCyE44zdcf32hWLxnxX0yCA499JD1L7/MNd227eeef+7M004/95PnhOGPEELX9YZsiahcLgshGGMIkngrOBvMLZeI3F0s1eu1XwhtZ4nEDALwPRV4tgx8pQIiUkSkGhq4hqgRgDWzRGRMKSJCXTeQCWQaMoEMuACl4KXVL8yb12PwsrI3g7eF+ZuZuxHlCFAWmAeiDVgbiC5Hdm4rtm3Jsk0Dzov9g69s2lSrVmPx2Iyp3YsOe9chhxwybdo0TdNG3axlWZ7n6YYeNaNjnMqbsmrb59rezgvDONN13ZuXLiMC04yGSUN7R8fL69dPnTJly5at7e3tiKiURGS2bZ986smTp0z5zve+l8vnOzo6nnr6Kc/321pbNU3PZbMjw8Oaptm2HS6coYIm5FBSqdTAtm0tra2uihmlm40tXwLRqQ68TmU+FGDCrlb9gW0AFEhFBKNqtoZwERqS1JCYCYjCDn4pPcPQTTNSKpVDfTFimOuDlGrjS3+eN28GN6dxc9r2JT8UZvhl8LaivxW9AYMN93W81Ncj4BAdTk0DvC9fMV/ZUto04G3YtOXRVU+mW1pm9vXNntU3s683k8mEoZDneZ7rSal0XfsrpSh8a1N7QmS5XP7ZNWu6Ojst265WKkDkuG66peXpPz+dy+VNMyI0LfADAGhvb//UhRctW7bs2TVrEolEsViMRCJGJOIH0nGrUsqrfvnLzq7OT198cXj1oaGh//jxj59bs2bGjBlf+tIXp8/o9Vy33b8D2ENwxE2gHwUAjuN5do4D6rF4mGqFqDXJMyDAcGJJKUO3HOZkpJQRSZmm6ThOd3dXuVzBZhQdZkexVMrx6rLqM0TOGeccWahQ5WikwEgBHDBqJ0oBSAuDLAT5TFst05M5Qk+AZCAjIzln89bswNDWbdu2JROJadOntba0tLa06roeKpt3q5q4lx1pGIU+s3r1V772tSOPOEITYvXq1fV6vVwu53I5xlgqlUJETYhEMtHW1n722R/3/eAbl10uZcAY45zruh6NRoUQ5XK5Zlm+5ymp3vve4+fNm2fo+tW/uPovf/lzeK/Zs2d/7V++Ua9ujfKSjB7Cua6CEilJhESkpNR1Q9M1aLIs2BAfIiLjyBgPweWAENI2rut2dXY++uijS5Ysufjiiw9esCDwfWQs5NjqdXf1o4/8r/PP1TRdShkm4qOKVsYYZyFRwDjnLNTjMME4huGyAgBJCD4iQ+YCMAAzJCLy+bzvB4ZhtLSkDcPY3eVwL0MopRKCX3vttf/505+mUskFBy/omTQpGo0SURD4hm4AYggzMnRdr7+//4knn3RclzMW1hE1ITRdb2lJB4HcNjDg1B2ppJKSc75ly+ZUIplpa5cyyOdyxUIBEKbOmKnpMVB1pXwCxpjgnAV+YPkU1dDQNdUUgI9moo3CBecAFM56JgQCyUA6jpPLZh3bJqJpvb0hU4OInh8EtcLhRx5zw+9vNAxdKhkScKHIkZrdAaMF0SaxE0rOIZydoc4KAYDxsNgVToCxZYA9qOaLvZ1OAAB0dnaWy5VcLvfUk0859bqu66l0qrOjw/X8cqkUBIEfBJ7rur5nGEZra5vQBBAppYIg8Fw3Yhj5fEJKqWkaAHHGotFoIZ/PtLZ1dneVCkXf95KplAwCy7Jsq0q1MjUGNLwMKVInT3WeGI4MOagxDIUXo0p+AsAmrIDM4GpBq/PkiM64SCUSU6ZMcV03Ozws/SAWiwEg56wr3TI11SuiptC0MKPdlbGmHY+GaIohA4kA0GwQCD9iiHuWG4i3oqegtTWDQMlEIplMbNq40a07w4ODQ4ODjAsVBNvLv5y1tLRyxqSUmhDImNC0aDTKEJVU2VwuFovFolGllG3ZruOkW1qtam3G9GkyCDZt3qwZBtp2OpVOpVNCCE0TnAnGkHNhGPqMtG94ccl0M2LouiEENwxD1w1dE7phRAxD0zVN0yKGGYkYHNXnjKjneZdffkVnRydjODI8fMIJ77300ksdxxGcT548+eFHHrvzrjt0TUgpwyrKLqbI4TF2hXvNuc3WgD2uVOxV/MKL9ff3z5o9OxaNOo6TTCarlarreaFAGwhczw2FERHT1DTN930/8BGQcx6LxUzTdB1HESRTyVqt5jguMrQtyzRNIcQxRy1edMQRa/vXIeMbNm0s5HKHHfKu7373u0opxrgQXAghhAgCWQ8gYWrRiOH6fuiumpZKoao/VHlrXCBDzw9iseijjz3qB/7x7z2+f+1aw4hUyuXZs2fnstlQvVrIZU95//thjwa7aYJvSXuVeJPb7kF/jCJiAIVice1La5OJODImlfKl4kIQUaAUEAldj2qaEEIqpYiEpmm6ERZYichxnJDCtm0bEaVSSBAEAWdc08Txxx23tn/dHXfeeeSiRYNDg0RULBU1TSMAJaVUinzf9TzbsjnDgo1VTQ8bacJCIAJyzhQRKen7Mgh8LrjvB5FIJJmM33zzza7r5rLZVzZt6u6ZVCiW1q1dW65WI0YkkUx8/ONnRSIRImL8b63w7UUF4ptCuEf3QGREdMoHP3DdkiXPPfdc6KxaWlqarSyEjAFRqVgMgoBzjuHizrmmCWjEdSwUGzadLVdhj6gMOGOWba+4b0U+ny+VSx2dnS/39ytFjuuakQjXtCAILNsOAtnV2eE4jlSKM6aUqlYr+XyBgKSUnueFxig0LQz/GOKjj63qX/vSPSvulYpefOmlKZMnb3xlg+e66ZaWTFtbJtMqhBb2WzFsFPbGtFbB65eiNzc43EdWuIfqJiSivr6+Fffes3Tp0meeeeaVDRsefvhhXdcbmTWQlBKAMc6qlWqo+Qzbd8M+GIYoNI0LQUoxZF5Ql9InqbgQrue9+OJLSlEkEunu6qpWqgCg68bgwMDg0BAi6ppmRk3Lsm+88cZqrVotl0ul0vDwyHHH/8MF519oGLoZjYajrnFhRIxmUgj33HvPb37zm2RLC+dcBsHiww8fHhw879xzJ02aNFa41fwKOwbhSsnAJ6LRlGV76/FeNY99V7VHRCllOpW68IILACCfLxxw0IH5fJ4zFkjZKDYB+J73wx/+qLe3N5fPO45dq1rZfHbVqsctyxoaHs6OjAghlFI9k3ssy3aCOhHZtt2/dm13V2d7e2bmzJkrV66MxWKz58zundE7berU0BtHTLNWq33/+99/fNWq0Tn/0Y9+tFwpW5alpApzCxlIP/DD2cMYE0JDxmzLCjxvOJe75bbbE8mkHon86tfXcMakkmEMK5VEAM6FEFzXDcPQI5GIECISMXVdi5pmuJabZjQWi45SaG+5JGIv5IWvi2lfMwGvu27J5z73WalUEARhOu173vnnn3f11b98zZXKpXK1Vn145coHH3ww8INCsfjBD3zg/gfuX3bLLel0WhHNmjlzUnfXySe/76mnnr57xb1HLVqUTKZ0Q6/XbduuV6rVcqns+16pVM5ms4jgy4Azzhm3bMv3PJJyu02FxVxNYwwNw4iZJuMs05pJJFOpVLKjo0PT9XQylUgmUslkIpFMJhOJRCKZSEZj0ZCtNnRD13Vd1wzDeI2B7ste+7ekXpjP54eHh+v1erlSqdVqjuP87Gc/f/hPD213SkI7/YzTiZRVs1zPC4svruuGGW4YVYYdZZZl2bZlWbbgjHEej8WPPvqoQMpHH3m0atVsywK5g5gChabrWiQSiZpRLrhpmslEIh5PtLSkk4lEMplKp1PhkU63pFLJlnQ6kUwm4vGIYXAhDMPQdX3Uwe56eBKGnPB2bJixpxA2LI8a3T2wg/jctqzhkWwul81mc6VyqVAsElG1WrVt26pZdt12HDebHalZtSAIXNfzPCfUK3ieFwS+lIqUCuVH4aIipfRcR0mFDE0zqohSyVQmk2lr7+hozyQTiXS6CU06nU4lw1epVCoei2maruuaruvIdnXVCDX8oTxgFJHXqN92cDmvjd5xX24X+bdYIb1WQNf0Hrs+E0kFgeJSoSKQslHgdl03lOd7YSthEDaRBa7jEBETvCWV7unpMQ1h6KQbxi7eLFwGlQQgFwEBd2BYdnzmt2nLEyLcfY5mjyEkQAZ+CapPAPikfIwvhMh0oKZ5bqeUdshqx4RrBIwjAMgy1F8CWQiLCoAh88QAqVHpGTV6JgBCEBj4ddCmgnkgVZ5Q7gARUHh6qPfF5s9REeH2qi5HLQ3mbNDboaH+289advcoF9+ziFQBMPAG6Pn3Q21N46YLH4fIDADVVO+9+eY9BMjJL9KW70B2CfjDENZh6Y0d9tiPGvsYBIAH3wliqnr+/cwvIgs/INxeDkUAAhqdVI27gtYG7R/DqZeBltnvUNwj2xd7OFkY0uAvsLwGjAj4LradCIlFQGrXdB/hvmoFePFDWHgUNAAFoGC7B8G/lhVLoMmfwsz7aesPeL0IAkDuGAWOIR2RRkWhABzIy8Lmn4C1Gg+4i5g5nvad2XsQEjJO0obsDcAZkUIkaD87zNoBxS7gR4CctnwPi4+CESHpYHw+JRaDkk192U4yFmSAHIgwfjh2X0RKAYvQ5HMBBQDb0VZf7zc4eq9icQUyAi6gtJIKt0P7x0D54TPvbEEJGe03TBJGPU1YIXkjqgrCdrhRecBraqshGfCGtx6tVL8FEJIiFFS8B6x1IAQqD8yp0HoqEIQ6111wFxy8HA3/FjkD6aE5AxY+g0zfvRSUCEHBpC/uYvzXOOvFj8LITSAYECNnS6irUA1JHH8TsuLNy0mMsZ3pP5ufvkGy2NRx0c5uvYvJ5e5DGIYJI9ciAKAAFUDbP4JoARXsEoQkARmVHkB3BDgHFQAFMHTV6COPGa+wThtGNEQig7GFGJsPpIAkIgcmqL6Rsn9QxYdZ91nQfvZOnwFD5y+UqiMAQgBMYeyAxtuMAcDWrVuLxSI1vG4jm1FSzp07t1qtvrp5s2EYpNSoUF8pNbmnJ5PJhNLWDRs22PX66NhLpcxIZNasWYyxfD6/adOmGTNmtLa2jkXl+eefF5qY1Tfrpf61UspGcgIYCouisdjMvr7dgHBXExlSwDhYL0FxBTAE5YJmQPsndncpRlkDSSA4MIT6Fnj5i9AII8fIs2hsMAMIQFyHjrOx76eABiGDketp/RfALSAD6L0CkAHjO1mMFTBO9looPYACQQUUnYnJYxQRIq/Vat/57veWLV8ebvIVKIUAjKHreAceOO/WZcu++a1v3/bHPxoRI0xWFRFnTNO0vt7e31+/ZHBw8BuXXf7EU08xxhiiVIpIIWMaF+d+8pyvXnrpt77z3XtW3HvbsmWtra1Eigg45y+++OKHzzjzUxdecOYZZ3z8nHPq9XojciZQShmGwTm7/F//9YzTTw/rAX8dwl3ORQgAaGQJeDboEQgcSr8H4wt3OZCBcDGjzCmUPhJLj+NY7Sa9JokDwObmaAIBGJJPW66hxDHYfT5UnqB15yH5xDm2nQyJw9/sGUgBchi5kfk26BGQDrSeBiJJgceEfvWvfv2b3/32ogsuPOnEEwyjyX0TOK7T0dGRzxceenjlMUcffdGFFyilAIEhq9edf/vWt4qlouf737vyyseffOKfv/rVefPmKaUCKTlj/f3rvv/Df9+4cWOhUPjTww8ffdTRM2fODLmC8Hvedfc9QRCcfvrp99x7r2XZl3/jG9OnTQukJFK6pt92x+033by0sQXrX4u2dsuREjAOQY1GbmAMIGwTav8EkBwNCv4KOxF6OQpAa2cH3QPlFWCvpaDctL4xWRGNAiiQXBq5FrwiMgFcgbIBkAauQt8H3QS/Ti2n4+ufYYcERgMKILsEGAAFJDh2nEUAXGjlcnnZLbccfthh/3b5ZQCwYePGer0erk+JRHxmX9+vrrmmUil//nOfPXLRotErrlv38kg2e9EF5+dyufsfePDC884POf2xoYpVq5180kmrnnhiaHjolA9+IHyTcc4Zs2373hUrFh1xRFdX1y233nbkEYef84mzx56+bPnyWCx+7DHH7Ip3E7uRXZIE1Kh4J7M3gBAgfYrNxo5zAAGalr7dEeIbgRj2myNDANCS0HbmLhXPCCB3C2IJiEAzsPVU8EtQvAM4gqxjbBp0fhKQw5t4Gwpg0z9jfR1wgzwXOj4A8XepwGdCe+SxxzZu3HjOJ86WUj719NPnX/QpTQhkWC6X37Vg4e+vX/LAgw8Kwa+6+upfX3ON47iJRCJiRh57bFU0an78Yx9bfuutvu+feOIJ4YYAjDFFpAlx09KlHe0dhx166L9ecUVfX9+xxxzT8NK+LzTt6af//PyLL/7wB99fu3btplc3AdBFn/6MkjLsLi4WS4+tevz8cz85derU8JpvHqaJ3cgukQMBDf6mEfgjIDNpy3dAeaO6dtohmsImkAwQADn2fBmCGg38HFABUaNfGZs2F9oiUbNvonmX0gPovgo8Qq4DnR8EcxoN/hKcERAaKR9YFLb+O5D/2uiTmpp7VcXKI1B9EpgGgQuRNuz9YVjaVIruuuuuTCbzoVNO4ZwvPHjBnbffFo/FHlu16ov/+5/OOutjW7ZsfXbNmnlz53qeV6/XdU17ds2z2wYGPnTKqRdfdGFXV/cdd919+KGHHn7YYQAwWl0aGBh45JFH3nv88b4fPPLIo+ec84mWlpaxA3n7HX9sSaff/e5jfvY/V5kRc8rUqZZtYZMRNs3IVy/98gXnnbcrRN/ubJcQBjK157H8JxAsDBCg9ixWngUcE+y/blVrvOEDTDmLmAHrLsCB67e3cuyQ9o05i8Y8Y8iUuQ7FprDp3wYAGrmhsZshY2C/BBv+hZp2jzvyBw12hgMgkPQhNgfn/Bqic0FJxkSxWHzyqacNw1h+620dHe2IqGkaMvaHG29Kt6Tfd9JJP7/qqlq1+u1vfvOggw4Kr3rL8uVf+qd/OuRdCw844IC/PPPMlq1bp06Z/NvfXZdIxKVSCCClXHbrreVy5eNnnfX4E4/XLGvDxo1/uOlmTQippCbE2v51N9689NxPnB01o7feevux7373z376k79FnyFg9wKZq8G3SQMcLVE045HtXCYDou1DSQTIDGg/BWf/BvK309D1oAG9ztpfy5HgmJyCAWg9mD4Jp30dIr1UeRLLDxACKIUIFLaWqUb2Qbg9Dho1b9BbwJiJmdNh0mdAtICS4b7BsVjsuOP+4aGH/vSLX14tpWr2TPFIJHLZ179uGMYDDz547LHHzp07N9xsmDH2nmPfM2fOnKXLbvnHj3xkyuTJhyxcuO7ll3/0nz8mAsaQFBFRW1vbN6+44tBDDvE8b97cuS88/8Lq1avD7YtCBfgZp5321a98ZcV993m++6FTTwnVlzuEnRSS8G84JH8jzW2/QLIWRpWwnVQOZzuMSu2oeTsMx5LFIXYAEYCzHvwcIg837g33zN6uPRllV0bFeg3XroHeDXpXg1jwsuBsACaAKHwAbFSlxnxDGnXDACBAS4MxvZHRKhm+CCGRUm7bNsAYhm2n4ahFo9HW1lbXcQeHh5KJRGtrq2r+xAIiDg0NOY7T3T3JMPS6Ux8ZznLBiWg0X0yn0slkIhyKQqFQqdaE4OEVEEBoWldnJwBks1m7bk+a1CN2AI926Lba+5WKPa7BbN80cE+P0d67PXsGopBVeK217+RqY9otdmBJxrItSqmdxRqjWtM3/IPRLte9UuLf3WKT2qN+cGzWF8aUiHfr9B13bdrtizTujjtjyHZGfjZMZ0eYG53lO2qxd0ZvhoTOTphV2hnGb7/wYuLYl8c78We3cI8+moBwPzpojz6agPDvBeQJCPfFOP7tGk4cT/ODvUkQuT+jiG9F5vO2L8V7dIidjx7tz1914le9d8+RvjN/wRP/niCciGnGPYQTXmt/ttW/Qyvctz/GSxMQvgV28Q779e13/FpINAHhuLfZ8T4/JiLScTs/JiD8uwlzJyAc9ykpe1smzsSxPzrSifT/7XK6E4503Dvd8Q/hO9z88e/ACt/hizDR/wehGgqWkFkw8gAAAABJRU5ErkJggg==" alt="LSD Group SRL" style="height:42px;width:auto;object-fit:contain;display:block;max-width:180px"/>
+    <div style="display:flex;flex-direction:column;line-height:1.15">
+      <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:15px;color:var(--amber);letter-spacing:-.3px">LSD GROUP</span>
+      <span style="font-size:10px;color:var(--stone);font-weight:500;letter-spacing:.3px">Transport Persoane</span>
+    </div>
   </div>
   <div id="notif-bell" onclick="toggleNotifPanel()">
     <span>🔔</span>
@@ -2595,15 +2599,13 @@ window.loadOrgPage = async function() {
   renderOrgStops();
   const u=window._U;
   await loadFleet().catch(()=>{});
-  const orgVeh=document.getElementById('org-veh');
-  if(orgVeh) orgVeh.innerHTML='<option value="">— selectați vehiculul dorit —</option>'+window._F.filter(v=>v.disponibil!==false).map(v=>`<option value="${v.id}">${v.icon||''} ${v.nome||v.name||v.nume||''} — ${capVeh(v)} locuri${v.pretPerKm?' · '+v.pretPerKm+' RON/km':''}</option>`).join('');
-  // Load drivers for preference
+  // Load drivers
   try{
     const sfSnap=await getDocs(collection(db,'soferi'));
     buildDriversCache(sfSnap);
-    const sel=document.getElementById('org-driver-pref');
-    if(sel) sel.innerHTML='<option value="">— fără preferință —</option>'+window._DRIVERS_LIST.map(s=>`<option value="${s.id}">${s.numeFull}</option>`).join('');
   }catch(e){}
+  // Rebuild vehicle/driver selects when date changes
+  await refreshOrgSelects();
   const wrap=document.getElementById('org-contact-wrap');
   if(u){
     wrap.innerHTML=`<div style="background:var(--cream);border:1px solid var(--border-l);border-radius:8px;padding:12px;font-size:13px;margin-bottom:16px"><div style="color:var(--stone);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-bottom:4px">Cerere ca</div><div style="font-weight:600">${u.displayName||''} · ${u.email}</div></div>`;
@@ -2611,8 +2613,92 @@ window.loadOrgPage = async function() {
     wrap.innerHTML=`<div class="fg"><div class="fl">Nume complet *</div><input type="text" id="org-name" placeholder="Ion Popescu"/></div><div class="fg"><div class="fl">Telefon *</div><input type="tel" id="org-phone" placeholder="07XX XXX XXX"/></div><div class="fg"><div class="fl">Email *</div><input type="email" id="org-email" placeholder="email@exemplu.ro"/><div class="f-hint">Oferta va fi trimisă pe acest email</div></div><div class="info-box info-box-blue" style="font-size:12px;margin-bottom:12px">💡 <a onclick="nav('auth')">Creează un cont</a> pentru a urmări cererea și a vedea ofertele direct pe site.</div>`;
   }
   const today=new Date().toISOString().split('T')[0];
-  document.getElementById('org-date').min=today;
+  const dateEl=document.getElementById('org-date');
+  if(dateEl){dateEl.min=today;dateEl.onchange=()=>refreshOrgSelects();}
 };
+
+async function refreshOrgSelects() {
+  const dateStr=document.getElementById('org-date')?.value||'';
+  const dow=dateStr?new Date(dateStr+'T12:00:00').getDay():-1;
+
+  // Build vehicle availability map for chosen date
+  let busyVehicles=new Map(); // vehiculId -> [{ruta, ora}]
+  if(dateStr){
+    try{
+      const snap=await getDocs(query(collection(db,'rezervari'),where('data','==',dateStr)));
+      snap.docs.forEach(d=>{
+        const r=d.data();
+        if(r.status==='anulata')return;
+        if(!r.vehiculId)return;
+        if(!busyVehicles.has(r.vehiculId))busyVehicles.set(r.vehiculId,[]);
+        busyVehicles.get(r.vehiculId).push({ruta:r.ruta||r.traseu||r.descriereCursa||'Cursă',ora:r.ora||''});
+      });
+      // Also check regulate for that day
+      if(dow>=0){
+        (window._R||[]).filter(c=>{
+          if(!c.activa)return false;
+          if(!(c.zile||[]).includes(dow))return false;
+          if(c.dataStart&&dateStr<c.dataStart)return false;
+          if(c.dataEnd&&dateStr>c.dataEnd)return false;
+          if(c.dateBlocate?.includes(dateStr))return false;
+          return true;
+        }).forEach(c=>{
+          if(!c.vehiculId)return;
+          if(!busyVehicles.has(c.vehiculId))busyVehicles.set(c.vehiculId,[]);
+          busyVehicles.get(c.vehiculId).push({ruta:c.ruta,ora:(c.plecari||[{ora:c.ora}]).map(p=>p.ora).join('/')});
+        });
+      }
+    }catch(e){}
+  }
+
+  // Populate vehicle select with availability info
+  const orgVeh=document.getElementById('org-veh');
+  if(orgVeh){
+    orgVeh.innerHTML='<option value="">— selectați vehiculul dorit —</option>'+
+    window._F.filter(v=>v.disponibil!==false).map(v=>{
+      const busy=busyVehicles.get(v.id)||[];
+      const isBusy=busy.length>0;
+      const busyInfo=busy.map(b=>`${b.ruta}${b.ora?' ('+b.ora+')':''}`).slice(0,2).join(', ');
+      const vName=v.icon||'';
+      const vNume=v.nome||v.name||v.nume||'';
+      const locuri=capVeh(v);
+      const pret=v.pretPerKm?` · ${v.pretPerKm} RON/km`:'';
+      const statusIcon=dateStr?(isBusy?'🔴':'🟢'):'';
+      const statusText=dateStr?(isBusy?` — OCUPAT (${busyInfo})`:'  — Disponibil'):'';
+      return`<option value="${v.id}" ${isBusy?'style="color:#b52d2d"':''}>${statusIcon} ${vName} ${vNume} — ${locuri} locuri${pret}${statusText}</option>`;
+    }).join('');
+  }
+
+  // Populate driver preference with hours info for chosen date
+  const sel=document.getElementById('org-driver-pref');
+  if(sel){
+    const driverOpts=window._DRIVERS_LIST.map(s=>{
+      const minZi=dateStr?getDriverHoursForDate(s.id,dateStr):0;
+      const hZ=(minZi/60).toFixed(1);
+      const icon=minZi>=600?'🔴':minZi>=480?'🟡':'🟢';
+      const hoursLabel=dateStr?` (${icon} ${minZi>0?hZ+'h azi':'liber'})`:'';
+      return`<option value="${s.id}">${s.numeFull}${hoursLabel}</option>`;
+    }).join('');
+    sel.innerHTML='<option value="">— fără preferință —</option>'+driverOpts;
+  }
+
+  // Show availability info box
+  const priceBox=document.getElementById('org-price-box');
+  let infoBoxEl=document.getElementById('org-avail-info');
+  if(!infoBoxEl){
+    infoBoxEl=document.createElement('div');
+    infoBoxEl.id='org-avail-info';
+    infoBoxEl.style.marginBottom='12px';
+    priceBox?.parentNode?.insertBefore(infoBoxEl,priceBox);
+  }
+  if(dateStr&&busyVehicles.size>0){
+    const busyCnt=[...busyVehicles.keys()].filter(id=>window._F.some(v=>v.id===id)).length;
+    const freeCnt=window._F.filter(v=>v.disponibil!==false&&!busyVehicles.has(v.id)).length;
+    infoBoxEl.innerHTML=`<div style="background:var(--blue-g);border:1px solid rgba(30,95,168,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--blue)">📅 <strong>${dateStr}</strong>: ${freeCnt} vehicul${freeCnt!==1?'e':''} disponibil${freeCnt!==1?'e':''} 🟢 · ${busyCnt} ocupat${busyCnt!==1?'e':''} 🔴 (detalii în lista de mai sus)</div>`;
+  } else {
+    infoBoxEl.innerHTML='';
+  }
+}
 function renderOrgStops(){
   const c=document.getElementById('org-stops-container'); if(!c)return;
   c.innerHTML='';
@@ -3151,24 +3237,117 @@ window.calcDistances=async()=>{
   renderRmStops();
   toast(`✅ ${totalKm} km total · ~${Math.round(totalMin/60*10)/10}h · Prețurile pot fi editate manual.`,'ok');
 };
+function getDriverHoursForDate(sfId, dateStr) {
+  // Calculeaza orele unui sofer specific pentru o zi anume
+  // S1 conduce pana la MAX_H_DAY, S2 preia restul
+  if (!sfId || !dateStr) return 0;
+  const dow = new Date(dateStr+'T12:00:00').getDay();
+  let totalMin = 0;
+  (window._R||[]).forEach(c => {
+    if (!c.activa) return;
+    if (!(c.zile||[]).includes(dow)) return;
+    if (c.dataStart && dateStr < c.dataStart) return;
+    if (c.dataEnd && dateStr > c.dataEnd) return;
+    if (c.dateBlocate?.includes(dateStr)) return;
+    const sm = (c.statii?.length>=2) ? (c.statii[c.statii.length-1].minuteDeLaStart||60) : 60;
+    const dur = c.tipCursa==='roundtrip' ? sm*2 : sm;
+    const pl = c.plecari||[{ora:c.ora,driverId:c.driverId}];
+    pl.forEach(p => {
+      const oraInfo = getOraForDate(p, dateStr);
+      const s1Id = resSf(oraInfo.driverId||p.driverId||'')?.id;
+      const s2Id = resSf(p.driverId2||'')?.id;
+      if (s1Id === sfId) {
+        // Acest sofer e S1 - conduce pana la limita
+        const disponibil = Math.max(0, 600 - totalMin); // 600min=10h
+        totalMin += Math.min(dur, disponibil);
+      } else if (s2Id === sfId && s1Id) {
+        // Acest sofer e S2 - conduce restul dupa ce S1 se opreste
+        // Calculam cat conduce S1 din aceasta cursa
+        const s1AlreadyWorked = getDriverHoursForDateSimple(s1Id, dateStr, c.id);
+        const disponibilS1 = Math.max(0, 600 - s1AlreadyWorked);
+        const minS1 = Math.min(dur, disponibilS1);
+        const minS2 = dur - minS1;
+        if (minS2 > 0) totalMin += minS2;
+      }
+    });
+  });
+  return totalMin;
+}
+function getDriverHoursForDateSimple(sfId, dateStr, excludeCursaId) {
+  // Versiune simplificata fara S2 lookup (evita recursie)
+  if (!sfId || !dateStr) return 0;
+  const dow = new Date(dateStr+'T12:00:00').getDay();
+  let totalMin = 0;
+  (window._R||[]).forEach(c => {
+    if (c.id === excludeCursaId) return; // nu numara cursa curenta
+    if (!c.activa) return;
+    if (!(c.zile||[]).includes(dow)) return;
+    if (c.dataStart && dateStr < c.dataStart) return;
+    if (c.dataEnd && dateStr > c.dataEnd) return;
+    if (c.dateBlocate?.includes(dateStr)) return;
+    const sm = (c.statii?.length>=2) ? (c.statii[c.statii.length-1].minuteDeLaStart||60) : 60;
+    const dur = c.tipCursa==='roundtrip' ? sm*2 : sm;
+    const pl = c.plecari||[{ora:c.ora,driverId:c.driverId}];
+    pl.forEach(p => {
+      const oraInfo = getOraForDate(p, dateStr);
+      const s1Id = resSf(oraInfo.driverId||p.driverId||'')?.id;
+      if (s1Id === sfId) {
+        const disponibil = Math.max(0, 600 - totalMin);
+        totalMin += Math.min(dur, disponibil);
+      }
+    });
+  });
+  return totalMin;
+}
+window.getDriverHoursForDate = getDriverHoursForDate;
+
+function buildSfOptsWithHours(curValId, dateStr) {
+  // Construieste optiunile pentru select sofer cu ore lucrate afisate
+  const testDate = dateStr || new Date().toISOString().split('T')[0];
+  return window._DRIVERS_LIST.map(sf => {
+    const minZi = getDriverHoursForDate(sf.id, testDate);
+    const hZ = (minZi/60).toFixed(1);
+    const pZ = Math.min(Math.round(minZi/600*100),100); // 600min=10h
+    const icon = minZi>=600?'🔴':minZi>=480?'🟡':'🟢';
+    const label = minZi>0 ? `${sf.numeFull} (${icon} ${hZ}h azi)` : `${sf.numeFull} (🟢 liber)`;
+    return `<option value="${sf.id}" ${curValId===sf.id?'selected':''} style="color:${minZi>=600?'#b52d2d':minZi>=480?'#c46520':'#1a6b3c'}">${label}</option>`;
+  }).join('');
+}
+
 function renderRmDeps(){
   const el=document.getElementById('rm-departures');if(!el)return;
+  // Determina data de test (data start sau azi)
+  const testDate = document.getElementById('rm-date-start')?.value || new Date().toISOString().split('T')[0];
   el.innerHTML=window._RM_DEPS.map((p,i)=>{
-    const sfOpts=window._DRIVERS_LIST.map(sf=>`<option value="${sf.id}" ${p.driverId===sf.id?'selected':''}>${sf.numeFull}</option>`).join('');
+    const sfOpts = buildSfOptsWithHours(p.driverId, testDate);
+    const s2Opts = buildSfOptsWithHours(p.driverId2||'', testDate);
+    const curSf = p.driverId ? window._DRIVERS[p.driverId] : null;
+    const minZiS1 = p.driverId ? getDriverHoursForDate(p.driverId, testDate) : 0;
+    const needS2 = minZiS1 >= 480; // 8h = avertizare
+    const overLimit = minZiS1 >= 600; // 10h = depasit
+    const s2Visible = p.driverId2 || needS2;
+
     const oreHtml=[1,2,3,4,5,6,0].map(d=>{const oz=(p.orePerZi||{})[d]||'';const isDiff=oz&&oz!==p.ora;return`<div style="text-align:center"><div style="font-size:9px;color:var(--stone);margin-bottom:2px">${window.DAYS_RO[d]}</div><input type="time" value="${oz}" style="width:100%;font-size:10px;padding:3px;border-radius:5px;border:1px solid ${isDiff?'var(--amber)':'var(--border)'};background:${isDiff?'var(--amber-g)':'#fff'}" onchange="if(!window._RM_DEPS[${i}].orePerZi)window._RM_DEPS[${i}].orePerZi={};window._RM_DEPS[${i}].orePerZi[${d}]=this.value;this.style.borderColor=this.value&&this.value!==window._RM_DEPS[${i}].ora?'var(--amber)':'var(--border)';this.style.background=this.value&&this.value!==window._RM_DEPS[${i}].ora?'var(--amber-g)':'#fff'"/></div>`;}).join('');
-    return`<div style="background:var(--cream);border:1.5px solid var(--border-l);border-radius:var(--r);padding:14px;margin-bottom:10px">
+
+    return`<div style="background:var(--cream);border:1.5px solid ${overLimit?'var(--red)':needS2?'var(--orange)':'var(--border-l)'};border-radius:var(--r);padding:14px;margin-bottom:10px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <div style="width:22px;height:22px;border-radius:50%;background:var(--amber);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
         <input type="time" value="${p.ora||''}" style="width:110px;flex-shrink:0" onchange="window._RM_DEPS[${i}].ora=this.value"/>
-        <select style="flex:1;min-width:140px" onchange="window._RM_DEPS[${i}].driverId=this.value"><option value="">— fără șofer —</option>${sfOpts}</select>
+        <select style="flex:1;min-width:180px;border-color:${overLimit?'var(--red)':needS2?'var(--orange)':'var(--border)'}" onchange="window._RM_DEPS[${i}].driverId=this.value;renderRmDeps()"><option value="">— fără șofer —</option>${sfOpts}</select>
         ${window._RM_DEPS.length>1?`<button style="background:none;border:none;color:var(--stone);cursor:pointer;font-size:16px" onclick="window._RM_DEPS.splice(${i},1);renderRmDeps()">✕</button>`:''}
       </div>
+      ${overLimit?`<div style="background:var(--red-g);border:1px solid rgba(181,45,45,.3);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--red)">⚠️ <strong>${curSf?.numeFull||''}</strong> a depășit limita de 10h (${(minZiS1/60).toFixed(1)}h). Adăugați obligatoriu un șofer 2 pentru preluare!</div>`
+      :needS2?`<div style="background:var(--orange-g);border:1px solid rgba(196,101,32,.3);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--orange)">⚠️ <strong>${curSf?.numeFull||''}</strong> are deja ${(minZiS1/60).toFixed(1)}h programate. Recomandăm șofer 2 pentru schimb.</div>`:''}
+      ${s2Visible?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;background:var(--green-g);border:1px solid rgba(26,107,60,.2);border-radius:8px;padding:8px 10px">
+        <span style="font-size:11px;font-weight:700;color:var(--green);white-space:nowrap">🔄 Șofer 2 (preia):</span>
+        <select style="flex:1;min-width:140px;font-size:12px" onchange="window._RM_DEPS[${i}].driverId2=this.value;renderRmDeps()"><option value="">— fără șofer 2 —</option>${s2Opts}</select>
+      </div>`:''}
       <div style="font-size:11px;font-weight:700;color:var(--stone);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Oră specifică per zi (gol = ora default)</div>
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${oreHtml}</div>
     </div>`;
   }).join('');
 }
-window.addDeparture=()=>{window._RM_DEPS.push({ora:'',driverId:'',orePerZi:{},exceptions:[]});renderRmDeps();};
+window.addDeparture=()=>{window._RM_DEPS.push({ora:'',driverId:'',driverId2:'',orePerZi:{},exceptions:[]});renderRmDeps();};
 function renderRmRetDeps(){
   const el=document.getElementById('rm-return-departures');if(!el)return;
   const sfOpts=window._DRIVERS_LIST.map(sf=>`<option value="${sf.id}">${sf.numeFull}</option>`).join('');
@@ -3282,12 +3461,52 @@ window.openBookingDetail=async rezId=>{
   if(isOrg){
     allocEl.style.display='block';
     const vS=document.getElementById('alloc-vehicle');
-    vS.innerHTML='<option value="">— nu a fost alocat —</option>'+window._F.map(v=>`<option value="${v.id}" ${r.vehiculId===v.id?'selected':''}>${v.icon||''} ${v.nome||v.name||v.nume||''} (${capVeh(v)} loc.)</option>`).join('');
+    // Build vehicle options with availability for reservation date
+    const rezDate=r.data||'';
+    let busyVehIds=new Set();
+    if(rezDate){
+      try{
+        const snap2=await getDocs(query(collection(db,'rezervari'),where('data','==',rezDate)));
+        snap2.docs.forEach(d2=>{
+          const r2=d2.data();
+          if(r2.status!=='anulata'&&r2.vehiculId&&d2.id!==rezId) busyVehIds.add(r2.vehiculId);
+        });
+        // Check regular routes
+        const dow2=new Date(rezDate+'T12:00:00').getDay();
+        (window._R||[]).filter(c=>{
+          if(!c.activa)return false;
+          if(!(c.zile||[]).includes(dow2))return false;
+          if(c.dataStart&&rezDate<c.dataStart)return false;
+          if(c.dataEnd&&rezDate>c.dataEnd)return false;
+          if(c.dateBlocate?.includes(rezDate))return false;
+          return true;
+        }).forEach(c=>{if(c.vehiculId)busyVehIds.add(c.vehiculId);});
+      }catch(e2){}
+    }
+    vS.innerHTML='<option value="">— nu a fost alocat —</option>'+window._F.map(v=>{
+      const isBusy=busyVehIds.has(v.id)&&v.id!==r.vehiculId;
+      const statusIcon=rezDate?(isBusy?'🔴 ':'🟢 '):'';
+      const statusTxt=rezDate?(isBusy?' [OCUPAT]':' [Liber]'):'';
+      return`<option value="${v.id}" ${r.vehiculId===v.id?'selected':''} ${isBusy?'style="color:#b52d2d"':''}>${statusIcon}${v.icon||''} ${v.nome||v.name||v.nume||''} (${capVeh(v)} loc.)${statusTxt}</option>`;
+    }).join('');
+    if(r.vehiculId)vS.value=r.vehiculId;
     const sfS=document.getElementById('alloc-driver');
-    sfS.innerHTML='<option value="">— nu a fost alocat —</option>'+window._DRIVERS_LIST.map(sf=>`<option value="${sf.id}" ${r.driverId===sf.id?'selected':''}>${sf.numeFull}</option>`).join('');
+    sfS.innerHTML='<option value="">— nu a fost alocat —</option>'+window._DRIVERS_LIST.map(sf=>{
+      const minZi=rezDate?getDriverHoursForDate(sf.id,rezDate):0;
+      const hZ=(minZi/60).toFixed(1);
+      const icon=minZi>=600?'🔴':minZi>=480?'🟡':'🟢';
+      const hoursLabel=rezDate?` (${icon} ${minZi>0?hZ+'h':'liber'})`:'';
+      return`<option value="${sf.id}" ${r.driverId===sf.id?'selected':''} style="color:${minZi>=600?'#b52d2d':minZi>=480?'#c46520':'#1a6b3c'}">${sf.numeFull}${hoursLabel}</option>`;
+    }).join('');
     if(r.driverId)sfS.value=r.driverId;
     const sf2S=document.getElementById('alloc-driver2');
-    sf2S.innerHTML='<option value="">— fără șofer 2 —</option>'+window._DRIVERS_LIST.map(sf=>`<option value="${sf.id}" ${r.driverId2===sf.id?'selected':''}>${sf.numeFull}</option>`).join('');
+    sf2S.innerHTML='<option value="">— fără șofer 2 —</option>'+window._DRIVERS_LIST.map(sf=>{
+      const minZi=rezDate?getDriverHoursForDate(sf.id,rezDate):0;
+      const hZ=(minZi/60).toFixed(1);
+      const icon=minZi>=600?'🔴':minZi>=480?'🟡':'🟢';
+      const hoursLabel=rezDate?` (${icon} ${minZi>0?hZ+'h':'liber'})`:'';
+      return`<option value="${sf.id}" ${r.driverId2===sf.id?'selected':''} style="color:${minZi>=600?'#b52d2d':minZi>=480?'#c46520':'#1a6b3c'}">${sf.numeFull}${hoursLabel}</option>`;
+    }).join('');
     if(r.driverId2)sf2S.value=r.driverId2;
     checkS2Need(r);
   } else allocEl.style.display='none';
@@ -4037,45 +4256,37 @@ window.loadSchedule = async () => {
     window._R=regSnap.docs.map(d=>({id:d.id,...d.data()}));
     const dow=new Date(date+'T12:00:00').getDay();
     const curseAzi=window._R.filter(c=>{if(!c.activa)return false;if(!(c.zile||[]).includes(dow))return false;if(c.dataStart&&date<c.dataStart)return false;if(c.dataEnd&&date>c.dataEnd)return false;if(c.dateBlocate?.includes(date))return false;return true;});
-    // Compute hours per driver - INDIVIDUAL (fiecare sofer = doar cursele lui)
+    // Compute hours per driver - INDIVIDUAL, S2 preia de unde S1 se opreste
     const oreMap={};
-    // Initializeaza toti soferii cu 0
     for(const sf of soferi) oreMap[sf.id]={minZi:0};
 
-    // Parcurge cursele si atribuie minutele DOAR soferului atribuit pe acea plecare
     curseAzi.forEach(c=>{
       const pl=c.plecari||[{ora:c.ora,driverId:c.driverId}];
       const sm=(c.statii?.length>=2)?(c.statii[c.statii.length-1].minuteDeLaStart||60):60;
       const durMin=c.tipCursa==='roundtrip'?sm*2:sm;
 
       pl.forEach(p=>{
-        // Soferul principal (S1) pe aceasta plecare
         const oraInfo=getOraForDate(p,date);
         const sfId1=oraInfo.driverId||p.driverId||p.soferEmail||'';
-        if(sfId1){
-          const obj=resSf(sfId1);
-          if(obj&&oreMap[obj.id]!==undefined){
-            // S1 conduce pana la limita lui (MAX_H_DAY) din aceasta cursa
-            // Daca exista S2, S1 conduce max MAX_H_DAY - ce a lucrat deja
-            const deja=oreMap[obj.id].minZi;
-            const disponibil=Math.max(0, MAX_H_DAY - deja);
-            const minS1=Math.min(durMin, disponibil);
-            oreMap[obj.id].minZi+=minS1;
-          }
-        }
-
-        // Soferul 2 (S2) daca exista - preia restul
         const sfId2=p.driverId2||p.soferEmail2||'';
-        if(sfId2&&sfId1){
-          const obj1=resSf(sfId1);
-          const obj2=resSf(sfId2);
-          if(obj1&&obj2&&oreMap[obj2.id]!==undefined){
-            const deja1=oreMap[obj1.id]?.minZi||0;
-            // S1 a condus deja pana la limita lui
-            const minS1=Math.min(durMin, MAX_H_DAY - (deja1-Math.min(durMin,MAX_H_DAY)));
-            const minS2=Math.max(0, durMin-minS1);
+        const obj1=sfId1?resSf(sfId1):null;
+        const obj2=sfId2?resSf(sfId2):null;
+
+        if(obj1&&oreMap[obj1.id]!==undefined){
+          const dejaS1=oreMap[obj1.id].minZi;
+          const disponibilS1=Math.max(0, MAX_H_DAY - dejaS1);
+          // S1 conduce cat poate din aceasta cursa (pana la limita zilnica)
+          const minS1=Math.min(durMin, disponibilS1);
+          oreMap[obj1.id].minZi+=minS1;
+
+          // S2 preia restul ramas dupa ce S1 se opreste
+          if(obj2&&oreMap[obj2.id]!==undefined){
+            const minS2=durMin-minS1; // exact ce a ramas de condus
             if(minS2>0) oreMap[obj2.id].minZi+=minS2;
           }
+        } else if(obj2&&oreMap[obj2.id]!==undefined){
+          // Daca nu e S1 dar e S2, S2 conduce toata cursa
+          oreMap[obj2.id].minZi+=durMin;
         }
       });
     });
@@ -4215,23 +4426,36 @@ window.tlClickBlock=async(event,cursaId,pi,date)=>{
     window._DRIVERS_LIST.forEach(sf=>{
       const minZi=(oreMap[sf.id]?.minZi||0);
       const after=minZi+durTotal;const dep=after>MAX_H_DAY;const warn=!dep&&after>WARN_H_DAY;
-      const h=(minZi/60).toFixed(1);const icon=dep?'⚠️':warn?'○':'●';
+      const h=(minZi/60).toFixed(1);const icon=dep?'🔴':warn?'🟡':'🟢';
       opts+=`<option value="${sf.id}" ${curValId===sf.id?'selected':''} style="color:${dep?'var(--red)':warn?'var(--orange)':'var(--green)'}">${icon} ${sf.numeFull} (${h}h azi)</option>`;
     });
     return opts;
   };
-  const needS2=oraInfo.driverId&&(oreMap[resSf(oraInfo.driverId)?.id||'']?.minZi||0)+durTotal>MAX_H_DAY;
+  // Calc how many minutes S1 can still drive
+  const s1CurrentMin=(oraInfo.driverId?(oreMap[resSf(oraInfo.driverId)?.id||'']?.minZi||0):0);
+  const s1CanDrive=Math.max(0,MAX_H_DAY-s1CurrentMin);
+  const needS2=oraInfo.driverId&&(s1CurrentMin+durTotal>MAX_H_DAY);
+  const s2TakesOverAt=needS2?Math.round(s1CanDrive):-1;
+  const s2TakesOverHrs=s2TakesOverAt>0?(s2TakesOverAt/60).toFixed(1):'';
+  const s2Opts=window._DRIVERS_LIST.map(sf=>{
+    const minZi=(oreMap[sf.id]?.minZi||0);
+    const h=(minZi/60).toFixed(1);
+    const icon=minZi>=MAX_H_DAY?'🔴':minZi>=WARN_H_DAY?'🟡':'🟢';
+    return`<option value="${sf.id}" ${p.driverId2===sf.id?'selected':''} style="color:${minZi>=MAX_H_DAY?'var(--red)':minZi>=WARN_H_DAY?'var(--orange)':'var(--green)'}">${icon} ${sf.numeFull} (${h}h azi)</option>`;
+  }).join('');
   const panel=document.createElement('div');panel.className='assign-panel';
   const rect=event.target.getBoundingClientRect();
   let top=rect.bottom+8,left=rect.left;
-  if(top+360>window.innerHeight)top=Math.max(10,rect.top-370);
+  if(top+400>window.innerHeight)top=Math.max(10,rect.top-410);
   if(left+320>window.innerWidth)left=window.innerWidth-325;if(left<10)left=10;
   panel.style.cssText=`top:${top}px;left:${left}px`;
   panel.innerHTML=`<div style="font-weight:700;font-size:14px;margin-bottom:2px">${c.ruta}</div>
-    <div style="font-size:12px;color:var(--stone);margin-bottom:12px">${p.ora} · ${(durTotal/60).toFixed(1)}h${c.tipCursa==='roundtrip'?' · Dus-Întors':''} · ${date}</div>
-    ${needS2?`<div style="background:var(--orange-g);border:1px solid var(--orange);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--orange);margin-bottom:10px">⚠️ Cursă lungă! Șoferul depășește ${MAX_H_DAY/60}h. Alocați șofer 2.</div>`:''}
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0"></div><select id="asgn-s1" class="assign-sf-select">${sfOpt(0)}</select></div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div style="width:8px;height:8px;border-radius:50%;background:rgba(196,154,42,.4);flex-shrink:0"></div><select id="asgn-s2" class="assign-sf-select"><option value="">— Fără șofer 2 —</option>${window._DRIVERS_LIST.map(sf=>`<option value="${sf.id}" ${p.driverId2===sf.id?'selected':''}>${sf.numeFull}</option>`).join('')}</select></div>
+    <div style="font-size:12px;color:var(--stone);margin-bottom:10px">${p.ora} · ${(durTotal/60).toFixed(1)}h${c.tipCursa==='roundtrip'?' · Dus-Întors':''} · ${date}</div>
+    ${needS2?`<div style="background:var(--orange-g);border:1px solid var(--orange);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--orange);margin-bottom:10px">⚠️ S1 poate conduce max ${s2TakesOverHrs}h din această cursă. S2 preia restul de ${((durTotal-s2TakesOverAt)/60).toFixed(1)}h.</div>`:''}
+    <div style="font-size:11px;font-weight:700;color:var(--stone);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">🟠 Șofer 1 (primar)</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><select id="asgn-s1" class="assign-sf-select" style="border-color:${needS2?'var(--orange)':'var(--border)'}">${sfOpt(0)}</select></div>
+    <div style="font-size:11px;font-weight:700;color:var(--stone);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">🟢 Șofer 2 (preia schimb${needS2?' — obligatoriu':''})</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><select id="asgn-s2" class="assign-sf-select" style="border-color:${needS2?'var(--green)':'var(--border)'}"><option value="">— Fără șofer 2 —</option>${s2Opts}</select></div>
     <div style="background:var(--cream);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px"><div style="font-weight:700;color:var(--stone);margin-bottom:6px">Aplică pe interval</div><div style="display:flex;gap:8px;align-items:center"><input type="date" id="asgn-df" value="${date}" style="flex:1;font-size:12px;padding:5px;border:1px solid var(--border);border-radius:6px"/><span style="color:var(--stone)">→</span><input type="date" id="asgn-dt" value="${date}" style="flex:1;font-size:12px;padding:5px;border:1px solid var(--border);border-radius:6px"/></div></div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-primary" style="flex:1;font-size:13px" onclick="tlSaveAssign('${cursaId}',${pi})">💾 Salvează</button>
