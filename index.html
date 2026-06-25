@@ -2619,70 +2619,72 @@ window.loadOrgPage = async function() {
 
 async function refreshOrgSelects() {
   const dateStr=document.getElementById('org-date')?.value||'';
-  const dow=dateStr?new Date(dateStr+'T12:00:00').getDay():-1;
 
-  // Build vehicle availability map for chosen date
-  let busyVehicles=new Map(); // vehiculId -> [{ruta, ora}]
+  // ── VEHICULE: intervale exacte ──
+  // Intervale din curse regulate (din _R)
+  const vehIntervalsMap=new Map(); // vehiculId -> [{start,end,ruta}]
   if(dateStr){
+    getIntervalsForDate(dateStr,(info)=>{
+      if(!info.vehiculId)return;
+      if(!vehIntervalsMap.has(info.vehiculId))vehIntervalsMap.set(info.vehiculId,[]);
+      vehIntervalsMap.get(info.vehiculId).push({start:info.startMin,end:info.endMin,ruta:info.ruta});
+    });
+    // Adauga si rezervari organizate confirmate
     try{
       const snap=await getDocs(query(collection(db,'rezervari'),where('data','==',dateStr)));
       snap.docs.forEach(d=>{
         const r=d.data();
-        if(r.status==='anulata')return;
-        if(!r.vehiculId)return;
-        if(!busyVehicles.has(r.vehiculId))busyVehicles.set(r.vehiculId,[]);
-        busyVehicles.get(r.vehiculId).push({ruta:r.ruta||r.traseu||r.descriereCursa||'Cursă',ora:r.ora||''});
+        if(r.status==='anulata'||r.tipRezervare==='regulata')return;
+        if(!r.vehiculId||!r.ora)return;
+        const sMin=timeToMin(r.ora);
+        const eMin=sMin+120; // estimare 2h pentru organizate fara durata exacta
+        if(!vehIntervalsMap.has(r.vehiculId))vehIntervalsMap.set(r.vehiculId,[]);
+        vehIntervalsMap.get(r.vehiculId).push({start:sMin,end:eMin,ruta:r.descriereCursa||r.traseu||'Org.'});
       });
-      // Also check regulate for that day
-      if(dow>=0){
-        (window._R||[]).filter(c=>{
-          if(!c.activa)return false;
-          if(!(c.zile||[]).includes(dow))return false;
-          if(c.dataStart&&dateStr<c.dataStart)return false;
-          if(c.dataEnd&&dateStr>c.dataEnd)return false;
-          if(c.dateBlocate?.includes(dateStr))return false;
-          return true;
-        }).forEach(c=>{
-          if(!c.vehiculId)return;
-          if(!busyVehicles.has(c.vehiculId))busyVehicles.set(c.vehiculId,[]);
-          busyVehicles.get(c.vehiculId).push({ruta:c.ruta,ora:(c.plecari||[{ora:c.ora}]).map(p=>p.ora).join('/')});
-        });
-      }
     }catch(e){}
   }
 
-  // Populate vehicle select with availability info
+  // Populate vehicle select cu intervale exacte
   const orgVeh=document.getElementById('org-veh');
   if(orgVeh){
     orgVeh.innerHTML='<option value="">— selectați vehiculul dorit —</option>'+
     window._F.filter(v=>v.disponibil!==false).map(v=>{
-      const busy=busyVehicles.get(v.id)||[];
-      const isBusy=busy.length>0;
-      const busyInfo=busy.map(b=>`${b.ruta}${b.ora?' ('+b.ora+')':''}`).slice(0,2).join(', ');
-      const vName=v.icon||'';
-      const vNume=v.nome||v.name||v.nume||'';
+      const ivs=(vehIntervalsMap.get(v.id)||[]).sort((a,b)=>a.start-b.start);
+      const vNume=`${v.icon||''} ${v.nome||v.name||v.nume||''}`.trim();
       const locuri=capVeh(v);
       const pret=v.pretPerKm?` · ${v.pretPerKm} RON/km`:'';
-      const statusIcon=dateStr?(isBusy?'🔴':'🟢'):'';
-      const statusText=dateStr?(isBusy?` — OCUPAT (${busyInfo})`:'  — Disponibil'):'';
-      return`<option value="${v.id}" ${isBusy?'style="color:#b52d2d"':''}>${statusIcon} ${vName} ${vNume} — ${locuri} locuri${pret}${statusText}</option>`;
+      let statusStr='';
+      if(dateStr&&ivs.length){
+        const ocupatStr=ivs.map(iv=>`🔴 ${minToTime(iv.start)}–${minToTime(iv.end%1440)}`).join(', ');
+        statusStr=` — ${ocupatStr}`;
+      } else if(dateStr){
+        statusStr=' — 🟢 Disponibil toată ziua';
+      }
+      return`<option value="${v.id}" ${ivs.length?'style="color:#b52d2d"':''}>${vNume} — ${locuri} locuri${pret}${statusStr}</option>`;
     }).join('');
   }
 
-  // Populate driver preference with hours info for chosen date
+  // ── ȘOFERI: intervale exacte ──
   const sel=document.getElementById('org-driver-pref');
   if(sel){
     const driverOpts=window._DRIVERS_LIST.map(s=>{
-      const minZi=dateStr?getDriverHoursForDate(s.id,dateStr):0;
-      const hZ=(minZi/60).toFixed(1);
-      const icon=minZi>=600?'🔴':minZi>=480?'🟡':'🟢';
-      const hoursLabel=dateStr?` (${icon} ${minZi>0?hZ+'h azi':'liber'})`:'';
-      return`<option value="${s.id}">${s.numeFull}${hoursLabel}</option>`;
+      if(!dateStr) return`<option value="${s.id}">${s.numeFull}</option>`;
+      const ivs=getDriverIntervals(s.id,dateStr);
+      const totalMin=ivs.reduce((sum,iv)=>sum+(iv.end-iv.start),0);
+      const icon=totalMin>=600?'🔴':totalMin>=480?'🟡':'🟢';
+      let statusStr;
+      if(ivs.length){
+        const ocupatStr=ivs.map(iv=>`${minToTime(iv.start)}–${minToTime(iv.end%1440)}`).join(', ');
+        statusStr=` (${icon} ocupat ${ocupatStr})`;
+      } else {
+        statusStr=' (🟢 Liber toată ziua)';
+      }
+      return`<option value="${s.id}" style="color:${totalMin>=600?'#b52d2d':totalMin>=480?'#c46520':'#1a6b3c'}">${s.numeFull}${statusStr}</option>`;
     }).join('');
     sel.innerHTML='<option value="">— fără preferință —</option>'+driverOpts;
   }
 
-  // Show availability info box
+  // ── INFO BOX rezumat disponibilitate ──
   const priceBox=document.getElementById('org-price-box');
   let infoBoxEl=document.getElementById('org-avail-info');
   if(!infoBoxEl){
@@ -2691,10 +2693,13 @@ async function refreshOrgSelects() {
     infoBoxEl.style.marginBottom='12px';
     priceBox?.parentNode?.insertBefore(infoBoxEl,priceBox);
   }
-  if(dateStr&&busyVehicles.size>0){
-    const busyCnt=[...busyVehicles.keys()].filter(id=>window._F.some(v=>v.id===id)).length;
-    const freeCnt=window._F.filter(v=>v.disponibil!==false&&!busyVehicles.has(v.id)).length;
-    infoBoxEl.innerHTML=`<div style="background:var(--blue-g);border:1px solid rgba(30,95,168,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--blue)">📅 <strong>${dateStr}</strong>: ${freeCnt} vehicul${freeCnt!==1?'e':''} disponibil${freeCnt!==1?'e':''} 🟢 · ${busyCnt} ocupat${busyCnt!==1?'e':''} 🔴 (detalii în lista de mai sus)</div>`;
+  if(dateStr){
+    const total=window._F.filter(v=>v.disponibil!==false).length;
+    const ocupate=window._F.filter(v=>v.disponibil!==false&&(vehIntervalsMap.get(v.id)||[]).length>0).length;
+    const libere=total-ocupate;
+    infoBoxEl.innerHTML=`<div style="background:var(--blue-g);border:1px solid rgba(30,95,168,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--blue)">
+      📅 <strong>${dateStr}</strong>: ${libere} vehicul${libere!==1?'e':''} 🟢 libere · ${ocupate} 🔴 cu curse planificate (vehiculele ocupate arată intervalul exact)
+    </div>`;
   } else {
     infoBoxEl.innerHTML='';
   }
@@ -3237,12 +3242,12 @@ window.calcDistances=async()=>{
   renderRmStops();
   toast(`✅ ${totalKm} km total · ~${Math.round(totalMin/60*10)/10}h · Prețurile pot fi editate manual.`,'ok');
 };
-function getDriverHoursForDate(sfId, dateStr) {
-  // Calculeaza orele unui sofer specific pentru o zi anume
-  // S1 conduce pana la MAX_H_DAY, S2 preia restul
-  if (!sfId || !dateStr) return 0;
+// ── CALCUL ORE / INTERVALE SOFERI & VEHICULE ──────────────
+// Returneaza lista de intervale [{start:min, end:min, ruta, cursaId}] pentru un sofer/vehicul intr-o zi
+function getIntervalsForDate(dateStr, filterFn) {
+  if (!dateStr) return [];
   const dow = new Date(dateStr+'T12:00:00').getDay();
-  let totalMin = 0;
+  const intervals = [];
   (window._R||[]).forEach(c => {
     if (!c.activa) return;
     if (!(c.zile||[]).includes(dow)) return;
@@ -3250,67 +3255,143 @@ function getDriverHoursForDate(sfId, dateStr) {
     if (c.dataEnd && dateStr > c.dataEnd) return;
     if (c.dateBlocate?.includes(dateStr)) return;
     const sm = (c.statii?.length>=2) ? (c.statii[c.statii.length-1].minuteDeLaStart||60) : 60;
-    const dur = c.tipCursa==='roundtrip' ? sm*2 : sm;
+    const durDus = sm;
     const pl = c.plecari||[{ora:c.ora,driverId:c.driverId}];
     pl.forEach(p => {
       const oraInfo = getOraForDate(p, dateStr);
-      const s1Id = resSf(oraInfo.driverId||p.driverId||'')?.id;
-      const s2Id = resSf(p.driverId2||'')?.id;
+      const ora = oraInfo.ora || p.ora || '';
+      if (!ora) return;
+      const startMin = timeToMin(ora);
+      const s1Id = resSf(oraInfo.driverId||p.driverId||'')?.id||'';
+      const s2Id = resSf(p.driverId2||'')?.id||'';
+      // Calc how long S1 can drive
+      const s1TotalBefore = getDriverMinutesBefore(s1Id, dateStr, c.id, startMin);
+      const s1Disponibil = s1Id ? Math.max(0, MAX_H_DAY - s1TotalBefore) : 0;
+      if (c.tipCursa==='roundtrip') {
+        const durTotal = sm*2 + BREAK_MIN;
+        const endMin = startMin + durTotal;
+        const handoverMin = s1Id ? startMin + Math.min(sm, s1Disponibil) : startMin;
+        filterFn({cursaId:c.id, ruta:c.ruta, vehiculId:c.vehiculId,
+          s1Id, s2Id, startMin, endMin, handoverMin,
+          durDus, durTotal, isDI:true}, intervals);
+      } else {
+        const endMin = startMin + durDus;
+        const handoverMin = s1Id ? startMin + Math.min(durDus, s1Disponibil) : startMin;
+        filterFn({cursaId:c.id, ruta:c.ruta, vehiculId:c.vehiculId,
+          s1Id, s2Id, startMin, endMin, handoverMin,
+          durDus, durTotal:durDus, isDI:false}, intervals);
+      }
+    });
+  });
+  return intervals.sort((a,b)=>a.startMin-b.startMin);
+}
+
+// Calculeaza minutele acumulate de un sofer INAINTE de ora `beforeMin` in aceeasi zi
+function getDriverMinutesBefore(sfId, dateStr, excludeCursaId, beforeMin) {
+  if (!sfId || !dateStr) return 0;
+  const dow = new Date(dateStr+'T12:00:00').getDay();
+  let totalMin = 0;
+  (window._R||[]).forEach(c => {
+    if (c.id === excludeCursaId) return;
+    if (!c.activa) return;
+    if (!(c.zile||[]).includes(dow)) return;
+    if (c.dataStart && dateStr < c.dataStart) return;
+    if (c.dataEnd && dateStr > c.dataEnd) return;
+    if (c.dateBlocate?.includes(dateStr)) return;
+    const sm = (c.statii?.length>=2) ? (c.statii[c.statii.length-1].minuteDeLaStart||60) : 60;
+    const dur = c.tipCursa==='roundtrip' ? sm*2+BREAK_MIN : sm;
+    const pl = c.plecari||[{ora:c.ora,driverId:c.driverId}];
+    pl.forEach(p => {
+      const oraInfo = getOraForDate(p, dateStr);
+      const ora = oraInfo.ora||p.ora||'';
+      if (!ora) return;
+      const pStartMin = timeToMin(ora);
+      if (pStartMin >= beforeMin) return; // ignora cursele care incep dupa
+      const s1Id = resSf(oraInfo.driverId||p.driverId||'')?.id||'';
+      const s2Id = resSf(p.driverId2||'')?.id||'';
       if (s1Id === sfId) {
-        // Acest sofer e S1 - conduce pana la limita
-        const disponibil = Math.max(0, 600 - totalMin); // 600min=10h
+        const disponibil = Math.max(0, MAX_H_DAY - totalMin);
         totalMin += Math.min(dur, disponibil);
       } else if (s2Id === sfId && s1Id) {
-        // Acest sofer e S2 - conduce restul dupa ce S1 se opreste
-        // Calculam cat conduce S1 din aceasta cursa
-        const s1AlreadyWorked = getDriverHoursForDateSimple(s1Id, dateStr, c.id);
-        const disponibilS1 = Math.max(0, 600 - s1AlreadyWorked);
-        const minS1 = Math.min(dur, disponibilS1);
-        const minS2 = dur - minS1;
-        if (minS2 > 0) totalMin += minS2;
+        const s1Before = getDriverMinutesBefore(s1Id, dateStr, c.id, pStartMin);
+        const s1Disp = Math.max(0, MAX_H_DAY - s1Before);
+        const minS1 = Math.min(dur, s1Disp);
+        totalMin += Math.max(0, dur - minS1);
       }
     });
   });
   return totalMin;
 }
-function getDriverHoursForDateSimple(sfId, dateStr, excludeCursaId) {
-  // Versiune simplificata fara S2 lookup (evita recursie)
-  if (!sfId || !dateStr) return 0;
-  const dow = new Date(dateStr+'T12:00:00').getDay();
-  let totalMin = 0;
-  (window._R||[]).forEach(c => {
-    if (c.id === excludeCursaId) return; // nu numara cursa curenta
-    if (!c.activa) return;
-    if (!(c.zile||[]).includes(dow)) return;
-    if (c.dataStart && dateStr < c.dataStart) return;
-    if (c.dataEnd && dateStr > c.dataEnd) return;
-    if (c.dateBlocate?.includes(dateStr)) return;
-    const sm = (c.statii?.length>=2) ? (c.statii[c.statii.length-1].minuteDeLaStart||60) : 60;
-    const dur = c.tipCursa==='roundtrip' ? sm*2 : sm;
-    const pl = c.plecari||[{ora:c.ora,driverId:c.driverId}];
-    pl.forEach(p => {
-      const oraInfo = getOraForDate(p, dateStr);
-      const s1Id = resSf(oraInfo.driverId||p.driverId||'')?.id;
-      if (s1Id === sfId) {
-        const disponibil = Math.max(0, 600 - totalMin);
-        totalMin += Math.min(dur, disponibil);
+
+// Returneaza intervalele unui sofer intr-o zi (cu ore exacte)
+function getDriverIntervals(sfId, dateStr) {
+  if (!sfId || !dateStr) return [];
+  const result = [];
+  getIntervalsForDate(dateStr, (info, arr) => {
+    if (info.s1Id === sfId) {
+      const endS1 = info.s2Id ? info.handoverMin : info.endMin;
+      result.push({start:info.startMin, end:endS1, ruta:info.ruta, role:'S1', cursaId:info.cursaId});
+      // Daca e dus-intors si S1 conduce tot
+      if (!info.s2Id && info.isDI) {
+        result[result.length-1].end = info.endMin;
       }
-    });
+    } else if (info.s2Id === sfId && info.s1Id) {
+      if (info.handoverMin < info.endMin) {
+        result.push({start:info.handoverMin, end:info.endMin, ruta:info.ruta+' (preia)', role:'S2', cursaId:info.cursaId});
+      }
+    } else if (!info.s1Id && info.s2Id === sfId) {
+      result.push({start:info.startMin, end:info.endMin, ruta:info.ruta, role:'S1', cursaId:info.cursaId});
+    }
   });
-  return totalMin;
+  return result.sort((a,b)=>a.start-b.start);
+}
+
+// Returneaza intervalele unui vehicul intr-o zi
+function getVehicleIntervals(vehId, dateStr) {
+  if (!vehId || !dateStr) return [];
+  const result = [];
+  getIntervalsForDate(dateStr, (info) => {
+    if (info.vehiculId === vehId) {
+      result.push({start:info.startMin, end:info.endMin, ruta:info.ruta, cursaId:info.cursaId});
+    }
+  });
+  return result.sort((a,b)=>a.start-b.start);
+}
+
+// Formateaza intervalele ca text pentru afisare in select/option
+function formatIntervals(intervals) {
+  if (!intervals.length) return '🟢 Liber';
+  return intervals.map(iv => `🔴 ${minToTime(iv.start)}–${minToTime(iv.end%1440)} (${iv.ruta.split('–')[0].trim()})`).join(', ');
+}
+
+// Calculeaza total minute conduse intr-o zi (pentru bara progres)
+function getDriverTotalMinutes(sfId, dateStr) {
+  return getDriverIntervals(sfId, dateStr).reduce((s,iv)=>s+(iv.end-iv.start),0);
+}
+window.getDriverIntervals = getDriverIntervals;
+window.getVehicleIntervals = getVehicleIntervals;
+window.getDriverTotalMinutes = getDriverTotalMinutes;
+
+function getDriverHoursForDate(sfId, dateStr) {
+  return getDriverTotalMinutes(sfId, dateStr);
+}
+function getDriverHoursForDateSimple(sfId, dateStr, excludeCursaId) {
+  return getDriverMinutesBefore(sfId, dateStr, excludeCursaId, 9999);
 }
 window.getDriverHoursForDate = getDriverHoursForDate;
 
 function buildSfOptsWithHours(curValId, dateStr) {
-  // Construieste optiunile pentru select sofer cu ore lucrate afisate
   const testDate = dateStr || new Date().toISOString().split('T')[0];
   return window._DRIVERS_LIST.map(sf => {
-    const minZi = getDriverHoursForDate(sf.id, testDate);
-    const hZ = (minZi/60).toFixed(1);
-    const pZ = Math.min(Math.round(minZi/600*100),100); // 600min=10h
-    const icon = minZi>=600?'🔴':minZi>=480?'🟡':'🟢';
-    const label = minZi>0 ? `${sf.numeFull} (${icon} ${hZ}h azi)` : `${sf.numeFull} (🟢 liber)`;
-    return `<option value="${sf.id}" ${curValId===sf.id?'selected':''} style="color:${minZi>=600?'#b52d2d':minZi>=480?'#c46520':'#1a6b3c'}">${label}</option>`;
+    const intervals = testDate ? getDriverIntervals(sf.id, testDate) : [];
+    const totalMin = intervals.reduce((s,iv)=>s+(iv.end-iv.start),0);
+    const hZ = (totalMin/60).toFixed(1);
+    const icon = totalMin>=600?'🔴':totalMin>=480?'🟡':'🟢';
+    const intervalsText = testDate ? formatIntervals(intervals) : '';
+    const label = totalMin>0
+      ? `${sf.numeFull} (${icon} ${hZ}h — ${intervalsText})`
+      : `${sf.numeFull} (🟢 Liber)`;
+    return `<option value="${sf.id}" ${curValId===sf.id?'selected':''} style="color:${totalMin>=600?'#b52d2d':totalMin>=480?'#c46520':'#1a6b3c'}">${label}</option>`;
   }).join('');
 }
 
@@ -3461,52 +3542,52 @@ window.openBookingDetail=async rezId=>{
   if(isOrg){
     allocEl.style.display='block';
     const vS=document.getElementById('alloc-vehicle');
-    // Build vehicle options with availability for reservation date
     const rezDate=r.data||'';
-    let busyVehIds=new Set();
+    // Vehicule: intervale exacte din curse regulate + rezervari
+    const vehIvsMap=new Map();
     if(rezDate){
+      getIntervalsForDate(rezDate,(info)=>{
+        if(!info.vehiculId)return;
+        if(!vehIvsMap.has(info.vehiculId))vehIvsMap.set(info.vehiculId,[]);
+        vehIvsMap.get(info.vehiculId).push({start:info.startMin,end:info.endMin,ruta:info.ruta});
+      });
       try{
         const snap2=await getDocs(query(collection(db,'rezervari'),where('data','==',rezDate)));
         snap2.docs.forEach(d2=>{
           const r2=d2.data();
-          if(r2.status!=='anulata'&&r2.vehiculId&&d2.id!==rezId) busyVehIds.add(r2.vehiculId);
+          if(d2.id===rezId||r2.status==='anulata'||r2.tipRezervare==='regulata'||!r2.vehiculId||!r2.ora)return;
+          const sMin=timeToMin(r2.ora);
+          if(!vehIvsMap.has(r2.vehiculId))vehIvsMap.set(r2.vehiculId,[]);
+          vehIvsMap.get(r2.vehiculId).push({start:sMin,end:sMin+120,ruta:r2.descriereCursa||'Org.'});
         });
-        // Check regular routes
-        const dow2=new Date(rezDate+'T12:00:00').getDay();
-        (window._R||[]).filter(c=>{
-          if(!c.activa)return false;
-          if(!(c.zile||[]).includes(dow2))return false;
-          if(c.dataStart&&rezDate<c.dataStart)return false;
-          if(c.dataEnd&&rezDate>c.dataEnd)return false;
-          if(c.dateBlocate?.includes(rezDate))return false;
-          return true;
-        }).forEach(c=>{if(c.vehiculId)busyVehIds.add(c.vehiculId);});
       }catch(e2){}
     }
     vS.innerHTML='<option value="">— nu a fost alocat —</option>'+window._F.map(v=>{
-      const isBusy=busyVehIds.has(v.id)&&v.id!==r.vehiculId;
-      const statusIcon=rezDate?(isBusy?'🔴 ':'🟢 '):'';
-      const statusTxt=rezDate?(isBusy?' [OCUPAT]':' [Liber]'):'';
-      return`<option value="${v.id}" ${r.vehiculId===v.id?'selected':''} ${isBusy?'style="color:#b52d2d"':''}>${statusIcon}${v.icon||''} ${v.nome||v.name||v.nume||''} (${capVeh(v)} loc.)${statusTxt}</option>`;
+      const ivs=(vehIvsMap.get(v.id)||[]).sort((a,b)=>a.start-b.start);
+      const isBusyOther=ivs.length>0&&v.id!==r.vehiculId;
+      let statusStr='';
+      if(rezDate&&ivs.length){
+        statusStr=' — '+ivs.map(iv=>`🔴 ${minToTime(iv.start)}–${minToTime(iv.end%1440)}`).join(', ');
+      } else if(rezDate){statusStr=' — 🟢 Liber';}
+      return`<option value="${v.id}" ${r.vehiculId===v.id?'selected':''} ${isBusyOther?'style="color:#b52d2d"':''}>${v.icon||''} ${v.nome||v.name||v.nume||''} (${capVeh(v)} loc.)${statusStr}</option>`;
     }).join('');
     if(r.vehiculId)vS.value=r.vehiculId;
-    const sfS=document.getElementById('alloc-driver');
-    sfS.innerHTML='<option value="">— nu a fost alocat —</option>'+window._DRIVERS_LIST.map(sf=>{
-      const minZi=rezDate?getDriverHoursForDate(sf.id,rezDate):0;
-      const hZ=(minZi/60).toFixed(1);
-      const icon=minZi>=600?'🔴':minZi>=480?'🟡':'🟢';
-      const hoursLabel=rezDate?` (${icon} ${minZi>0?hZ+'h':'liber'})`:'';
-      return`<option value="${sf.id}" ${r.driverId===sf.id?'selected':''} style="color:${minZi>=600?'#b52d2d':minZi>=480?'#c46520':'#1a6b3c'}">${sf.numeFull}${hoursLabel}</option>`;
+    // Soferi: intervale exacte
+    const buildSfAllocOpts=(curVal)=>window._DRIVERS_LIST.map(sf=>{
+      const ivs=rezDate?getDriverIntervals(sf.id,rezDate):[];
+      const totalMin=ivs.reduce((s,iv)=>s+(iv.end-iv.start),0);
+      const icon=totalMin>=600?'🔴':totalMin>=480?'🟡':'🟢';
+      let statusStr='';
+      if(rezDate&&ivs.length){
+        statusStr=` (${icon} ${ivs.map(iv=>`${minToTime(iv.start)}–${minToTime(iv.end%1440)}`).join(', ')})`;
+      } else if(rezDate){statusStr=' (🟢 Liber)';}
+      return`<option value="${sf.id}" ${curVal===sf.id?'selected':''} style="color:${totalMin>=600?'#b52d2d':totalMin>=480?'#c46520':'#1a6b3c'}">${sf.numeFull}${statusStr}</option>`;
     }).join('');
+    const sfS=document.getElementById('alloc-driver');
+    sfS.innerHTML='<option value="">— nu a fost alocat —</option>'+buildSfAllocOpts(r.driverId||'');
     if(r.driverId)sfS.value=r.driverId;
     const sf2S=document.getElementById('alloc-driver2');
-    sf2S.innerHTML='<option value="">— fără șofer 2 —</option>'+window._DRIVERS_LIST.map(sf=>{
-      const minZi=rezDate?getDriverHoursForDate(sf.id,rezDate):0;
-      const hZ=(minZi/60).toFixed(1);
-      const icon=minZi>=600?'🔴':minZi>=480?'🟡':'🟢';
-      const hoursLabel=rezDate?` (${icon} ${minZi>0?hZ+'h':'liber'})`:'';
-      return`<option value="${sf.id}" ${r.driverId2===sf.id?'selected':''} style="color:${minZi>=600?'#b52d2d':minZi>=480?'#c46520':'#1a6b3c'}">${sf.numeFull}${hoursLabel}</option>`;
-    }).join('');
+    sf2S.innerHTML='<option value="">— fără șofer 2 —</option>'+buildSfAllocOpts(r.driverId2||'');
     if(r.driverId2)sf2S.value=r.driverId2;
     checkS2Need(r);
   } else allocEl.style.display='none';
@@ -4297,23 +4378,29 @@ window.loadSchedule = async () => {
 };
 
 function renderScheduleSummary(soferi,oreMap,el){
-  // Afiseaza doar soferii care au cel putin o cursa azi SAU toti daca mai putin de 6
+  const date=window._TL_DATE||new Date().toISOString().split('T')[0];
   const cuCurse=soferi.filter(sf=>(oreMap[sf.id]?.minZi||0)>0);
   const lista=cuCurse.length>0?cuCurse:soferi.slice(0,6);
-  el.innerHTML='<div style="margin-bottom:6px;font-size:11px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Ore condus azi — individual per șofer</div>'
+  el.innerHTML='<div style="margin-bottom:6px;font-size:11px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Program șoferi azi — intervale exacte</div>'
   +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">'+soferi.map(sf=>{
     const o=oreMap[sf.id]||{};
     const minZi=o.minZi||0;
+    const ivs=getDriverIntervals(sf.id,date);
     const hZ=(minZi/60).toFixed(1);
     const pZ=Math.min(Math.round(minZi/MAX_H_DAY*100),100);
     const col=pZ>=100?'var(--red)':pZ>=80?'var(--orange)':minZi>0?'var(--green)':'var(--stone)';
     const name=sf.numeFull||[sf.prenume,sf.nume].filter(Boolean).join(' ');
     const expOk=!sf.expPermis||new Date(sf.expPermis)>new Date();
-    return`<div style="background:var(--card);border:1.5px solid ${pZ>=100?'var(--red)':pZ>=80?'var(--orange)':minZi>0?'var(--green-g)':'var(--border-l)'};border-radius:10px;padding:10px 14px;min-width:160px;flex:1">
-      <div style="font-weight:700;font-size:13px;margin-bottom:3px">${name}</div>
-      <div style="font-size:12px;color:${col};font-weight:600">${minZi>0?hZ+'h condus':'Liber azi'}</div>
-      <div style="font-size:10px;color:var(--stone);margin-bottom:4px">max ${MAX_H_DAY/60}h/zi${pZ>=80?' · '+pZ+'%':''}</div>
-      <div class="pbar" style="width:100%"><div class="pbar-fill" style="width:${pZ}%;background:${col}"></div></div>
+    // Intervale text
+    let ivText='🟢 Liber toată ziua';
+    if(ivs.length){
+      ivText=ivs.map(iv=>`<span style="display:inline-block;background:${iv.role==='S2'?'var(--green-g)':'var(--amber-g)'};border:1px solid ${iv.role==='S2'?'rgba(26,107,60,.3)':'var(--amber-b)'};border-radius:4px;padding:1px 6px;margin:1px;font-size:10px;color:${iv.role==='S2'?'var(--green)':'var(--amber-d)'};white-space:nowrap">🔴 ${minToTime(iv.start)}–${minToTime(iv.end%1440)}${iv.role==='S2'?' (S2)':''}</span>`).join('');
+    }
+    return`<div style="background:var(--card);border:1.5px solid ${pZ>=100?'var(--red)':pZ>=80?'var(--orange)':minZi>0?'var(--green-g)':'var(--border-l)'};border-radius:10px;padding:10px 14px;min-width:200px;flex:1">
+      <div style="font-weight:700;font-size:13px;margin-bottom:4px">${name}</div>
+      <div style="margin-bottom:5px;line-height:1.6">${ivText}</div>
+      ${minZi>0?`<div style="font-size:11px;color:${col};font-weight:600;margin-bottom:3px">Total: ${hZ}h / ${MAX_H_DAY/60}h max</div>
+      <div class="pbar" style="width:100%"><div class="pbar-fill" style="width:${pZ}%;background:${col}"></div></div>`:''}
       ${!expOk?'<div style="font-size:10px;color:var(--red);font-weight:700;margin-top:3px">⚠️ Permis expirat</div>':''}
     </div>`;
   }).join('')+'</div>';
