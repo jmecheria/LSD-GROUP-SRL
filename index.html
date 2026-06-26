@@ -1060,7 +1060,8 @@ footer{
     <button class="tab-btn" onclick="adminTab('routes')">🔄 Regulate</button>
     <button class="tab-btn" onclick="adminTab('bookings')">📋 Rezervări</button>
     <button class="tab-btn" onclick="adminTab('drivers')">👤 Șoferi</button>
-    <button class="tab-btn" onclick="adminTab('schedule')">📅 Program</button>
+    <button class="tab-btn" onclick="adminTab('schedule')">📅 Program zilnic</button>
+    <button class="tab-btn" onclick="adminTab('weekly')">📊 Program săptămânal</button>
     <button class="tab-btn" onclick="adminTab('ticker')">📢 Ticker</button>
     <button class="tab-btn" onclick="adminTab('settings')">⚙️ Setări</button>
   </div>
@@ -1161,6 +1162,32 @@ footer{
     </div>
     <div id="schedule-summary" style="margin-bottom:12px"></div>
     <div id="schedule-list"></div>
+  </div>
+
+  <!-- PROGRAM SAPTAMANAL -->
+  <div id="admin-tab-weekly" class="tab-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div>
+        <h3 style="font-size:16px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif">📊 Program Săptămânal Șoferi</h3>
+        <p style="font-size:12px;color:var(--stone)">Ore conduse per zi · limită legală 10h/zi, 56h/săptămână · Click pe zi pentru detalii</p>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="weeklyPrev()">← Săptămâna anterioară</button>
+        <button class="btn btn-secondary btn-sm" onclick="weeklyToday()">Săptămâna curentă</button>
+        <button class="btn btn-secondary btn-sm" onclick="weeklyNext()">Săptămâna următoare →</button>
+        <button class="btn btn-primary btn-sm" onclick="loadWeeklySchedule()">🔄</button>
+      </div>
+    </div>
+    <div id="weekly-range-label" style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px;color:var(--amber-d)"></div>
+    <!-- Legenda -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;margin-bottom:12px;padding:8px 14px;background:var(--cream);border-radius:8px;border:1px solid var(--border-l)">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:var(--green-g);border:1px solid rgba(26,107,60,.3);display:inline-block"></span>Normal (sub 8h)</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:var(--orange-g);border:1px solid var(--orange);display:inline-block"></span>Atenție (8–10h)</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:var(--red-g);border:1px solid var(--red);display:inline-block"></span>Depășit (10h+)</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:var(--cream);border:1px dashed var(--border);display:inline-block"></span>Liber</span>
+    </div>
+    <div id="weekly-grid" style="overflow-x:auto"></div>
+    <div id="weekly-totals" style="margin-top:16px"></div>
   </div>
 
   <!-- TICKER -->
@@ -2953,13 +2980,14 @@ window.loadAdmin = async () => {
 };
 window.refreshAdmin=async()=>{await loadAdmin();toast('Date actualizate!','ok');};
 window.adminTab=tab=>{
-  ['vehicles','routes','bookings','drivers','schedule','ticker','settings'].forEach(t=>{
+  ['vehicles','routes','bookings','drivers','schedule','weekly','ticker','settings'].forEach(t=>{
     document.getElementById('admin-tab-'+t)?.classList.toggle('active',t===tab);
   });
   document.querySelectorAll('#pg-admin .tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['vehicles','routes','bookings','drivers','schedule','ticker','settings'][i]===tab);
+    b.classList.toggle('active',['vehicles','routes','bookings','drivers','schedule','weekly','ticker','settings'][i]===tab);
   });
   if(tab==='schedule'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];loadSchedule();}
+  if(tab==='weekly'){loadWeeklySchedule();}
 };
 window.adminViewAs=role=>{
   window._ROLE=role==='driver'?'driver':'client';
@@ -4317,6 +4345,152 @@ window.markScanned = async (rezId, locNr) => {
 };
 
 // ── TIMELINE / PROGRAM SOFERI ──────────────────────────────
+// ── PROGRAM SAPTAMANAL ─────────────────────────────────────
+let _weekStart = null; // luni din saptamana curenta
+
+function getWeekStart(referenceDate) {
+  const d = new Date(referenceDate+'T12:00:00');
+  const day = d.getDay(); // 0=dum
+  const diff = (day===0?-6:1-day); // merge la luni
+  d.setDate(d.getDate()+diff);
+  return d.toISOString().split('T')[0];
+}
+
+window.weeklyToday = () => {
+  _weekStart = getWeekStart(new Date().toISOString().split('T')[0]);
+  loadWeeklySchedule();
+};
+window.weeklyPrev = () => {
+  if(!_weekStart) _weekStart = getWeekStart(new Date().toISOString().split('T')[0]);
+  const d = new Date(_weekStart+'T12:00:00'); d.setDate(d.getDate()-7);
+  _weekStart = d.toISOString().split('T')[0];
+  loadWeeklySchedule();
+};
+window.weeklyNext = () => {
+  if(!_weekStart) _weekStart = getWeekStart(new Date().toISOString().split('T')[0]);
+  const d = new Date(_weekStart+'T12:00:00'); d.setDate(d.getDate()+7);
+  _weekStart = d.toISOString().split('T')[0];
+  loadWeeklySchedule();
+};
+
+window.loadWeeklySchedule = async () => {
+  if(!_weekStart) _weekStart = getWeekStart(new Date().toISOString().split('T')[0]);
+  const gridEl = document.getElementById('weekly-grid');
+  const totEl = document.getElementById('weekly-totals');
+  const labelEl = document.getElementById('weekly-range-label');
+  if(!gridEl) return;
+  gridEl.innerHTML = '<div class="loading-state"><div class="spin"></div></div>';
+
+  // Asigura-te ca avem soferii si cursele
+  try{ const sfSnap=await getDocs(collection(db,'soferi')); buildDriversCache(sfSnap); }catch(e){}
+  if(!window._R?.length){
+    try{ const rs=await getDocs(collection(db,'curse_regulate')); window._R=rs.docs.map(d=>({id:d.id,...d.data()})); }catch(e){}
+  }
+  await loadFleet().catch(()=>{});
+  const soferi = window._DRIVERS_LIST.filter(s=>s.activ!==false);
+  if(!soferi.length){gridEl.innerHTML='<div class="empty-state"><div class="empty-icon">👤</div><p>Niciun șofer activ</p></div>';return;}
+
+  // Genereaza cele 7 zile (Lun–Dum)
+  const days = [];
+  const zileLong = ['Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă','Duminică'];
+  for(let i=0;i<7;i++){
+    const d=new Date(_weekStart+'T12:00:00'); d.setDate(d.getDate()+i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+
+  // Label saptamana
+  const dS=new Date(days[0]+'T12:00:00'), dE=new Date(days[6]+'T12:00:00');
+  labelEl.textContent=`${dS.getDate()} ${window.MONTHS_RO[dS.getMonth()].slice(0,3)} – ${dE.getDate()} ${window.MONTHS_RO[dE.getMonth()].slice(0,3)} ${dE.getFullYear()}`;
+
+  // Calculam orele per sofer per zi
+  const today = new Date().toISOString().split('T')[0];
+  const data = soferi.map(sf => {
+    const zileProg = days.map(dateStr => {
+      const ivs = getDriverIntervals(sf.id, dateStr);
+      const minZi = ivs.reduce((s,iv)=>s+(iv.end-iv.start),0);
+      return { dateStr, ivs, minZi };
+    });
+    const totalSapt = zileProg.reduce((s,z)=>s+z.minZi,0);
+    return { sf, zileProg, totalSapt };
+  });
+
+  // Tabel HTML
+  const MAX_SAPT = 56*60;
+  let html = `<table style="width:100%;border-collapse:collapse;min-width:700px;background:var(--card);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh)">
+    <thead>
+      <tr style="background:var(--cream);border-bottom:2px solid var(--border)">
+        <th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--stone);font-weight:700;text-transform:uppercase;letter-spacing:.4px;min-width:130px">Șofer</th>
+        ${days.map((d,i)=>{
+          const isPast=d<today; const isToday2=d===today;
+          const bg=isToday2?'var(--amber-g)':isPast?'transparent':'transparent';
+          const border=isToday2?'border-bottom:2px solid var(--amber)':'';
+          return`<th style="padding:10px 8px;text-align:center;font-size:11px;color:${isToday2?'var(--amber-d)':'var(--stone)'};font-weight:${isToday2?700:600};background:${bg};${border};min-width:90px">
+            ${zileLong[i]}<br><span style="font-size:10px;font-weight:400">${d.slice(5)}</span>
+          </th>`;
+        }).join('')}
+        <th style="padding:10px 14px;text-align:center;font-size:11px;color:var(--stone);font-weight:700;text-transform:uppercase;letter-spacing:.4px;min-width:100px">Total săpt.</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  data.forEach(({sf,zileProg,totalSapt},ri) => {
+    const pSapt=Math.min(Math.round(totalSapt/MAX_SAPT*100),100);
+    const colSapt=pSapt>=100?'var(--red)':pSapt>=80?'var(--orange)':'var(--ink)';
+    const rowBg=ri%2===0?'var(--card)':'rgba(245,242,235,.5)';
+    html+=`<tr style="border-bottom:1px solid var(--border-l);background:${rowBg}">
+      <td style="padding:10px 14px">
+        <div style="font-weight:700;font-size:13px">${sf.numeFull}</div>
+        ${sf.expPermis&&new Date(sf.expPermis)<new Date()?'<div style="font-size:10px;color:var(--red);font-weight:600">⚠️ Permis expirat</div>':''}
+      </td>`;
+    zileProg.forEach(({dateStr,ivs,minZi})=>{
+      const isToday2=dateStr===today;
+      const isPast=dateStr<today;
+      const hZ=(minZi/60).toFixed(1);
+      const pZ=Math.min(Math.round(minZi/MAX_H_DAY*100),100);
+      const bg=minZi>=600?'var(--red-g)':minZi>=480?'var(--orange-g)':minZi>0?'var(--green-g)':'transparent';
+      const border2=isToday2?'border:1.5px solid var(--amber)':'border:1px solid transparent';
+      const col=minZi>=600?'var(--red)':minZi>=480?'var(--orange)':minZi>0?'var(--green)':'var(--stone)';
+      let cellContent='';
+      if(minZi>0){
+        const ivText=ivs.slice(0,2).map(iv=>`${minToTime(iv.start)}–${minToTime(iv.end%1440)}`).join('<br>');
+        const moreIvs=ivs.length>2?`<span style="font-size:9px;color:var(--stone)">+${ivs.length-2} mai mult</span>`:'';
+        cellContent=`<div style="font-weight:700;font-size:13px;color:${col}">${hZ}h</div>
+          <div style="font-size:10px;color:var(--stone);line-height:1.4">${ivText}${moreIvs}</div>
+          <div style="height:3px;background:var(--border);border-radius:2px;margin-top:4px;overflow:hidden"><div style="width:${pZ}%;height:100%;background:${col};border-radius:2px"></div></div>`;
+      } else {
+        cellContent=`<div style="font-size:11px;color:${isPast?'var(--stone)':'var(--green)'};font-weight:500">${isPast?'—':'🟢 Liber'}</div>`;
+      }
+      html+=`<td style="padding:8px;text-align:center;cursor:pointer;border-radius:0" onclick="nav('admin');adminTab('schedule');document.getElementById('prog-date').value='${dateStr}';loadSchedule()" title="Vezi programul din ${dateStr}">
+        <div style="background:${bg};${border2};border-radius:8px;padding:6px 4px;min-height:52px;display:flex;flex-direction:column;justify-content:center;transition:all .15s" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">${cellContent}</div>
+      </td>`;
+    });
+    // Total saptamana
+    const hSapt=(totalSapt/60).toFixed(1);
+    html+=`<td style="padding:10px 14px;text-align:center">
+      <div style="font-weight:800;font-size:15px;color:${colSapt}">${hSapt}h</div>
+      <div style="font-size:10px;color:var(--stone);margin-bottom:4px">din ${MAX_SAPT/60}h max</div>
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${pSapt}%;height:100%;background:${colSapt};border-radius:2px"></div></div>
+      ${pSapt>=100?'<div style="font-size:9px;color:var(--red);font-weight:700;margin-top:3px">⚠️ LIMITĂ DEPĂȘITĂ</div>':pSapt>=80?'<div style="font-size:9px;color:var(--orange);font-weight:600;margin-top:2px">⚠️ Aproape de limită</div>':''}
+    </td></tr>`;
+  });
+  html+='</tbody></table>';
+  gridEl.innerHTML=html;
+
+  // Sumar totaluri
+  const totalOreTotal=data.reduce((s,d)=>s+d.totalSapt,0);
+  totEl.innerHTML=`<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
+    ${data.filter(d=>d.totalSapt>=MAX_SAPT).map(d=>`
+      <div style="background:var(--red-g);border:1.5px solid var(--red);border-radius:10px;padding:10px 16px;font-size:13px">
+        ⚠️ <strong>${d.sf.numeFull}</strong> — ${(d.totalSapt/60).toFixed(1)}h (depășit limita de ${MAX_SAPT/60}h!)
+      </div>`).join('')}
+    ${data.filter(d=>d.totalSapt>=WARN_H_DAY*5&&d.totalSapt<MAX_SAPT).map(d=>`
+      <div style="background:var(--orange-g);border:1.5px solid var(--orange);border-radius:10px;padding:10px 16px;font-size:13px">
+        ⚠️ <strong>${d.sf.numeFull}</strong> — ${(d.totalSapt/60).toFixed(1)}h (aproape de limita săptămânală)
+      </div>`).join('')}
+    ${!data.some(d=>d.totalSapt>=WARN_H_DAY*5)?`<div style="font-size:13px;color:var(--green);font-weight:600">✅ Toți șoferii sunt în limitele legale această săptămână</div>`:''}
+  </div>`;
+};
+
 window.setProgToday = () => { document.getElementById('prog-date').value=new Date().toISOString().split('T')[0]; loadSchedule(); };
 window.tlPrev = () => { const el=document.getElementById('prog-date'); if(!el.value)el.value=new Date().toISOString().split('T')[0]; const d=new Date(el.value+'T12:00:00');d.setDate(d.getDate()-1);el.value=d.toISOString().split('T')[0];loadSchedule(); };
 window.tlNext = () => { const el=document.getElementById('prog-date'); if(!el.value)el.value=new Date().toISOString().split('T')[0]; const d=new Date(el.value+'T12:00:00');d.setDate(d.getDate()+1);el.value=d.toISOString().split('T')[0];loadSchedule(); };
@@ -4415,44 +4589,67 @@ function renderTimeline(curse,soferi,date,oreMap,el){
   let html='<div class="tl-wrap"><div class="tl-grid">';
   html+=`<div class="tl-header"><div class="tl-rowlabel">Șofer</div><div class="tl-hours">${hdrCells}</div></div>`;
   if(!curse.length){html+='<div style="text-align:center;padding:48px;color:var(--stone)"><div style="font-size:40px;margin-bottom:10px">😴</div>Nicio cursă activă pentru '+date+'</div></div></div>';el.innerHTML=html;return;}
-  // Build blocks per driver
-  const sfBlocks=new Map(); const nealocat=[];
+
+  // Colectam curse neatribuite (fara S1 si fara S2)
+  const nealocat=[];
   curse.forEach(c=>{
     const pl=c.plecari||[{ora:c.ora,driverId:c.driverId}];
     const sm=(c.statii?.length>=2)?(c.statii[c.statii.length-1].minuteDeLaStart||60):60;
     pl.forEach((p,pi)=>{
       if(!p.ora)return;
       const oraInfo=getOraForDate(p,date);
-      const sfId=oraInfo.driverId||p.driverId||'';
-      const sMin=timeToMin(p.ora); const dMin=sm||60; const eMin=sMin+dMin;
-      const eTotal=c.tipCursa==='roundtrip'?eMin+BREAK_MIN+dMin:eMin;
-      const b={cursaId:c.id,ruta:c.ruta,pi,ora:p.ora,sMin,eMin,eTotal,dMin,sm,isDI:c.tipCursa==='roundtrip',driverId:sfId,vehiculId:c.vehiculId};
-      if(!sfId){nealocat.push(b);return;}
-      const sfKey=resSf(sfId)?.id||sfId;
-      if(!sfBlocks.has(sfKey))sfBlocks.set(sfKey,[]);
-      sfBlocks.get(sfKey).push(b);
+      const s1Id=oraInfo.driverId||p.driverId||'';
+      const s2Id=p.driverId2||'';
+      if(!s1Id&&!s2Id){
+        const sMin=timeToMin(p.ora);
+        const eMin=sMin+sm;
+        const eTotal=c.tipCursa==='roundtrip'?eMin+BREAK_MIN+sm:eMin;
+        nealocat.push({cursaId:c.id,ruta:c.ruta,pi,ora:p.ora,sMin,eMin,eTotal,dMin:sm,isDI:c.tipCursa==='roundtrip'});
+      }
     });
   });
+
+  // Randul per sofer folosind getDriverIntervals (stie S1 si S2)
   soferi.forEach(sf=>{
-    const k=sf.id; const blocks=sfBlocks.get(k)||[];
-    const o=oreMap[k]||{}; const hZ=(o.minZi/60).toFixed(1);
-    const pZ=Math.min(Math.round((o.minZi||0)/MAX_H_DAY*100),100);
-    const col=pZ>=100?'var(--red)':pZ>=80?'var(--orange)':'var(--green)';
+    const k=sf.id;
+    const ivs=getDriverIntervals(k,date); // [{start,end,ruta,role,cursaId}]
+    const minZi=ivs.reduce((s,iv)=>s+(iv.end-iv.start),0);
+    const pZ=Math.min(Math.round(minZi/MAX_H_DAY*100),100);
+    const col=pZ>=100?'var(--red)':pZ>=80?'var(--orange)':minZi>0?'var(--green)':'var(--stone)';
+    const hZ=(minZi/60).toFixed(1);
     const sfN=sf.numeFull||[sf.prenume,sf.nume].filter(Boolean).join(' ');
-    html+=`<div class="tl-row"><div class="tl-label"><div class="tl-lname">${sfN}</div><div class="tl-lsub" style="display:flex;align-items:center;gap:5px"><div class="tl-ore-bar"><div class="tl-ore-fill" style="width:${pZ}%;background:${col}"></div></div><span style="font-size:10px;color:${col};font-weight:600">${hZ}h</span></div></div>`;
+
+    html+=`<div class="tl-row"><div class="tl-label">
+      <div class="tl-lname">${sfN}</div>
+      <div class="tl-lsub" style="display:flex;align-items:center;gap:5px">
+        <div class="tl-ore-bar"><div class="tl-ore-fill" style="width:${pZ}%;background:${col}"></div></div>
+        <span style="font-size:10px;color:${col};font-weight:600">${minZi>0?hZ+'h':'Liber'}</span>
+      </div>
+    </div>`;
     html+=`<div class="tl-track" data-date="${date}" data-sfid="${k}" ondragover="tlDragOver(event)" ondragleave="tlDragLeave(event)" ondrop="tlDrop(event)">`;
     if(isToday&&nowMin>=TL_START&&nowMin<=TL_END)html+=`<div class="tl-nowline" style="left:${tlPct(nowMin)}"></div>`;
-    blocks.forEach(b=>{
-      const isWarn=pZ>=80&&pZ<100; const isOver=pZ>=100;
-      const cls=`tl-block ${isOver?'b-over':isWarn?'b-warn':'b-normal'}`;
-      const rutaShort=b.ruta.split('–')[0].trim();
-      html+=`<div class="${cls}" draggable="true" data-cursaid="${b.cursaId}" data-pi="${b.pi}" data-date="${date}" data-startmin="${b.sMin}" data-durmin="${b.dMin}" style="left:${tlPct(b.sMin)};width:${tlW(b.sMin,b.isDI?b.eTotal:b.eMin)}" onclick="tlClickBlock(event,'${b.cursaId}',${b.pi},'${date}')" title="${b.ruta} | ${b.ora}">${rutaShort}</div>`;
-      if(b.isDI){html+=`<div class="tl-block b-break" style="left:${tlPct(b.eMin)};width:${tlW(b.eMin,b.eMin+BREAK_MIN)};pointer-events:none" title="Pauză obligatorie">☕</div>`;html+=`<div class="tl-block b-return" style="left:${tlPct(b.eMin+BREAK_MIN)};width:${tlW(b.eMin+BREAK_MIN,b.eTotal)}" onclick="tlClickBlock(event,'${b.cursaId}',${b.pi},'${date}')" title="${b.ruta} retur">↩ ${b.ruta.split('–').pop()?.trim()||''}</div>`;}
-    });
-    if(!blocks.length)html+=`<div style="position:absolute;top:50%;transform:translateY(-50%);left:12px;font-size:11px;color:var(--stone)">Liber azi</div>`;
+
+    if(!ivs.length){
+      html+=`<div style="position:absolute;top:50%;transform:translateY(-50%);left:12px;font-size:11px;color:var(--stone)">Liber azi</div>`;
+    } else {
+      ivs.forEach(iv=>{
+        // Gasim cursa si pi pentru drag/click
+        const cObj=curse.find(c=>c.id===iv.cursaId);
+        const pi=cObj?(cObj.plecari||[{ora:cObj.ora}]).findIndex(p=>{const oi=getOraForDate(p,date);return(oi.driverId||p.driverId||'')===(iv.role==='S1'?k:'') || (p.driverId2||'')===(iv.role==='S2'?k:'');}):0;
+        const piSafe=Math.max(0,pi);
+        const rutaShort=(iv.ruta||'').split('–')[0].split('→')[0].trim().slice(0,18);
+        const isS2=iv.role==='S2';
+        const isWarn=pZ>=80&&pZ<100; const isOver=pZ>=100;
+        const cls=isS2?'tl-block b-handover':`tl-block ${isOver?'b-over':isWarn?'b-warn':'b-normal'}`;
+        const w=tlW(iv.start,iv.end);
+        if(w==='0%')return;
+        html+=`<div class="${cls}" draggable="${!isS2}" data-cursaid="${iv.cursaId}" data-pi="${piSafe}" data-date="${date}" data-startmin="${iv.start}" data-durmin="${iv.end-iv.start}" style="left:${tlPct(iv.start)};width:${w}" onclick="tlClickBlock(event,'${iv.cursaId}',${piSafe},'${date}')" title="${iv.ruta} | ${minToTime(iv.start)}–${minToTime(iv.end%1440)}${isS2?' (S2 preia)':''}">${isS2?'🔄 ':''} ${rutaShort}</div>`;
+      });
+    }
     html+='</div></div>';
   });
-  // Unassigned row
+
+  // Neatribuite
   if(nealocat.length){
     html+='<div class="tl-section-hdr">⚠️ Neatribuite — click pentru atribuire</div>';
     html+=`<div class="tl-row"><div class="tl-label"><div class="tl-lname" style="color:var(--red)">Neatribuite</div><div class="tl-lsub">${nealocat.length} curse</div></div>`;
