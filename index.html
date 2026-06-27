@@ -793,51 +793,95 @@ footer{
   </div>
   <div class="g2" style="align-items:start">
     <div>
-      <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:16px;box-shadow:var(--sh)">
-        <h3 style="font-size:15px;font-weight:700;margin-bottom:18px;font-family:'Plus Jakarta Sans',sans-serif">📋 Detalii cursă</h3>
-        <div class="fg"><div class="fl">Tip / Descriere cursă *</div><input type="text" id="org-desc" placeholder="Ex: Excursie la munte, nuntă, transfer aeroport..."/></div>
+      <!-- STEP 1: Detalii cursa -->
+      <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:14px;box-shadow:var(--sh)">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif">📋 1. Tipul și traseul cursei</h3>
         <div class="fg">
-          <div class="fl">Vehicul dorit (opțional)</div>
+          <div class="fl">Tip cursă *</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap" id="org-tip-btns">
+            <button type="button" class="btn btn-secondary btn-sm org-tip-btn" onclick="selectOrgTip(this,'Excursie/Turism')">🏔 Excursie</button>
+            <button type="button" class="btn btn-secondary btn-sm org-tip-btn" onclick="selectOrgTip(this,'Nuntă/Eveniment')">💒 Nuntă / Eveniment</button>
+            <button type="button" class="btn btn-secondary btn-sm org-tip-btn" onclick="selectOrgTip(this,'Transfer aeroport')">✈️ Transfer aeroport</button>
+            <button type="button" class="btn btn-secondary btn-sm org-tip-btn" onclick="selectOrgTip(this,'Transport elevi/grupuri')">🎒 Elevi / Grupuri</button>
+            <button type="button" class="btn btn-secondary btn-sm org-tip-btn" onclick="selectOrgTip(this,'Altele')">📋 Altele</button>
+          </div>
+          <input type="text" id="org-desc" placeholder="Detalii suplimentare (opțional)" style="margin-top:8px"/>
+        </div>
+        <div class="fg">
+          <div class="fl">Traseu (de unde → până unde) *</div>
+          <div id="org-stops-container"></div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="addOrgStop()">+ Adaugă oprire intermediară</button>
+        </div>
+        <div class="fg"><div class="fl">Nr. persoane aproximativ</div>
+          <input type="number" id="org-persons" min="1" max="100" placeholder="Ex: 20" style="max-width:120px"/>
+        </div>
+        <div class="fg"><div class="fl">Observații / cerințe speciale</div>
+          <textarea id="org-obs" rows="2" placeholder="Bagaje mari, microfon, scaune speciale..."></textarea>
+        </div>
+      </div>
+
+      <!-- STEP 2: Data, ora, durata -->
+      <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:14px;box-shadow:var(--sh)">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif">📅 2. Când și cât timp?</h3>
+        <div class="f-row">
+          <div class="fg"><div class="fl">Data dorită *</div>
+            <input type="date" id="org-date" onchange="onOrgDateChange()"/>
+          </div>
+          <div class="fg"><div class="fl">Ora de plecare</div>
+            <select id="org-time" onchange="onOrgDateChange()">
+              <option value="flexibil">Flexibil / nu știu încă</option>
+              <option>05:00</option><option>06:00</option><option>07:00</option><option>08:00</option>
+              <option>09:00</option><option>10:00</option><option>11:00</option><option>12:00</option>
+              <option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option>
+              <option>17:00</option><option>18:00</option><option>19:00</option><option>20:00</option>
+              <option>21:00</option><option>22:00</option><option>23:00</option>
+            </select>
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="fg"><div class="fl">Durata estimată</div>
+            <select id="org-dur-h" onchange="onOrgDateChange()" style="max-width:150px">
+              <option value="">— ore —</option>
+              <option value="1">1 oră</option><option value="2">2 ore</option><option value="3">3 ore</option>
+              <option value="4">4 ore</option><option value="5">5 ore</option><option value="6">6 ore</option>
+              <option value="8">8 ore</option><option value="10">10 ore</option><option value="12">12 ore</option>
+              <option value="16">16 ore</option><option value="20">20 ore</option><option value="24">24 ore</option>
+            </select>
+          </div>
+          <div class="fg"><div class="fl">Sau nr. zile</div>
+            <select id="org-dur-zile" onchange="onOrgDurZileChange()" style="max-width:150px">
+              <option value="">— zile —</option>
+              <option value="1">1 zi</option><option value="2">2 zile</option><option value="3">3 zile</option>
+              <option value="4">4 zile</option><option value="5">5 zile</option><option value="7">7 zile</option>
+            </select>
+          </div>
+        </div>
+        <div id="org-dur-info" style="font-size:12px;color:var(--stone);margin-top:4px"></div>
+      </div>
+
+      <!-- STEP 3: Disponibilitate -->
+      <div id="org-avail-wrap" style="display:none;background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:14px;box-shadow:var(--sh)">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">🚌 3. Alege vehiculul și șoferul</h3>
+        <p style="font-size:12px;color:var(--stone);margin-bottom:14px">Bazat pe data și durata selectate — vehiculele și șoferii liberi în acel interval</p>
+        <div id="org-avail-info" style="margin-bottom:12px"></div>
+        <div class="fg">
+          <div class="fl">Vehicul preferat</div>
           <select id="org-veh" onchange="calcOrgPrice()"><option value="">— selectați vehiculul dorit —</option></select>
           <div id="org-price-box" style="display:none;margin-top:8px;background:var(--cream);border:1px solid var(--amber-b);border-radius:8px;padding:10px 14px;font-size:13px">
             <span style="color:var(--stone)">Estimare: </span><strong id="org-price-val" style="color:var(--amber-d)">—</strong><span id="org-price-info" style="color:var(--stone);font-size:12px"></span>
           </div>
         </div>
         <div class="fg">
-          <div class="fl">Preferință șofer (opțional)</div>
+          <div class="fl">Preferință șofer</div>
           <select id="org-driver-pref"><option value="">— fără preferință —</option></select>
         </div>
-        <div class="f-row">
-          <div class="fg"><div class="fl">Data dorită *</div><input type="date" id="org-date"/></div>
-          <div class="fg"><div class="fl">Ora</div>
-            <select id="org-time">
-              <option value="flexibil">Flexibil</option>
-              <option>05:00</option><option>06:00</option><option>07:00</option><option>08:00</option>
-              <option>09:00</option><option>10:00</option><option>11:00</option><option>12:00</option>
-              <option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option>
-              <option>17:00</option><option>18:00</option><option>19:00</option><option>20:00</option>
-            </select>
-          </div>
-        </div>
-        <div class="fg">
-          <div class="fl">Traseu (opriri în ordine) *</div>
-          <div id="org-stops-container"></div>
-          <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="addOrgStop()">+ Adaugă oprire</button>
-        </div>
-        <div class="f-row">
-          <div class="fg"><div class="fl">Nr. persoane (opțional)</div><input type="number" id="org-persons" min="1" placeholder="Ex: 20"/></div>
-          <div class="fg">
-            <div class="fl">Distanță km (auto sau manual)</div>
-            <input type="number" id="org-km" min="1" placeholder="Se calculează automat" oninput="calcOrgPrice()"/>
-            <div id="org-route-info" style="margin-top:6px;font-size:12px;color:var(--stone)"></div>
-          </div>
-        </div>
-        <div class="fg"><div class="fl">Observații</div><textarea id="org-obs" rows="3" placeholder="Cerințe speciale, bagaje mari, microfon..."></textarea></div>
       </div>
     </div>
+
+    <!-- Coloana dreapta -->
     <div>
-      <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:16px;box-shadow:var(--sh)">
-        <h3 style="font-size:15px;font-weight:700;margin-bottom:18px;font-family:'Plus Jakarta Sans',sans-serif">👤 Datele tale</h3>
+      <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:14px;box-shadow:var(--sh)">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif">👤 Datele tale</h3>
         <div id="org-contact-wrap"></div>
         <div class="info-box" style="font-size:12px">
           ℹ️ Prin trimiterea cererii ești de acord cu <a onclick="nav('gdpr')">Politica GDPR</a> și Termenii LSD Group SRL.
@@ -1959,11 +2003,37 @@ if (localStorage.getItem('cookies_ok')) document.getElementById('cookie-banner')
 // ── TICKER ─────────────────────────────────────────────────
 onSnapshot(collection(db,'ticker'), snap => {
   const msgs = snap.docs.filter(d=>d.data().activ).map(d=>d.data().mesaj);
-  const ticker = document.getElementById('ticker');
-  if (!msgs.length) { ticker.classList.add('hidden'); return; }
-  ticker.classList.remove('hidden');
-  document.getElementById('tick-inner').innerHTML = [...msgs,...msgs].map(m=>`<span>● ${m}</span>`).join('');
+  renderTicker(msgs);
 }, err => console.warn('Ticker:', err.message));
+
+async function renderTicker(manualMsgs) {
+  const ticker = document.getElementById('ticker');
+  const inner = document.getElementById('tick-inner');
+  // Curse regulate de azi
+  const today = new Date().toISOString().split('T')[0];
+  const dow = new Date().getDay();
+  let curseMsgs = [];
+  try {
+    const snap = await getDocs(collection(db,'curse_regulate'));
+    const curseAzi = snap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>{
+      if(!c.activa) return false;
+      if(!(c.zile||[]).includes(dow)) return false;
+      if(c.dataStart && today < c.dataStart) return false;
+      if(c.dataEnd && today > c.dataEnd) return false;
+      if(c.dateBlocate?.includes(today)) return false;
+      return true;
+    });
+    curseMsgs = curseAzi.map(c=>{
+      const pl = c.plecari||[{ora:c.ora}];
+      const ore = pl.map(p=>{const oi=getOraForDate(p,today);return oi.ora||p.ora||'';}).filter(Boolean);
+      return `🚌 ${c.ruta}${ore.length?' — '+ore.join(', '):''}`;
+    });
+  } catch(e) {}
+  const allMsgs = [...curseMsgs, ...manualMsgs];
+  if(!allMsgs.length){ticker.classList.add('hidden');return;}
+  ticker.classList.remove('hidden');
+  inner.innerHTML = [...allMsgs,...allMsgs].map(m=>`<span>● ${m}</span>`).join('');
+}
 
 // ── FOOTER ─────────────────────────────────────────────────
 function renderFooter() {
@@ -2622,114 +2692,168 @@ window.printBiletById = async rezId => {
 
 
 // ── ORGANIZATE ─────────────────────────────────────────────
+window.selectOrgTip = (btn, tip) => {
+  document.querySelectorAll('.org-tip-btn').forEach(b=>b.classList.replace('btn-primary','btn-secondary'));
+  btn.classList.replace('btn-secondary','btn-primary');
+  window._ORG_TIP = tip;
+};
+
+window.onOrgDurZileChange = () => {
+  const zile = parseInt(document.getElementById('org-dur-zile')?.value)||0;
+  if(zile>0){
+    const durSel = document.getElementById('org-dur-h');
+    if(durSel) durSel.value = '';
+    window._ORG_DUR_H = zile*24;
+  }
+  onOrgDateChange();
+};
+
+window.onOrgDateChange = async () => {
+  const dateStr = document.getElementById('org-date')?.value||'';
+  const oraStr = document.getElementById('org-time')?.value||'flexibil';
+  const durH = parseInt(document.getElementById('org-dur-h')?.value)||0;
+  const durZile = parseInt(document.getElementById('org-dur-zile')?.value)||0;
+  const durMin = durH>0 ? durH*60 : durZile>0 ? durZile*1440 : 0;
+
+  const infoEl = document.getElementById('org-dur-info');
+  const availWrap = document.getElementById('org-avail-wrap');
+
+  if(!dateStr){ if(availWrap)availWrap.style.display='none'; return; }
+
+  // Arata info durata
+  if(infoEl){
+    if(durMin>0){
+      const h=Math.floor(durMin/60), m=durMin%60;
+      const ends = oraStr!=='flexibil' ? ` → se termină ~${calcArrival(oraStr,durMin)}${durMin>=1440?' (ziua urmatoare)':''}` : '';
+      infoEl.innerHTML=`<span style="color:var(--amber-d);font-weight:600">⏱ Durată estimată: ${h>0?h+'h ':''}${m>0?m+'min ':''}</span>${ends}`;
+    } else {
+      infoEl.textContent='';
+    }
+  }
+
+  if(!durMin){ if(availWrap)availWrap.style.display='none'; return; }
+  if(availWrap) availWrap.style.display='block';
+  await refreshOrgSelects();
+};
+
 window.loadOrgPage = async function() {
+  window._ORG_TIP = '';
   renderOrgStops();
   const u=window._U;
   await loadFleet().catch(()=>{});
-  // Load drivers
   try{
     const sfSnap=await getDocs(collection(db,'soferi'));
     buildDriversCache(sfSnap);
   }catch(e){}
-  // Rebuild vehicle/driver selects when date changes
-  await refreshOrgSelects();
+
+  const today=new Date().toISOString().split('T')[0];
+  const dateEl=document.getElementById('org-date');
+  if(dateEl){dateEl.min=today;}
+
   const wrap=document.getElementById('org-contact-wrap');
   if(u){
     wrap.innerHTML=`<div style="background:var(--cream);border:1px solid var(--border-l);border-radius:8px;padding:12px;font-size:13px;margin-bottom:16px"><div style="color:var(--stone);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-bottom:4px">Cerere ca</div><div style="font-weight:600">${u.displayName||''} · ${u.email}</div></div>`;
   } else {
     wrap.innerHTML=`<div class="fg"><div class="fl">Nume complet *</div><input type="text" id="org-name" placeholder="Ion Popescu"/></div><div class="fg"><div class="fl">Telefon *</div><input type="tel" id="org-phone" placeholder="07XX XXX XXX"/></div><div class="fg"><div class="fl">Email *</div><input type="email" id="org-email" placeholder="email@exemplu.ro"/><div class="f-hint">Oferta va fi trimisă pe acest email</div></div><div class="info-box info-box-blue" style="font-size:12px;margin-bottom:12px">💡 <a onclick="nav('auth')">Creează un cont</a> pentru a urmări cererea și a vedea ofertele direct pe site.</div>`;
   }
-  const today=new Date().toISOString().split('T')[0];
-  const dateEl=document.getElementById('org-date');
-  if(dateEl){dateEl.min=today;dateEl.onchange=()=>refreshOrgSelects();}
+  // Hide avail wrap until date+dur selected
+  const aw=document.getElementById('org-avail-wrap');
+  if(aw)aw.style.display='none';
 };
 
 async function refreshOrgSelects() {
   const dateStr=document.getElementById('org-date')?.value||'';
+  const oraStr=document.getElementById('org-time')?.value||'flexibil';
+  const durH=parseInt(document.getElementById('org-dur-h')?.value)||0;
+  const durZile=parseInt(document.getElementById('org-dur-zile')?.value)||0;
+  const durMin=durH>0?durH*60:durZile>0?durZile*1440:0;
+  if(!dateStr)return;
 
-  // ── VEHICULE: intervale exacte ──
-  // Intervale din curse regulate (din _R)
-  const vehIntervalsMap=new Map(); // vehiculId -> [{start,end,ruta}]
-  if(dateStr){
-    getIntervalsForDate(dateStr,(info)=>{
-      if(!info.vehiculId)return;
-      if(!vehIntervalsMap.has(info.vehiculId))vehIntervalsMap.set(info.vehiculId,[]);
-      vehIntervalsMap.get(info.vehiculId).push({start:info.startMin,end:info.endMin,ruta:info.ruta});
+  // Intervalul cerut de client (in minute de la miezul noptii al datei)
+  const reqStart = oraStr!=='flexibil' ? timeToMin(oraStr) : -1;
+  const reqEnd = reqStart>=0&&durMin>0 ? reqStart+durMin : -1;
+
+  // Intervale ocupate vehicule
+  const vehIvsMap=new Map();
+  getIntervalsForDate(dateStr,(info)=>{
+    if(!info.vehiculId)return;
+    if(!vehIvsMap.has(info.vehiculId))vehIvsMap.set(info.vehiculId,[]);
+    vehIvsMap.get(info.vehiculId).push({start:info.startMin,end:info.endMin,ruta:info.ruta});
+  });
+  try{
+    const snap=await getDocs(query(collection(db,'rezervari'),where('data','==',dateStr)));
+    snap.docs.forEach(d=>{
+      const r=d.data();
+      if(r.status==='anulata'||r.tipRezervare==='regulata'||!r.vehiculId||!r.ora)return;
+      const sMin=timeToMin(r.ora);
+      const eMin=sMin+(r.durataEstimataH||2)*60;
+      if(!vehIvsMap.has(r.vehiculId))vehIvsMap.set(r.vehiculId,[]);
+      vehIvsMap.get(r.vehiculId).push({start:sMin,end:eMin,ruta:r.descriereCursa||'Org.'});
     });
-    // Adauga si rezervari organizate confirmate
-    try{
-      const snap=await getDocs(query(collection(db,'rezervari'),where('data','==',dateStr)));
-      snap.docs.forEach(d=>{
-        const r=d.data();
-        if(r.status==='anulata'||r.tipRezervare==='regulata')return;
-        if(!r.vehiculId||!r.ora)return;
-        const sMin=timeToMin(r.ora);
-        const eMin=sMin+120; // estimare 2h pentru organizate fara durata exacta
-        if(!vehIntervalsMap.has(r.vehiculId))vehIntervalsMap.set(r.vehiculId,[]);
-        vehIntervalsMap.get(r.vehiculId).push({start:sMin,end:eMin,ruta:r.descriereCursa||r.traseu||'Org.'});
-      });
-    }catch(e){}
+  }catch(e){}
+
+  // Funcție: verifica daca intervalul [reqStart,reqEnd] se suprapune cu intervalele existente
+  function hasConflict(ivs) {
+    if(reqStart<0||reqEnd<0) return false; // fara interval precis = nu putem verifica
+    return ivs.some(iv=>reqStart<iv.end && reqEnd>iv.start);
   }
 
-  // Populate vehicle select cu intervale exacte
+  // Vehicule
   const orgVeh=document.getElementById('org-veh');
   if(orgVeh){
-    orgVeh.innerHTML='<option value="">— selectați vehiculul dorit —</option>'+
-    window._F.filter(v=>v.disponibil!==false).map(v=>{
-      const ivs=(vehIntervalsMap.get(v.id)||[]).sort((a,b)=>a.start-b.start);
+    orgVeh.innerHTML='<option value="">— selectați vehiculul dorit —</option>';
+    const liber=[],ocupat=[];
+    window._F.filter(v=>v.disponibil!==false).forEach(v=>{
+      const ivs=(vehIvsMap.get(v.id)||[]).sort((a,b)=>a.start-b.start);
+      const conflict=hasConflict(ivs);
       const vNume=`${v.icon||''} ${v.nome||v.name||v.nume||''}`.trim();
       const locuri=capVeh(v);
       const pret=v.pretPerKm?` · ${v.pretPerKm} RON/km`:'';
       let statusStr='';
-      if(dateStr&&ivs.length){
-        const ocupatStr=ivs.map(iv=>`🔴 ${minToTime(iv.start)}–${minToTime(iv.end%1440)}`).join(', ');
-        statusStr=` — ${ocupatStr}`;
-      } else if(dateStr){
-        statusStr=' — 🟢 Disponibil toată ziua';
+      if(ivs.length){
+        statusStr=' — '+ivs.map(iv=>`🔴 ${minToTime(iv.start)}–${minToTime(iv.end%1440)}`).join(', ');
+        if(!conflict) statusStr+=' · 🟢 liber în intervalul tău';
+      } else {
+        statusStr=' — 🟢 Disponibil';
       }
-      return`<option value="${v.id}" ${ivs.length?'style="color:#b52d2d"':''}>${vNume} — ${locuri} locuri${pret}${statusStr}</option>`;
-    }).join('');
+      const opt=`<option value="${v.id}" ${conflict?'style="color:#b52d2d"':''}>${vNume} — ${locuri} locuri${pret}${statusStr}</option>`;
+      if(conflict) ocupat.push(opt); else liber.push(opt);
+    });
+    orgVeh.innerHTML+=[...liber,...(ocupat.length?['<option disabled>─── Ocupate în intervalul tău ───</option>']:[]),...ocupat].join('');
   }
 
-  // ── ȘOFERI: intervale exacte ──
+  // Soferi
   const sel=document.getElementById('org-driver-pref');
   if(sel){
-    const driverOpts=window._DRIVERS_LIST.map(s=>{
-      if(!dateStr) return`<option value="${s.id}">${s.numeFull}</option>`;
+    const liber2=[],ocupat2=[];
+    window._DRIVERS_LIST.forEach(s=>{
       const ivs=getDriverIntervals(s.id,dateStr);
       const totalMin=ivs.reduce((sum,iv)=>sum+(iv.end-iv.start),0);
+      const conflict=hasConflict(ivs);
       const icon=totalMin>=600?'🔴':totalMin>=480?'🟡':'🟢';
-      let statusStr;
+      let statusStr='';
       if(ivs.length){
-        const ocupatStr=ivs.map(iv=>`${minToTime(iv.start)}–${minToTime(iv.end%1440)}`).join(', ');
-        statusStr=` (${icon} ocupat ${ocupatStr})`;
+        statusStr=` (${icon} ${ivs.map(iv=>`${minToTime(iv.start)}–${minToTime(iv.end%1440)}`).join(', ')}${!conflict?' · liber în intervalul tău':''})`; 
       } else {
         statusStr=' (🟢 Liber toată ziua)';
       }
-      return`<option value="${s.id}" style="color:${totalMin>=600?'#b52d2d':totalMin>=480?'#c46520':'#1a6b3c'}">${s.numeFull}${statusStr}</option>`;
-    }).join('');
-    sel.innerHTML='<option value="">— fără preferință —</option>'+driverOpts;
+      const opt=`<option value="${s.id}" style="color:${conflict?'#b52d2d':totalMin>=480?'#c46520':'#1a6b3c'}">${s.numeFull}${statusStr}</option>`;
+      if(conflict) ocupat2.push(opt); else liber2.push(opt);
+    });
+    sel.innerHTML='<option value="">— fără preferință —</option>'+
+      [...liber2,...(ocupat2.length?['<option disabled>─── Ocupați în intervalul tău ───</option>']:[]),...ocupat2].join('');
   }
 
-  // ── INFO BOX rezumat disponibilitate ──
-  const priceBox=document.getElementById('org-price-box');
+  // Info box
   let infoBoxEl=document.getElementById('org-avail-info');
-  if(!infoBoxEl){
-    infoBoxEl=document.createElement('div');
-    infoBoxEl.id='org-avail-info';
-    infoBoxEl.style.marginBottom='12px';
-    priceBox?.parentNode?.insertBefore(infoBoxEl,priceBox);
-  }
-  if(dateStr){
-    const total=window._F.filter(v=>v.disponibil!==false).length;
-    const ocupate=window._F.filter(v=>v.disponibil!==false&&(vehIntervalsMap.get(v.id)||[]).length>0).length;
-    const libere=total-ocupate;
-    infoBoxEl.innerHTML=`<div style="background:var(--blue-g);border:1px solid rgba(30,95,168,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--blue)">
-      📅 <strong>${dateStr}</strong>: ${libere} vehicul${libere!==1?'e':''} 🟢 libere · ${ocupate} 🔴 cu curse planificate (vehiculele ocupate arată intervalul exact)
-    </div>`;
-  } else {
-    infoBoxEl.innerHTML='';
-  }
+  if(!infoBoxEl){infoBoxEl=document.createElement('div');infoBoxEl.id='org-avail-info';document.getElementById('org-veh')?.parentNode?.insertBefore(infoBoxEl,document.getElementById('org-veh'));}
+  const totalV=window._F.filter(v=>v.disponibil!==false).length;
+  const conflictV=window._F.filter(v=>v.disponibil!==false&&hasConflict(vehIvsMap.get(v.id)||[])).length;
+  const liberV=totalV-conflictV;
+  const intervalText=reqStart>=0&&reqEnd>=0?` în intervalul ${minToTime(reqStart)}–${minToTime(reqEnd%1440)}`:'';
+  infoBoxEl.innerHTML=`<div style="background:var(--blue-g);border:1px solid rgba(30,95,168,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:10px">
+    📅 <strong>${dateStr}</strong>${intervalText}: <strong>${liberV}</strong> vehicul${liberV!==1?'e':''} 🟢 libere · <strong>${conflictV}</strong> 🔴 cu conflict de orar
+  </div>`;
 }
 function renderOrgStops(){
   const c=document.getElementById('org-stops-container'); if(!c)return;
@@ -2796,12 +2920,17 @@ async function calcDistORS(from,to){
   }catch(e){return null;}
 }
 window.submitOrg = async () => {
-  const desc=document.getElementById('org-desc')?.value?.trim();
+  const tipCursa = window._ORG_TIP||'';
+  const descExtra = document.getElementById('org-desc')?.value?.trim()||'';
+  const desc = tipCursa ? (tipCursa + (descExtra ? ': '+descExtra : '')) : descExtra;
   const date=document.getElementById('org-date')?.value;
   const stops=window._ORG_STOPS.filter(Boolean);
-  if(!desc){toast('Descrieți tipul cursei','wr');return;}
+  if(!tipCursa&&!descExtra){toast('Selectați tipul cursei','wr');return;}
   if(!date){toast('Selectați data','wr');return;}
   if(stops.length<2){toast('Completați punctul de plecare și destinația','wr');return;}
+  const durH=parseInt(document.getElementById('org-dur-h')?.value)||0;
+  const durZile=parseInt(document.getElementById('org-dur-zile')?.value)||0;
+  const durMin=durH>0?durH*60:durZile>0?durZile*1440:0;
   const u=window._U;
   let nc,em,tel;
   if(u){nc=u.displayName||'';em=u.email||'';try{const ud=await getDoc(doc(db,'users',u.uid));tel=ud.exists()?ud.data().tel||'-':'-';}catch(e){tel='-';}}
@@ -2813,20 +2942,34 @@ window.submitOrg = async () => {
   }
   const vehId=document.getElementById('org-veh')?.value||null;
   const veh=vehId?window._F.find(x=>x.id===vehId):null;
-  const km=parseInt(document.getElementById('org-km')?.value)||null;
-  const pretEstim=veh?.pretPerKm&&km?Math.round(veh.pretPerKm*km):null;
+  const pretEstim=veh?.pretPerKm&&durMin>0?Math.round(veh.pretPerKm*(durMin/60)*65/60):null; // estimare bazata pe durata
   const drivPref=document.getElementById('org-driver-pref')?.value||null;
-  const rez={uid:u?u.uid:null,numeClient:nc,email:em,telefon:tel,tipRezervare:'organizata',descriereCursa:desc,stops,traseu:stops.join(' → '),data:date,ora:document.getElementById('org-time')?.value||'flexibil',persoane:parseInt(document.getElementById('org-persons')?.value)||null,distantaKm:km,vehiculId:vehId||null,vehiculNume:veh?.nome||veh?.name||veh?.nume||null,driverPrefId:drivPref||null,pretEstimativ:pretEstim,pretFinal:null,observatii:document.getElementById('org-obs')?.value?.trim()||'',status:'in_asteptare',mesaje:[],createdAt:serverTimestamp()};
+  const ora=document.getElementById('org-time')?.value||'flexibil';
+  const rez={
+    uid:u?u.uid:null,numeClient:nc,email:em,telefon:tel,
+    tipRezervare:'organizata',tipCursa:tipCursa,descriereCursa:desc,
+    stops,traseu:stops.join(' → '),
+    data:date,ora,
+    durataEstimataH:durH||null,durataEstimataZile:durZile||null,durataEstimataMin:durMin||null,
+    persoane:parseInt(document.getElementById('org-persons')?.value)||null,
+    vehiculId:vehId||null,vehiculNume:veh?veh.nome||veh.name||veh.nume||'':null,
+    driverPrefId:drivPref||null,pretEstimativ:pretEstim,pretFinal:null,
+    observatii:document.getElementById('org-obs')?.value?.trim()||'',
+    status:'in_asteptare',mesaje:[],createdAt:serverTimestamp()
+  };
   const btn=document.getElementById('btn-submit-org');
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> Se trimite...';}
   try{
     await addDoc(collection(db,'rezervari'),rez);
-    sendEmailOrg({to_email:em,nume:nc,subiect:'Cerere primită — LSD Group SRL',mesaj:'Cererea ta de cursă organizată a fost primită! Echipa noastră o va analiza și te va contacta în curând cu o ofertă.',traseu:stops.join(' → '),data:date,ora:rez.ora,vehicul:veh?(veh.nome||veh.name||veh.nume||''):'De confirmat',pret:pretEstim?pretEstim+' RON (estimativ)':'La cerere',status:'În așteptare'});
-    sendEmailAdmin({subiect:'Cerere organizată nouă — '+stops.join(' – '),mesaj:desc+(rez.observatii?' | Obs: '+rez.observatii:''),nume_client:nc,telefon:tel,tip:desc,traseu:stops.join(' – ')});
+    const durText=durMin>0?(durZile>0?durZile+' zile':durH+'h'):'neprecizată';
+    sendEmailOrg({to_email:em,nume:nc,subiect:'Cerere primită — LSD Group SRL',mesaj:'Cererea ta de cursă organizată a fost primită! Echipa noastră o va analiza și te va contacta în curând cu o ofertă.',traseu:stops.join(' → '),data:date,ora,vehicul:veh?veh.nome||veh.name||veh.nume||'':'De confirmat',pret:pretEstim?pretEstim+' RON (estimativ)':'La cerere',status:'În așteptare'});
+    sendEmailAdmin({subiect:'Cerere organizată nouă — '+stops.join(' – '),mesaj:desc+' | Durată: '+durText+(rez.observatii?' | Obs: '+rez.observatii:''),nume_client:nc,telefon:tel,tip:desc,traseu:stops.join(' – ')});
     toast('✅ Cererea a fost trimisă! Veți fi contactat în curând.','ok');
     if(btn){btn.disabled=false;btn.innerHTML='Trimite cererea 📨';}
-    window._ORG_STOPS=['',''];
-    ['org-desc','org-km','org-persons','org-date','org-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    window._ORG_STOPS=['',''];window._ORG_TIP='';
+    ['org-desc','org-persons','org-date','org-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.querySelectorAll('.org-tip-btn').forEach(b=>b.classList.replace('btn-primary','btn-secondary'));
+    document.getElementById('org-avail-wrap').style.display='none';
     renderOrgStops();
     if(u)nav('cont');
   }catch(e){if(btn){btn.disabled=false;btn.innerHTML='Trimite cererea 📨';}toast('Eroare: '+e.message,'er');}
@@ -3272,46 +3415,108 @@ window.calcDistances=async()=>{
 };
 // ── CALCUL ORE / INTERVALE SOFERI & VEHICULE ──────────────
 // Returneaza lista de intervale [{start:min, end:min, ruta, cursaId}] pentru un sofer/vehicul intr-o zi
+// Suporta curse care trec peste miezul noptii (endMin > 1440)
 function getIntervalsForDate(dateStr, filterFn) {
   if (!dateStr) return [];
-  const dow = new Date(dateStr+'T12:00:00').getDay();
   const intervals = [];
+
+  // Procesam cursele din ziua dateStr (plecare in aceasta zi)
+  _processIntervalsForDay(dateStr, dateStr, filterFn, intervals);
+
+  // Procesam si cursele din ziua PRECEDENTA care se extind in dateStr (trec miezul noptii)
+  const prevDate = getPrevDate(dateStr);
+  _processIntervalsForDay(prevDate, dateStr, filterFn, intervals);
+
+  return intervals.sort((a,b)=>a.startMin-b.startMin);
+}
+
+function getPrevDate(dateStr) {
+  const d = new Date(dateStr+'T12:00:00'); d.setDate(d.getDate()-1);
+  return d.toISOString().split('T')[0];
+}
+function getNextDate(dateStr) {
+  const d = new Date(dateStr+'T12:00:00'); d.setDate(d.getDate()+1);
+  return d.toISOString().split('T')[0];
+}
+
+// Proceseaza cursele care pleaca in `depDate` si returneaza intervalele relevante pentru `forDate`
+function _processIntervalsForDay(depDate, forDate, filterFn, intervals) {
+  const dow = new Date(depDate+'T12:00:00').getDay();
+  const isNextDay = depDate !== forDate; // cursa pleaca ziua precedenta
+
   (window._R||[]).forEach(c => {
     if (!c.activa) return;
     if (!(c.zile||[]).includes(dow)) return;
-    if (c.dataStart && dateStr < c.dataStart) return;
-    if (c.dataEnd && dateStr > c.dataEnd) return;
-    if (c.dateBlocate?.includes(dateStr)) return;
+    if (c.dataStart && depDate < c.dataStart) return;
+    if (c.dataEnd && depDate > c.dataEnd) return;
+    if (c.dateBlocate?.includes(depDate)) return;
+
     const sm = (c.statii?.length>=2) ? (c.statii[c.statii.length-1].minuteDeLaStart||60) : 60;
-    const durDus = sm;
     const pl = c.plecari||[{ora:c.ora,driverId:c.driverId}];
+
     pl.forEach(p => {
-      const oraInfo = getOraForDate(p, dateStr);
+      const oraInfo = getOraForDate(p, depDate);
       const ora = oraInfo.ora || p.ora || '';
       if (!ora) return;
-      const startMin = timeToMin(ora);
+
+      const startMinAbsolut = timeToMin(ora); // minute din ziua depDate (0–1439)
       const s1Id = resSf(oraInfo.driverId||p.driverId||'')?.id||'';
       const s2Id = resSf(p.driverId2||'')?.id||'';
-      // Calc how long S1 can drive
-      const s1TotalBefore = getDriverMinutesBefore(s1Id, dateStr, c.id, startMin);
+      const s1TotalBefore = getDriverMinutesBefore(s1Id, depDate, c.id, startMinAbsolut);
       const s1Disponibil = s1Id ? Math.max(0, MAX_H_DAY - s1TotalBefore) : 0;
-      if (c.tipCursa==='roundtrip') {
-        const durTotal = sm*2 + BREAK_MIN;
-        const endMin = startMin + durTotal;
-        const handoverMin = s1Id ? startMin + Math.min(sm, s1Disponibil) : startMin;
-        filterFn({cursaId:c.id, ruta:c.ruta, vehiculId:c.vehiculId,
-          s1Id, s2Id, startMin, endMin, handoverMin,
-          durDus, durTotal, isDI:true}, intervals);
+
+      const durDus = sm;
+      const durTotal = c.tipCursa==='roundtrip' ? sm*2 + BREAK_MIN : sm;
+      const endMinAbsolut = startMinAbsolut + durTotal; // poate depasi 1440
+
+      if (isNextDay) {
+        // Cursa a plecat ieri — ne intereseaza doar portiunea din forDate (0–endMinAbsolut-1440)
+        if (endMinAbsolut <= 1440) return; // cursa s-a terminat ieri, nu ajunge in forDate
+        // Portiunea din forDate: 0 → (endMinAbsolut - 1440)
+        const startInForDate = 0;
+        const endInForDate = endMinAbsolut - 1440;
+        // Handover in forDate
+        const handoverAbsolut = s1Id ? startMinAbsolut + Math.min(durDus, s1Disponibil) : startMinAbsolut;
+        const handoverInForDate = Math.max(0, handoverAbsolut - 1440);
+        filterFn({
+          cursaId:c.id, ruta:c.ruta+' (noapte)', vehiculId:c.vehiculId,
+          s1Id, s2Id,
+          startMin: startInForDate,
+          endMin: endInForDate,
+          handoverMin: handoverInForDate,
+          durDus, durTotal, isDI: c.tipCursa==='roundtrip',
+          crossesMidnight: true, startedPrevDay: true
+        }, intervals);
       } else {
-        const endMin = startMin + durDus;
-        const handoverMin = s1Id ? startMin + Math.min(durDus, s1Disponibil) : startMin;
-        filterFn({cursaId:c.id, ruta:c.ruta, vehiculId:c.vehiculId,
-          s1Id, s2Id, startMin, endMin, handoverMin,
-          durDus, durTotal:durDus, isDI:false}, intervals);
+        // Cursa pleaca in forDate
+        const handoverMin = s1Id ? startMinAbsolut + Math.min(c.tipCursa==='roundtrip'?sm:durTotal, s1Disponibil) : startMinAbsolut;
+
+        if (endMinAbsolut > 1440) {
+          // Cursa trece miezul noptii — portiunea din forDate: startMinAbsolut → 1440
+          filterFn({
+            cursaId:c.id, ruta:c.ruta, vehiculId:c.vehiculId,
+            s1Id, s2Id,
+            startMin: startMinAbsolut,
+            endMin: 1440, // se termina la miezul noptii (pentru aceasta zi)
+            handoverMin: Math.min(handoverMin, 1440),
+            durDus, durTotal, isDI: c.tipCursa==='roundtrip',
+            crossesMidnight: true, startedPrevDay: false,
+            fullEndMin: endMinAbsolut // pentru calcul corect de minute totale
+          }, intervals);
+        } else {
+          filterFn({
+            cursaId:c.id, ruta:c.ruta, vehiculId:c.vehiculId,
+            s1Id, s2Id,
+            startMin: startMinAbsolut,
+            endMin: endMinAbsolut,
+            handoverMin,
+            durDus, durTotal, isDI: c.tipCursa==='roundtrip',
+            crossesMidnight: false, startedPrevDay: false
+          }, intervals);
+        }
       }
     });
   });
-  return intervals.sort((a,b)=>a.startMin-b.startMin);
 }
 
 // Calculeaza minutele acumulate de un sofer INAINTE de ora `beforeMin` in aceeasi zi
