@@ -1202,7 +1202,9 @@ footer{
       <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:rgba(196,154,42,.06);border:1.5px dashed rgba(196,154,42,.4);display:inline-block"></span>Retur</span>
       <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:var(--orange-g);border:1.5px solid var(--orange);display:inline-block"></span>>8h atenție</span>
       <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:var(--green-g);border:1.5px solid var(--green);border-left:3px solid var(--green);display:inline-block"></span>Șofer 2 preia</span>
-      <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:var(--red);display:inline-block"></span>Ora curentă</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:var(--blue-g);border:1.5px solid rgba(30,95,168,.3);display:inline-block"></span>Vehicul ocupat</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:rgba(196,101,32,.08);border:1.5px dashed rgba(196,101,32,.35);display:inline-block"></span>Retur garaj est.</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:var(--red);display:inline-block"></span>Ora curentă</span>
     </div>
     <div id="schedule-summary" style="margin-bottom:12px"></div>
     <div id="schedule-list"></div>
@@ -2851,9 +2853,18 @@ async function refreshOrgSelects() {
       const vNume=`${v.icon||''} ${v.nome||v.name||v.nume||''}`.trim();
       const locuri=capVeh(v);
       const pret=v.pretPerKm?` · ${v.pretPerKm} RON/km`:'';
-      // Afiseaza conflictele pe zile
+      // Afiseaza conflictele (include timp retur garaj pentru one-way)
+      const vehIvsLocal=getVehicleIntervals(v.id, dateStr);
       const conflictsByDay={};
-      ivs.forEach(iv=>{const dKey=iv.data||dateStr;if(!conflictsByDay[dKey])conflictsByDay[dKey]=[];conflictsByDay[dKey].push(`🔴 ${minToTime(iv.start)}–${minToTime(iv.end%1440)}`);});
+      vehIvsLocal.forEach(iv=>{
+        const dKey=iv.data||dateStr;
+        if(!conflictsByDay[dKey])conflictsByDay[dKey]=[];
+        const endCStr=iv.endCursa?minToTime(iv.endCursa%1440):'';
+        const endStr=minToTime(iv.end%1440);
+        conflictsByDay[dKey].push(iv.returEstimat&&iv.endCursa
+          ?`🔴 ${minToTime(iv.start)}–${endCStr}+↩~${endStr}`
+          :`🔴 ${minToTime(iv.start)}–${endStr}`);
+      });
       let statusStr='';
       if(Object.keys(conflictsByDay).length){
         statusStr=' — '+Object.entries(conflictsByDay).map(([d,ivArr])=>`${d.slice(5)}: ${ivArr.join(',')}`).join(' | ');
@@ -3646,9 +3657,25 @@ function getVehicleIntervals(vehId, dateStr) {
   if (!vehId || !dateStr) return [];
   const result = [];
   getIntervalsForDate(dateStr, (info) => {
-    if (info.vehiculId === vehId) {
-      result.push({start:info.startMin, end:info.endMin, ruta:info.ruta, cursaId:info.cursaId});
+    if (info.vehiculId !== vehId) return;
+    // Pentru curse one-way: vehiculul e plecat si trebuie sa se intoarca
+    // Estimam timpul de intoarcere = durata cursei dus + 60 min tampon (soferul e in oras)
+    // Pentru roundtrip: deja include retur in durTotal
+    let endEffectiv = info.endMin;
+    if (!info.isDI && !info.startedPrevDay) {
+      // One-way: adauga timp estimat de intoarcere la garaj
+      // durDus = minutele cursei dus; adaugam 60min tampon minim
+      endEffectiv = info.endMin + Math.max(60, info.durDus || 60);
     }
+    result.push({
+      start: info.startMin,
+      end: endEffectiv,
+      endCursa: info.endMin, // sfarsitul real al cursei (fara retur)
+      ruta: info.ruta,
+      cursaId: info.cursaId,
+      isDI: info.isDI,
+      returEstimat: !info.isDI
+    });
   });
   return result.sort((a,b)=>a.start-b.start);
 }
@@ -3690,35 +3717,99 @@ function buildSfOptsWithHours(curValId, dateStr) {
   }).join('');
 }
 
+function calcSplitOre(ora, durMin) {
+  // Calculeaza cat conduce S1 si cat S2 cand cursa trece miezul noptii
+  if(!ora||!durMin) return {ziuaCurenta:durMin,ziuaUrm:0,treceNoaptea:false};
+  const startMin = timeToMin(ora);
+  const endMin = startMin + durMin;
+  if(endMin <= 1440) return {ziuaCurenta:durMin, ziuaUrm:0, treceNoaptea:false};
+  return {
+    ziuaCurenta: 1440 - startMin,
+    ziuaUrm: endMin - 1440,
+    treceNoaptea: true
+  };
+}
+
 function renderRmDeps(){
   const el=document.getElementById('rm-departures');if(!el)return;
-  // Determina data de test (data start sau azi)
   const testDate = document.getElementById('rm-date-start')?.value || new Date().toISOString().split('T')[0];
+  // Calculeaza durata cursei din statii
+  const sm = (window._RM_STOPS?.length>=2) ? (window._RM_STOPS[window._RM_STOPS.length-1].m||60) : 60;
+  const isRoundtrip = document.getElementById('rt-roundtrip')?.checked;
+  const durMin = isRoundtrip ? sm*2 + 45 : sm;
+
   el.innerHTML=window._RM_DEPS.map((p,i)=>{
     const sfOpts = buildSfOptsWithHours(p.driverId, testDate);
     const s2Opts = buildSfOptsWithHours(p.driverId2||'', testDate);
     const curSf = p.driverId ? window._DRIVERS[p.driverId] : null;
     const minZiS1 = p.driverId ? getDriverHoursForDate(p.driverId, testDate) : 0;
-    const needS2 = minZiS1 >= 480; // 8h = avertizare
-    const overLimit = minZiS1 >= 600; // 10h = depasit
-    const s2Visible = p.driverId2 || needS2;
+
+    // Calcul split ore cand trece miezul noptii
+    const split = calcSplitOre(p.ora, durMin);
+    const oraFinish = p.ora ? minToTime((timeToMin(p.ora)+durMin)%1440) : '';
+
+    // S1 poate conduce max (MAX_H_DAY - ore_deja) minute
+    const s1Disponibil = Math.max(0, MAX_H_DAY - minZiS1);
+    const s1Poate = Math.min(durMin, s1Disponibil);
+    const s2Trebuie = s1Poate < durMin; // S1 nu poate toata cursa
+    const needS2 = s2Trebuie || minZiS1 >= 480 || !!p.driverId2;
+    const overLimit = minZiS1 + durMin > MAX_H_DAY && !p.driverId2;
+
+    // Ore S1 si S2 pe ziua curenta si urmatoare
+    const oreS1ziCur = split.treceNoaptea ? Math.min(s1Poate, split.ziuaCurenta) : s1Poate;
+    const oreS1ziUrm = split.treceNoaptea && s1Poate > split.ziuaCurenta ? s1Poate - split.ziuaCurenta : 0;
+    const oreS2ziCur = split.treceNoaptea ? Math.max(0, split.ziuaCurenta - s1Poate) : Math.max(0, durMin - s1Poate);
+    const oreS2ziUrm = split.treceNoaptea ? split.ziuaUrm - oreS1ziUrm : 0;
+    const handoverOra = p.ora ? minToTime((timeToMin(p.ora)+s1Poate)%1440) : '';
 
     const oreHtml=[1,2,3,4,5,6,0].map(d=>{const oz=(p.orePerZi||{})[d]||'';const isDiff=oz&&oz!==p.ora;return`<div style="text-align:center"><div style="font-size:9px;color:var(--stone);margin-bottom:2px">${window.DAYS_RO[d]}</div><input type="time" value="${oz}" style="width:100%;font-size:10px;padding:3px;border-radius:5px;border:1px solid ${isDiff?'var(--amber)':'var(--border)'};background:${isDiff?'var(--amber-g)':'#fff'}" onchange="if(!window._RM_DEPS[${i}].orePerZi)window._RM_DEPS[${i}].orePerZi={};window._RM_DEPS[${i}].orePerZi[${d}]=this.value;this.style.borderColor=this.value&&this.value!==window._RM_DEPS[${i}].ora?'var(--amber)':'var(--border)';this.style.background=this.value&&this.value!==window._RM_DEPS[${i}].ora?'var(--amber-g)':'#fff'"/></div>`;}).join('');
 
-    return`<div style="background:var(--cream);border:1.5px solid ${overLimit?'var(--red)':needS2?'var(--orange)':'var(--border-l)'};border-radius:var(--r);padding:14px;margin-bottom:10px">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+    // Box info split ore
+    let splitBox = '';
+    if(p.ora && durMin > 0){
+      if(split.treceNoaptea){
+        splitBox = `<div style="background:var(--blue-g);border:1px solid rgba(30,95,168,.25);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px">
+          <div style="font-weight:700;color:var(--blue);margin-bottom:6px">🌙 Cursa trece miezul nopții (${p.ora} → ${oraFinish}+1zi)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:rgba(255,255,255,.6);border-radius:6px;padding:6px 8px">
+              <div style="font-size:10px;color:var(--stone);text-transform:uppercase;font-weight:700">Ziua 1 (azi)</div>
+              ${curSf?`<div>S1 ${curSf.prenume||curSf.numeFull}: <strong>${(oreS1ziCur/60).toFixed(1)}h</strong></div>`:''}
+              ${p.driverId2&&oreS2ziCur>0?`<div style="color:var(--green)">S2: <strong>${(oreS2ziCur/60).toFixed(1)}h</strong></div>`:''}
+            </div>
+            <div style="background:rgba(255,255,255,.6);border-radius:6px;padding:6px 8px">
+              <div style="font-size:10px;color:var(--stone);text-transform:uppercase;font-weight:700">Ziua 2 (mâine)</div>
+              ${curSf&&oreS1ziUrm>0?`<div>S1 ${curSf.prenume||curSf.numeFull}: <strong>${(oreS1ziUrm/60).toFixed(1)}h</strong></div>`:''}
+              ${p.driverId2&&oreS2ziUrm>0?`<div style="color:var(--green)">S2: <strong>${(oreS2ziUrm/60).toFixed(1)}h</strong></div>`:''}
+              ${!p.driverId2&&split.ziuaUrm>0?`<div style="color:var(--orange)">⚠️ Necesar S2: ${(split.ziuaUrm/60).toFixed(1)}h</div>`:''}
+            </div>
+          </div>
+          ${p.driverId2&&s1Poate<durMin?`<div style="margin-top:6px;font-size:11px;color:var(--green)">🔄 Handover S1→S2 la ora <strong>${handoverOra}</strong></div>`:''}
+        </div>`;
+      } else {
+        splitBox = `<div style="font-size:11px;color:var(--stone);margin-bottom:8px">⏱ ${p.ora} → ${oraFinish} · durată ${(durMin/60).toFixed(1)}h${isRoundtrip?' (dus+retur)':''}</div>`;
+      }
+    }
+
+    return`<div style="background:var(--cream);border:1.5px solid ${overLimit?'var(--red)':s2Trebuie&&!p.driverId2?'var(--orange)':'var(--border-l)'};border-radius:var(--r);padding:14px;margin-bottom:10px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
         <div style="width:22px;height:22px;border-radius:50%;background:var(--amber);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
-        <input type="time" value="${p.ora||''}" style="width:110px;flex-shrink:0" onchange="window._RM_DEPS[${i}].ora=this.value"/>
-        <select style="flex:1;min-width:180px;border-color:${overLimit?'var(--red)':needS2?'var(--orange)':'var(--border)'}" onchange="window._RM_DEPS[${i}].driverId=this.value;renderRmDeps()"><option value="">— fără șofer —</option>${sfOpts}</select>
+        <input type="time" value="${p.ora||''}" style="width:110px;flex-shrink:0" onchange="window._RM_DEPS[${i}].ora=this.value;renderRmDeps()"/>
+        <select style="flex:1;min-width:180px;border-color:${overLimit?'var(--red)':s2Trebuie&&!p.driverId2?'var(--orange)':'var(--border)'}" onchange="window._RM_DEPS[${i}].driverId=this.value;renderRmDeps()"><option value="">— fără șofer —</option>${sfOpts}</select>
         ${window._RM_DEPS.length>1?`<button style="background:none;border:none;color:var(--stone);cursor:pointer;font-size:16px" onclick="window._RM_DEPS.splice(${i},1);renderRmDeps()">✕</button>`:''}
       </div>
-      ${overLimit?`<div style="background:var(--red-g);border:1px solid rgba(181,45,45,.3);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--red)">⚠️ <strong>${curSf?.numeFull||''}</strong> a depășit limita de 10h (${(minZiS1/60).toFixed(1)}h). Adăugați obligatoriu un șofer 2 pentru preluare!</div>`
-      :needS2?`<div style="background:var(--orange-g);border:1px solid rgba(196,101,32,.3);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--orange)">⚠️ <strong>${curSf?.numeFull||''}</strong> are deja ${(minZiS1/60).toFixed(1)}h programate. Recomandăm șofer 2 pentru schimb.</div>`:''}
-      ${s2Visible?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;background:var(--green-g);border:1px solid rgba(26,107,60,.2);border-radius:8px;padding:8px 10px">
-        <span style="font-size:11px;font-weight:700;color:var(--green);white-space:nowrap">🔄 Șofer 2 (preia):</span>
-        <select style="flex:1;min-width:140px;font-size:12px" onchange="window._RM_DEPS[${i}].driverId2=this.value;renderRmDeps()"><option value="">— fără șofer 2 —</option>${s2Opts}</select>
-      </div>`:''}
-      <div style="font-size:11px;font-weight:700;color:var(--stone);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Oră specifică per zi (gol = ora default)</div>
+      ${splitBox}
+      ${overLimit&&!p.driverId2?`<div style="background:var(--red-g);border:1px solid rgba(181,45,45,.3);border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:var(--red)">🚨 <strong>${curSf?.numeFull||''}</strong> depășește 10h! Șofer 2 obligatoriu.</div>`:''}
+      ${s2Trebuie&&!p.driverId2&&!overLimit?`<div style="background:var(--orange-g);border:1px solid rgba(196,101,32,.3);border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:var(--orange)">⚠️ S1 poate conduce ${(s1Poate/60).toFixed(1)}h din ${(durMin/60).toFixed(1)}h. Adăugați Șofer 2 pentru restul de ${((durMin-s1Poate)/60).toFixed(1)}h.</div>`:''}
+      <div style="background:var(--green-g);border:1px solid rgba(26,107,60,.2);border-radius:8px;padding:8px 10px;margin-bottom:8px">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:700;color:var(--green);white-space:nowrap">🔄 Șofer 2${s2Trebuie?' (necesar)':' (opțional)'}:</span>
+          <select style="flex:1;min-width:140px;font-size:12px;border-color:${s2Trebuie&&!p.driverId2?'var(--orange)':'var(--border)'}" onchange="window._RM_DEPS[${i}].driverId2=this.value;renderRmDeps()">
+            <option value="">— fără șofer 2 —</option>${s2Opts}
+          </select>
+        </div>
+        ${p.driverId2&&s1Poate<durMin?`<div style="font-size:11px;color:var(--green);margin-top:4px">Handover la <strong>${handoverOra}</strong> · S2 preia ${((durMin-s1Poate)/60).toFixed(1)}h</div>`:''}
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--stone);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">Oră specifică per zi (gol = ora default de mai sus)</div>
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${oreHtml}</div>
     </div>`;
   }).join('');
@@ -4116,15 +4207,20 @@ window.saveDriver=async()=>{
 
 // ── VEHICLE ASSIGNMENT ─────────────────────────────────────
 window.openAssignDrivers=async(vehId)=>{
-  const v=window._F.find(x=>x.id===vehId);if(!v)return;
+  // Re-incarca flota daca e nevoie
+  if(!window._F?.length){ try{await loadFleet();}catch(e){} }
+  let v=window._F.find(x=>x.id===vehId);
+  if(!v){
+    // Incearca direct din Firestore
+    try{const ref=await getDoc(doc(db,'vehicule',vehId));if(ref.exists()){v={id:ref.id,...ref.data()};window._F.push(v);}}catch(e){}
+  }
+  if(!v){toast('Vehiculul nu a fost găsit','er');return;}
   window._ASSIGN_VEH_ID=vehId;
   window._ASSIGN_DRIVERS=JSON.parse(JSON.stringify(v.soferiAtribuiti||[]));
   document.getElementById('assign-drivers-title').textContent='👨‍✈️ Atribuire șoferi — '+(v.icon||'')+' '+(v.nome||v.name||v.nume||'');
   document.getElementById('assign-vehicle-id').value=vehId;
-  // Incarca soferii daca nu sunt in cache
-  if(!window._DRIVERS_LIST?.length){
-    try{const sfSnap=await getDocs(collection(db,'soferi'));buildDriversCache(sfSnap);}catch(e){}
-  }
+  // Incarca soferii intotdeauna fresh
+  try{const sfSnap=await getDocs(collection(db,'soferi'));buildDriversCache(sfSnap);}catch(e){}
   if(!window._DRIVERS_LIST?.length){
     toast('Nu există șoferi adăugați. Adăugați mai întâi șoferi din tab-ul Șoferi.','wr');
     return;
@@ -4808,27 +4904,33 @@ window.loadSchedule = async () => {
 
 function renderScheduleSummary(soferi,oreMap,el){
   const date=window._TL_DATE||new Date().toISOString().split('T')[0];
-  const cuCurse=soferi.filter(sf=>(oreMap[sf.id]?.minZi||0)>0);
-  const lista=cuCurse.length>0?cuCurse:soferi.slice(0,6);
-  el.innerHTML='<div style="margin-bottom:6px;font-size:11px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Program șoferi azi — intervale exacte</div>'
+  el.innerHTML='<div style="margin-bottom:6px;font-size:11px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Program șoferi — intervale exacte</div>'
   +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">'+soferi.map(sf=>{
-    const o=oreMap[sf.id]||{};
-    const minZi=o.minZi||0;
     const ivs=getDriverIntervals(sf.id,date);
+    const minZi=ivs.reduce((s,iv)=>s+(iv.end-iv.start),0);
     const hZ=(minZi/60).toFixed(1);
     const pZ=Math.min(Math.round(minZi/MAX_H_DAY*100),100);
     const col=pZ>=100?'var(--red)':pZ>=80?'var(--orange)':minZi>0?'var(--green)':'var(--stone)';
     const name=sf.numeFull||[sf.prenume,sf.nume].filter(Boolean).join(' ');
     const expOk=!sf.expPermis||new Date(sf.expPermis)>new Date();
-    // Intervale text
+    const hasS2role=ivs.some(iv=>iv.role==='S2');
+    const hasOvernight=ivs.some(iv=>iv.crossesMidnight);
     let ivText='🟢 Liber toată ziua';
     if(ivs.length){
-      ivText=ivs.map(iv=>`<span style="display:inline-block;background:${iv.role==='S2'?'var(--green-g)':'var(--amber-g)'};border:1px solid ${iv.role==='S2'?'rgba(26,107,60,.3)':'var(--amber-b)'};border-radius:4px;padding:1px 6px;margin:1px;font-size:10px;color:${iv.role==='S2'?'var(--green)':'var(--amber-d)'};white-space:nowrap">🔴 ${minToTime(iv.start)}–${minToTime(iv.end%1440)}${iv.role==='S2'?' (S2)':''}</span>`).join('');
+      ivText=ivs.map(iv=>{
+        const endDisp=minToTime(iv.end===1440?0:iv.end%1440);
+        const roleTag=iv.role==='S2'
+          ?'<span style="background:var(--green-g);color:var(--green);font-size:9px;padding:1px 5px;border-radius:4px;border:1px solid rgba(26,107,60,.3)">S2</span>'
+          :'<span style="background:var(--amber-g);color:var(--amber-d);font-size:9px;padding:1px 5px;border-radius:4px;border:1px solid var(--amber-b)">S1</span>';
+        const nightTag=iv.crossesMidnight&&!iv.startedPrevDay?'<span style="font-size:9px;color:var(--blue)">→+1zi</span>':
+                       iv.startedPrevDay?'<span style="font-size:9px;color:var(--stone)">←ieri</span>':'';
+        return`<span style="display:inline-flex;align-items:center;gap:3px;background:var(--cream);border:1px solid var(--border);border-radius:4px;padding:2px 6px;margin:1px;font-size:10px">${roleTag} ${minToTime(iv.start)}–${endDisp}${nightTag}</span>`;
+      }).join('');
     }
-    return`<div style="background:var(--card);border:1.5px solid ${pZ>=100?'var(--red)':pZ>=80?'var(--orange)':minZi>0?'var(--green-g)':'var(--border-l)'};border-radius:10px;padding:10px 14px;min-width:200px;flex:1">
-      <div style="font-weight:700;font-size:13px;margin-bottom:4px">${name}</div>
-      <div style="margin-bottom:5px;line-height:1.6">${ivText}</div>
-      ${minZi>0?`<div style="font-size:11px;color:${col};font-weight:600;margin-bottom:3px">Total: ${hZ}h / ${MAX_H_DAY/60}h max</div>
+    return`<div style="background:var(--card);border:1.5px solid ${pZ>=100?'var(--red)':pZ>=80?'var(--orange)':minZi>0?'var(--green-g)':'var(--border-l)'};border-radius:10px;padding:10px 14px;min-width:180px;flex:1">
+      <div style="font-weight:700;font-size:13px;margin-bottom:4px">${name}${hasS2role?'<span style="font-size:10px;color:var(--green);margin-left:6px">+S2</span>':''}${hasOvernight?'<span style="font-size:10px;color:var(--blue);margin-left:4px">🌙</span>':''}</div>
+      <div style="margin-bottom:5px;line-height:1.8">${ivText}</div>
+      ${minZi>0?`<div style="font-size:11px;color:${col};font-weight:600;margin-bottom:3px">Total: ${hZ}h / ${MAX_H_DAY/60}h</div>
       <div class="pbar" style="width:100%"><div class="pbar-fill" style="width:${pZ}%;background:${col}"></div></div>`:''}
       ${!expOk?'<div style="font-size:10px;color:var(--red);font-weight:700;margin-top:3px">⚠️ Permis expirat</div>':''}
     </div>`;
@@ -4845,7 +4947,34 @@ function renderTimeline(curse,soferi,date,oreMap,el){
   html+=`<div class="tl-header"><div class="tl-rowlabel">Șofer</div><div class="tl-hours">${hdrCells}</div></div>`;
   if(!curse.length){html+='<div style="text-align:center;padding:48px;color:var(--stone)"><div style="font-size:40px;margin-bottom:10px">😴</div>Nicio cursă activă pentru '+date+'</div></div></div>';el.innerHTML=html;return;}
 
-  // Colectam curse neatribuite (fara S1 si fara S2)
+  // ── Rand vehicule ──────────────────────────
+  html+='<div class="tl-section-hdr" style="background:var(--blue-g);color:var(--blue)">🚌 Vehicule — ocupare (portocaliu = timp retur estimat la garaj)</div>';
+  window._F.forEach(v=>{
+    const ivs=getVehicleIntervals(v.id,date);
+    const minOcup=ivs.reduce((s,iv)=>s+(iv.end-iv.start),0);
+    const pV=Math.min(Math.round(minOcup/1440*100),100);
+    const vNume=(v.icon||'🚌')+' '+(v.nome||v.name||v.nume||'');
+    html+=`<div class="tl-row"><div class="tl-label">
+      <div class="tl-lname" style="font-size:11px">${vNume}</div>
+      <div class="tl-lsub">${capVeh(v)} locuri${minOcup>0?' · '+Math.round(minOcup/60*10)/10+'h':'  · Liber'}</div>
+    </div>`;
+    html+=`<div class="tl-track" data-date="${date}" data-vehid="${v.id}">`;
+    if(isToday&&nowMin>=TL_START&&nowMin<=TL_END)html+=`<div class="tl-nowline" style="left:${tlPct(nowMin)}"></div>`;
+    if(!ivs.length){
+      html+=`<div style="position:absolute;top:50%;transform:translateY(-50%);left:12px;font-size:11px;color:var(--green);font-weight:600">🟢 Disponibil</div>`;
+    } else {
+      ivs.forEach(iv=>{
+        const wCursa=tlW(iv.start,iv.endCursa||iv.end);
+        const wRetur=iv.returEstimat&&iv.endCursa?tlW(iv.endCursa,iv.end):'0%';
+        const rutaS=(iv.ruta||'').split('–')[0].trim().slice(0,15);
+        if(wCursa!=='0%')html+=`<div class="tl-block b-veh" style="left:${tlPct(iv.start)};width:${wCursa};border-style:solid" title="${iv.ruta} · ${minToTime(iv.start)}–${minToTime((iv.endCursa||iv.end)%1440)}">🚌 ${rutaS}</div>`;
+        if(wRetur!=='0%')html+=`<div class="tl-block b-veh" style="left:${tlPct(iv.endCursa)};width:${wRetur};background:rgba(196,101,32,.08);border-color:rgba(196,101,32,.35);border-style:dashed;color:var(--orange)" title="Timp estimat retur la garaj">⟵ retur garaj</div>`;
+      });
+    }
+    html+='</div></div>';
+  });
+
+  // ── Colectam curse neatribuite (fara S1 si fara S2) ──
   const nealocat=[];
   curse.forEach(c=>{
     const pl=c.plecari||[{ora:c.ora,driverId:c.driverId}];
@@ -4973,9 +5102,16 @@ window.tlClickBlock=async(event,cursaId,pi,date)=>{
   // Calc how many minutes S1 can still drive
   const s1CurrentMin=(oraInfo.driverId?(oreMap[resSf(oraInfo.driverId)?.id||'']?.minZi||0):0);
   const s1CanDrive=Math.max(0,MAX_H_DAY-s1CurrentMin);
-  const needS2=oraInfo.driverId&&(s1CurrentMin+durTotal>MAX_H_DAY);
+  const needS2=s1CanDrive<durTotal; // S1 nu poate toata cursa
   const s2TakesOverAt=needS2?Math.round(s1CanDrive):-1;
   const s2TakesOverHrs=s2TakesOverAt>0?(s2TakesOverAt/60).toFixed(1):'';
+  // Calculeaza split pe zile pentru cursa overnight
+  const plecareMin = timeToMin(p.ora||'00:00');
+  const splitInfo = {
+    treceNoaptea: plecareMin + durTotal > 1440,
+    ziuaCurenta: Math.min(durTotal, 1440-plecareMin),
+    ziuaUrm: Math.max(0, plecareMin+durTotal-1440)
+  };
   const s2Opts=window._DRIVERS_LIST.map(sf=>{
     const minZi=(oreMap[sf.id]?.minZi||0);
     const h=(minZi/60).toFixed(1);
@@ -4990,7 +5126,11 @@ window.tlClickBlock=async(event,cursaId,pi,date)=>{
   panel.style.cssText=`top:${top}px;left:${left}px`;
   panel.innerHTML=`<div style="font-weight:700;font-size:14px;margin-bottom:2px">${c.ruta}</div>
     <div style="font-size:12px;color:var(--stone);margin-bottom:10px">${p.ora} · ${(durTotal/60).toFixed(1)}h${c.tipCursa==='roundtrip'?' · Dus-Întors':''} · ${date}</div>
-    ${needS2?`<div style="background:var(--orange-g);border:1px solid var(--orange);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--orange);margin-bottom:10px">⚠️ S1 poate conduce max ${s2TakesOverHrs}h din această cursă. S2 preia restul de ${((durTotal-s2TakesOverAt)/60).toFixed(1)}h.</div>`:''}
+    ${needS2?`<div style="background:var(--orange-g);border:1px solid var(--orange);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--orange);margin-bottom:10px">
+      ⚠️ S1 poate conduce <strong>${s2TakesOverHrs}h</strong> din <strong>${(durTotal/60).toFixed(1)}h</strong> total. S2 preia restul de <strong>${((durTotal-s2TakesOverAt)/60).toFixed(1)}h</strong>.
+      ${splitInfo.treceNoaptea?`<br>🌙 Cursa trece miezul nopții — Ziua 1: ${(splitInfo.ziuaCurenta/60).toFixed(1)}h · Ziua 2: ${(splitInfo.ziuaUrm/60).toFixed(1)}h`:''}
+    </div>`:''}
+    ${!needS2&&splitInfo.treceNoaptea?`<div style="background:var(--blue-g);border:1px solid rgba(30,95,168,.2);border-radius:8px;padding:6px 10px;font-size:11px;color:var(--blue);margin-bottom:8px">🌙 Overnight: Ziua 1 ${(splitInfo.ziuaCurenta/60).toFixed(1)}h · Ziua 2 ${(splitInfo.ziuaUrm/60).toFixed(1)}h</div>`:''}
     <div style="font-size:11px;font-weight:700;color:var(--stone);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">🟠 Șofer 1 (primar)</div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><select id="asgn-s1" class="assign-sf-select" style="border-color:${needS2?'var(--orange)':'var(--border)'}">${sfOpt(0)}</select></div>
     <div style="font-size:11px;font-weight:700;color:var(--stone);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">🟢 Șofer 2 (preia schimb${needS2?' — obligatoriu':''})</div>
