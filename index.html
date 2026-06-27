@@ -2001,10 +2001,19 @@ window.acceptCookies = () => { localStorage.setItem('cookies_ok','1'); document.
 if (localStorage.getItem('cookies_ok')) document.getElementById('cookie-banner').classList.add('hidden');
 
 // ── TICKER ─────────────────────────────────────────────────
+// Asculta mesajele manuale din ticker
 onSnapshot(collection(db,'ticker'), snap => {
   const msgs = snap.docs.filter(d=>d.data().activ).map(d=>d.data().mesaj);
   renderTicker(msgs);
 }, err => console.warn('Ticker:', err.message));
+
+// Re-renderiza ticker-ul si cand se schimba cursele regulate
+onSnapshot(collection(db,'curse_regulate'), _snap => {
+  getDocs(collection(db,'ticker')).then(tSnap => {
+    const msgs = tSnap.docs.filter(d=>d.data().activ).map(d=>d.data().mesaj);
+    renderTicker(msgs);
+  }).catch(()=>{});
+}, err => console.warn('Ticker curse:', err.message));
 
 async function renderTicker(manualMsgs) {
   const ticker = document.getElementById('ticker');
@@ -2023,9 +2032,15 @@ async function renderTicker(manualMsgs) {
       if(c.dateBlocate?.includes(today)) return false;
       return true;
     });
+    // Sorteaza dupa prima ora de plecare
+    curseAzi.sort((a,b)=>{
+      const oaA = (a.plecari||[{ora:a.ora}]).map(p=>getOraForDate(p,today).ora||p.ora||'').filter(Boolean).sort()[0]||'99:99';
+      const oaB = (b.plecari||[{ora:b.ora}]).map(p=>getOraForDate(p,today).ora||p.ora||'').filter(Boolean).sort()[0]||'99:99';
+      return oaA.localeCompare(oaB);
+    });
     curseMsgs = curseAzi.map(c=>{
       const pl = c.plecari||[{ora:c.ora}];
-      const ore = pl.map(p=>{const oi=getOraForDate(p,today);return oi.ora||p.ora||'';}).filter(Boolean);
+      const ore = pl.map(p=>{const oi=getOraForDate(p,today);return oi.ora||p.ora||'';}).filter(Boolean).sort();
       return `🚌 ${c.ruta}${ore.length?' — '+ore.join(', '):''}`;
     });
   } catch(e) {}
@@ -2769,33 +2784,60 @@ async function refreshOrgSelects() {
   const durMin=durH>0?durH*60:durZile>0?durZile*1440:0;
   if(!dateStr)return;
 
-  // Intervalul cerut de client (in minute de la miezul noptii al datei)
   const reqStart = oraStr!=='flexibil' ? timeToMin(oraStr) : -1;
   const reqEnd = reqStart>=0&&durMin>0 ? reqStart+durMin : -1;
+  // Zile afectate de calatorie
+  const affectedDays = [];
+  if(durZile>0){
+    for(let i=0;i<durZile;i++){
+      const d=new Date(dateStr+'T12:00:00'); d.setDate(d.getDate()+i);
+      affectedDays.push(d.toISOString().split('T')[0]);
+    }
+  } else {
+    affectedDays.push(dateStr);
+    // daca trece miezul noptii
+    if(reqEnd>1440){
+      const d=new Date(dateStr+'T12:00:00'); d.setDate(d.getDate()+1);
+      affectedDays.push(d.toISOString().split('T')[0]);
+    }
+  }
 
-  // Intervale ocupate vehicule
-  const vehIvsMap=new Map();
-  getIntervalsForDate(dateStr,(info)=>{
-    if(!info.vehiculId)return;
-    if(!vehIvsMap.has(info.vehiculId))vehIvsMap.set(info.vehiculId,[]);
-    vehIvsMap.get(info.vehiculId).push({start:info.startMin,end:info.endMin,ruta:info.ruta});
-  });
-  try{
-    const snap=await getDocs(query(collection(db,'rezervari'),where('data','==',dateStr)));
-    snap.docs.forEach(d=>{
-      const r=d.data();
-      if(r.status==='anulata'||r.tipRezervare==='regulata'||!r.vehiculId||!r.ora)return;
-      const sMin=timeToMin(r.ora);
-      const eMin=sMin+(r.durataEstimataH||2)*60;
-      if(!vehIvsMap.has(r.vehiculId))vehIvsMap.set(r.vehiculId,[]);
-      vehIvsMap.get(r.vehiculId).push({start:sMin,end:eMin,ruta:r.descriereCursa||'Org.'});
+  // Intervale ocupate vehicule — pe TOATE zilele afectate
+  const vehIvsMap=new Map(); // vehId -> [{start, end, data, ruta}]
+  for(const dayStr of affectedDays){
+    const dayStart = dayStr===dateStr ? reqStart : 0;
+    const dayEnd = dayStr===dateStr ? Math.min(reqEnd, 1440) : (reqEnd>1440 ? reqEnd-1440 : reqEnd);
+    getIntervalsForDate(dayStr,(info)=>{
+      if(!info.vehiculId)return;
+      if(!vehIvsMap.has(info.vehiculId))vehIvsMap.set(info.vehiculId,[]);
+      vehIvsMap.get(info.vehiculId).push({start:info.startMin,end:info.endMin,ruta:info.ruta,data:dayStr});
     });
-  }catch(e){}
+    try{
+      const snap=await getDocs(query(collection(db,'rezervari'),where('data','==',dayStr)));
+      snap.docs.forEach(d=>{
+        const r=d.data();
+        if(r.status==='anulata'||r.tipRezervare==='regulata'||!r.vehiculId||!r.ora)return;
+        const sMin=timeToMin(r.ora);
+        const eMin=sMin+(r.durataEstimataH||2)*60;
+        if(!vehIvsMap.has(r.vehiculId))vehIvsMap.set(r.vehiculId,[]);
+        vehIvsMap.get(r.vehiculId).push({start:sMin,end:eMin,ruta:r.descriereCursa||'Org.',data:dayStr});
+      });
+    }catch(e){}
+  }
 
-  // Funcție: verifica daca intervalul [reqStart,reqEnd] se suprapune cu intervalele existente
+  // Verifica conflict pe intervalul exact cerut
   function hasConflict(ivs) {
-    if(reqStart<0||reqEnd<0) return false; // fara interval precis = nu putem verifica
-    return ivs.some(iv=>reqStart<iv.end && reqEnd>iv.start);
+    if(reqStart<0||reqEnd<0) return false;
+    // verifica fiecare zi afectata
+    return ivs.some(iv=>{
+      if(!iv.data) return reqStart<iv.end && reqEnd>iv.start;
+      const ivDayIdx=affectedDays.indexOf(iv.data);
+      if(ivDayIdx<0)return false;
+      // normalizeaza intervalul cerut pentru ziua respectiva
+      const reqSDay = ivDayIdx===0 ? reqStart : 0;
+      const reqEDay = ivDayIdx===0 ? Math.min(reqEnd,1440) : Math.max(0,reqEnd-1440*ivDayIdx);
+      return reqSDay<iv.end && reqEDay>iv.start;
+    });
   }
 
   // Vehicule
@@ -2809,12 +2851,15 @@ async function refreshOrgSelects() {
       const vNume=`${v.icon||''} ${v.nome||v.name||v.nume||''}`.trim();
       const locuri=capVeh(v);
       const pret=v.pretPerKm?` · ${v.pretPerKm} RON/km`:'';
+      // Afiseaza conflictele pe zile
+      const conflictsByDay={};
+      ivs.forEach(iv=>{const dKey=iv.data||dateStr;if(!conflictsByDay[dKey])conflictsByDay[dKey]=[];conflictsByDay[dKey].push(`🔴 ${minToTime(iv.start)}–${minToTime(iv.end%1440)}`);});
       let statusStr='';
-      if(ivs.length){
-        statusStr=' — '+ivs.map(iv=>`🔴 ${minToTime(iv.start)}–${minToTime(iv.end%1440)}`).join(', ');
+      if(Object.keys(conflictsByDay).length){
+        statusStr=' — '+Object.entries(conflictsByDay).map(([d,ivArr])=>`${d.slice(5)}: ${ivArr.join(',')}`).join(' | ');
         if(!conflict) statusStr+=' · 🟢 liber în intervalul tău';
       } else {
-        statusStr=' — 🟢 Disponibil';
+        statusStr=' — 🟢 Disponibil'+(affectedDays.length>1?` toate cele ${affectedDays.length} zile`:'');
       }
       const opt=`<option value="${v.id}" ${conflict?'style="color:#b52d2d"':''}>${vNume} — ${locuri} locuri${pret}${statusStr}</option>`;
       if(conflict) ocupat.push(opt); else liber.push(opt);
@@ -2822,20 +2867,29 @@ async function refreshOrgSelects() {
     orgVeh.innerHTML+=[...liber,...(ocupat.length?['<option disabled>─── Ocupate în intervalul tău ───</option>']:[]),...ocupat].join('');
   }
 
-  // Soferi
+  // Soferi — pe toate zilele afectate
+  const sfIvsMap=new Map();
+  for(const dayStr of affectedDays){
+    window._DRIVERS_LIST.forEach(s=>{
+      if(!sfIvsMap.has(s.id))sfIvsMap.set(s.id,[]);
+      const ivs=getDriverIntervals(s.id,dayStr);
+      ivs.forEach(iv=>sfIvsMap.get(s.id).push({...iv,data:dayStr}));
+    });
+  }
   const sel=document.getElementById('org-driver-pref');
   if(sel){
     const liber2=[],ocupat2=[];
     window._DRIVERS_LIST.forEach(s=>{
-      const ivs=getDriverIntervals(s.id,dateStr);
+      const ivs=sfIvsMap.get(s.id)||[];
       const totalMin=ivs.reduce((sum,iv)=>sum+(iv.end-iv.start),0);
       const conflict=hasConflict(ivs);
       const icon=totalMin>=600?'🔴':totalMin>=480?'🟡':'🟢';
       let statusStr='';
       if(ivs.length){
-        statusStr=` (${icon} ${ivs.map(iv=>`${minToTime(iv.start)}–${minToTime(iv.end%1440)}`).join(', ')}${!conflict?' · liber în intervalul tău':''})`; 
+        const byDay={};ivs.forEach(iv=>{const dk=iv.data||dateStr;if(!byDay[dk])byDay[dk]=[];byDay[dk].push(`${minToTime(iv.start)}–${minToTime(iv.end%1440)}`);});
+        statusStr=` (${icon} ${Object.entries(byDay).map(([d,arr])=>`${d.slice(5)}: ${arr.join(',')}`).join(' | ')}${!conflict?' · liber în intervalul tău':''})`;
       } else {
-        statusStr=' (🟢 Liber toată ziua)';
+        statusStr=` (🟢 Liber${affectedDays.length>1?' toate zilele':' toată ziua'})`;
       }
       const opt=`<option value="${s.id}" style="color:${conflict?'#b52d2d':totalMin>=480?'#c46520':'#1a6b3c'}">${s.numeFull}${statusStr}</option>`;
       if(conflict) ocupat2.push(opt); else liber2.push(opt);
@@ -2846,13 +2900,14 @@ async function refreshOrgSelects() {
 
   // Info box
   let infoBoxEl=document.getElementById('org-avail-info');
-  if(!infoBoxEl){infoBoxEl=document.createElement('div');infoBoxEl.id='org-avail-info';document.getElementById('org-veh')?.parentNode?.insertBefore(infoBoxEl,document.getElementById('org-veh'));}
+  if(!infoBoxEl){infoBoxEl=document.createElement('div');infoBoxEl.id='org-avail-info';document.getElementById('org-avail-wrap')?.insertBefore(infoBoxEl,document.getElementById('org-veh'));}
   const totalV=window._F.filter(v=>v.disponibil!==false).length;
   const conflictV=window._F.filter(v=>v.disponibil!==false&&hasConflict(vehIvsMap.get(v.id)||[])).length;
   const liberV=totalV-conflictV;
-  const intervalText=reqStart>=0&&reqEnd>=0?` în intervalul ${minToTime(reqStart)}–${minToTime(reqEnd%1440)}`:'';
+  const intervalText=reqStart>=0&&reqEnd>=0?` ${oraStr}–${minToTime(reqEnd%1440)}${reqEnd>1440?' (+1 zi)':''}`:' (interval flexibil)';
+  const zileText=affectedDays.length>1?` · ${affectedDays.length} zile (${affectedDays[0].slice(5)}–${affectedDays[affectedDays.length-1].slice(5)})`:'';
   infoBoxEl.innerHTML=`<div style="background:var(--blue-g);border:1px solid rgba(30,95,168,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:10px">
-    📅 <strong>${dateStr}</strong>${intervalText}: <strong>${liberV}</strong> vehicul${liberV!==1?'e':''} 🟢 libere · <strong>${conflictV}</strong> 🔴 cu conflict de orar
+    📅 <strong>${dateStr}</strong>${intervalText}${zileText}: <strong>${liberV}</strong> vehicul${liberV!==1?'e':''} 🟢 libere · <strong>${conflictV}</strong> 🔴 cu conflict de orar
   </div>`;
 }
 function renderOrgStops(){
@@ -3442,7 +3497,7 @@ function getNextDate(dateStr) {
 // Proceseaza cursele care pleaca in `depDate` si returneaza intervalele relevante pentru `forDate`
 function _processIntervalsForDay(depDate, forDate, filterFn, intervals) {
   const dow = new Date(depDate+'T12:00:00').getDay();
-  const isNextDay = depDate !== forDate; // cursa pleaca ziua precedenta
+  const isNextDay = depDate !== forDate;
 
   (window._R||[]).forEach(c => {
     if (!c.activa) return;
@@ -3459,49 +3514,52 @@ function _processIntervalsForDay(depDate, forDate, filterFn, intervals) {
       const ora = oraInfo.ora || p.ora || '';
       if (!ora) return;
 
-      const startMinAbsolut = timeToMin(ora); // minute din ziua depDate (0–1439)
+      const startMinAbsolut = timeToMin(ora);
       const s1Id = resSf(oraInfo.driverId||p.driverId||'')?.id||'';
       const s2Id = resSf(p.driverId2||'')?.id||'';
-      const s1TotalBefore = getDriverMinutesBefore(s1Id, depDate, c.id, startMinAbsolut);
-      const s1Disponibil = s1Id ? Math.max(0, MAX_H_DAY - s1TotalBefore) : 0;
 
       const durDus = sm;
       const durTotal = c.tipCursa==='roundtrip' ? sm*2 + BREAK_MIN : sm;
-      const endMinAbsolut = startMinAbsolut + durTotal; // poate depasi 1440
+      const endMinAbsolut = startMinAbsolut + durTotal;
+
+      // Calculeaza handover: S1 conduce cat poate, S2 preia restul
+      let handoverMinAbsolut = endMinAbsolut; // default: S1 tot
+      if (s1Id && s2Id) {
+        const s1TotalBefore = getDriverMinutesBefore(s1Id, depDate, c.id, startMinAbsolut);
+        const s1Disponibil = Math.max(0, MAX_H_DAY - s1TotalBefore);
+        const s1Poate = Math.min(durTotal, s1Disponibil);
+        handoverMinAbsolut = startMinAbsolut + s1Poate;
+        // daca S1 poate tot, nu mai e nevoie de S2
+        if (handoverMinAbsolut >= endMinAbsolut) handoverMinAbsolut = endMinAbsolut;
+      }
 
       if (isNextDay) {
-        // Cursa a plecat ieri — ne intereseaza doar portiunea din forDate (0–endMinAbsolut-1440)
-        if (endMinAbsolut <= 1440) return; // cursa s-a terminat ieri, nu ajunge in forDate
-        // Portiunea din forDate: 0 → (endMinAbsolut - 1440)
-        const startInForDate = 0;
+        // Cursa a plecat ieri — portiunea din forDate (ziua urmatoare)
+        if (endMinAbsolut <= 1440) return; // s-a terminat ieri
         const endInForDate = endMinAbsolut - 1440;
-        // Handover in forDate
-        const handoverAbsolut = s1Id ? startMinAbsolut + Math.min(durDus, s1Disponibil) : startMinAbsolut;
-        const handoverInForDate = Math.max(0, handoverAbsolut - 1440);
+        // handover translatat in coordonatele zilei de azi
+        const handoverInForDate = handoverMinAbsolut >= 1440 ? handoverMinAbsolut - 1440 : 0;
         filterFn({
-          cursaId:c.id, ruta:c.ruta+' (noapte)', vehiculId:c.vehiculId,
+          cursaId:c.id, ruta:c.ruta+' ⟵noapte', vehiculId:c.vehiculId,
           s1Id, s2Id,
-          startMin: startInForDate,
+          startMin: 0,
           endMin: endInForDate,
           handoverMin: handoverInForDate,
           durDus, durTotal, isDI: c.tipCursa==='roundtrip',
           crossesMidnight: true, startedPrevDay: true
         }, intervals);
       } else {
-        // Cursa pleaca in forDate
-        const handoverMin = s1Id ? startMinAbsolut + Math.min(c.tipCursa==='roundtrip'?sm:durTotal, s1Disponibil) : startMinAbsolut;
-
         if (endMinAbsolut > 1440) {
-          // Cursa trece miezul noptii — portiunea din forDate: startMinAbsolut → 1440
+          // Cursa trece miezul noptii — portiunea din azi: start → 1440
           filterFn({
             cursaId:c.id, ruta:c.ruta, vehiculId:c.vehiculId,
             s1Id, s2Id,
             startMin: startMinAbsolut,
-            endMin: 1440, // se termina la miezul noptii (pentru aceasta zi)
-            handoverMin: Math.min(handoverMin, 1440),
+            endMin: 1440,
+            handoverMin: Math.min(handoverMinAbsolut, 1440),
             durDus, durTotal, isDI: c.tipCursa==='roundtrip',
             crossesMidnight: true, startedPrevDay: false,
-            fullEndMin: endMinAbsolut // pentru calcul corect de minute totale
+            fullEndMin: endMinAbsolut
           }, intervals);
         } else {
           filterFn({
@@ -3509,7 +3567,7 @@ function _processIntervalsForDay(depDate, forDate, filterFn, intervals) {
             s1Id, s2Id,
             startMin: startMinAbsolut,
             endMin: endMinAbsolut,
-            handoverMin,
+            handoverMin: handoverMinAbsolut,
             durDus, durTotal, isDI: c.tipCursa==='roundtrip',
             crossesMidnight: false, startedPrevDay: false
           }, intervals);
@@ -3562,18 +3620,22 @@ function getDriverIntervals(sfId, dateStr) {
   const result = [];
   getIntervalsForDate(dateStr, (info, arr) => {
     if (info.s1Id === sfId) {
+      // S1 conduce de la start pana la handover (sau pana la sfarsit daca nu e S2)
       const endS1 = info.s2Id ? info.handoverMin : info.endMin;
-      result.push({start:info.startMin, end:endS1, ruta:info.ruta, role:'S1', cursaId:info.cursaId});
-      // Daca e dus-intors si S1 conduce tot
-      if (!info.s2Id && info.isDI) {
-        result[result.length-1].end = info.endMin;
+      if (endS1 > info.startMin) {
+        result.push({start:info.startMin, end:endS1, ruta:info.ruta, role:'S1', cursaId:info.cursaId, crossesMidnight:info.crossesMidnight});
       }
-    } else if (info.s2Id === sfId && info.s1Id) {
-      if (info.handoverMin < info.endMin) {
-        result.push({start:info.handoverMin, end:info.endMin, ruta:info.ruta+' (preia)', role:'S2', cursaId:info.cursaId});
+    } else if (info.s2Id === sfId) {
+      // S2 preia de la handover pana la sfarsit
+      if (info.s1Id) {
+        // exista S1, S2 preia dupa handover
+        if (info.handoverMin < info.endMin) {
+          result.push({start:info.handoverMin, end:info.endMin, ruta:info.ruta+' (S2)', role:'S2', cursaId:info.cursaId, crossesMidnight:info.crossesMidnight});
+        }
+      } else {
+        // nu e S1, S2 conduce tot
+        result.push({start:info.startMin, end:info.endMin, ruta:info.ruta, role:'S2', cursaId:info.cursaId, crossesMidnight:info.crossesMidnight});
       }
-    } else if (!info.s1Id && info.s2Id === sfId) {
-      result.push({start:info.startMin, end:info.endMin, ruta:info.ruta, role:'S1', cursaId:info.cursaId});
     }
   });
   return result.sort((a,b)=>a.start-b.start);
@@ -4057,8 +4119,16 @@ window.openAssignDrivers=async(vehId)=>{
   const v=window._F.find(x=>x.id===vehId);if(!v)return;
   window._ASSIGN_VEH_ID=vehId;
   window._ASSIGN_DRIVERS=JSON.parse(JSON.stringify(v.soferiAtribuiti||[]));
-  document.getElementById('assign-drivers-title').textContent='👨‍✈️ Atribuire șoferi — '+(v.icon||'')+(v.nome||v.name||v.nume||'');
+  document.getElementById('assign-drivers-title').textContent='👨‍✈️ Atribuire șoferi — '+(v.icon||'')+' '+(v.nome||v.name||v.nume||'');
   document.getElementById('assign-vehicle-id').value=vehId;
+  // Incarca soferii daca nu sunt in cache
+  if(!window._DRIVERS_LIST?.length){
+    try{const sfSnap=await getDocs(collection(db,'soferi'));buildDriversCache(sfSnap);}catch(e){}
+  }
+  if(!window._DRIVERS_LIST?.length){
+    toast('Nu există șoferi adăugați. Adăugați mai întâi șoferi din tab-ul Șoferi.','wr');
+    return;
+  }
   renderAssignList();openModal('assign-drivers');
 };
 function renderAssignList(){
@@ -4655,11 +4725,18 @@ window.loadWeeklySchedule = async () => {
       const bg=minZi>=600?'var(--red-g)':minZi>=480?'var(--orange-g)':minZi>0?'var(--green-g)':'transparent';
       const border2=isToday2?'border:1.5px solid var(--amber)':'border:1px solid transparent';
       const col=minZi>=600?'var(--red)':minZi>=480?'var(--orange)':minZi>0?'var(--green)':'var(--stone)';
+      // Verifica daca exista curse care continua in ziua urmatoare
+      const hasOvernight=ivs.some(iv=>iv.crossesMidnight&&!iv.startedPrevDay);
+      const hasPrevDay=ivs.some(iv=>iv.startedPrevDay);
       let cellContent='';
       if(minZi>0){
-        const ivText=ivs.slice(0,2).map(iv=>`${minToTime(iv.start)}–${minToTime(iv.end%1440)}`).join('<br>');
-        const moreIvs=ivs.length>2?`<span style="font-size:9px;color:var(--stone)">+${ivs.length-2} mai mult</span>`:'';
-        cellContent=`<div style="font-weight:700;font-size:13px;color:${col}">${hZ}h</div>
+        const ivText=ivs.slice(0,2).map(iv=>{
+          const endDisp=minToTime(iv.end%1440||(iv.end===1440?0:iv.end));
+          const suffix=iv.crossesMidnight&&!iv.startedPrevDay?' →':iv.startedPrevDay?' ←':'';
+          return`${minToTime(iv.start)}–${endDisp}${suffix}`;
+        }).join('<br>');
+        const moreIvs=ivs.length>2?`<span style="font-size:9px;color:var(--stone)">+${ivs.length-2}</span>`:'';
+        cellContent=`<div style="font-weight:700;font-size:13px;color:${col}">${hZ}h${hasOvernight?'<span style="font-size:9px;color:var(--amber-d)" title="Cursa continuă a doua zi">→</span>':hasPrevDay?'<span style="font-size:9px;color:var(--blue)" title="Cursa a început ieri">←</span>':''}</div>
           <div style="font-size:10px;color:var(--stone);line-height:1.4">${ivText}${moreIvs}</div>
           <div style="height:3px;background:var(--border);border-radius:2px;margin-top:4px;overflow:hidden"><div style="width:${pZ}%;height:100%;background:${col};border-radius:2px"></div></div>`;
       } else {
@@ -4716,40 +4793,13 @@ window.loadSchedule = async () => {
     window._R=regSnap.docs.map(d=>({id:d.id,...d.data()}));
     const dow=new Date(date+'T12:00:00').getDay();
     const curseAzi=window._R.filter(c=>{if(!c.activa)return false;if(!(c.zile||[]).includes(dow))return false;if(c.dataStart&&date<c.dataStart)return false;if(c.dataEnd&&date>c.dataEnd)return false;if(c.dateBlocate?.includes(date))return false;return true;});
-    // Compute hours per driver - INDIVIDUAL, S2 preia de unde S1 se opreste
+    // Calculeaza orele per sofer folosind getDriverIntervals (include S1, S2, curse de noapte)
     const oreMap={};
-    for(const sf of soferi) oreMap[sf.id]={minZi:0};
-
-    curseAzi.forEach(c=>{
-      const pl=c.plecari||[{ora:c.ora,driverId:c.driverId}];
-      const sm=(c.statii?.length>=2)?(c.statii[c.statii.length-1].minuteDeLaStart||60):60;
-      const durMin=c.tipCursa==='roundtrip'?sm*2:sm;
-
-      pl.forEach(p=>{
-        const oraInfo=getOraForDate(p,date);
-        const sfId1=oraInfo.driverId||p.driverId||p.soferEmail||'';
-        const sfId2=p.driverId2||p.soferEmail2||'';
-        const obj1=sfId1?resSf(sfId1):null;
-        const obj2=sfId2?resSf(sfId2):null;
-
-        if(obj1&&oreMap[obj1.id]!==undefined){
-          const dejaS1=oreMap[obj1.id].minZi;
-          const disponibilS1=Math.max(0, MAX_H_DAY - dejaS1);
-          // S1 conduce cat poate din aceasta cursa (pana la limita zilnica)
-          const minS1=Math.min(durMin, disponibilS1);
-          oreMap[obj1.id].minZi+=minS1;
-
-          // S2 preia restul ramas dupa ce S1 se opreste
-          if(obj2&&oreMap[obj2.id]!==undefined){
-            const minS2=durMin-minS1; // exact ce a ramas de condus
-            if(minS2>0) oreMap[obj2.id].minZi+=minS2;
-          }
-        } else if(obj2&&oreMap[obj2.id]!==undefined){
-          // Daca nu e S1 dar e S2, S2 conduce toata cursa
-          oreMap[obj2.id].minZi+=durMin;
-        }
-      });
-    });
+    for(const sf of soferi){
+      const ivs=getDriverIntervals(sf.id,date);
+      const minZi=ivs.reduce((s,iv)=>s+(iv.end-iv.start),0);
+      oreMap[sf.id]={minZi};
+    }
     window._TL_ORE_MAP=oreMap; window._TL_DATE=date;
     if(sumEl) renderScheduleSummary(soferi,oreMap,sumEl);
     renderTimeline(curseAzi,soferi,date,oreMap,listEl);
