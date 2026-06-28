@@ -3245,22 +3245,116 @@ async function loadAdminStats(){
 
 // ── VEHICLES ADMIN ─────────────────────────────────────────
 async function loadVehiclesTbl(){
+  const today=new Date().toISOString().split('T')[0];
   document.getElementById('vehicles-tbody').innerHTML=window._F.map(v=>{
     const sfAtr=(v.soferiAtribuiti||[]).map(sa=>{const n=numeSofer(sa.driverId||sa.soferId||sa.email||'');const z=(sa.zile||[]).map(d=>window.DAYS_RO[d]).join(',');return`<span class="chip" title="${z}">${n.split(' ')[0]} <span style="color:var(--stone)">(${z})</span></span>`;}).join('');
+    // Status locatie vehicul
+    const locatie=v.locatieCurenta||'garaj';
+    const esteAcasa=locatie==='garaj'||!locatie;
+    const ivs=getVehicleIntervals(v.id,today);
+    const eOcupatAzi=ivs.length>0;
+    let statusBadge='';
+    if(!esteAcasa){
+      statusBadge=`<span class="badge" style="background:var(--orange-g);color:var(--orange);border:1px solid rgba(196,101,32,.3);font-size:10px">📍 ${locatie}</span>`;
+    } else if(eOcupatAzi){
+      statusBadge=`<span class="badge" style="background:var(--amber-g);color:var(--amber-d);border:1px solid var(--amber-b);font-size:10px">🚌 În cursă</span>`;
+    } else {
+      statusBadge=`<span class="badge" style="background:var(--green-g);color:var(--green);border:1px solid rgba(26,107,60,.2);font-size:10px">🏠 La garaj</span>`;
+    }
     return`<tr>
-      <td><strong>${v.icon||''} ${v.nome||v.name||v.nume||''}</strong><br><span style="color:var(--stone);font-size:11px">${v.model||''} ${v.anFab||''}</span></td>
+      <td>
+        <strong>${v.icon||''} ${v.nome||v.name||v.nume||''}</strong>
+        <br><span style="color:var(--stone);font-size:11px">${v.model||''} ${v.anFab||''}</span>
+        <br>${statusBadge}
+      </td>
       <td>${capVeh(v)} locuri${v.pretPerKm?' · '+v.pretPerKm+' RON/km':''}</td>
       <td style="font-size:12px">${v.nrInmatr||'-'}</td>
       <td style="max-width:160px">${sfAtr||'<span style="color:var(--stone);font-size:12px">Neatribuit</span>'}</td>
       <td><label class="toggle"><input type="checkbox" ${v.disponibil!==false?'checked':''} onchange="toggleVehicleCharter('${v.id}',this.checked)"/><div class="toggle-track"></div></label></td>
       <td style="display:flex;gap:5px;flex-wrap:wrap;padding:10px 12px">
         <button class="btn btn-secondary btn-sm btn-icon" onclick="openAssignDrivers('${v.id}')" title="Atribuie șoferi">👨‍✈️</button>
+        <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="setVehicleLocation('${v.id}','${v.nome||v.name||v.nume||''}')" title="Setează locația">📍</button>
         <button class="btn btn-secondary btn-sm btn-icon" onclick="openVehicleModal('${v.id}')">✏️</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteVehicle('${v.id}')">🗑</button>
       </td></tr>`;
   }).join('');
 }
+
 window.toggleVehicleCharter=async(id,val)=>{await setDoc(doc(db,'vehicule',id),{disponibil:val},{merge:true});const v=window._F.find(x=>x.id===id);if(v)v.disponibil=val;};
+
+window.setVehicleLocation=async(vehId, vehName)=>{
+  const v=window._F.find(x=>x.id===vehId);
+  const locCur=v?.locatieCurenta||'garaj';
+  const opts=[
+    {val:'garaj', label:'🏠 La garaj (disponibil)'},
+    {val:'', label:'— Introduceți locația manual —'},
+  ];
+  // Gasim destinatiile din cursele active
+  const dest=[];
+  (window._R||[]).filter(c=>c.activa&&c.vehiculId===vehId).forEach(c=>{
+    const ultima=(c.statii||[]).slice(-1)[0];
+    if(ultima) dest.push(ultima.nome||ultima.name||ultima.nume||'');
+  });
+  [...new Set(dest)].forEach(d=>{opts.push({val:d,label:'📍 '+d});});
+
+  // Modal simplu
+  const panel=document.createElement('div');
+  panel.style.cssText='position:fixed;inset:0;background:rgba(15,13,10,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  panel.innerHTML=`<div style="background:var(--card);border-radius:var(--r-xl);padding:24px;max-width:420px;width:100%;box-shadow:var(--sh-lg)">
+    <div style="font-weight:700;font-size:16px;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">📍 Locație vehicul</div>
+    <div style="color:var(--stone);font-size:13px;margin-bottom:16px">${vehName} — locație curentă: <strong>${locCur}</strong></div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Status</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1.5px solid var(--green);border-radius:8px;background:var(--green-g)">
+          <input type="radio" name="vloc" value="garaj" ${locCur==='garaj'||!locCur?'checked':''}/> 
+          <div><div style="font-weight:600">🏠 La garaj</div><div style="font-size:11px;color:var(--stone)">Vehiculul e disponibil de la sediu</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1.5px solid var(--orange);border-radius:8px;background:var(--orange-g)">
+          <input type="radio" name="vloc" value="plecat" ${locCur&&locCur!=='garaj'?'checked':''}/> 
+          <div><div style="font-weight:600">📍 Plecat / La destinație</div><div style="font-size:11px;color:var(--stone)">Specificați unde se află</div></div>
+        </label>
+      </div>
+    </div>
+    <div id="vloc-dest-wrap" style="margin-bottom:14px;${locCur&&locCur!=='garaj'?'':'display:none'}">
+      <div style="font-size:11px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Unde se află?</div>
+      <input type="text" id="vloc-input" value="${locCur!=='garaj'?locCur:''}" placeholder="Ex: Timișoara, Bacău..." style="margin-bottom:8px"/>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${dest.map(d=>`<button class="btn btn-secondary btn-sm" onclick="document.getElementById('vloc-input').value='${d}'">${d}</button>`).join('')}
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="this.closest('div[style*=fixed]').remove()">Anulează</button>
+      <button class="btn btn-primary" onclick="saveVehicleLocation('${vehId}',this)">💾 Salvează</button>
+    </div>
+  </div>`;
+  // Toggle dest wrap
+  panel.querySelectorAll('input[name=vloc]').forEach(r=>{
+    r.addEventListener('change',()=>{
+      panel.querySelector('#vloc-dest-wrap').style.display=r.value==='plecat'?'block':'none';
+    });
+  });
+  document.body.appendChild(panel);
+  panel.addEventListener('click',e=>{if(e.target===panel)panel.remove();});
+};
+
+window.saveVehicleLocation=async(vehId, btn)=>{
+  const panel=btn.closest('div[style*="fixed"]');
+  const radio=panel.querySelector('input[name=vloc]:checked');
+  const val=radio?.value;
+  let locatie='garaj';
+  if(val==='plecat'){
+    const input=panel.querySelector('#vloc-input');
+    locatie=(input?.value?.trim())||'Destinație necunoscută';
+  }
+  try{
+    await setDoc(doc(db,'vehicule',vehId),{locatieCurenta:locatie},{merge:true});
+    const v=window._F.find(x=>x.id===vehId);if(v)v.locatieCurenta=locatie;
+    panel.remove();
+    toast(locatie==='garaj'?'✅ Vehicul marcat la garaj':'📍 Locație setată: '+locatie,'ok');
+    await loadVehiclesTbl();
+  }catch(e){toast('Eroare: '+e.message,'er');}
+};
 window.deleteVehicle=async id=>{if(!confirm('Ștergeți vehiculul?'))return;await deleteDoc(doc(db,'vehicule',id));await loadFleet();loadVehiclesTbl();toast('Vehicul șters','ok');};
 window.openVehicleModal=async(id=null)=>{
   window._VM_IMAGES=[]; window._SEAT_ROWS=[];
@@ -4227,7 +4321,7 @@ window.openAssignDrivers=async(vehId)=>{
   }
   renderAssignList();openModal('assign-drivers');
 };
-function renderAssignList(){
+window.renderAssignList=function renderAssignList(){
   const el=document.getElementById('assign-drivers-list');if(!el)return;
   el.innerHTML=window._ASSIGN_DRIVERS.map((sa,i)=>{
     const sfOpts=window._DRIVERS_LIST.map(sf=>{const sel=(sa.driverId===sf.id||(sa.soferId&&sa.soferId===sf.id))?'selected':'';return`<option value="${sf.id}" ${sel}>${sf.numeFull}</option>`;}).join('');
