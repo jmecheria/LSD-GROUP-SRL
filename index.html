@@ -588,6 +588,45 @@ input.ok{border-color:var(--green)}
 .org-tip-text{font-size:11px;font-weight:600;text-align:center;line-height:1.3}
 .org-tip-card.btn-primary .org-tip-text{color:#fff}
 
+/* ── ORG MODE CHOICE ── */
+.org-mode-choice{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;max-width:760px}
+.org-mode-card{
+  background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-xl);
+  padding:28px 22px;text-align:center;cursor:pointer;transition:all .2s;
+}
+.org-mode-card:hover{border-color:var(--amber);box-shadow:var(--sh-lg);transform:translateY(-3px)}
+.org-mode-card:first-child{border-color:var(--amber-b);background:linear-gradient(135deg,var(--amber-g),rgba(196,154,42,.02))}
+.org-mode-icon{font-size:38px;margin-bottom:12px}
+.org-mode-title{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:16px;margin-bottom:6px}
+.org-mode-desc{font-size:12px;color:var(--stone);margin-bottom:14px;line-height:1.5}
+.org-mode-cta{font-size:12px;font-weight:700;color:var(--amber-d)}
+@media(max-width:700px){.org-mode-choice{grid-template-columns:1fr}}
+
+/* ── WIZARD MODAL ── */
+.wiz-progress-bar{height:4px;background:var(--cream);margin:0 24px}
+.wiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--amber-d));border-radius:2px;transition:width .35s ease}
+.wiz-question{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:18px;margin-bottom:6px}
+.wiz-hint{font-size:12px;color:var(--stone);margin-bottom:20px}
+.wiz-options-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.wiz-opt-card{
+  background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);
+  padding:16px 10px;text-align:center;cursor:pointer;transition:all .15s;
+}
+.wiz-opt-card:hover{border-color:var(--amber-b);background:var(--amber-g)}
+.wiz-opt-card.selected{border-color:var(--amber);background:var(--amber-g);box-shadow:0 0 0 2px var(--amber-b)}
+.wiz-opt-icon{font-size:24px;display:block;margin-bottom:6px}
+.wiz-opt-text{font-size:12px;font-weight:600}
+.wiz-stop-row{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+.wiz-stop-badge{
+  width:26px;height:26px;border-radius:50%;background:var(--amber);color:#fff;
+  font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.wiz-fade-in{animation:wizFadeIn .25s ease-out}
+@keyframes wizFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.wiz-summary-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border-l);font-size:13px}
+.wiz-summary-row span:first-child{color:var(--stone)}
+.wiz-summary-row span:last-child{font-weight:600;text-align:right;max-width:60%}
+
 
 
 /* ── BUS CARD (flotă homepage) ── */
@@ -842,9 +881,97 @@ footer{
   .invoice-parties{grid-template-columns:1fr}
 }
 @media(max-width:480px){.page{padding:16px 12px}}
+
+/* ── APP LOADER ── */
+#app-loader{
+  position:fixed;inset:0;z-index:100000;
+  background:linear-gradient(160deg,var(--bone),var(--cream));
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .5s ease,visibility .5s ease;
+}
+#app-loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.loader-inner{text-align:center;width:100%;max-width:340px;padding:0 24px}
+.loader-road-svg{width:100%;height:auto;overflow:visible;margin-bottom:8px}
+.loader-road-bg{fill:none;stroke:var(--border-l);stroke-width:9;stroke-linecap:round}
+.loader-road-fg{
+  fill:none;stroke:url(#loaderRoadGrad);stroke-width:9;stroke-linecap:round;
+  stroke-dasharray:620;stroke-dashoffset:620;
+  animation:loaderRoadDraw 1.8s cubic-bezier(.4,0,.2,1) infinite;
+}
+.loader-road-dash{
+  fill:none;stroke:#fff;stroke-width:1.4;stroke-linecap:round;
+  stroke-dasharray:9 8;opacity:.85;
+}
+@keyframes loaderRoadDraw{
+  0%{stroke-dashoffset:620}
+  55%{stroke-dashoffset:0}
+  100%{stroke-dashoffset:-620}
+}
+.loader-bus-wrap{
+  position:relative;width:42px;height:42px;margin:-78px auto 18px;
+  offset-path:path("M 20 90 Q 110 40, 200 90 T 380 90");
+  offset-rotate:auto;offset-distance:0%;
+  animation:loaderBusMove 1.8s cubic-bezier(.4,0,.2,1) infinite;
+  filter:drop-shadow(0 3px 5px rgba(15,13,10,.25));
+}
+.loader-bus-svg{width:100%;height:100%;transform:rotate(90deg)}
+@keyframes loaderBusMove{
+  0%{offset-distance:0%;opacity:0}
+  8%{opacity:1}
+  55%{offset-distance:100%;opacity:1}
+  63%{opacity:0}
+  64%{offset-distance:0%}
+  72%{opacity:1}
+  100%{offset-distance:0%;opacity:1}
+}
+@supports not (offset-path: path("M0 0")){
+  .loader-bus-wrap{left:0;animation:loaderBusFallback 1.8s ease-in-out infinite}
+  @keyframes loaderBusFallback{0%{transform:translateX(0)}50%{transform:translateX(280%)}100%{transform:translateX(0)}}
+}
+.loader-brand{
+  font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:20px;
+  color:var(--amber-d);letter-spacing:.5px;margin-bottom:4px;
+}
+.loader-sub{font-size:12px;color:var(--stone);letter-spacing:.3px}
+
 </style>
 </head>
 <body>
+<!-- ── LOADING SCREEN ── -->
+<div id="app-loader">
+  <div class="loader-inner">
+    <svg class="loader-road-svg" viewBox="0 0 400 140" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="loaderRoadGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#c49a2a"/>
+          <stop offset="100%" stop-color="#a07d1c"/>
+        </linearGradient>
+      </defs>
+      <path class="loader-road-bg" d="M 20 90 Q 110 40, 200 90 T 380 90"/>
+      <path class="loader-road-fg" d="M 20 90 Q 110 40, 200 90 T 380 90"/>
+      <path class="loader-road-dash" d="M 20 90 Q 110 40, 200 90 T 380 90"/>
+    </svg>
+    <div class="loader-bus-wrap">
+      <svg class="loader-bus-svg" viewBox="0 0 46 46">
+        <g>
+          <ellipse cx="23" cy="38" rx="15" ry="3" fill="#000" opacity=".15"/>
+          <rect x="6" y="14" width="34" height="18" rx="5" fill="#c49a2a" stroke="#7a5c14" stroke-width="1"/>
+          <rect x="9" y="17" width="9" height="7" rx="1.5" fill="#fef9ed"/>
+          <rect x="20" y="17" width="9" height="7" rx="1.5" fill="#fef9ed"/>
+          <rect x="31" y="17" width="6" height="7" rx="1.5" fill="#7a5c14" opacity=".5"/>
+          <rect x="6" y="26" width="34" height="3" fill="#a07d1c"/>
+          <circle cx="14" cy="33" r="4" fill="#2a2620"/>
+          <circle cx="14" cy="33" r="1.6" fill="#8a7f6e"/>
+          <circle cx="32" cy="33" r="4" fill="#2a2620"/>
+          <circle cx="32" cy="33" r="1.6" fill="#8a7f6e"/>
+        </g>
+      </svg>
+    </div>
+    <div class="loader-brand">LSD GROUP</div>
+    <div class="loader-sub">Se pregătește călătoria...</div>
+  </div>
+</div>
+
 <!-- ── TICKER ── -->
 <div id="ticker"><div class="tick-inner" id="tick-inner"></div></div>
 
@@ -1067,6 +1194,23 @@ footer{
       <div class="sec-sub">Completați cererea. Echipa noastră vă va contacta cu o ofertă personalizată.</div>
     </div>
   </div>
+  <!-- Alegere mod completare -->
+  <div class="org-mode-choice" id="org-mode-choice">
+    <div class="org-mode-card" onclick="openOrgWizard()">
+      <div class="org-mode-icon">🧭</div>
+      <div class="org-mode-title">Te ghidez pas-cu-pas</div>
+      <div class="org-mode-desc">Răspunzi la câteva întrebări simple, una câte una</div>
+      <div class="org-mode-cta">Începe ghidat →</div>
+    </div>
+    <div class="org-mode-card" onclick="document.getElementById('org-mode-choice').style.display='none';document.getElementById('org-form-wrap').style.display='block'">
+      <div class="org-mode-icon">📝</div>
+      <div class="org-mode-title">Completez tot formularul</div>
+      <div class="org-mode-desc">Văd toate câmpurile dintr-o dată, în ordinea mea</div>
+      <div class="org-mode-cta">Deschide formularul →</div>
+    </div>
+  </div>
+
+  <div id="org-form-wrap" style="display:none">
   <!-- Progress tracker -->
   <div class="org-progress" id="org-progress">
     <div class="org-progress-step active" data-step="1"><div class="org-progress-dot">1</div><div class="org-progress-label">Traseu</div></div>
@@ -1190,6 +1334,7 @@ footer{
         </div>
       </div>
     </div>
+  </div>
   </div>
 </div>
 
@@ -1832,9 +1977,20 @@ footer{
         <div style="font-weight:700;font-size:13px;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">🗺 Stații și prețuri cumulate</div>
         <div style="font-size:12px;color:var(--stone);margin-bottom:12px">Prima stație = 0 RON. Restul = preț total de la start.</div>
         <div id="rm-stops"></div>
-        <div style="display:flex;gap:8px;margin-top:8px">
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
           <button class="btn btn-secondary btn-sm" onclick="addRouteStop()">+ Adaugă stație</button>
           <button class="btn btn-secondary btn-sm" onclick="calcDistances()">🗺 Calculează automat</button>
+          <button class="btn btn-primary btn-sm" onclick="openRouteMapPicker()">📍 Plasează pe hartă</button>
+        </div>
+        <!-- Harta pentru plasare puncte -->
+        <div id="rm-map-picker-wrap" style="display:none;margin-top:14px">
+          <div style="font-size:11px;color:var(--stone);margin-bottom:6px">📍 Click pe hartă pentru a adăuga o stație în ordine (plecare → intermediare → sosire). Traseul real pe drum se desenează automat.</div>
+          <div id="rm-map-picker" style="height:320px;border-radius:var(--r);overflow:hidden;background:var(--cream)"></div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-secondary btn-sm" onclick="rmMapPickerUndo()">↩ Șterge ultimul punct</button>
+            <button class="btn btn-danger btn-sm" onclick="rmMapPickerClear()">🗑 Curăță toate</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('rm-map-picker-wrap').style.display='none'">✕ Închide harta</button>
+          </div>
         </div>
       </div>
       <div class="fg"><div class="fl">Vehicul *</div><select id="rm-vehicle" onchange="updateVehicleSeats()"></select></div>
@@ -2073,6 +2229,28 @@ footer{
   </div>
 </div>
 
+<!-- MODAL: Wizard Cursă Organizată -->
+<div class="modal-overlay" id="mo-org-wizard">
+  <div class="modal modal-md" style="overflow:visible">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">🧭 Cursă Organizată — Ghidat</div>
+        <div class="modal-sub" id="wiz-step-counter">Pasul 1</div>
+      </div>
+      <button class="modal-close" onclick="closeOrgWizard()">✕</button>
+    </div>
+    <div class="wiz-progress-bar"><div class="wiz-progress-fill" id="wiz-progress-fill"></div></div>
+    <div class="modal-body" id="wiz-body" style="min-height:280px"></div>
+    <div class="modal-foot" style="justify-content:space-between">
+      <button class="btn btn-secondary" id="wiz-btn-back" onclick="wizBack()">← Înapoi</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="wizSwitchToForm()">📝 Trec pe formular</button>
+        <button class="btn btn-primary" id="wiz-btn-next" onclick="wizNext()">Continuă →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Profil client -->
 <div class="modal-overlay" id="mo-profile">
   <div class="modal modal-sm">
@@ -2241,6 +2419,12 @@ footer{
   window.closeModal = function(id) {
     document.getElementById('mo-' + id)?.classList.remove('open');
     if (id === 'cinema') { stopQRScan && stopQRScan(); }
+    if (id === 'route') {
+      const wrap = document.getElementById('rm-map-picker-wrap');
+      if (wrap) wrap.style.display = 'none';
+      if (window._rmPickerMap) { try{window._rmPickerMap.remove();}catch(e){} window._rmPickerMap=null; }
+      window._rmPickerLeafletLoaded = false;
+    }
   };
 
   window.openModal = function(id) { document.getElementById('mo-' + id)?.classList.add('open'); };
@@ -3484,6 +3668,11 @@ window.loadOrgPage = async function() {
   window._ORG_TIP = '';
   renderOrgStops();
   updateOrgProgress();
+  // Reset afisare: arata alegerea (wizard/formular) din nou
+  const modeChoice = document.getElementById('org-mode-choice');
+  const formWrap = document.getElementById('org-form-wrap');
+  if (modeChoice) modeChoice.style.display = 'grid';
+  if (formWrap) formWrap.style.display = 'none';
   const u=window._U;
   await loadFleet().catch(()=>{});
   try{
@@ -3795,9 +3984,275 @@ async function calcDistORS(from,to){
     return{km,min,text:h+'h'+(m?' '+m+'min':'')};
   }catch(e){return null;}
 }
+
+// ══════════════════════════════════════════════════════════
+// WIZARD CURSĂ ORGANIZATĂ — interfață pas-cu-pas
+// Foloseste aceleasi variabile globale (window._ORG_STOPS, window._ORG_TIP etc.)
+// astfel incat la final submitOrg() functioneaza identic indiferent de calea aleasa.
+// ══════════════════════════════════════════════════════════
+window._WIZ_STEP = 1;
+window._WIZ_TOTAL = 6;
+window._WIZ_DATA = { stops:['',''], tip:'', desc:'', date:'', time:'flexibil', durH:'', durZile:'', vehId:'', persons:'' };
+
+window.openOrgWizard = () => {
+  window._WIZ_STEP = 1;
+  window._WIZ_DATA = { stops:['',''], tip:'', desc:'', date:'', time:'flexibil', durH:'', durZile:'', vehId:'', persons:'' };
+  document.getElementById('org-mode-choice').style.display='none';
+  openModal('org-wizard');
+  renderWizStep();
+};
+
+window.closeOrgWizard = () => {
+  closeModal('org-wizard');
+  document.getElementById('org-mode-choice').style.display='grid';
+};
+
+window.wizSwitchToForm = () => {
+  // Transfera datele acumulate in wizard catre formularul complet
+  applyWizDataToForm();
+  closeModal('org-wizard');
+  document.getElementById('org-mode-choice').style.display='none';
+  document.getElementById('org-form-wrap').style.display='block';
+  updateOrgProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+function applyWizDataToForm(){
+  const d = window._WIZ_DATA;
+  window._ORG_STOPS = [...d.stops];
+  window._ORG_TIP = d.tip;
+  renderOrgStops();
+  if (document.getElementById('org-desc')) document.getElementById('org-desc').value = d.desc;
+  if (document.getElementById('org-date')) document.getElementById('org-date').value = d.date;
+  if (document.getElementById('org-time')) document.getElementById('org-time').value = d.time;
+  if (document.getElementById('org-dur-h')) document.getElementById('org-dur-h').value = d.durH;
+  if (document.getElementById('org-dur-zile')) document.getElementById('org-dur-zile').value = d.durZile;
+  if (document.getElementById('org-persons')) document.getElementById('org-persons').value = d.persons;
+  // Marcheaza vizual cardul de tip cursa selectat
+  document.querySelectorAll('.org-tip-btn').forEach(b=>{
+    const matches = b.getAttribute('onclick')?.includes(`'${d.tip}'`);
+    b.classList.toggle('btn-primary', !!matches);
+    b.classList.toggle('btn-secondary', !matches);
+  });
+  if (d.date) onOrgDateChange();
+  triggerOrgCalc();
+}
+
+window.wizBack = () => {
+  if (window._WIZ_STEP > 1) { window._WIZ_STEP--; renderWizStep(); }
+};
+
+window.wizNext = async () => {
+  if (!wizValidateStep()) return;
+  if (window._WIZ_STEP < window._WIZ_TOTAL) {
+    window._WIZ_STEP++;
+    renderWizStep();
+  } else {
+    // Ultimul pas: trimite cererea folosind exact logica din submitOrg
+    await wizSubmit();
+  }
+};
+
+function wizValidateStep(){
+  const d = window._WIZ_DATA;
+  const step = window._WIZ_STEP;
+  if (step===1 && !d.tip) { toast('Alege tipul cursei','wr'); return false; }
+  if (step===2) {
+    const stops = d.stops.filter(Boolean);
+    if (stops.length<2) { toast('Completează plecarea și destinația','wr'); return false; }
+  }
+  if (step===3 && !d.date) { toast('Selectează data','wr'); return false; }
+  if (step===4 && !d.durH && !d.durZile) { toast('Selectează durata estimată','wr'); return false; }
+  if (step===6) {
+    const u = window._U;
+    if (!u) {
+      const nc = document.getElementById('wiz-name')?.value?.trim();
+      const em = document.getElementById('wiz-email')?.value?.trim();
+      const tel = document.getElementById('wiz-phone')?.value?.trim();
+      if (!nc || !validEmail(em||'') || !validPhone(tel||'')) { toast('Completează datele de contact corect','wr'); return false; }
+      d._contactName = nc; d._contactEmail = em; d._contactPhone = tel;
+    }
+  }
+  return true;
+}
+
+function wizUpdateProgress(){
+  const pct = Math.round((window._WIZ_STEP-1)/(window._WIZ_TOTAL-1)*100);
+  const fill = document.getElementById('wiz-progress-fill');
+  if (fill) fill.style.width = pct+'%';
+  const counter = document.getElementById('wiz-step-counter');
+  if (counter) counter.textContent = `Pasul ${window._WIZ_STEP} din ${window._WIZ_TOTAL}`;
+  const backBtn = document.getElementById('wiz-btn-back');
+  if (backBtn) backBtn.style.visibility = window._WIZ_STEP===1 ? 'hidden' : 'visible';
+  const nextBtn = document.getElementById('wiz-btn-next');
+  if (nextBtn) nextBtn.textContent = window._WIZ_STEP===window._WIZ_TOTAL ? '📨 Trimite cererea' : 'Continuă →';
+}
+
+function renderWizStep(){
+  wizUpdateProgress();
+  const body = document.getElementById('wiz-body');
+  if (!body) return;
+  const d = window._WIZ_DATA;
+  const step = window._WIZ_STEP;
+  let html = '';
+
+  if (step===1) {
+    const tipOptions = [
+      ['Excursie/Turism','🏔','Excursie'],['Nuntă/Eveniment','💒','Nuntă / Eveniment'],
+      ['Transfer aeroport','✈️','Transfer aeroport'],['Transport elevi/grupuri','🎒','Elevi / Grupuri'],
+      ['Altele','📋','Altele']
+    ];
+    html = `<div class="wiz-fade-in">
+      <div class="wiz-question">Ce tip de cursă dorești?</div>
+      <div class="wiz-hint">Alege categoria care se potrivește cel mai bine</div>
+      <div class="wiz-options-grid">
+        ${tipOptions.map(([val,icon,label])=>`<div class="wiz-opt-card ${d.tip===val?'selected':''}" onclick="wizSelectTip('${val}')"><span class="wiz-opt-icon">${icon}</span><span class="wiz-opt-text">${label}</span></div>`).join('')}
+      </div>
+      <div class="fg" style="margin-top:16px"><div class="fl">Detalii suplimentare (opțional)</div><input type="text" id="wiz-desc" value="${d.desc}" placeholder="Ex: 25 persoane, plecare dimineața..." oninput="window._WIZ_DATA.desc=this.value"/></div>
+    </div>`;
+  }
+  else if (step===2) {
+    html = `<div class="wiz-fade-in">
+      <div class="wiz-question">De unde pleci și unde mergi?</div>
+      <div class="wiz-hint">Adaugă și opriri intermediare dacă e nevoie</div>
+      <div id="wiz-stops-list"></div>
+      <button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="wizAddStop()">+ Adaugă oprire intermediară</button>
+    </div>`;
+  }
+  else if (step===3) {
+    html = `<div class="wiz-fade-in">
+      <div class="wiz-question">Când vrei să plece cursa?</div>
+      <div class="wiz-hint">Ora poate fi flexibilă dacă nu știi exact încă</div>
+      <div class="fg"><div class="fl">Data dorită *</div><input type="date" id="wiz-date" value="${d.date}" min="${new Date().toISOString().split('T')[0]}" onchange="window._WIZ_DATA.date=this.value"/></div>
+      <div class="fg"><div class="fl">Ora de plecare</div>
+        <select id="wiz-time" onchange="window._WIZ_DATA.time=this.value">
+          <option value="flexibil" ${d.time==='flexibil'?'selected':''}>Flexibil / nu știu încă</option>
+          ${['05:00','06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00'].map(t=>`<option ${d.time===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    </div>`;
+  }
+  else if (step===4) {
+    html = `<div class="wiz-fade-in">
+      <div class="wiz-question">Cât durează călătoria?</div>
+      <div class="wiz-hint">Alege fie în ore, fie în zile (pentru excursii mai lungi)</div>
+      <div class="f-row">
+        <div class="fg"><div class="fl">Durata în ore</div>
+          <select id="wiz-dur-h" onchange="window._WIZ_DATA.durH=this.value;if(this.value){document.getElementById('wiz-dur-zile').value='';window._WIZ_DATA.durZile='';}">
+            <option value="">—</option>
+            ${[1,2,3,4,5,6,8,10,12,16,20,24].map(h=>`<option value="${h}" ${d.durH==h?'selected':''}>${h} oră/ore</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><div class="fl">Sau în zile</div>
+          <select id="wiz-dur-zile" onchange="window._WIZ_DATA.durZile=this.value;if(this.value){document.getElementById('wiz-dur-h').value='';window._WIZ_DATA.durH='';}">
+            <option value="">—</option>
+            ${[1,2,3,4,5,7].map(z=>`<option value="${z}" ${d.durZile==z?'selected':''}>${z} zi/zile</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="fg"><div class="fl">Nr. persoane aproximativ</div><input type="number" id="wiz-persons" min="1" max="100" value="${d.persons}" placeholder="Ex: 20" oninput="window._WIZ_DATA.persons=this.value"/></div>
+    </div>`;
+  }
+  else if (step===5) {
+    const fleetOptions = (window._F||[]).map(v=>`<div class="wiz-opt-card ${d.vehId===v.id?'selected':''}" onclick="wizSelectVeh('${v.id}')" style="text-align:left;display:flex;align-items:center;gap:10px;padding:12px"><span style="font-size:22px">${v.icon||'🚌'}</span><div><div class="wiz-opt-text" style="font-size:13px">${v.nome||v.name||v.nume||''}</div><div style="font-size:11px;color:var(--stone);font-weight:400">${capVeh(v)} locuri${v.pretPerKm?' · '+v.pretPerKm+' RON/km':''}</div></div></div>`).join('');
+    html = `<div class="wiz-fade-in">
+      <div class="wiz-question">Ai o preferință de vehicul?</div>
+      <div class="wiz-hint">Opțional — dacă nu alegi, echipa va selecta cel mai potrivit</div>
+      <div class="wiz-opt-card ${!d.vehId?'selected':''}" onclick="wizSelectVeh('')" style="margin-bottom:10px;text-align:left;padding:12px">
+        <span class="wiz-opt-text">🤷 Nu am o preferință — alegeți voi</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;max-height:240px;overflow-y:auto">${fleetOptions||'<div style="color:var(--stone);font-size:12px;text-align:center;padding:16px">Nicio flotă disponibilă momentan</div>'}</div>
+    </div>`;
+  }
+  else if (step===6) {
+    const u = window._U;
+    const stops = d.stops.filter(Boolean);
+    const durText = d.durH ? d.durH+' oră/ore' : d.durZile ? d.durZile+' zi/zile' : 'nespecificat';
+    const vehName = d.vehId ? ((window._F||[]).find(v=>v.id===d.vehId)?.nome || (window._F||[]).find(v=>v.id===d.vehId)?.name || '') : 'Fără preferință';
+    html = `<div class="wiz-fade-in">
+      <div class="wiz-question">Aproape gata! Verifică detaliile</div>
+      <div class="wiz-hint">${u?'Cererea va fi asociată contului tău':'Completează datele de contact pentru a primi oferta'}</div>
+      <div style="background:var(--cream);border-radius:var(--r);padding:12px 16px;margin-bottom:16px">
+        <div class="wiz-summary-row"><span>Tip cursă</span><span>${d.tip||'-'}</span></div>
+        <div class="wiz-summary-row"><span>Traseu</span><span>${stops.join(' → ')}</span></div>
+        <div class="wiz-summary-row"><span>Data</span><span>${d.date||'-'} ${d.time!=='flexibil'?'· '+d.time:'(oră flexibilă)'}</span></div>
+        <div class="wiz-summary-row"><span>Durată</span><span>${durText}</span></div>
+        <div class="wiz-summary-row"><span>Vehicul</span><span>${vehName}</span></div>
+        ${d.persons?`<div class="wiz-summary-row"><span>Persoane</span><span>${d.persons}</span></div>`:''}
+      </div>
+      ${u ? `<div class="info-box" style="font-size:12px">👤 Trimiți ca <strong>${u.displayName||u.email}</strong></div>` : `
+      <div class="fg"><div class="fl">Nume complet *</div><input type="text" id="wiz-name" placeholder="Ion Popescu"/></div>
+      <div class="fg"><div class="fl">Telefon *</div><input type="tel" id="wiz-phone" placeholder="07XX XXX XXX"/></div>
+      <div class="fg"><div class="fl">Email *</div><input type="email" id="wiz-email" placeholder="email@exemplu.ro"/></div>
+      `}
+      <div class="info-box" style="font-size:12px">ℹ️ Prin trimitere ești de acord cu <a onclick="closeOrgWizard();nav('gdpr')">Politica GDPR</a>.</div>
+    </div>`;
+  }
+
+  body.innerHTML = html;
+  if (step===2) { renderWizStops(); }
+}
+
+window.wizSelectTip = (val) => {
+  window._WIZ_DATA.tip = val;
+  renderWizStep();
+};
+
+window.wizSelectVeh = (val) => {
+  window._WIZ_DATA.vehId = val;
+  renderWizStep();
+};
+
+function renderWizStops(){
+  const c = document.getElementById('wiz-stops-list');
+  if (!c) return;
+  const stops = window._WIZ_DATA.stops;
+  c.innerHTML = stops.map((s,i)=>{
+    const label = i===0 ? 'A' : i===stops.length-1 ? 'B' : (i+1);
+    const placeholder = i===0?'Punct de plecare *':(i===stops.length-1?'Destinație finală *':'Oprire intermediară');
+    const delBtn = (i>0 && i<stops.length-1) ? `<button class="btn btn-ghost btn-sm" onclick="wizRemoveStop(${i})">✕</button>` : '';
+    return `<div class="wiz-stop-row"><div class="wiz-stop-badge">${label}</div><input type="text" value="${s}" placeholder="${placeholder}" oninput="window._WIZ_DATA.stops[${i}]=this.value" style="flex:1"/>${delBtn}</div>`;
+  }).join('');
+}
+window.wizAddStop = () => {
+  window._WIZ_DATA.stops.splice(window._WIZ_DATA.stops.length-1, 0, '');
+  renderWizStops();
+};
+window.wizRemoveStop = (i) => {
+  window._WIZ_DATA.stops.splice(i,1);
+  renderWizStops();
+};
+
+async function wizSubmit(){
+  // Transfera datele wizard-ului catre variabilele globale folosite de submitOrg
+  applyWizDataToForm();
+  const d = window._WIZ_DATA;
+  if (!window._U && d._contactName) {
+    // Populeaza campurile de contact din formular daca userul nu e logat
+    const nameEl = document.getElementById('org-name'); if (nameEl) nameEl.value = d._contactName;
+    const emailEl = document.getElementById('org-email'); if (emailEl) emailEl.value = d._contactEmail;
+    const phoneEl = document.getElementById('org-phone'); if (phoneEl) phoneEl.value = d._contactPhone;
+  }
+  const btn = document.getElementById('wiz-btn-next');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Se trimite...'; }
+  closeModal('org-wizard');
+  document.getElementById('org-mode-choice').style.display='none';
+  document.getElementById('org-form-wrap').style.display='block';
+  await submitOrg();
+  if (btn) { btn.disabled = false; }
+  // Dupa trimitere cu succes, readuce alegerea initiala pentru o cerere noua
+  setTimeout(()=>{
+    const modeChoice = document.getElementById('org-mode-choice');
+    const formWrap = document.getElementById('org-form-wrap');
+    if (modeChoice) modeChoice.style.display='grid';
+    if (formWrap) formWrap.style.display='none';
+  }, 600);
+}
+
 window.submitOrg = async () => {
   const tipCursa = window._ORG_TIP||'';
   const descExtra = document.getElementById('org-desc')?.value?.trim()||'';
+
   const desc = tipCursa ? (tipCursa + (descExtra ? ': '+descExtra : '')) : descExtra;
   const date=document.getElementById('org-date')?.value;
   const stops=window._ORG_STOPS.filter(Boolean);
@@ -4387,6 +4842,155 @@ window.calcDistances=async()=>{
   renderRmStops();
   toast(`✅ ${totalKm} km total · ~${Math.round(totalMin/60*10)/10}h · Prețurile pot fi editate manual.`,'ok');
 };
+
+// ── HARTĂ INTERACTIVĂ PENTRU PLASARE STAȚII (admin curse regulate) ──
+window._rmPickerMap = null;
+window._rmPickerPoints = []; // {ll:[lat,lng], nume:string}
+window._rmPickerLeafletLoaded = false;
+window._rmPickerMarkers = [];
+window._rmPickerLine = null;
+window._rmPickerBus = null;
+
+window.openRouteMapPicker = async () => {
+  const wrap = document.getElementById('rm-map-picker-wrap');
+  wrap.style.display = 'block';
+  // Preincarcam punctele deja existente din stationsTextuale (daca au nume valide)
+  window._rmPickerPoints = [];
+
+  if (!window._rmPickerLeafletLoaded) {
+    const mapDiv = document.getElementById('rm-map-picker');
+    mapDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)"><div class="spin"></div></div>';
+    try {
+      await new Promise((res,rej)=>{
+        if (window.L) { res(); return; }
+        const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
+        const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+        s.onload=res; s.onerror=()=>rej(new Error('Hartă indisponibilă'));
+        document.head.appendChild(s);
+        setTimeout(()=>rej(new Error('Timeout hartă')), 10000);
+      });
+      window._rmPickerLeafletLoaded = true;
+    } catch(e) {
+      mapDiv.innerHTML = `<div style="text-align:center;color:var(--stone);padding:24px">⚠️ ${e.message}</div>`;
+      return;
+    }
+  }
+
+  const mapDiv = document.getElementById('rm-map-picker');
+  if (window._rmPickerMap) { try{window._rmPickerMap.remove();}catch(e){} window._rmPickerMap=null; }
+  mapDiv.innerHTML = '';
+  const map = L.map(mapDiv,{center:[46.0,25.0],zoom:7});
+  window._rmPickerMap = map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+
+  map.on('click', async (e) => {
+    await rmMapPickerAddPoint(e.latlng.lat, e.latlng.lng);
+  });
+
+  // Daca avem deja statii valide cu nume, le geocodam si afisam ca puncte de pornire
+  const existingStops = (window._RM_STOPS||[]).filter(s=>s.n);
+  if (existingStops.length >= 2) {
+    toast('Se încarcă stațiile existente pe hartă...', 'in');
+    for (const st of existingStops) {
+      const ll = await geocodeCached(st.n);
+      if (ll) window._rmPickerPoints.push({ll, nume:st.n});
+    }
+    rmMapPickerRender();
+  }
+};
+
+async function rmMapPickerAddPoint(lat, lng){
+  // Reverse geocoding: coordonate -> nume localitate
+  let nume = `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
+  try {
+    const r = await fetch(`https://api.openrouteservice.org/geocode/reverse?api_key=${window.ORS_KEY}&point.lon=${lng}&point.lat=${lat}&size=1`);
+    if (r.ok) {
+      const d = await r.json();
+      const props = d.features?.[0]?.properties;
+      if (props) {
+        nume = props.locality || props.county || props.label || nume;
+      }
+    }
+  } catch(e) { console.warn('Reverse geocode failed:', e.message); }
+  window._rmPickerPoints.push({ll:[lat,lng], nume});
+  await rmMapPickerRender();
+}
+
+window.rmMapPickerUndo = async () => {
+  window._rmPickerPoints.pop();
+  await rmMapPickerRender();
+};
+window.rmMapPickerClear = async () => {
+  window._rmPickerPoints = [];
+  await rmMapPickerRender();
+};
+
+async function rmMapPickerRender(){
+  const map = window._rmPickerMap;
+  if (!map) return;
+  // Curata markeri si linie veche
+  window._rmPickerMarkers.forEach(m=>map.removeLayer(m));
+  window._rmPickerMarkers = [];
+  if (window._rmPickerLine) { map.removeLayer(window._rmPickerLine); window._rmPickerLine=null; }
+  if (window._rmPickerBus) { map.removeLayer(window._rmPickerBus); window._rmPickerBus=null; }
+
+  const pts = window._rmPickerPoints;
+  pts.forEach((p,i)=>{
+    const isEnd = i===0 || i===pts.length-1;
+    const icon = L.divIcon({
+      html:`<div style="background:${isEnd?'#c49a2a':'#fff'};color:${isEnd?'#fff':'#c49a2a'};border:2.5px solid #c49a2a;border-radius:50%;width:${isEnd?28:18}px;height:${isEnd?28:18}px;display:flex;align-items:center;justify-content:center;font-size:${isEnd?12:10}px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.25)">${i===0?'A':i===pts.length-1?'B':i}</div>`,
+      iconSize:[isEnd?28:18,isEnd?28:18], iconAnchor:[isEnd?14:9,isEnd?14:9], className:''
+    });
+    const marker = L.marker(p.ll,{icon, draggable:true}).addTo(map).bindPopup(`<strong>${p.nume}</strong><br><button onclick="rmMapPickerRemovePoint(${i})" style="margin-top:6px;padding:3px 10px;background:#b52d2d;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">✕ Șterge</button>`);
+    marker.on('dragend', async (ev)=>{
+      const ll = ev.target.getLatLng();
+      window._rmPickerPoints[i].ll = [ll.lat, ll.lng];
+      // Re-geocode reverse pentru noua pozitie
+      try {
+        const r = await fetch(`https://api.openrouteservice.org/geocode/reverse?api_key=${window.ORS_KEY}&point.lon=${ll.lng}&point.lat=${ll.lat}&size=1`);
+        const d = await r.json();
+        const props = d.features?.[0]?.properties;
+        if (props) window._rmPickerPoints[i].nume = props.locality || props.county || props.label || window._rmPickerPoints[i].nume;
+      } catch(e){}
+      await rmMapPickerRender();
+    });
+    window._rmPickerMarkers.push(marker);
+  });
+
+  if (pts.length >= 2) {
+    // Traseu real pe drum
+    const roadRoute = await getRoadRoute(pts.map(p=>p.ll));
+    const drawCoords = roadRoute || pts.map(p=>p.ll);
+    window._rmPickerLine = L.polyline(drawCoords,{color:'#c49a2a',weight:roadRoute?4:3,opacity:.85,dashArray:roadRoute?null:'4,6'}).addTo(map);
+    if (drawCoords.length>=2) window._rmPickerBus = createBusMarkerOnRoute(map, drawCoords, '#c49a2a');
+    map.fitBounds(pts.map(p=>p.ll),{padding:[30,30]});
+    // Aplica automat la lista de statii text
+    rmMapPickerApplyToStops();
+  } else if (pts.length===1) {
+    map.setView(pts[0].ll, 11);
+  }
+}
+
+window.rmMapPickerRemovePoint = async (i) => {
+  window._rmPickerPoints.splice(i,1);
+  await rmMapPickerRender();
+};
+
+async function rmMapPickerApplyToStops(){
+  const pts = window._rmPickerPoints;
+  if (pts.length < 2) return;
+  // Calculam distante cumulate folosind ORS pe perechi consecutive
+  let totalKm = 0, totalMin = 0;
+  const newStops = [{n: pts[0].nume, p:0, m:0}];
+  for (let i=1; i<pts.length; i++) {
+    const dist = await calcDistORS(pts[i-1].nume, pts[i].nume);
+    if (dist) { totalKm += dist.km; totalMin += dist.min; }
+    newStops.push({n: pts[i].nume, p: Math.round(totalKm*0.5), m: totalMin});
+  }
+  window._RM_STOPS = newStops;
+  renderRmStops();
+}
+
 // ── CALCUL ORE / INTERVALE SOFERI & VEHICULE ──────────────
 // Returneaza lista de intervale [{start:min, end:min, ruta, cursaId}] pentru un sofer/vehicul intr-o zi
 // Suporta curse care trec peste miezul noptii (endMin > 1440)
@@ -6385,7 +6989,17 @@ async function seedIfEmpty() {
   if(fy)fy.textContent=`© ${new Date().getFullYear()} ${window._FIRMA?.name||'LSD Group SRL'} · Toate drepturile rezervate · Autorizat ARR`;
   // Scroll to top button
   window.addEventListener('scroll',()=>{const fab=document.getElementById('fab-scroll');if(fab)fab.style.display=window.scrollY>300?'flex':'none';});
+  // Ascunde loader-ul de incarcare
+  hideAppLoader();
 })();
+
+function hideAppLoader(){
+  const loader = document.getElementById('app-loader');
+  if (loader) loader.classList.add('hidden');
+}
+window.hideAppLoader = hideAppLoader;
+// Failsafe: ascunde loader-ul oricum dupa 6 secunde, ca utilizatorul sa nu ramana blocat
+setTimeout(hideAppLoader, 6000);
 
 </script>
 </body>
