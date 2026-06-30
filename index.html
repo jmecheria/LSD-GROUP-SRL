@@ -415,43 +415,66 @@ input.ok{border-color:var(--green)}
 .hero-sub{color:var(--stone);font-size:16px;max-width:500px;margin:0 auto 40px;line-height:1.65}
 .hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:56px}
 
-/* ── HERO ROUTE LINE (signature element) ── */
-.hero-journey{padding-bottom:24px}
+/* ── HERO ROUTE LINE (signature element) — drum cu autobuz real ── */
+.hero-journey{padding-bottom:8px}
 .route-line-wrap{
-  position:relative;max-width:900px;margin:0 auto;height:90px;
+  position:relative;max-width:920px;margin:0 auto;height:110px;
 }
-.route-line-svg{width:100%;height:90px;display:block}
-.route-path-bg{fill:none;stroke:var(--border-l);stroke-width:3;stroke-linecap:round}
+.route-line-svg{width:100%;height:110px;display:block;overflow:visible}
+.route-path-bg{fill:none;stroke:var(--border-l);stroke-width:10;stroke-linecap:round}
+.route-path-mid{fill:none;stroke:#fff;stroke-width:10;stroke-linecap:round;opacity:.5}
+.route-path-dash{
+  fill:none;stroke:#fff;stroke-width:1.5;stroke-linecap:round;
+  stroke-dasharray:10 9;opacity:.9;
+}
 .route-path-fg{
-  fill:none;stroke:url(#routeGrad);stroke-width:3;stroke-linecap:round;
+  fill:none;stroke:url(#routeGrad);stroke-width:10;stroke-linecap:round;
   stroke-dasharray:1400;stroke-dashoffset:1400;
-  animation:routeDraw 2.4s ease-out forwards .3s;
+  animation:routeDraw 2.6s cubic-bezier(.4,0,.2,1) forwards .2s;
 }
 @keyframes routeDraw{to{stroke-dashoffset:0}}
 .route-stops{position:absolute;inset:0;pointer-events:none}
 .route-stop-dot{
-  position:absolute;top:40px;width:9px;height:9px;margin:-4px 0 0 -4px;
-  border-radius:50%;background:var(--amber-d);border:2px solid var(--bone);
+  position:absolute;top:50px;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;
+  border-radius:50%;background:#fff;border:3px solid var(--amber-d);
+  box-shadow:0 2px 6px rgba(0,0,0,.18);
   opacity:0;transform:scale(0);
-  animation:stopPop .4s ease-out forwards;
+  animation:stopPop .45s cubic-bezier(.34,1.56,.64,1) forwards;
 }
+.route-stop-dot:first-child,.route-stop-dot:last-child{background:var(--amber-d)}
 @keyframes stopPop{to{opacity:1;transform:scale(1)}}
 .route-stop-label{
-  position:absolute;top:50px;font-size:10px;font-weight:600;color:var(--stone);
+  position:absolute;top:66px;font-size:10.5px;font-weight:700;color:var(--stone);
   white-space:nowrap;transform:translateX(-50%);opacity:0;
   animation:labelFade .4s ease-out forwards;
 }
 @keyframes labelFade{to{opacity:1}}
-.route-bus{
-  position:absolute;top:18px;left:0;font-size:22px;opacity:0;
-  animation:busTravel 2.4s ease-out forwards .3s;
-  filter:drop-shadow(0 2px 4px rgba(0,0,0,.2));
+
+/* Autobuzul SVG real, urmeaza curba traseului prin offset-path */
+.route-bus-wrap{
+  position:absolute;top:0;left:0;width:46px;height:46px;
+  margin:-23px 0 0 -23px;
+  offset-path:path("M 20 55 Q 250 15, 500 55 T 980 55");
+  offset-rotate:auto;
+  offset-distance:0%;
+  opacity:0;
+  animation:busFollowPath 2.6s cubic-bezier(.4,0,.2,1) forwards .2s,
+            busFadeIn .3s ease-out forwards .2s;
+  filter:drop-shadow(0 3px 6px rgba(15,13,10,.25));
 }
-@keyframes busTravel{
-  0%{left:0%;opacity:1;transform:translateX(-50%) scaleX(1)}
-  100%{left:98%;opacity:1;transform:translateX(-50%) scaleX(1)}
+@keyframes busFollowPath{from{offset-distance:0%}to{offset-distance:100%}}
+@keyframes busFadeIn{to{opacity:1}}
+.route-bus-svg{width:100%;height:100%;transform:rotate(90deg)}
+.route-bus-body{transition:none}
+@supports not (offset-path: path("M0 0")){
+  .route-bus-wrap{animation:busFallback 2.6s ease-out forwards .2s,busFadeIn .3s ease-out forwards .2s}
+  @keyframes busFallback{from{left:1%}to{left:98%}}
 }
-@media(max-width:700px){.route-line-wrap{height:70px}.route-stop-label{display:none}}
+@media(max-width:700px){
+  .route-line-wrap{height:80px}
+  .route-stop-label{display:none}
+  .route-stop-dot{top:38px}
+}
 
 /* ── STATS STRIP ── */
 .stats-strip{
@@ -875,16 +898,38 @@ footer{
       <button class="btn btn-primary btn-lg" onclick="nav('regulate')">🔄 Curse Regulate</button>
       <button class="btn btn-secondary btn-lg" onclick="nav('organizate')">🚌 Cursă Organizată</button>
     </div>
-    <!-- Linia de traseu — semnatura vizuala -->
+    <!-- Linia de traseu — semnatura vizuala: drum real cu autobuz -->
     <div class="route-line-wrap" id="hero-route-line">
-      <svg class="route-line-svg" viewBox="0 0 1000 80" preserveAspectRatio="none">
-        <path class="route-path-bg" d="M 20 40 Q 250 10, 500 40 T 980 40"/>
-        <path class="route-path-fg" d="M 20 40 Q 250 10, 500 40 T 980 40"/>
+      <svg class="route-line-svg" viewBox="0 0 1000 110" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="routeGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#c49a2a"/>
+            <stop offset="100%" stop-color="#a07d1c"/>
+          </linearGradient>
+        </defs>
+        <path class="route-path-bg" d="M 20 55 Q 250 15, 500 55 T 980 55"/>
+        <path class="route-path-fg" d="M 20 55 Q 250 15, 500 55 T 980 55"/>
+        <path class="route-path-dash" d="M 20 55 Q 250 15, 500 55 T 980 55"/>
       </svg>
       <div class="route-stops" id="hero-route-stops"></div>
-      <div class="route-bus" id="hero-route-bus">🚌</div>
+      <div class="route-bus-wrap" id="hero-route-bus">
+        <svg class="route-bus-svg" viewBox="0 0 46 46">
+          <g class="route-bus-body">
+            <ellipse cx="23" cy="38" rx="15" ry="3" fill="#000" opacity=".12"/>
+            <rect x="6" y="14" width="34" height="18" rx="5" fill="#c49a2a" stroke="#7a5c14" stroke-width="1"/>
+            <rect x="9" y="17" width="9" height="7" rx="1.5" fill="#fef9ed"/>
+            <rect x="20" y="17" width="9" height="7" rx="1.5" fill="#fef9ed"/>
+            <rect x="31" y="17" width="6" height="7" rx="1.5" fill="#7a5c14" opacity=".5"/>
+            <rect x="6" y="26" width="34" height="3" fill="#a07d1c"/>
+            <circle cx="14" cy="33" r="4" fill="#2a2620"/>
+            <circle cx="14" cy="33" r="1.6" fill="#8a7f6e"/>
+            <circle cx="32" cy="33" r="4" fill="#2a2620"/>
+            <circle cx="32" cy="33" r="1.6" fill="#8a7f6e"/>
+          </g>
+        </svg>
+      </div>
     </div>
-  </div>
+    </div>
 
   <!-- Statistici live -->
   <div class="stats-strip" id="home-stats">
@@ -2613,6 +2658,87 @@ window.carStep = (id,dir) => {
 };
 
 // ── HOME ───────────────────────────────────────────────────
+// ── HELPER: Geocodare cu cache + traseu real pe drumuri (ORS Directions) ──
+window._geoCache = window._geoCache || {};
+async function geocodeCached(placeName){
+  const key = placeName.trim().toLowerCase();
+  if (window._geoCache[key] !== undefined) return window._geoCache[key];
+  try{
+    const r = await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${window.ORS_KEY}&text=${encodeURIComponent(placeName+', Romania')}&size=1`);
+    if(!r.ok) throw new Error('Geocode HTTP '+r.status);
+    const d = await r.json();
+    const ll = d.features?.[0]?.geometry?.coordinates; // [lng,lat]
+    const result = ll ? [ll[1],ll[0]] : null;
+    window._geoCache[key] = result;
+    return result;
+  }catch(e){
+    console.warn('Geocode failed for', placeName, e.message);
+    window._geoCache[key] = null;
+    return null;
+  }
+}
+
+// Obtine traseul REAL pe drum (nu linie dreapta) intre N puncte [lat,lng]
+async function getRoadRoute(latLngArray){
+  if (latLngArray.length < 2) return null;
+  try{
+    const coords = latLngArray.map(([lat,lng])=>[lng,lat]); // ORS vrea [lng,lat]
+    const r = await fetch('https://api.openrouteservice.org/v2/directions/driving-hgv/geojson',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':window.ORS_KEY},
+      body:JSON.stringify({coordinates:coords})
+    });
+    if(!r.ok) throw new Error('Directions HTTP '+r.status);
+    const d = await r.json();
+    const geom = d.features?.[0]?.geometry?.coordinates;
+    if (!geom) return null;
+    return geom.map(([lng,lat])=>[lat,lng]); // inapoi la [lat,lng] pt Leaflet
+  }catch(e){
+    console.warn('Road route failed:', e.message);
+    return null; // fallback la linie dreapta se face de apelant
+  }
+}
+
+// Creeaza un marker autobuz SVG (nu emoji) care se misca pe un traseu real
+function createBusMarkerOnRoute(map, routeLatLngs, color){
+  if (!routeLatLngs || routeLatLngs.length < 2) return null;
+  const busIcon = L.divIcon({
+    html: `<div class="leaflet-bus-marker" style="--bus-color:${color}">
+      <svg width="30" height="30" viewBox="0 0 30 30">
+        <g transform="translate(15,15) rotate(0)">
+          <rect x="-11" y="-7" width="22" height="14" rx="3" fill="${color}" stroke="#fff" stroke-width="1.5"/>
+          <rect x="-8" y="-4.5" width="6" height="5" rx="1" fill="#fff" opacity=".85"/>
+          <rect x="0" y="-4.5" width="6" height="5" rx="1" fill="#fff" opacity=".85"/>
+          <circle cx="-6" cy="7.5" r="2.4" fill="#2a2620"/>
+          <circle cx="6" cy="7.5" r="2.4" fill="#2a2620"/>
+        </g>
+      </svg>
+    </div>`,
+    iconSize:[30,30], iconAnchor:[15,15], className:''
+  });
+  const marker = L.marker(routeLatLngs[0], {icon: busIcon, zIndexOffset: 1000}).addTo(map);
+  // Anima de-a lungul punctelor reale ale traseului (urmeaza drumul, nu o linie dreapta)
+  let idx = 0;
+  const totalPoints = routeLatLngs.length;
+  const stepMs = Math.max(30, Math.min(120, Math.round(6000/totalPoints)));
+  function animateStep(){
+    if (!marker._map) return; // marker a fost scos de pe harta
+    const next = routeLatLngs[idx];
+    const prev = routeLatLngs[Math.max(0,idx-1)];
+    if (next && prev) {
+      const dLat = next[0]-prev[0], dLng = next[1]-prev[1];
+      const angle = Math.atan2(dLng, dLat) * 180/Math.PI;
+      const el = marker.getElement()?.querySelector('g');
+      if (el) el.setAttribute('transform', `translate(15,15) rotate(${angle})`);
+    }
+    marker.setLatLng(routeLatLngs[idx]);
+    idx = (idx+1) % totalPoints;
+    setTimeout(animateStep, stepMs);
+  }
+  animateStep();
+  return marker;
+}
+
 async function initHome() {
   try { await loadFleet(); } catch(e) {}
   const el = document.getElementById('home-fleet');
@@ -2640,18 +2766,11 @@ function renderHeroRouteLine(){
   let html = '';
   usedStatii.forEach((s,i)=>{
     const pct = n===1 ? 0 : (i/(n-1))*96+2;
-    const delay = 0.3 + (i/(n-1||1))*2.0;
+    const delay = 0.25 + (i/(n-1||1))*2.2;
     html += `<div class="route-stop-dot" style="left:${pct}%;animation-delay:${delay}s"></div>`;
     html += `<div class="route-stop-label" style="left:${pct}%;animation-delay:${delay+0.1}s">${s}</div>`;
   });
   wrap.innerHTML = html;
-  // Adauga gradient SVG definition daca lipseste
-  const svg = document.querySelector('.route-line-svg');
-  if (svg && !svg.querySelector('defs')) {
-    const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
-    defs.innerHTML = '<linearGradient id="routeGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#c49a2a"/><stop offset="100%" stop-color="#a07d1c"/></linearGradient>';
-    svg.insertBefore(defs, svg.firstChild);
-  }
 }
 
 async function renderHomeStats(){
@@ -2714,48 +2833,80 @@ async function initHomeRoutesMap(){
   if (!mapEl) return;
   const curse = (window._R||[]).filter(c=>c.activa && (c.statii||[]).length>=2);
   if (!curse.length) { mapEl.innerHTML = '<div style="text-align:center;color:var(--stone)"><div style="font-size:36px;margin-bottom:8px">🗺</div>Nicio cursă activă momentan</div>'; return; }
+
+  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:8px"><div class="spin"></div><span style="font-size:12px">Se încarcă harta...</span></div>';
+
+  // Incarca Leaflet daca nu e deja
   if (!_homeMapLoaded) {
-    await new Promise((res,rej)=>{
-      const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
-      const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);
-    });
-    _homeMapLoaded = true;
+    try {
+      await new Promise((res,rej)=>{
+        if (window.L) { res(); return; }
+        const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
+        const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+        s.onload=res; s.onerror=()=>rej(new Error('Nu s-a putut încărca biblioteca de hărți (Leaflet)'));
+        document.head.appendChild(s);
+        setTimeout(()=>rej(new Error('Timeout la încărcarea hărții')), 10000);
+      });
+      _homeMapLoaded = true;
+    } catch(e) {
+      mapEl.innerHTML = `<div style="text-align:center;color:var(--stone);padding:24px"><div style="font-size:32px;margin-bottom:8px">⚠️</div><div style="font-weight:600;margin-bottom:4px">Harta nu s-a putut încărca</div><div style="font-size:12px">${e.message}</div></div>`;
+      return;
+    }
   }
+
   if (window._homeLeafletMap) { try{window._homeLeafletMap.remove();}catch(e){} window._homeLeafletMap=null; }
   mapEl.innerHTML = '';
-  const map = L.map(mapEl,{center:[46.0,25.0],zoom:7,scrollWheelZoom:false});
-  window._homeLeafletMap = map;
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+  let map;
+  try {
+    map = L.map(mapEl,{center:[46.0,25.0],zoom:7,scrollWheelZoom:false});
+    window._homeLeafletMap = map;
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+  } catch(e) {
+    mapEl.innerHTML = `<div style="text-align:center;color:var(--stone);padding:24px">⚠️ Eroare la inițializarea hărții: ${e.message}</div>`;
+    return;
+  }
 
-  const colors = ['#c49a2a','#1e5fa8','#c46520','#1a6b3c','#b52d2d'];
+  const colors = ['#c49a2a','#1e5fa8','#c46520','#1a6b3c','#b52d2d','#7c3aed'];
   const bounds = [];
   let colorIdx = 0;
-  for (const c of curse.slice(0,8)) {
+  let anyRouteDrawn = false;
+
+  for (const c of curse.slice(0,6)) {
     const statii = c.statii||[];
     const coords = [];
     for (const st of statii) {
       const nume = st.nome||st.name||st.nume;
       if (!nume) continue;
-      try {
-        const r = await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${window.ORS_KEY}&text=${encodeURIComponent(nume+', Romania')}&size=1`);
-        const d = await r.json();
-        const ll = d.features?.[0]?.geometry?.coordinates;
-        if (ll) coords.push([ll[1],ll[0]]);
-      } catch(e) {}
+      const ll = await geocodeCached(nume);
+      if (ll) coords.push(ll);
     }
     if (coords.length>=2) {
       const col = colors[colorIdx%colors.length]; colorIdx++;
-      L.polyline(coords,{color:col,weight:3,opacity:.8}).addTo(map).bindPopup(`<strong>${c.ruta}</strong>`);
+      anyRouteDrawn = true;
+      // Incearca traseu real pe drum; daca esueaza, foloseste linie dreapta ca fallback
+      const roadRoute = await getRoadRoute(coords);
+      const drawCoords = roadRoute || coords;
+      L.polyline(drawCoords,{color:col,weight:roadRoute?4:3,opacity:.85,dashArray:roadRoute?null:'4,6'}).addTo(map).bindPopup(`<strong>${c.ruta}</strong>`);
       coords.forEach((ll,i)=>{
         bounds.push(ll);
         const isEnd = i===0||i===coords.length-1;
-        L.circleMarker(ll,{radius:isEnd?6:4,color:col,fillColor:'#fff',fillOpacity:1,weight:2}).addTo(map)
+        const stopIcon = L.divIcon({
+          html:`<div style="width:${isEnd?16:10}px;height:${isEnd?16:10}px;border-radius:50%;background:${isEnd?col:'#fff'};border:2.5px solid ${col};box-shadow:0 1px 4px rgba(0,0,0,.25)"></div>`,
+          iconSize:[isEnd?16:10,isEnd?16:10], iconAnchor:[isEnd?8:5,isEnd?8:5], className:''
+        });
+        L.marker(ll,{icon:stopIcon}).addTo(map)
           .bindPopup(`<strong>${statii[i]?.nome||statii[i]?.name||statii[i]?.nume||''}</strong><br>${c.ruta}`);
       });
+      // Autobuz SVG animat care merge pe traseul real (sau pe linia dreapta daca nu avem traseu pe drum)
+      createBusMarkerOnRoute(map, drawCoords, col);
     }
   }
-  if (bounds.length) map.fitBounds(bounds,{padding:[30,30]});
-  else mapEl.innerHTML = '<div style="text-align:center;color:var(--stone);padding:40px">Nu s-au putut localiza traseele</div>';
+
+  if (bounds.length) {
+    map.fitBounds(bounds,{padding:[30,30]});
+  } else if (!anyRouteDrawn) {
+    mapEl.innerHTML = '<div style="text-align:center;color:var(--stone);padding:24px"><div style="font-size:32px;margin-bottom:8px">📍</div><div style="font-weight:600;margin-bottom:4px">Nu am putut localiza stațiile</div><div style="font-size:12px">Verifică denumirile stațiilor din cursele regulate</div></div>';
+  }
 }
 
 // ── VEHICLE HOMEPAGE MODAL ──────────────────────────────────
@@ -2929,40 +3080,56 @@ window.showRouteMapModal = async (cursaId) => {
   document.getElementById('rmq-title').textContent = '🗺 ' + c.ruta;
   modal.classList.add('open');
   const mapEl = document.getElementById('rmq-map');
-  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)"><div class="spin"></div></div>';
+  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:8px"><div class="spin"></div><span style="font-size:12px">Se încarcă harta...</span></div>';
 
   if (!_homeMapLoaded) {
-    await new Promise((res,rej)=>{
-      const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
-      const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);
-    });
-    _homeMapLoaded = true;
+    try {
+      await new Promise((res,rej)=>{
+        if (window.L) { res(); return; }
+        const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
+        const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+        s.onload=res; s.onerror=()=>rej(new Error('Nu s-a putut încărca biblioteca de hărți'));
+        document.head.appendChild(s);
+        setTimeout(()=>rej(new Error('Timeout la încărcarea hărții')), 10000);
+      });
+      _homeMapLoaded = true;
+    } catch(e) {
+      mapEl.innerHTML = `<div style="text-align:center;color:var(--stone);padding:24px">⚠️ ${e.message}</div>`;
+      return;
+    }
   }
+
   mapEl.innerHTML = '';
-  const map = L.map(mapEl,{center:[46,25],zoom:7});
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+  let map;
+  try {
+    map = L.map(mapEl,{center:[46,25],zoom:7});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+  } catch(e) {
+    mapEl.innerHTML = `<div style="text-align:center;color:var(--stone);padding:24px">⚠️ Eroare hartă: ${e.message}</div>`;
+    return;
+  }
+
   const statii = c.statii||[];
   const coords = [];
   for (const st of statii) {
     const nume = st.nome||st.name||st.nume;
     if (!nume) continue;
-    try {
-      const r = await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${window.ORS_KEY}&text=${encodeURIComponent(nume+', Romania')}&size=1`);
-      const d = await r.json();
-      const ll = d.features?.[0]?.geometry?.coordinates;
-      if (ll) coords.push({ll:[ll[1],ll[0]], nume});
-    } catch(e) {}
+    const ll = await geocodeCached(nume);
+    if (ll) coords.push({ll, nume});
   }
   if (coords.length>=2) {
-    L.polyline(coords.map(c2=>c2.ll),{color:'#c49a2a',weight:4,opacity:.85}).addTo(map);
+    const roadRoute = await getRoadRoute(coords.map(c2=>c2.ll));
+    const drawCoords = roadRoute || coords.map(c2=>c2.ll);
+    L.polyline(drawCoords,{color:'#c49a2a',weight:roadRoute?5:3,opacity:.85,dashArray:roadRoute?null:'4,6'}).addTo(map);
     coords.forEach((c2,i)=>{
       const isEnd = i===0||i===coords.length-1;
       const icon = L.divIcon({html:`<div style="background:${isEnd?'#c49a2a':'#fff'};color:${isEnd?'#fff':'#c49a2a'};border:2px solid #c49a2a;border-radius:50%;width:${isEnd?26:16}px;height:${isEnd?26:16}px;display:flex;align-items:center;justify-content:center;font-size:${isEnd?12:9}px;font-weight:800">${i===0?'A':i===coords.length-1?'B':''}</div>`,iconSize:[isEnd?26:16,isEnd?26:16],className:''});
       L.marker(c2.ll,{icon}).addTo(map).bindPopup(`<strong>${c2.nume}</strong>`);
     });
+    createBusMarkerOnRoute(map, drawCoords, '#c49a2a');
     map.fitBounds(coords.map(c2=>c2.ll),{padding:[30,30]});
   } else {
-    mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)">Nu s-au putut localiza stațiile pe hartă</div>';
+    mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:8px;padding:24px;text-align:center"><div style="font-size:32px">📍</div>Nu s-au putut localiza stațiile pe hartă.<br><span style="font-size:11px">Verifică denumirile stațiilor în Firestore.</span></div>';
   }
 };
 window.filterRegulate = () => {
@@ -3533,39 +3700,55 @@ async function renderOrgRoutePreviewMap(){
   if (!mapEl) return;
   const stops = window._ORG_STOPS.filter(Boolean);
   if (stops.length<2) { mapEl.innerHTML='<div style="text-align:center;color:var(--stone);font-size:12px;padding:20px"><div style="font-size:28px;margin-bottom:6px">🗺</div>Completează plecarea și destinația</div>'; return; }
-  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)"><div class="spin"></div></div>';
+  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:6px"><div class="spin"></div><span style="font-size:11px">Se caută traseul...</span></div>';
+
   if (!_orgPreviewMapLoaded) {
-    await new Promise((res,rej)=>{
-      if(window.L){res();return;}
-      const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
-      const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);
-    });
-    _orgPreviewMapLoaded = true;
+    try {
+      await new Promise((res,rej)=>{
+        if(window.L){res();return;}
+        const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
+        const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+        s.onload=res; s.onerror=()=>rej(new Error('Hartă indisponibilă'));
+        document.head.appendChild(s);
+        setTimeout(()=>rej(new Error('Timeout hartă')), 10000);
+      });
+      _orgPreviewMapLoaded = true;
+    } catch(e) {
+      mapEl.innerHTML = `<div style="text-align:center;color:var(--stone);font-size:12px;padding:20px">⚠️ ${e.message}</div>`;
+      return;
+    }
   }
+
   if (window._orgPreviewMap) { try{window._orgPreviewMap.remove();}catch(e){} window._orgPreviewMap=null; }
   mapEl.innerHTML='';
-  const map = L.map(mapEl,{center:[46,25],zoom:7,scrollWheelZoom:false});
-  window._orgPreviewMap = map;
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+  let map;
+  try {
+    map = L.map(mapEl,{center:[46,25],zoom:7,scrollWheelZoom:false});
+    window._orgPreviewMap = map;
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+  } catch(e) {
+    mapEl.innerHTML = `<div style="text-align:center;color:var(--stone);font-size:12px;padding:20px">⚠️ ${e.message}</div>`;
+    return;
+  }
+
   const coords = [];
   for (const stopName of stops) {
-    try {
-      const r = await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${window.ORS_KEY}&text=${encodeURIComponent(stopName+', Romania')}&size=1`);
-      const d = await r.json();
-      const ll = d.features?.[0]?.geometry?.coordinates;
-      if (ll) coords.push({ll:[ll[1],ll[0]], nume:stopName});
-    } catch(e) {}
+    const ll = await geocodeCached(stopName);
+    if (ll) coords.push({ll, nume:stopName});
   }
   if (coords.length>=2) {
-    L.polyline(coords.map(c=>c.ll),{color:'#c49a2a',weight:4,opacity:.85,dashArray:'1,8',lineCap:'round'}).addTo(map);
+    const roadRoute = await getRoadRoute(coords.map(c=>c.ll));
+    const drawCoords = roadRoute || coords.map(c=>c.ll);
+    L.polyline(drawCoords,{color:'#c49a2a',weight:roadRoute?4:3,opacity:.85,dashArray:roadRoute?null:'4,6'}).addTo(map);
     coords.forEach((c,i)=>{
       const isEnd = i===0||i===coords.length-1;
       const icon = L.divIcon({html:`<div style="background:${isEnd?'#c49a2a':'#fff'};color:${isEnd?'#fff':'#c49a2a'};border:2px solid #c49a2a;border-radius:50%;width:${isEnd?24:14}px;height:${isEnd?24:14}px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${i===0?'A':i===coords.length-1?'B':''}</div>`,iconSize:[isEnd?24:14,isEnd?24:14],className:''});
       L.marker(c.ll,{icon}).addTo(map).bindPopup(`<strong>${c.nume}</strong>`);
     });
+    if (drawCoords.length >= 2) createBusMarkerOnRoute(map, drawCoords, '#c49a2a');
     map.fitBounds(coords.map(c=>c.ll),{padding:[24,24]});
   } else {
-    mapEl.innerHTML='<div style="text-align:center;color:var(--stone);font-size:12px;padding:20px">Nu am putut localiza pe hartă aceste nume. Verifică ortografia.</div>';
+    mapEl.innerHTML='<div style="text-align:center;color:var(--stone);font-size:12px;padding:20px">Nu am putut localiza aceste nume.<br>Verifică ortografia (ex: "Iași" nu "iasi").</div>';
   }
 }
 window.calcOrgPrice = async () => {
