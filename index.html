@@ -415,6 +415,158 @@ input.ok{border-color:var(--green)}
 .hero-sub{color:var(--stone);font-size:16px;max-width:500px;margin:0 auto 40px;line-height:1.65}
 .hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:56px}
 
+/* ── HERO ROUTE LINE (signature element) ── */
+.hero-journey{padding-bottom:24px}
+.route-line-wrap{
+  position:relative;max-width:900px;margin:0 auto;height:90px;
+}
+.route-line-svg{width:100%;height:90px;display:block}
+.route-path-bg{fill:none;stroke:var(--border-l);stroke-width:3;stroke-linecap:round}
+.route-path-fg{
+  fill:none;stroke:url(#routeGrad);stroke-width:3;stroke-linecap:round;
+  stroke-dasharray:1400;stroke-dashoffset:1400;
+  animation:routeDraw 2.4s ease-out forwards .3s;
+}
+@keyframes routeDraw{to{stroke-dashoffset:0}}
+.route-stops{position:absolute;inset:0;pointer-events:none}
+.route-stop-dot{
+  position:absolute;top:40px;width:9px;height:9px;margin:-4px 0 0 -4px;
+  border-radius:50%;background:var(--amber-d);border:2px solid var(--bone);
+  opacity:0;transform:scale(0);
+  animation:stopPop .4s ease-out forwards;
+}
+@keyframes stopPop{to{opacity:1;transform:scale(1)}}
+.route-stop-label{
+  position:absolute;top:50px;font-size:10px;font-weight:600;color:var(--stone);
+  white-space:nowrap;transform:translateX(-50%);opacity:0;
+  animation:labelFade .4s ease-out forwards;
+}
+@keyframes labelFade{to{opacity:1}}
+.route-bus{
+  position:absolute;top:18px;left:0;font-size:22px;opacity:0;
+  animation:busTravel 2.4s ease-out forwards .3s;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.2));
+}
+@keyframes busTravel{
+  0%{left:0%;opacity:1;transform:translateX(-50%) scaleX(1)}
+  100%{left:98%;opacity:1;transform:translateX(-50%) scaleX(1)}
+}
+@media(max-width:700px){.route-line-wrap{height:70px}.route-stop-label{display:none}}
+
+/* ── STATS STRIP ── */
+.stats-strip{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--border-l);border:1px solid var(--border-l);border-radius:var(--r-lg);
+  overflow:hidden;margin-bottom:40px;box-shadow:var(--sh);
+}
+.stat-pill{background:var(--card);padding:18px 12px;text-align:center}
+.stat-pill-num{font-family:"Plus Jakarta Sans",sans-serif;font-size:26px;font-weight:800;color:var(--amber-d);line-height:1.1}
+.stat-pill-label{font-size:11px;color:var(--stone);margin-top:4px}
+@media(max-width:700px){.stats-strip{grid-template-columns:repeat(2,1fr)}}
+
+/* ── QUICK SEARCH ── */
+.quick-search-card{
+  background:linear-gradient(135deg,var(--amber-g),rgba(196,154,42,.03));
+  border:1.5px solid var(--amber-b);border-radius:var(--r-xl);
+  padding:24px 28px;margin-bottom:48px;
+}
+.quick-search-title{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:16px;margin-bottom:14px}
+.quick-search-row{display:flex;gap:10px;flex-wrap:wrap}
+.quick-search-row input{flex:1;min-width:220px;font-size:14px;padding:12px 16px}
+.quick-search-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.qs-chip{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:5px 14px;font-size:12px;color:var(--stone);cursor:pointer;transition:all .15s;
+}
+.qs-chip:hover{border-color:var(--amber);color:var(--amber-d);background:var(--amber-g)}
+
+/* ── HOW IT WORKS ── */
+.how-it-works-grid{display:flex;align-items:flex-start;gap:0;flex-wrap:wrap;justify-content:center}
+.hiw-step{
+  flex:1;min-width:140px;max-width:200px;text-align:center;position:relative;padding:8px;
+}
+.hiw-num{
+  position:absolute;top:0;right:8px;font-size:11px;font-weight:800;color:var(--amber-b);
+  font-family:"Plus Jakarta Sans",sans-serif;
+}
+.hiw-icon{
+  width:64px;height:64px;margin:0 auto 14px;border-radius:50%;
+  background:var(--cream);border:1.5px solid var(--border-l);
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+  transition:all .2s;
+}
+.hiw-step:hover .hiw-icon{border-color:var(--amber);background:var(--amber-g);transform:translateY(-3px)}
+.hiw-title{font-weight:700;font-size:14px;margin-bottom:6px;font-family:"Plus Jakarta Sans",sans-serif}
+.hiw-desc{font-size:12px;color:var(--stone);line-height:1.5}
+.hiw-connector{
+  flex:0 0 40px;height:2px;background:repeating-linear-gradient(90deg,var(--border) 0 6px,transparent 6px 12px);
+  margin-top:32px;
+}
+@media(max-width:900px){.hiw-connector{display:none}.how-it-works-grid{gap:24px}}
+
+/* ── WHY CARD HOVER ── */
+.why-card{text-align:center;padding:12px;border-radius:var(--r-lg);transition:all .2s}
+.why-card:hover{background:var(--card);box-shadow:var(--sh);transform:translateY(-2px)}
+
+/* ── ROUTE CARD (curse regulate) ── */
+.route-card{transition:all .2s}
+.mini-route-line{position:relative;height:34px;margin:10px 0 16px;padding:0 4px}
+.mini-route-track{
+  position:absolute;top:14px;left:4px;right:4px;height:2px;
+  background:linear-gradient(90deg,var(--amber),var(--amber-d));border-radius:2px;
+}
+.mini-route-dot{
+  position:absolute;top:9px;width:11px;height:11px;margin-left:-5.5px;
+  background:var(--card);border:2.5px solid var(--amber-d);border-radius:50%;
+}
+.mini-route-dot:first-child{background:var(--amber-d)}
+.mini-route-dot:last-child{background:var(--amber-d)}
+.mini-route-time-start{position:absolute;top:24px;left:0;font-size:11px;font-weight:700;color:var(--amber-d)}
+.mini-route-time-end{position:absolute;top:24px;right:0;font-size:11px;font-weight:700;color:var(--amber-d)}
+
+.seat-occ-bar{height:6px;background:var(--cream);border-radius:3px;overflow:hidden;margin-top:8px}
+.seat-occ-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.seat-occ-label{font-size:11px;font-weight:600;margin-top:5px}
+
+.route-stops-collapsible{border-top:1px solid var(--border-l);padding-top:10px}
+.route-stops-toggle{
+  background:none;border:none;color:var(--stone);font-size:12px;font-weight:600;
+  cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:4px;
+}
+.route-stops-toggle:hover{color:var(--amber-d)}
+.toggle-arrow{transition:transform .2s;display:inline-block}
+.route-stops-collapsible.open .toggle-arrow{transform:rotate(180deg)}
+.route-stops-content{
+  max-height:0;overflow:hidden;transition:max-height .3s ease;
+}
+.route-stops-collapsible.open .route-stops-content{max-height:300px;margin-top:8px}
+
+/* ── ORG PROGRESS TRACKER ── */
+.org-progress{display:flex;align-items:flex-start;margin-bottom:28px;max-width:600px}
+.org-progress-step{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0}
+.org-progress-dot{
+  width:30px;height:30px;border-radius:50%;background:var(--cream);border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--stone);
+  transition:all .3s;
+}
+.org-progress-step.active .org-progress-dot{background:var(--amber);border-color:var(--amber-d);color:#fff;box-shadow:0 0 0 4px var(--amber-g)}
+.org-progress-step.done .org-progress-dot{background:var(--green);border-color:var(--green);color:#fff}
+.org-progress-label{font-size:11px;color:var(--stone);font-weight:500;white-space:nowrap}
+.org-progress-step.active .org-progress-label{color:var(--amber-d);font-weight:700}
+.org-progress-line{flex:1;height:2px;background:var(--border);margin:14px 4px 0;min-width:20px}
+@media(max-width:700px){.org-progress-label{display:none}.org-progress{max-width:100%}}
+
+/* ── ORG TIP CARDS ── */
+.org-tip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.org-tip-card{
+  flex-direction:column;gap:6px;padding:16px 8px;height:auto;border-radius:var(--r-lg);
+}
+.org-tip-icon{font-size:26px;display:block}
+.org-tip-text{font-size:11px;font-weight:600;text-align:center;line-height:1.3}
+.org-tip-card.btn-primary .org-tip-text{color:#fff}
+
+
+
 /* ── BUS CARD (flotă homepage) ── */
 .bus-card{
   background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);
@@ -714,7 +866,8 @@ footer{
 
 <!-- ────────────────── HOME ────────────────── -->
 <div id="pg-home" class="page active">
-  <div class="hero">
+  <!-- HERO cu traseu animat -->
+  <div class="hero hero-journey">
     <div class="hero-eyebrow">🛡️ Autorizat ARR · CUI: RO12345678</div>
     <h1>Călătoriți cu <span class="grad">confort</span><br>și siguranță</h1>
     <p class="hero-sub">Curse regulate și organizate în toată România. Flotă modernă, șoferi autorizați, bilete electronice.</p>
@@ -722,7 +875,35 @@ footer{
       <button class="btn btn-primary btn-lg" onclick="nav('regulate')">🔄 Curse Regulate</button>
       <button class="btn btn-secondary btn-lg" onclick="nav('organizate')">🚌 Cursă Organizată</button>
     </div>
+    <!-- Linia de traseu — semnatura vizuala -->
+    <div class="route-line-wrap" id="hero-route-line">
+      <svg class="route-line-svg" viewBox="0 0 1000 80" preserveAspectRatio="none">
+        <path class="route-path-bg" d="M 20 40 Q 250 10, 500 40 T 980 40"/>
+        <path class="route-path-fg" d="M 20 40 Q 250 10, 500 40 T 980 40"/>
+      </svg>
+      <div class="route-stops" id="hero-route-stops"></div>
+      <div class="route-bus" id="hero-route-bus">🚌</div>
+    </div>
   </div>
+
+  <!-- Statistici live -->
+  <div class="stats-strip" id="home-stats">
+    <div class="stat-pill"><div class="stat-pill-num" id="hs-routes">—</div><div class="stat-pill-label">curse active</div></div>
+    <div class="stat-pill"><div class="stat-pill-num" id="hs-vehicles">—</div><div class="stat-pill-label">vehicule în flotă</div></div>
+    <div class="stat-pill"><div class="stat-pill-num" id="hs-seats">—</div><div class="stat-pill-label">locuri disponibile azi</div></div>
+    <div class="stat-pill"><div class="stat-pill-num" id="hs-drivers">—</div><div class="stat-pill-label">șoferi autorizați</div></div>
+  </div>
+
+  <!-- Cautare rapida -->
+  <div class="quick-search-card">
+    <div class="quick-search-title">🔍 Găsește o cursă rapid</div>
+    <div class="quick-search-row">
+      <input type="text" id="home-quick-search" placeholder="Unde mergi? Ex: Bacău, Târgu Neamț..." onkeydown="if(event.key==='Enter')homeQuickSearch()"/>
+      <button class="btn btn-primary" onclick="homeQuickSearch()">Caută →</button>
+    </div>
+    <div class="quick-search-chips" id="home-search-suggestions"></div>
+  </div>
+
   <!-- Autobuzele noastre -->
   <div style="margin-bottom:56px">
     <div class="sec-head">
@@ -733,26 +914,76 @@ footer{
     </div>
     <div class="g-auto" id="home-fleet"></div>
   </div>
+
+  <!-- Harta traseelor -->
+  <div style="margin-bottom:56px">
+    <div class="sec-head">
+      <div>
+        <div class="sec-title">🗺 Traseele Noastre</div>
+        <div class="sec-sub">Toate destinațiile acoperite de curse regulate</div>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--sh-lg)">
+      <div id="home-routes-map" style="height:380px;width:100%;background:var(--cream);display:flex;align-items:center;justify-content:center">
+        <div style="text-align:center;color:var(--stone)"><div class="spin" style="margin-bottom:10px"></div>Se încarcă harta...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cum functioneaza -->
+  <div style="margin-bottom:56px">
+    <div class="sec-head"><div><div class="sec-title">Cum funcționează</div><div class="sec-sub">De la căutare la îmbarcare, în 4 pași</div></div></div>
+    <div class="how-it-works-grid">
+      <div class="hiw-step">
+        <div class="hiw-num">1</div>
+        <div class="hiw-icon">🔍</div>
+        <div class="hiw-title">Alegi cursa</div>
+        <div class="hiw-desc">Regulată cu plecări zilnice sau organizată pentru grupul tău</div>
+      </div>
+      <div class="hiw-connector"></div>
+      <div class="hiw-step">
+        <div class="hiw-num">2</div>
+        <div class="hiw-icon">💺</div>
+        <div class="hiw-title">Alegi locul</div>
+        <div class="hiw-desc">Selectezi locul preferat direct pe harta autobuzului</div>
+      </div>
+      <div class="hiw-connector"></div>
+      <div class="hiw-step">
+        <div class="hiw-num">3</div>
+        <div class="hiw-icon">🎟</div>
+        <div class="hiw-title">Primești biletul</div>
+        <div class="hiw-desc">Cod QR instant, pe ecran sau printat</div>
+      </div>
+      <div class="hiw-connector"></div>
+      <div class="hiw-step">
+        <div class="hiw-num">4</div>
+        <div class="hiw-icon">🚌</div>
+        <div class="hiw-title">Te îmbarci</div>
+        <div class="hiw-desc">Scanare rapidă la urcare, locul tău te așteaptă</div>
+      </div>
+    </div>
+  </div>
+
   <!-- De ce noi -->
   <div style="background:var(--cream);border:1px solid var(--border-l);border-radius:var(--r-xl);padding:36px;margin-bottom:32px">
     <h2 style="font-size:20px;font-weight:700;margin-bottom:24px;text-align:center">De ce să alegi LSD Group?</h2>
     <div class="g4">
-      <div style="text-align:center;padding:12px">
+      <div class="why-card">
         <div style="font-size:36px;margin-bottom:10px">🛡️</div>
         <div style="font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">Autorizat ARR</div>
         <div style="font-size:12px;color:var(--stone)">Licență transport persoane valabilă</div>
       </div>
-      <div style="text-align:center;padding:12px">
+      <div class="why-card">
         <div style="font-size:36px;margin-bottom:10px">👨‍✈️</div>
         <div style="font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">Șoferi profesioniști</div>
         <div style="font-size:12px;color:var(--stone)">Permis categoria D, experiență verificată</div>
       </div>
-      <div style="text-align:center;padding:12px">
+      <div class="why-card">
         <div style="font-size:36px;margin-bottom:10px">📍</div>
         <div style="font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">Trasee flexibile</div>
         <div style="font-size:12px;color:var(--stone)">Opriri la cerere pe rutele regulate</div>
       </div>
-      <div style="text-align:center;padding:12px">
+      <div class="why-card">
         <div style="font-size:36px;margin-bottom:10px">💳</div>
         <div style="font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">Prețuri corecte</div>
         <div style="font-size:12px;color:var(--stone)">Calculat transparent pe segmente</div>
@@ -791,6 +1022,16 @@ footer{
       <div class="sec-sub">Completați cererea. Echipa noastră vă va contacta cu o ofertă personalizată.</div>
     </div>
   </div>
+  <!-- Progress tracker -->
+  <div class="org-progress" id="org-progress">
+    <div class="org-progress-step active" data-step="1"><div class="org-progress-dot">1</div><div class="org-progress-label">Traseu</div></div>
+    <div class="org-progress-line"></div>
+    <div class="org-progress-step" data-step="2"><div class="org-progress-dot">2</div><div class="org-progress-label">Dată &amp; durată</div></div>
+    <div class="org-progress-line"></div>
+    <div class="org-progress-step" data-step="3"><div class="org-progress-dot">3</div><div class="org-progress-label">Vehicul</div></div>
+    <div class="org-progress-line"></div>
+    <div class="org-progress-step" data-step="4"><div class="org-progress-dot">4</div><div class="org-progress-label">Contact</div></div>
+  </div>
   <div class="g2" style="align-items:start">
     <div>
       <!-- STEP 1: Detalii cursa -->
@@ -798,12 +1039,12 @@ footer{
         <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif">📋 1. Tipul și traseul cursei</h3>
         <div class="fg">
           <div class="fl">Tip cursă *</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap" id="org-tip-btns">
-            <button type="button" class="btn btn-secondary btn-sm org-tip-btn" onclick="selectOrgTip(this,'Excursie/Turism')">🏔 Excursie</button>
-            <button type="button" class="btn btn-secondary btn-sm org-tip-btn" onclick="selectOrgTip(this,'Nuntă/Eveniment')">💒 Nuntă / Eveniment</button>
-            <button type="button" class="btn btn-secondary btn-sm org-tip-btn" onclick="selectOrgTip(this,'Transfer aeroport')">✈️ Transfer aeroport</button>
-            <button type="button" class="btn btn-secondary btn-sm org-tip-btn" onclick="selectOrgTip(this,'Transport elevi/grupuri')">🎒 Elevi / Grupuri</button>
-            <button type="button" class="btn btn-secondary btn-sm org-tip-btn" onclick="selectOrgTip(this,'Altele')">📋 Altele</button>
+          <div class="org-tip-grid" id="org-tip-btns">
+            <button type="button" class="btn btn-secondary org-tip-btn org-tip-card" onclick="selectOrgTip(this,'Excursie/Turism')"><span class="org-tip-icon">🏔</span><span class="org-tip-text">Excursie</span></button>
+            <button type="button" class="btn btn-secondary org-tip-btn org-tip-card" onclick="selectOrgTip(this,'Nuntă/Eveniment')"><span class="org-tip-icon">💒</span><span class="org-tip-text">Nuntă / Eveniment</span></button>
+            <button type="button" class="btn btn-secondary org-tip-btn org-tip-card" onclick="selectOrgTip(this,'Transfer aeroport')"><span class="org-tip-icon">✈️</span><span class="org-tip-text">Transfer aeroport</span></button>
+            <button type="button" class="btn btn-secondary org-tip-btn org-tip-card" onclick="selectOrgTip(this,'Transport elevi/grupuri')"><span class="org-tip-icon">🎒</span><span class="org-tip-text">Elevi / Grupuri</span></button>
+            <button type="button" class="btn btn-secondary org-tip-btn org-tip-card" onclick="selectOrgTip(this,'Altele')"><span class="org-tip-icon">📋</span><span class="org-tip-text">Altele</span></button>
           </div>
           <input type="text" id="org-desc" placeholder="Detalii suplimentare (opțional)" style="margin-top:8px"/>
         </div>
@@ -866,7 +1107,7 @@ footer{
         <div id="org-avail-info" style="margin-bottom:12px"></div>
         <div class="fg">
           <div class="fl">Vehicul preferat</div>
-          <select id="org-veh" onchange="calcOrgPrice()"><option value="">— selectați vehiculul dorit —</option></select>
+          <select id="org-veh" onchange="calcOrgPrice();updateOrgProgress()"><option value="">— selectați vehiculul dorit —</option></select>
           <div id="org-price-box" style="display:none;margin-top:8px;background:var(--cream);border:1px solid var(--amber-b);border-radius:8px;padding:10px 14px;font-size:13px">
             <span style="color:var(--stone)">Estimare: </span><strong id="org-price-val" style="color:var(--amber-d)">—</strong><span id="org-price-info" style="color:var(--stone);font-size:12px"></span>
           </div>
@@ -888,13 +1129,19 @@ footer{
         </div>
         <button class="btn btn-primary btn-full" id="btn-submit-org" onclick="submitOrg()">Trimite cererea 📨</button>
       </div>
-      <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh)">
+      <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh);margin-bottom:14px">
         <div style="font-weight:700;margin-bottom:12px;font-family:'Plus Jakarta Sans',sans-serif">📞 Cum funcționează?</div>
         <div style="font-size:13px;color:var(--stone);display:flex;flex-direction:column;gap:8px">
           <div>1️⃣ Trimiți cererea cu detaliile</div>
           <div>2️⃣ Echipa LSD analizează și pregătește oferta</div>
           <div>3️⃣ Primești oferta pe email și în contul tău</div>
           <div>4️⃣ Accepți oferta — cursa e confirmată</div>
+        </div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:0;box-shadow:var(--sh);overflow:hidden">
+        <div style="padding:18px 18px 0"><div style="font-weight:700;font-family:'Plus Jakarta Sans',sans-serif">🗺 Previzualizare traseu</div><p style="font-size:12px;color:var(--stone);margin-top:4px">Apare automat când completezi punctele de traseu</p></div>
+        <div id="org-route-preview-map" style="height:220px;margin-top:10px;background:var(--cream);display:flex;align-items:center;justify-content:center">
+          <div style="text-align:center;color:var(--stone);font-size:12px;padding:20px"><div style="font-size:28px;margin-bottom:6px">🗺</div>Completează plecarea și destinația</div>
         </div>
       </div>
     </div>
@@ -1001,6 +1248,7 @@ footer{
     <button class="tab-btn" onclick="driverTab('calendar')">📆 Calendar</button>
     <button class="tab-btn" onclick="driverTab('routes')">🗓 Cursele mele</button>
     <button class="tab-btn" onclick="driverTab('vehicle')">🚌 Vehiculul meu</button>
+    <button class="tab-btn" onclick="driverTab('locatie')">📍 Locație</button>
     <button class="tab-btn" onclick="driverTab('tickets')">🎟 Bilete</button>
     <button class="tab-btn" onclick="driverTab('scanner')">📷 Scanner QR</button>
   </div>
@@ -1029,6 +1277,41 @@ footer{
   </div>
   <div id="sf-tab-routes" class="tab-panel"><div id="sf-routes-list"></div></div>
   <div id="sf-tab-vehicle" class="tab-panel"><div id="sf-vehicle-info"></div></div>
+  <div id="sf-tab-locatie" class="tab-panel">
+    <div style="max-width:500px;margin:0 auto">
+      <!-- Status curent -->
+      <div id="sf-locatie-status" style="background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);padding:20px;margin-bottom:14px;box-shadow:var(--sh)">
+        <div style="font-weight:700;font-size:15px;margin-bottom:12px;font-family:'Plus Jakarta Sans',sans-serif">📍 Status curent</div>
+        <div id="sf-loc-current" style="font-size:13px;color:var(--stone)">Se încarcă...</div>
+      </div>
+      <!-- Butoane rapide -->
+      <div style="background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);padding:20px;margin-bottom:14px;box-shadow:var(--sh)">
+        <div style="font-weight:700;font-size:15px;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">🚦 Actualizează statusul</div>
+        <p style="font-size:12px;color:var(--stone);margin-bottom:14px">Apasă butonul potrivit pentru a informa firma unde te afli.</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-full" style="background:var(--green-g);border:1.5px solid rgba(26,107,60,.3);color:var(--green);font-weight:700;padding:14px;font-size:14px" onclick="sfSetLocatie('garaj')">
+            🏠 Am ajuns la garaj — Sunt disponibil
+          </button>
+          <button class="btn btn-full" style="background:var(--amber-g);border:1.5px solid var(--amber-b);color:var(--amber-d);font-weight:700;padding:14px;font-size:14px" onclick="sfSetLocatieCursa()">
+            🚌 Am pornit cursa — Sunt în deplasare
+          </button>
+          <button class="btn btn-full" style="background:var(--orange-g);border:1.5px solid rgba(196,101,32,.3);color:var(--orange);font-weight:700;padding:14px;font-size:14px" onclick="sfSetLocatieDestinatie()">
+            📍 Am ajuns la destinație — Aștept instrucțiuni
+          </button>
+        </div>
+      </div>
+      <!-- Locatie manuala -->
+      <div style="background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh)">
+        <div style="font-weight:700;font-size:15px;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">✏️ Locație personalizată</div>
+        <p style="font-size:12px;color:var(--stone);margin-bottom:10px">Ex: "Stație service Cluj", "Parcare Timișoara Nord"</p>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="sf-loc-custom" placeholder="Unde ești?" style="flex:1"/>
+          <button class="btn btn-primary" onclick="sfSetLocatieCustom()">✓</button>
+        </div>
+        <div id="sf-loc-history" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
   <div id="sf-tab-tickets" class="tab-panel">
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
       <select id="sf-tickets-route" style="max-width:300px" onchange="loadDriverTickets()"><option value="">— toate cursele —</option></select>
@@ -1106,6 +1389,7 @@ footer{
     <button class="tab-btn" onclick="adminTab('drivers')">👤 Șoferi</button>
     <button class="tab-btn" onclick="adminTab('schedule')">📅 Program zilnic</button>
     <button class="tab-btn" onclick="adminTab('weekly')">📊 Program săptămânal</button>
+    <button class="tab-btn" onclick="adminTab('harta')">🗺 Hartă live</button>
     <button class="tab-btn" onclick="adminTab('ticker')">📢 Ticker</button>
     <button class="tab-btn" onclick="adminTab('settings')">⚙️ Setări</button>
   </div>
@@ -1234,6 +1518,34 @@ footer{
     </div>
     <div id="weekly-grid" style="overflow-x:auto"></div>
     <div id="weekly-totals" style="margin-top:16px"></div>
+  </div>
+
+  <!-- HARTA LIVE -->
+  <div id="admin-tab-harta" class="tab-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div>
+        <h3 style="font-size:16px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif">🗺 Hartă Live — Flotă</h3>
+        <p style="font-size:12px;color:var(--stone)">Locațiile curente ale vehiculelor. Șoferii actualizează din portalul lor.</p>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="loadHartaAdmin()">🔄 Refresh</button>
+    </div>
+    <!-- Legenda stare -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin-bottom:12px;padding:8px 14px;background:var(--cream);border-radius:8px;border:1px solid var(--border-l)">
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:var(--green);display:inline-block"></span>La garaj</span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:var(--amber);display:inline-block"></span>În cursă</span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:var(--orange);display:inline-block"></span>La destinație (fără retur)</span>
+    </div>
+    <!-- Carduri vehicule cu locatie -->
+    <div id="harta-vehicule-grid" class="g-auto" style="margin-bottom:20px"></div>
+    <!-- Harta Leaflet -->
+    <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh)">
+      <div id="leaflet-map-admin" style="height:480px;width:100%;background:var(--cream);display:flex;align-items:center;justify-content:center">
+        <div style="text-align:center;color:var(--stone)">
+          <div style="font-size:40px;margin-bottom:10px">🗺</div>
+          <p>Accesați tab-ul Hartă live pentru a încărca harta</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- TICKER -->
@@ -2305,6 +2617,145 @@ async function initHome() {
   try { await loadFleet(); } catch(e) {}
   const el = document.getElementById('home-fleet');
   if (el) el.innerHTML = window._F.length ? window._F.map(v=>window.vCard(v)).join('') : '<div class="empty-state"><div class="empty-icon">🚌</div><p>Nicio flotă configurată</p></div>';
+  try { await getDocs(collection(db,'curse_regulate')).then(s=>{window._R=s.docs.map(d=>({id:d.id,...d.data()}));}); } catch(e) {}
+  renderHeroRouteLine();
+  renderHomeStats();
+  renderHomeSearchSuggestions();
+  initHomeRoutesMap();
+}
+
+function renderHeroRouteLine(){
+  const wrap = document.getElementById('hero-route-stops');
+  if (!wrap) return;
+  // Ia primele 4-5 statii unice dintr-o cursa reprezentativa (cea cu cele mai multe statii)
+  const curse = (window._R||[]).filter(c=>c.activa && (c.statii||[]).length>=2);
+  let statii = ['Plecare','Stație','Stație','Sosire'];
+  if (curse.length) {
+    const best = curse.reduce((a,b)=>((b.statii||[]).length>(a.statii||[]).length?b:a), curse[0]);
+    statii = (best.statii||[]).map(s=>s.nome||s.name||s.nume||'').filter(Boolean);
+    if (statii.length<2) statii=['Plecare','Sosire'];
+  }
+  const n = Math.min(statii.length, 6);
+  const usedStatii = statii.slice(0,n);
+  let html = '';
+  usedStatii.forEach((s,i)=>{
+    const pct = n===1 ? 0 : (i/(n-1))*96+2;
+    const delay = 0.3 + (i/(n-1||1))*2.0;
+    html += `<div class="route-stop-dot" style="left:${pct}%;animation-delay:${delay}s"></div>`;
+    html += `<div class="route-stop-label" style="left:${pct}%;animation-delay:${delay+0.1}s">${s}</div>`;
+  });
+  wrap.innerHTML = html;
+  // Adauga gradient SVG definition daca lipseste
+  const svg = document.querySelector('.route-line-svg');
+  if (svg && !svg.querySelector('defs')) {
+    const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+    defs.innerHTML = '<linearGradient id="routeGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#c49a2a"/><stop offset="100%" stop-color="#a07d1c"/></linearGradient>';
+    svg.insertBefore(defs, svg.firstChild);
+  }
+}
+
+async function renderHomeStats(){
+  const today = new Date().toISOString().split('T')[0];
+  const dow = new Date().getDay();
+  const curseAzi = (window._R||[]).filter(c=>{
+    if(!c.activa)return false;
+    if(!(c.zile||[]).includes(dow))return false;
+    if(c.dataStart&&today<c.dataStart)return false;
+    if(c.dataEnd&&today>c.dataEnd)return false;
+    if(c.dateBlocate?.includes(today))return false;
+    return true;
+  });
+  const totalLocuri = curseAzi.reduce((s,c)=>s+(c.capacitate||0),0);
+  let nrSoferi = 0;
+  try { const sf = await getDocs(collection(db,'soferi')); nrSoferi = sf.docs.filter(d=>d.data().activ!==false).length; } catch(e){}
+  animateCounter('hs-routes', curseAzi.length);
+  animateCounter('hs-vehicles', window._F.length);
+  animateCounter('hs-seats', totalLocuri);
+  animateCounter('hs-drivers', nrSoferi);
+}
+
+function animateCounter(id, target){
+  const el = document.getElementById(id); if(!el) return;
+  if (!target) { el.textContent = '0'; return; }
+  let cur = 0; const dur = 900; const start = performance.now();
+  function step(t){
+    const p = Math.min(1,(t-start)/dur);
+    const eased = 1-Math.pow(1-p,3);
+    cur = Math.round(target*eased);
+    el.textContent = cur;
+    if (p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function renderHomeSearchSuggestions(){
+  const wrap = document.getElementById('home-search-suggestions');
+  if (!wrap) return;
+  const dests = new Set();
+  (window._R||[]).filter(c=>c.activa).forEach(c=>{
+    (c.statii||[]).forEach((s,i)=>{ if(i>0){ const n=s.nome||s.name||s.nume; if(n) dests.add(n); } });
+  });
+  const list = [...dests].slice(0,6);
+  wrap.innerHTML = list.map(d=>`<span class="qs-chip" onclick="document.getElementById('home-quick-search').value='${d.replace(/'/g,"\\'")}';homeQuickSearch()">${d}</span>`).join('');
+}
+
+window.homeQuickSearch = () => {
+  const q = document.getElementById('home-quick-search')?.value?.trim();
+  nav('regulate');
+  setTimeout(()=>{
+    const inp = document.getElementById('reg-search');
+    if (inp && q) { inp.value = q; filterRegulate(); }
+  }, 200);
+};
+
+let _homeMapLoaded = false;
+async function initHomeRoutesMap(){
+  const mapEl = document.getElementById('home-routes-map');
+  if (!mapEl) return;
+  const curse = (window._R||[]).filter(c=>c.activa && (c.statii||[]).length>=2);
+  if (!curse.length) { mapEl.innerHTML = '<div style="text-align:center;color:var(--stone)"><div style="font-size:36px;margin-bottom:8px">🗺</div>Nicio cursă activă momentan</div>'; return; }
+  if (!_homeMapLoaded) {
+    await new Promise((res,rej)=>{
+      const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
+      const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);
+    });
+    _homeMapLoaded = true;
+  }
+  if (window._homeLeafletMap) { try{window._homeLeafletMap.remove();}catch(e){} window._homeLeafletMap=null; }
+  mapEl.innerHTML = '';
+  const map = L.map(mapEl,{center:[46.0,25.0],zoom:7,scrollWheelZoom:false});
+  window._homeLeafletMap = map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+
+  const colors = ['#c49a2a','#1e5fa8','#c46520','#1a6b3c','#b52d2d'];
+  const bounds = [];
+  let colorIdx = 0;
+  for (const c of curse.slice(0,8)) {
+    const statii = c.statii||[];
+    const coords = [];
+    for (const st of statii) {
+      const nume = st.nome||st.name||st.nume;
+      if (!nume) continue;
+      try {
+        const r = await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${window.ORS_KEY}&text=${encodeURIComponent(nume+', Romania')}&size=1`);
+        const d = await r.json();
+        const ll = d.features?.[0]?.geometry?.coordinates;
+        if (ll) coords.push([ll[1],ll[0]]);
+      } catch(e) {}
+    }
+    if (coords.length>=2) {
+      const col = colors[colorIdx%colors.length]; colorIdx++;
+      L.polyline(coords,{color:col,weight:3,opacity:.8}).addTo(map).bindPopup(`<strong>${c.ruta}</strong>`);
+      coords.forEach((ll,i)=>{
+        bounds.push(ll);
+        const isEnd = i===0||i===coords.length-1;
+        L.circleMarker(ll,{radius:isEnd?6:4,color:col,fillColor:'#fff',fillOpacity:1,weight:2}).addTo(map)
+          .bindPopup(`<strong>${statii[i]?.nome||statii[i]?.name||statii[i]?.nume||''}</strong><br>${c.ruta}`);
+      });
+    }
+  }
+  if (bounds.length) map.fitBounds(bounds,{padding:[30,30]});
+  else mapEl.innerHTML = '<div style="text-align:center;color:var(--stone);padding:40px">Nu s-au putut localiza traseele</div>';
 }
 
 // ── VEHICLE HOMEPAGE MODAL ──────────────────────────────────
@@ -2363,13 +2814,43 @@ window.loadRegulate = async () => {
     return true;
   });
   if (!curse.length) { list.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><h3>Nicio cursă ${['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'][dow]}</h3><p>Încearcă altă dată sau <a onclick="nav('organizate')">solicită o cursă organizată</a>.</p></div>`; window._REG_CARDS=[]; return; }
+
+  // Preincarcam ocuparea pentru toate cursele zilei (pentru bara de progres)
+  const occByRoute = {};
+  await Promise.all(curse.map(async c=>{
+    try{
+      const snap = await getDocs(query(collection(db,'rezervari'),where('cursaId','==',c.id),where('data','==',date)));
+      let nrOcup = 0;
+      snap.docs.forEach(d=>{ const r=d.data(); if(r.status!=='anulata') nrOcup += (r.locuriRezervate||[]).length; });
+      occByRoute[c.id] = nrOcup;
+    }catch(e){ occByRoute[c.id]=0; }
+  }));
+
   const cards=[];
   curse.forEach(c=>{
     const pl=c.plecari?.length?c.plecari:[{ora:c.ora,driverId:c.driverId}];
     const dayDots=window.DAYS_RO.map((d,i)=>`<div class="day-dot${(c.zile||[]).includes(i)?' active':''}">${d}</div>`).join('');
+    const ocupate = occByRoute[c.id]||0;
+    const capacit = c.capacitate||0;
+    const liber = Math.max(0, capacit-ocupate);
+    const pctOcup = capacit>0 ? Math.min(100,Math.round(ocupate/capacit*100)) : 0;
+    const urgent = capacit>0 && liber<=3 && liber>0;
+    const plin = capacit>0 && liber===0;
+
     pl.forEach((p,pi)=>{
       const oraInfo=getOraForDate(p,date);
       const oraP=oraInfo.ora||'-';
+      const statii = c.statii||[];
+      const lastMin = statii.length ? (statii[statii.length-1].minuteDeLaStart||60) : 60;
+      const oraSosire = oraP!=='-' ? calcArrival(oraP,lastMin) : '';
+
+      // Mini route line vizual (semnatura aplicata si la nivel de card)
+      const nStops = Math.min(statii.length,5);
+      const miniDots = statii.slice(0,nStops).map((s,i)=>{
+        const pct = nStops===1?0:(i/(nStops-1))*100;
+        return `<div class="mini-route-dot" style="left:${pct}%"></div>`;
+      }).join('');
+
       const stopsHtml=(c.statii||[]).map((s,i)=>{
         const arr=i>0&&oraP!=='-'&&s.minuteDeLaStart?calcArrival(oraP,s.minuteDeLaStart):'';
         return`<span class="stop-badge">📍 ${s.nume}${i>0?` <span class="stop-price">${s.pretDeLaStart} RON</span>${arr?` <span style="color:var(--stone);font-size:10px">≈${arr}</span>`:''}`:' <span class="stop-price">START</span>'}</span>`;
@@ -2384,20 +2865,41 @@ window.loadRegulate = async () => {
         }).join('');
         returnSection=`<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)"><div style="font-size:11px;font-weight:700;color:var(--amber-d);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">↩ RETUR — ora ${oraR}</div><div style="margin-bottom:8px">${stopsR}</div><button class="btn btn-secondary btn-sm" onclick="openCinema('${c.id}','${date}','return',${pi})">↩ Rezervă loc RETUR ${oraR}</button></div>`;
       }
-      cards.push(`<div class="sch-card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+
+      const occBarHtml = capacit>0 ? `<div class="seat-occ-bar">
+          <div class="seat-occ-fill" style="width:${pctOcup}%;background:${plin?'var(--red)':urgent?'var(--orange)':'var(--green)'}"></div>
+        </div>
+        <div class="seat-occ-label" style="color:${plin?'var(--red)':urgent?'var(--orange)':'var(--green)'}">
+          ${plin?'🔴 Loc complet':urgent?`🟠 Doar ${liber} locuri libere!`:`🟢 ${liber} locuri libere din ${capacit}`}
+        </div>` : '';
+
+      cards.push(`<div class="sch-card route-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
           <div class="sch-route">${c.ruta}</div>
           ${c.tipCursa==='roundtrip'?'<span class="chip chip-amber">↔️ Dus-Întors</span>':''}
         </div>
+        <!-- Mini traseu vizual -->
+        <div class="mini-route-line">
+          <div class="mini-route-track"></div>
+          ${miniDots}
+          <div class="mini-route-time-start">${oraP}</div>
+          <div class="mini-route-time-end">${oraSosire}</div>
+        </div>
         <div class="sch-meta">
-          <span>🕐 <strong>${oraP}</strong></span>
           <span>🚌 <strong>${c.vehiculNume||'-'}</strong></span>
-          <span>👥 <strong>${c.capacitate||'?'} locuri</strong></span>
+          <span>👥 <strong>${capacit||'?'} locuri</strong></span>
           ${oraInfo.driverId?`<span>👨‍✈️ <strong>${numeSofer(oraInfo.driverId)}</strong></span>`:''}
         </div>
-        <div style="display:flex;gap:2px;flex-wrap:wrap;margin-bottom:12px">${dayDots}</div>
-        <div style="margin-bottom:12px">${stopsHtml}</div>
-        <button class="btn btn-primary btn-sm" onclick="openCinema('${c.id}','${date}','one-way',${pi})">🎟 Rezervă loc — ${oraP}</button>
+        ${occBarHtml}
+        <div style="display:flex;gap:2px;flex-wrap:wrap;margin:10px 0 12px">${dayDots}</div>
+        <div class="route-stops-collapsible">
+          <button class="route-stops-toggle" onclick="this.parentElement.classList.toggle('open')">📍 Vezi toate stațiile și prețurile <span class="toggle-arrow">▾</span></button>
+          <div class="route-stops-content">${stopsHtml}</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" style="flex:1;min-width:140px" onclick="openCinema('${c.id}','${date}','one-way',${pi})" ${plin?'disabled':''}>${plin?'🔴 Indisponibil':'🎟 Rezervă — '+oraP}</button>
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="showRouteMapModal('${c.id}')" title="Vezi traseul pe hartă">🗺</button>
+        </div>
         ${returnSection}
       </div>`);
     });
@@ -2406,6 +2908,62 @@ window.loadRegulate = async () => {
   list.innerHTML=cards.join('');
   const q=document.getElementById('reg-search')?.value||'';
   if(q) filterRegulate();
+};
+
+// ── Mini-harta traseu (modal rapid) ──────────────────────────
+window.showRouteMapModal = async (cursaId) => {
+  const c = (window._R||[]).find(x=>x.id===cursaId);
+  if (!c) return;
+  let modal = document.getElementById('mo-route-map-quick');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'mo-route-map-quick';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `<div class="modal modal-lg">
+      <div class="modal-head"><div><div class="modal-title" id="rmq-title">Traseu</div></div><button class="modal-close" onclick="document.getElementById('mo-route-map-quick').classList.remove('open')">✕</button></div>
+      <div class="modal-body"><div id="rmq-map" style="height:420px;border-radius:var(--r);overflow:hidden;background:var(--cream)"></div></div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
+  }
+  document.getElementById('rmq-title').textContent = '🗺 ' + c.ruta;
+  modal.classList.add('open');
+  const mapEl = document.getElementById('rmq-map');
+  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)"><div class="spin"></div></div>';
+
+  if (!_homeMapLoaded) {
+    await new Promise((res,rej)=>{
+      const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
+      const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);
+    });
+    _homeMapLoaded = true;
+  }
+  mapEl.innerHTML = '';
+  const map = L.map(mapEl,{center:[46,25],zoom:7});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+  const statii = c.statii||[];
+  const coords = [];
+  for (const st of statii) {
+    const nume = st.nome||st.name||st.nume;
+    if (!nume) continue;
+    try {
+      const r = await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${window.ORS_KEY}&text=${encodeURIComponent(nume+', Romania')}&size=1`);
+      const d = await r.json();
+      const ll = d.features?.[0]?.geometry?.coordinates;
+      if (ll) coords.push({ll:[ll[1],ll[0]], nume});
+    } catch(e) {}
+  }
+  if (coords.length>=2) {
+    L.polyline(coords.map(c2=>c2.ll),{color:'#c49a2a',weight:4,opacity:.85}).addTo(map);
+    coords.forEach((c2,i)=>{
+      const isEnd = i===0||i===coords.length-1;
+      const icon = L.divIcon({html:`<div style="background:${isEnd?'#c49a2a':'#fff'};color:${isEnd?'#fff':'#c49a2a'};border:2px solid #c49a2a;border-radius:50%;width:${isEnd?26:16}px;height:${isEnd?26:16}px;display:flex;align-items:center;justify-content:center;font-size:${isEnd?12:9}px;font-weight:800">${i===0?'A':i===coords.length-1?'B':''}</div>`,iconSize:[isEnd?26:16,isEnd?26:16],className:''});
+      L.marker(c2.ll,{icon}).addTo(map).bindPopup(`<strong>${c2.nume}</strong>`);
+    });
+    map.fitBounds(coords.map(c2=>c2.ll),{padding:[30,30]});
+  } else {
+    mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)">Nu s-au putut localiza stațiile pe hartă</div>';
+  }
 };
 window.filterRegulate = () => {
   const q=(document.getElementById('reg-search')?.value||'').toLowerCase().trim();
@@ -2713,6 +3271,7 @@ window.selectOrgTip = (btn, tip) => {
   document.querySelectorAll('.org-tip-btn').forEach(b=>b.classList.replace('btn-primary','btn-secondary'));
   btn.classList.replace('btn-secondary','btn-primary');
   window._ORG_TIP = tip;
+  updateOrgProgress();
 };
 
 window.onOrgDurZileChange = () => {
@@ -2735,7 +3294,7 @@ window.onOrgDateChange = async () => {
   const infoEl = document.getElementById('org-dur-info');
   const availWrap = document.getElementById('org-avail-wrap');
 
-  if(!dateStr){ if(availWrap)availWrap.style.display='none'; return; }
+  if(!dateStr){ if(availWrap)availWrap.style.display='none'; updateOrgProgress(); return; }
 
   // Arata info durata
   if(infoEl){
@@ -2748,14 +3307,16 @@ window.onOrgDateChange = async () => {
     }
   }
 
-  if(!durMin){ if(availWrap)availWrap.style.display='none'; return; }
+  if(!durMin){ if(availWrap)availWrap.style.display='none'; updateOrgProgress(); return; }
   if(availWrap) availWrap.style.display='block';
   await refreshOrgSelects();
+  updateOrgProgress();
 };
 
 window.loadOrgPage = async function() {
   window._ORG_TIP = '';
   renderOrgStops();
+  updateOrgProgress();
   const u=window._U;
   await loadFleet().catch(()=>{});
   try{
@@ -2940,7 +3501,73 @@ function renderOrgStops(){
 }
 window.addOrgStop=()=>{window._ORG_STOPS.splice(window._ORG_STOPS.length-1,0,'');renderOrgStops();};
 let _orgCalcTimer=null;
-function triggerOrgCalc(){clearTimeout(_orgCalcTimer);_orgCalcTimer=setTimeout(()=>{if(window._ORG_STOPS.filter(Boolean).length>=2)window.calcOrgPrice();},1200);}
+let _orgMapTimer=null;
+function triggerOrgCalc(){
+  clearTimeout(_orgCalcTimer);
+  clearTimeout(_orgMapTimer);
+  updateOrgProgress();
+  _orgCalcTimer=setTimeout(()=>{if(window._ORG_STOPS.filter(Boolean).length>=2)window.calcOrgPrice();},1200);
+  _orgMapTimer=setTimeout(()=>{if(window._ORG_STOPS.filter(Boolean).length>=2)renderOrgRoutePreviewMap();},900);
+}
+
+// ── ORG PROGRESS TRACKER ──────────────────────────────────────
+window.updateOrgProgress = () => {
+  const stopsOk = window._ORG_STOPS.filter(Boolean).length>=2 && !!window._ORG_TIP;
+  const dateOk = !!document.getElementById('org-date')?.value && (!!document.getElementById('org-dur-h')?.value || !!document.getElementById('org-dur-zile')?.value);
+  const vehOk = !!document.getElementById('org-veh')?.value;
+  let step = 1;
+  if (stopsOk) step = 2;
+  if (stopsOk && dateOk) step = 3;
+  if (stopsOk && dateOk && vehOk) step = 4;
+  document.querySelectorAll('.org-progress-step').forEach(el=>{
+    const s = parseInt(el.dataset.step);
+    el.classList.toggle('active', s===step);
+    el.classList.toggle('done', s<step);
+  });
+};
+
+// ── ORG ROUTE PREVIEW MAP ──────────────────────────────────────
+let _orgPreviewMapLoaded = false;
+async function renderOrgRoutePreviewMap(){
+  const mapEl = document.getElementById('org-route-preview-map');
+  if (!mapEl) return;
+  const stops = window._ORG_STOPS.filter(Boolean);
+  if (stops.length<2) { mapEl.innerHTML='<div style="text-align:center;color:var(--stone);font-size:12px;padding:20px"><div style="font-size:28px;margin-bottom:6px">🗺</div>Completează plecarea și destinația</div>'; return; }
+  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)"><div class="spin"></div></div>';
+  if (!_orgPreviewMapLoaded) {
+    await new Promise((res,rej)=>{
+      if(window.L){res();return;}
+      const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
+      const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);
+    });
+    _orgPreviewMapLoaded = true;
+  }
+  if (window._orgPreviewMap) { try{window._orgPreviewMap.remove();}catch(e){} window._orgPreviewMap=null; }
+  mapEl.innerHTML='';
+  const map = L.map(mapEl,{center:[46,25],zoom:7,scrollWheelZoom:false});
+  window._orgPreviewMap = map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+  const coords = [];
+  for (const stopName of stops) {
+    try {
+      const r = await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${window.ORS_KEY}&text=${encodeURIComponent(stopName+', Romania')}&size=1`);
+      const d = await r.json();
+      const ll = d.features?.[0]?.geometry?.coordinates;
+      if (ll) coords.push({ll:[ll[1],ll[0]], nume:stopName});
+    } catch(e) {}
+  }
+  if (coords.length>=2) {
+    L.polyline(coords.map(c=>c.ll),{color:'#c49a2a',weight:4,opacity:.85,dashArray:'1,8',lineCap:'round'}).addTo(map);
+    coords.forEach((c,i)=>{
+      const isEnd = i===0||i===coords.length-1;
+      const icon = L.divIcon({html:`<div style="background:${isEnd?'#c49a2a':'#fff'};color:${isEnd?'#fff':'#c49a2a'};border:2px solid #c49a2a;border-radius:50%;width:${isEnd?24:14}px;height:${isEnd?24:14}px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${i===0?'A':i===coords.length-1?'B':''}</div>`,iconSize:[isEnd?24:14,isEnd?24:14],className:''});
+      L.marker(c.ll,{icon}).addTo(map).bindPopup(`<strong>${c.nume}</strong>`);
+    });
+    map.fitBounds(coords.map(c=>c.ll),{padding:[24,24]});
+  } else {
+    mapEl.innerHTML='<div style="text-align:center;color:var(--stone);font-size:12px;padding:20px">Nu am putut localiza pe hartă aceste nume. Verifică ortografia.</div>';
+  }
+}
 window.calcOrgPrice = async () => {
   const vehId=document.getElementById('org-veh')?.value;
   let km=parseInt(document.getElementById('org-km')?.value)||0;
@@ -3037,6 +3664,9 @@ window.submitOrg = async () => {
     document.querySelectorAll('.org-tip-btn').forEach(b=>b.classList.replace('btn-primary','btn-secondary'));
     document.getElementById('org-avail-wrap').style.display='none';
     renderOrgStops();
+    updateOrgProgress();
+    const previewMapEl=document.getElementById('org-route-preview-map');
+    if(previewMapEl)previewMapEl.innerHTML='<div style="text-align:center;color:var(--stone);font-size:12px;padding:20px"><div style="font-size:28px;margin-bottom:6px">🗺</div>Completează plecarea și destinația</div>';
     if(u)nav('cont');
   }catch(e){if(btn){btn.disabled=false;btn.innerHTML='Trimite cererea 📨';}toast('Eroare: '+e.message,'er');}
 };
@@ -3189,14 +3819,15 @@ window.loadAdmin = async () => {
 };
 window.refreshAdmin=async()=>{await loadAdmin();toast('Date actualizate!','ok');};
 window.adminTab=tab=>{
-  ['vehicles','routes','bookings','drivers','schedule','weekly','ticker','settings'].forEach(t=>{
+  ['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','settings'].forEach(t=>{
     document.getElementById('admin-tab-'+t)?.classList.toggle('active',t===tab);
   });
   document.querySelectorAll('#pg-admin .tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['vehicles','routes','bookings','drivers','schedule','weekly','ticker','settings'][i]===tab);
+    b.classList.toggle('active',['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','settings'][i]===tab);
   });
   if(tab==='schedule'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];loadSchedule();}
   if(tab==='weekly'){loadWeeklySchedule();}
+  if(tab==='harta'){loadHartaAdmin();}
 };
 window.adminViewAs=role=>{
   window._ROLE=role==='driver'?'driver':'client';
@@ -4462,14 +5093,15 @@ window.loadDriverPortal = async () => {
 };
 
 window.driverTab = tab => {
-  ['today','calendar','routes','vehicle','tickets','scanner'].forEach(t => {
+  ['today','calendar','routes','vehicle','locatie','tickets','scanner'].forEach(t => {
     document.getElementById('sf-tab-'+t)?.classList.toggle('active', t===tab);
   });
   document.querySelectorAll('#pg-sofer .tab-btn').forEach((b,i) => {
-    b.classList.toggle('active', ['today','calendar','routes','vehicle','tickets','scanner'][i]===tab);
+    b.classList.toggle('active', ['today','calendar','routes','vehicle','locatie','tickets','scanner'][i]===tab);
   });
   if (tab==='calendar') loadCalendar();
   if (tab==='tickets') loadDriverTickets();
+  if (tab==='locatie') loadSfLocatie();
   if (tab!=='scanner') stopQRScan();
 };
 
@@ -4682,6 +5314,258 @@ window.loadDriverTickets = async () => {
     </div>`).join('');
   } catch(e) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><p>'+e.message+'</p></div>'; }
 };
+
+// ── LOCATIE SOFER ───────────────────────────────────────────
+window.sfSetLocatie = async (locatie) => {
+  const sf = window._DRIVER_DOC; if(!sf) return;
+  const vehId = await getMyVehicleId();
+  try {
+    // Actualizeaza soferul
+    await setDoc(doc(db,'soferi',sf.id),{
+      locatieCurenta: locatie,
+      locatieUpdatedAt: Timestamp.now(),
+      statusCursa: locatie==='garaj'?'disponibil':locatie==='cursa'?'in_cursa':'la_destinatie'
+    },{merge:true});
+    // Actualizeaza vehiculul daca il cunoastem
+    if(vehId){
+      await setDoc(doc(db,'vehicule',vehId),{
+        locatieCurenta: locatie==='garaj'?'garaj':locatie,
+        locatieUpdatedAt: Timestamp.now()
+      },{merge:true});
+      // Update local cache
+      const vLocal = window._F?.find(x=>x.id===vehId);
+      if(vLocal) vLocal.locatieCurenta = locatie==='garaj'?'garaj':locatie;
+    }
+    window._DRIVER_DOC.locatieCurenta = locatie;
+    renderSfLocatieStatus();
+    toast(locatie==='garaj'?'✅ Marcat la garaj!':locatie==='cursa'?'🚌 Cursă pornită!':'📍 Destinație confirmată!','ok');
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
+};
+
+window.sfSetLocatieCursa = async () => {
+  // Gaseste cursa de azi si seteaza destinatia ca locatie "in transit"
+  const date = new Date().toISOString().split('T')[0];
+  const curse = (window._R||[]).filter(c=>{
+    const dow=new Date().getDay();
+    if(!c.activa||(!(c.zile||[]).includes(dow)))return false;
+    const pl=c.plecari||[{driverId:c.driverId}];
+    return pl.some(p=>isMyDriver(getOraForDate(p,date).driverId||p.driverId||''));
+  });
+  const dest = curse.length>0 ? ((curse[0].statii||[]).slice(-1)[0]?.nome||curse[0].statii?.slice(-1)[0]?.name||'Destinatie') : 'Deplasare';
+  await sfSetLocatie('cursa_spre_'+dest);
+};
+
+window.sfSetLocatieDestinatie = async () => {
+  const date = new Date().toISOString().split('T')[0];
+  const curse = (window._R||[]).filter(c=>{
+    const dow=new Date().getDay();
+    if(!c.activa||(!(c.zile||[]).includes(dow)))return false;
+    const pl=c.plecari||[{driverId:c.driverId}];
+    return pl.some(p=>isMyDriver(getOraForDate(p,date).driverId||p.driverId||''));
+  });
+  const dest = curse.length>0 ? ((curse[0].statii||[]).slice(-1)[0]?.nome||curse[0].statii?.slice(-1)[0]?.name||'Destinatie') : 'Destinatie';
+  await sfSetLocatie(dest);
+};
+
+window.sfSetLocatieCustom = async () => {
+  const val = document.getElementById('sf-loc-custom')?.value?.trim();
+  if(!val){toast('Introduceți locația','wr');return;}
+  await sfSetLocatie(val);
+  const el = document.getElementById('sf-loc-custom'); if(el)el.value='';
+};
+
+async function getMyVehicleId(){
+  const date=new Date().toISOString().split('T')[0];
+  const snap=await getDocs(collection(db,'curse_regulate'));
+  const mine=snap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>{
+    if(!c.activa)return false;
+    const pl=c.plecari||[{driverId:c.driverId}];
+    return pl.some(p=>isMyDriver(getOraForDate(p,date).driverId||p.driverId||''));
+  });
+  return mine[0]?.vehiculId||null;
+}
+
+function renderSfLocatieStatus(){
+  const el=document.getElementById('sf-loc-current'); if(!el)return;
+  const sf=window._DRIVER_DOC; if(!sf){el.textContent='Neidentificat';return;}
+  const loc=sf.locatieCurenta||'garaj';
+  const upd=sf.locatieUpdatedAt;
+  const updText=upd?new Date(upd.seconds*1000).toLocaleString('ro',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}):'—';
+  const isGaraj=loc==='garaj'||!loc;
+  const isCursa=loc.startsWith('cursa_');
+  const destDisplay=isCursa?'🚌 În cursă spre '+loc.replace('cursa_spre_',''):isGaraj?'🏠 La garaj':'📍 '+loc;
+  const col=isGaraj?'var(--green)':isCursa?'var(--amber-d)':'var(--orange)';
+  el.innerHTML=`<div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--cream);border-radius:var(--r);border:1px solid var(--border-l)">
+    <div style="font-size:32px">${isGaraj?'🏠':isCursa?'🚌':'📍'}</div>
+    <div>
+      <div style="font-weight:700;font-size:15px;color:${col}">${destDisplay}</div>
+      <div style="font-size:11px;color:var(--stone);margin-top:3px">Actualizat: ${updText}</div>
+    </div>
+  </div>
+  <div style="margin-top:10px;font-size:12px;color:var(--stone)">
+    ${isGaraj?'Firma știe că ești disponibil la sediu.':isCursa?'Firma știe că ești în deplasare. Actualizează când ajungi la destinație.':'Firma știe că ești la destinație și aștepți instrucțiuni. Dacă ai primit o nouă cursă sau te întorci la garaj, actualizează statusul.'}
+  </div>`;
+  // History
+  const hist=document.getElementById('sf-loc-history');
+  if(hist&&sf.locatieHistory?.length){
+    hist.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Istoric recent</div>'+
+      sf.locatieHistory.slice(-5).reverse().map(h=>`<div style="font-size:12px;color:var(--stone);padding:4px 0;border-bottom:1px solid var(--border-l)">${new Date(h.ts*1000).toLocaleString('ro',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'})} — ${h.loc}</div>`).join('');
+  }
+}
+
+window.loadSfLocatie = async () => {
+  // Incarca statusul curent al soferului
+  const sf=window._DRIVER_DOC; if(!sf)return;
+  try{
+    const ref=await getDoc(doc(db,'soferi',sf.id));
+    if(ref.exists()){
+      const d=ref.data();
+      window._DRIVER_DOC.locatieCurenta=d.locatieCurenta||'garaj';
+      window._DRIVER_DOC.locatieUpdatedAt=d.locatieUpdatedAt||null;
+      window._DRIVER_DOC.locatieHistory=d.locatieHistory||[];
+    }
+  }catch(e){}
+  // Precompletam locatii rapide din cursele de azi
+  renderSfLocatieStatus();
+};
+
+// ── HARTA ADMIN ─────────────────────────────────────────────
+let _leafletLoaded=false;
+window.loadHartaAdmin = async () => {
+  const gridEl=document.getElementById('harta-vehicule-grid');
+  const mapEl=document.getElementById('leaflet-map-admin');
+  if(!gridEl||!mapEl)return;
+  gridEl.innerHTML='<div class="loading-state"><div class="spin"></div></div>';
+
+  // Incarca vehicule si soferi fresh
+  await loadFleet().catch(()=>{});
+  try{const sfSnap=await getDocs(collection(db,'soferi'));buildDriversCache(sfSnap);}catch(e){}
+
+  // Incarca locatiile din Firestore (fresh)
+  try{
+    const snap=await getDocs(collection(db,'vehicule'));
+    snap.docs.forEach(d=>{
+      const v=window._F.find(x=>x.id===d.id);
+      if(v){v.locatieCurenta=d.data().locatieCurenta||'garaj';v.locatieUpdatedAt=d.data().locatieUpdatedAt||null;}
+    });
+  }catch(e){}
+
+  const today=new Date().toISOString().split('T')[0];
+
+  // Gasim soferul care e asociat fiecarui vehicul
+  function getSoferiPentruVehicul(vehId){
+    const curse=(window._R||[]).filter(c=>c.activa&&c.vehiculId===vehId);
+    const sfIds=new Set();
+    curse.forEach(c=>{
+      const pl=c.plecari||[{driverId:c.driverId}];
+      pl.forEach(p=>{
+        const oraInfo=getOraForDate(p,today);
+        if(oraInfo.driverId)sfIds.add(oraInfo.driverId);
+        if(p.driverId2)sfIds.add(p.driverId2);
+      });
+    });
+    return [...sfIds].map(id=>window._DRIVERS[id]).filter(Boolean);
+  }
+
+  // Carduri vehicule
+  gridEl.innerHTML=window._F.map(v=>{
+    const loc=v.locatieCurenta||'garaj';
+    const upd=v.locatieUpdatedAt;
+    const updText=upd?new Date(upd.seconds*1000).toLocaleString('ro',{hour:'2-digit',minute:'2-digit'}):'—';
+    const isGaraj=loc==='garaj'||!loc;
+    const isCursa=loc.startsWith('cursa_');
+    const dest=isCursa?loc.replace('cursa_spre_',''):loc;
+    const col=isGaraj?'var(--green)':isCursa?'var(--amber-d)':'var(--orange)';
+    const icon=isGaraj?'🏠':isCursa?'🚌':'📍';
+    const soferiAzi=getSoferiPentruVehicul(v.id);
+    return`<div style="background:var(--card);border:1.5px solid ${isGaraj?'rgba(26,107,60,.25)':isCursa?'var(--amber-b)':'rgba(196,101,32,.35)'};border-radius:var(--r-lg);padding:16px;box-shadow:var(--sh)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div style="font-weight:700;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif">${v.icon||'🚌'} ${v.nome||v.name||v.nume||''}</div>
+        <span style="font-size:18px">${icon}</span>
+      </div>
+      <div style="font-weight:600;color:${col};font-size:13px;margin-bottom:6px">${isGaraj?'La garaj':isCursa?'Spre '+dest:dest}</div>
+      <div style="font-size:11px;color:var(--stone);margin-bottom:8px">📍 ${v.nrInmatr||'-'} · Actualizat ${updText}</div>
+      ${soferiAzi.length?`<div style="font-size:11px;color:var(--stone);margin-bottom:10px">👨‍✈️ ${soferiAzi.map(s=>s.numeFull).join(', ')}</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:var(--green-g);color:var(--green);border:1px solid rgba(26,107,60,.3);font-size:11px" onclick="adminMarkVehicleGaraj('${v.id}')">🏠 La garaj</button>
+        <button class="btn btn-sm btn-secondary" style="font-size:11px" onclick="setVehicleLocation('${v.id}','${(v.nome||v.name||v.nume||'').replace(/'/g,'').replace(/"/g,'')}')">📍 Actualizează</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Harta Leaflet
+  await initLeafletHarta();
+};
+
+window.adminMarkVehicleGaraj = async(vehId)=>{
+  try{
+    await setDoc(doc(db,'vehicule',vehId),{locatieCurenta:'garaj',locatieUpdatedAt:Timestamp.now()},{merge:true});
+    const v=window._F.find(x=>x.id===vehId);if(v)v.locatieCurenta='garaj';
+    toast('✅ Vehicul marcat la garaj','ok');
+    loadHartaAdmin();
+  }catch(e){toast('Eroare: '+e.message,'er');}
+};
+
+async function initLeafletHarta(){
+  const mapEl=document.getElementById('leaflet-map-admin');if(!mapEl)return;
+  // Incarca Leaflet daca nu e deja
+  if(!_leafletLoaded){
+    await new Promise((res,rej)=>{
+      const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
+      const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);
+    });
+    _leafletLoaded=true;
+  }
+  // Distruge harta anterioara daca exista
+  if(window._leafletMap){try{window._leafletMap.remove();}catch(e){}window._leafletMap=null;}
+  mapEl.style.display='block';
+  const map=L.map('leaflet-map-admin',{center:[45.9,24.9],zoom:7});
+  window._leafletMap=map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:18
+  }).addTo(map);
+
+  // Garaj LSD Group (Iasi implicit, se poate schimba din settings)
+  const garajLat=47.157,garajLng=27.590;
+  const garajIcon=L.divIcon({html:'<div style="background:var(--green);color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3)">🏠</div>',iconSize:[32,32],iconAnchor:[16,16],className:''});
+  L.marker([garajLat,garajLng],{icon:garajIcon}).addTo(map).bindPopup('<strong>🏠 Garaj LSD Group</strong><br>Sediu firma').openPopup();
+
+  // Markeri vehicule
+  const bounds=[[garajLat,garajLng]];
+  for(const v of window._F){
+    const loc=v.locatieCurenta||'garaj';
+    if(loc==='garaj'||!loc) continue;
+    // Geocodare cu OpenRouteService
+    const dest=loc.startsWith('cursa_spre_')?loc.replace('cursa_spre_',''):loc;
+    try{
+      const r=await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${window.ORS_KEY}&text=${encodeURIComponent(dest+', Romania')}&size=1`);
+      const d=await r.json();
+      const coords=d.features?.[0]?.geometry?.coordinates;
+      if(!coords)continue;
+      const [lng,lat]=coords;
+      bounds.push([lat,lng]);
+      const isCursa=loc.startsWith('cursa_');
+      const vIcon=L.divIcon({
+        html:`<div style="background:${isCursa?'#c49a2a':'#c46520'};color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff">${v.icon||'🚌'}</div>`,
+        iconSize:[36,36],iconAnchor:[18,18],className:''
+      });
+      const soferiAzi=[];
+      (window._R||[]).filter(c=>c.activa&&c.vehiculId===v.id).forEach(c=>{
+        const pl=c.plecari||[{driverId:c.driverId}];
+        pl.forEach(p=>{const oi=getOraForDate(p,new Date().toISOString().split('T')[0]);if(oi.driverId){const sf=window._DRIVERS[oi.driverId];if(sf)soferiAzi.push(sf.numeFull);}});
+      });
+      L.marker([lat,lng],{icon:vIcon}).addTo(map).bindPopup(
+        `<strong>${v.icon||'🚌'} ${v.nome||v.name||v.nume||''}</strong><br>` +
+        `${isCursa?'🚌 Spre '+dest:'📍 La '+dest}<br>` +
+        `${v.nrInmatr?'🔖 '+v.nrInmatr+'<br>':''}` +
+        `${soferiAzi.length?'👨‍✈️ '+soferiAzi.join(', ')+'<br>':''}` +
+        `<button onclick="adminMarkVehicleGaraj('${v.id}')" style="margin-top:6px;padding:4px 10px;background:#1a6b3c;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">🏠 Marchează la garaj</button>`
+      );
+    }catch(e){ console.warn('Geocode error for',dest,e.message); }
+  }
+  if(bounds.length>1) map.fitBounds(bounds,{padding:[40,40]});
+}
+
 
 // ── CALENDAR ───────────────────────────────────────────────
 window.calPrev = () => { window._CAL_MONTH--; if(window._CAL_MONTH<0){window._CAL_MONTH=11;window._CAL_YEAR--;} loadCalendar(); };
