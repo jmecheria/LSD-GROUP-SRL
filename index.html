@@ -2739,7 +2739,7 @@ function createBusMarkerOnRoute(map, routeLatLngs, color){
   return marker;
 }
 
-async function initHome() {
+window.initHome = async function initHome() {
   try { await loadFleet(); } catch(e) {}
   const el = document.getElementById('home-fleet');
   if (el) el.innerHTML = window._F.length ? window._F.map(v=>window.vCard(v)).join('') : '<div class="empty-state"><div class="empty-icon">🚌</div><p>Nicio flotă configurată</p></div>';
@@ -4242,7 +4242,7 @@ window.addSeatRowCustom=()=>{
   window._SEAT_ROWS.push({type:'custom-'+nr,seats,customNr:nr});
   renderSeatBuilder();
 };
-function renderSeatBuilder(){
+window.renderSeatBuilder = function renderSeatBuilder(){
   const sb=document.getElementById('seat-builder');
   const total=window._SEAT_ROWS.reduce((s,r)=>s+(r.blocat?0:(r.seats||[]).length),0);
   document.getElementById('seat-total-count').textContent=total;
@@ -4299,7 +4299,7 @@ window.handleImages=files=>{
     };reader.readAsDataURL(f);
   });
 };
-function renderImgPreview(){
+window.renderImgPreview = function renderImgPreview(){
   document.getElementById('vm-img-preview').innerHTML=window._VM_IMAGES.map((s,i)=>`<div class="img-preview-item"><img src="${s}" onclick="openLB('${s}')"/><button class="img-preview-del" onclick="window._VM_IMAGES.splice(${i},1);renderImgPreview()">✕</button></div>`).join('');
 }
 
@@ -4359,7 +4359,7 @@ window.openRouteModal=async(id=null)=>{
   renderRmStops();renderRmDeps();renderRmRetDeps();renderBlockedDates();
   openModal('route');
 };
-function renderRmStops(){
+window.renderRmStops = function renderRmStops(){
   const el=document.getElementById('rm-stops');if(!el)return;
   el.innerHTML=`<div style="display:flex;gap:6px;margin-bottom:4px;padding-left:28px"><div style="flex:2;font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Stație</div><div style="width:90px;font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Preț (RON)</div><div style="width:80px;font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Min. start</div><div style="width:32px"></div></div>`+
   window._RM_STOPS.map((s,i)=>`<div data-stop-row="${i}" style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
@@ -4638,7 +4638,7 @@ function calcSplitOre(ora, durMin) {
   };
 }
 
-function renderRmDeps(){
+window.renderRmDeps = function renderRmDeps(){
   const el=document.getElementById('rm-departures');if(!el)return;
   const testDate = document.getElementById('rm-date-start')?.value || new Date().toISOString().split('T')[0];
   // Calculeaza durata cursei din statii
@@ -4723,7 +4723,7 @@ function renderRmDeps(){
   }).join('');
 }
 window.addDeparture=()=>{window._RM_DEPS.push({ora:'',driverId:'',driverId2:'',orePerZi:{},exceptions:[]});renderRmDeps();};
-function renderRmRetDeps(){
+window.renderRmRetDeps = function renderRmRetDeps(){
   const el=document.getElementById('rm-return-departures');if(!el)return;
   const sfOpts=window._DRIVERS_LIST.map(sf=>`<option value="${sf.id}">${sf.numeFull}</option>`).join('');
   el.innerHTML=window._RM_RET_DEPS.map((p,i)=>`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;background:var(--cream);border:1px solid var(--border-l);border-radius:var(--r);padding:10px 12px">
@@ -4741,7 +4741,7 @@ window.routeTypeChange=()=>{
   document.getElementById('lbl-roundtrip').style.borderColor=isDI?'var(--amber)':'var(--border-l)';
 };
 window.toggleDay=btn=>btn.classList.toggle('active');
-function renderBlockedDates(){
+window.renderBlockedDates = function renderBlockedDates(){
   const el=document.getElementById('rm-blocked-dates');if(!el)return;
   if(!window._BLOCKED_DATES.length){el.innerHTML='<p style="font-size:12px;color:var(--stone)">Nicio dată blocată.</p>';return;}
   el.innerHTML=window._BLOCKED_DATES.map((d,i)=>`<span style="display:inline-flex;align-items:center;gap:6px;background:var(--red-g);border:1px solid rgba(181,45,45,.2);border-radius:20px;padding:3px 10px;margin:3px;font-size:12px">🚫 ${d}<button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px" onclick="window._BLOCKED_DATES.splice(${i},1);renderBlockedDates()">✕</button></span>`).join('');
