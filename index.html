@@ -450,26 +450,24 @@ input.ok{border-color:var(--green)}
 }
 @keyframes labelFade{to{opacity:1}}
 
-/* Autobuzul SVG real, urmeaza curba traseului prin offset-path */
+/* Autobuzul foto-realist, urmareste curba traseului (sus-jos-sus) prin keyframes top/left */
 .route-bus-wrap{
-  position:absolute;top:0;left:0;width:46px;height:46px;
-  margin:-23px 0 0 -23px;
-  offset-path:path("M 20 55 Q 250 15, 500 55 T 980 55");
-  offset-rotate:auto;
-  offset-distance:0%;
+  position:absolute;top:0;left:0;width:62px;height:auto;
+  margin:-31px 0 0 -31px;
   opacity:0;
   animation:busFollowPath 2.6s cubic-bezier(.4,0,.2,1) forwards .2s,
             busFadeIn .3s ease-out forwards .2s;
   filter:drop-shadow(0 3px 6px rgba(15,13,10,.25));
 }
-@keyframes busFollowPath{from{offset-distance:0%}to{offset-distance:100%}}
-@keyframes busFadeIn{to{opacity:1}}
-.route-bus-svg{width:100%;height:100%;transform:rotate(90deg)}
-.route-bus-body{transition:none}
-@supports not (offset-path: path("M0 0")){
-  .route-bus-wrap{animation:busFallback 2.6s ease-out forwards .2s,busFadeIn .3s ease-out forwards .2s}
-  @keyframes busFallback{from{left:1%}to{left:98%}}
+.route-bus-img{width:100%;height:auto;display:block}
+@keyframes busFollowPath{
+  0%{left:2%;top:50%}
+  25%{left:25%;top:14%}
+  50%{left:50%;top:50%}
+  75%{left:75%;top:14%}
+  100%{left:98%;top:50%}
 }
+@keyframes busFadeIn{to{opacity:1}}
 @media(max-width:700px){
   .route-line-wrap{height:80px}
   .route-stop-label{display:none}
@@ -890,7 +888,7 @@ footer{
   transition:opacity .5s ease,visibility .5s ease;
 }
 #app-loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
-.loader-inner{text-align:center;width:100%;max-width:340px;padding:0 24px}
+.loader-inner{text-align:center;width:100%;max-width:340px;padding:0 24px;position:relative}
 .loader-road-svg{width:100%;height:auto;overflow:visible;margin-bottom:8px}
 .loader-road-bg{fill:none;stroke:var(--border-l);stroke-width:9;stroke-linecap:round}
 .loader-road-fg{
@@ -908,25 +906,21 @@ footer{
   100%{stroke-dashoffset:-620}
 }
 .loader-bus-wrap{
-  position:relative;width:42px;height:42px;margin:-78px auto 18px;
-  offset-path:path("M 20 90 Q 110 40, 200 90 T 380 90");
-  offset-rotate:auto;offset-distance:0%;
+  position:absolute;width:78px;height:auto;top:50px;left:0;
   animation:loaderBusMove 1.8s cubic-bezier(.4,0,.2,1) infinite;
-  filter:drop-shadow(0 3px 5px rgba(15,13,10,.25));
+  filter:drop-shadow(0 4px 6px rgba(15,13,10,.3));
 }
-.loader-bus-svg{width:100%;height:100%;transform:rotate(90deg)}
+.loader-bus-img{width:100%;height:auto;display:block}
 @keyframes loaderBusMove{
-  0%{offset-distance:0%;opacity:0}
+  0%{left:2%;opacity:0;transform:scaleX(1)}
   8%{opacity:1}
-  55%{offset-distance:100%;opacity:1}
-  63%{opacity:0}
-  64%{offset-distance:0%}
+  48%{left:calc(100% - 80px);opacity:1;transform:scaleX(1)}
+  52%{transform:scaleX(-1)}
+  60%{opacity:0;left:calc(100% - 80px);transform:scaleX(-1)}
+  61%{left:2%;transform:scaleX(-1)}
+  65%{transform:scaleX(1)}
   72%{opacity:1}
-  100%{offset-distance:0%;opacity:1}
-}
-@supports not (offset-path: path("M0 0")){
-  .loader-bus-wrap{left:0;animation:loaderBusFallback 1.8s ease-in-out infinite}
-  @keyframes loaderBusFallback{0%{transform:translateX(0)}50%{transform:translateX(280%)}100%{transform:translateX(0)}}
+  100%{left:2%;opacity:1;transform:scaleX(1)}
 }
 .loader-brand{
   font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:20px;
@@ -952,20 +946,7 @@ footer{
       <path class="loader-road-dash" d="M 20 90 Q 110 40, 200 90 T 380 90"/>
     </svg>
     <div class="loader-bus-wrap">
-      <svg class="loader-bus-svg" viewBox="0 0 46 46">
-        <g>
-          <ellipse cx="23" cy="38" rx="15" ry="3" fill="#000" opacity=".15"/>
-          <rect x="6" y="14" width="34" height="18" rx="5" fill="#c49a2a" stroke="#7a5c14" stroke-width="1"/>
-          <rect x="9" y="17" width="9" height="7" rx="1.5" fill="#fef9ed"/>
-          <rect x="20" y="17" width="9" height="7" rx="1.5" fill="#fef9ed"/>
-          <rect x="31" y="17" width="6" height="7" rx="1.5" fill="#7a5c14" opacity=".5"/>
-          <rect x="6" y="26" width="34" height="3" fill="#a07d1c"/>
-          <circle cx="14" cy="33" r="4" fill="#2a2620"/>
-          <circle cx="14" cy="33" r="1.6" fill="#8a7f6e"/>
-          <circle cx="32" cy="33" r="4" fill="#2a2620"/>
-          <circle cx="32" cy="33" r="1.6" fill="#8a7f6e"/>
-        </g>
-      </svg>
+      <img class="loader-bus-img" id="loader-bus-img" src="" alt="Sprinter"/>
     </div>
     <div class="loader-brand">LSD GROUP</div>
     <div class="loader-sub">Se pregătește călătoria...</div>
@@ -1040,20 +1021,7 @@ footer{
       </svg>
       <div class="route-stops" id="hero-route-stops"></div>
       <div class="route-bus-wrap" id="hero-route-bus">
-        <svg class="route-bus-svg" viewBox="0 0 46 46">
-          <g class="route-bus-body">
-            <ellipse cx="23" cy="38" rx="15" ry="3" fill="#000" opacity=".12"/>
-            <rect x="6" y="14" width="34" height="18" rx="5" fill="#c49a2a" stroke="#7a5c14" stroke-width="1"/>
-            <rect x="9" y="17" width="9" height="7" rx="1.5" fill="#fef9ed"/>
-            <rect x="20" y="17" width="9" height="7" rx="1.5" fill="#fef9ed"/>
-            <rect x="31" y="17" width="6" height="7" rx="1.5" fill="#7a5c14" opacity=".5"/>
-            <rect x="6" y="26" width="34" height="3" fill="#a07d1c"/>
-            <circle cx="14" cy="33" r="4" fill="#2a2620"/>
-            <circle cx="14" cy="33" r="1.6" fill="#8a7f6e"/>
-            <circle cx="32" cy="33" r="4" fill="#2a2620"/>
-            <circle cx="32" cy="33" r="1.6" fill="#8a7f6e"/>
-          </g>
-        </svg>
+        <img class="route-bus-img" id="hero-bus-img" src="" alt="Sprinter"/>
       </div>
     </div>
     </div>
@@ -2442,6 +2410,10 @@ const FB_CFG = {
   projectId:"lsd-group-srl"
 };
 const fbApp = initializeApp(FB_CFG);
+
+// ── SPRINTER IMAGE (base64, definit o singura data) ──
+window.SPRINTER_B64 = "data:image/png;base64,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";
+
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 
@@ -2886,23 +2858,15 @@ async function getRoadRoute(latLngArray){
 // Creeaza un marker autobuz SVG (nu emoji) care se misca pe un traseu real
 function createBusMarkerOnRoute(map, routeLatLngs, color){
   if (!routeLatLngs || routeLatLngs.length < 2) return null;
+  const SPRINTER_B64 = window.SPRINTER_B64;
   const busIcon = L.divIcon({
-    html: `<div class="leaflet-bus-marker" style="--bus-color:${color}">
-      <svg width="30" height="30" viewBox="0 0 30 30">
-        <g transform="translate(15,15) rotate(0)">
-          <rect x="-11" y="-7" width="22" height="14" rx="3" fill="${color}" stroke="#fff" stroke-width="1.5"/>
-          <rect x="-8" y="-4.5" width="6" height="5" rx="1" fill="#fff" opacity=".85"/>
-          <rect x="0" y="-4.5" width="6" height="5" rx="1" fill="#fff" opacity=".85"/>
-          <circle cx="-6" cy="7.5" r="2.4" fill="#2a2620"/>
-          <circle cx="6" cy="7.5" r="2.4" fill="#2a2620"/>
-        </g>
-      </svg>
-    </div>`,
-    iconSize:[30,30], iconAnchor:[15,15], className:''
+    html: `<img class="leaflet-bus-img" src="data:image/png;base64,${SPRINTER_B64}" style="width:46px;height:auto;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.35));transition:transform .25s ease" alt="Sprinter"/>`,
+    iconSize:[46,28], iconAnchor:[23,16], className:''
   });
   const marker = L.marker(routeLatLngs[0], {icon: busIcon, zIndexOffset: 1000}).addTo(map);
   // Anima de-a lungul punctelor reale ale traseului (urmeaza drumul, nu o linie dreapta)
   let idx = 0;
+  let lastFlip = false;
   const totalPoints = routeLatLngs.length;
   const stepMs = Math.max(30, Math.min(120, Math.round(6000/totalPoints)));
   function animateStep(){
@@ -2910,10 +2874,16 @@ function createBusMarkerOnRoute(map, routeLatLngs, color){
     const next = routeLatLngs[idx];
     const prev = routeLatLngs[Math.max(0,idx-1)];
     if (next && prev) {
-      const dLat = next[0]-prev[0], dLng = next[1]-prev[1];
-      const angle = Math.atan2(dLng, dLat) * 180/Math.PI;
-      const el = marker.getElement()?.querySelector('g');
-      if (el) el.setAttribute('transform', `translate(15,15) rotate(${angle})`);
+      const dLng = next[1]-prev[1];
+      // Imaginea sprinterului e orientata spre dreapta (est) implicit; oglindim daca mergem spre vest
+      if (Math.abs(dLng) > 0.00001) {
+        const goingWest = dLng < 0;
+        if (goingWest !== lastFlip) {
+          lastFlip = goingWest;
+          const imgEl = marker.getElement()?.querySelector('.leaflet-bus-img');
+          if (imgEl) imgEl.style.transform = goingWest ? 'scaleX(-1)' : 'scaleX(1)';
+        }
+      }
     }
     marker.setLatLng(routeLatLngs[idx]);
     idx = (idx+1) % totalPoints;
@@ -6998,6 +6968,17 @@ function hideAppLoader(){
   if (loader) loader.classList.add('hidden');
 }
 window.hideAppLoader = hideAppLoader;
+
+// Seteaza imaginea sprinterului in toate locurile placeholder (src gol initial)
+function applySprinterImages(){
+  const src = window.SPRINTER_B64 || '';
+  ['loader-bus-img','hero-bus-img'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el && src) el.src = src;
+  });
+}
+// Ruleaza imediat dupa ce constanta e disponibila
+applySprinterImages();
 // Failsafe: ascunde loader-ul oricum dupa 6 secunde, ca utilizatorul sa nu ramana blocat
 setTimeout(hideAppLoader, 6000);
 
