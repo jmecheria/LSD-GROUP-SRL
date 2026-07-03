@@ -2860,7 +2860,7 @@ function createBusMarkerOnRoute(map, routeLatLngs, color){
   if (!routeLatLngs || routeLatLngs.length < 2) return null;
   const SPRINTER_B64 = window.SPRINTER_B64;
   const busIcon = L.divIcon({
-    html: `<img class="leaflet-bus-img" src="data:image/png;base64,${SPRINTER_B64}" style="width:46px;height:auto;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.35));transition:transform .25s ease" alt="Sprinter"/>`,
+    html: `<img class="leaflet-bus-img" src="${SPRINTER_B64}" style="width:46px;height:auto;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.35));transition:transform .25s ease" alt="Sprinter"/>`,
     iconSize:[46,28], iconAnchor:[23,16], className:''
   });
   const marker = L.marker(routeLatLngs[0], {icon: busIcon, zIndexOffset: 1000}).addTo(map);
@@ -4777,7 +4777,7 @@ window.openRouteModal=async(id=null)=>{
       else window._RM_DEPS=[{ora:c.ora||'',driverId:c.driverId||c.soferId||c.soferEmail||'',orePerZi:{},exceptions:[]}];
       if(c.tipCursa==='roundtrip'&&c.intorsPlecari){document.getElementById('rt-roundtrip').checked=true;document.getElementById('rm-return-section').style.display='block';window._RM_RET_DEPS=c.intorsPlecari.map(p=>({ora:p.ora||'',driverId:p.driverId||''}));}
       (c.zile||[]).forEach(d=>{const b=document.querySelector(`[data-day="${d}"]`);if(b)b.classList.add('active');});
-      if(c.statii?.length>=2)window._RM_STOPS=c.statii.map(s=>({n:s.nome||s.name||s.nume||'',p:s.pretDeLaStart||0,m:s.minuteDeLaStart||0}));
+      if(c.statii?.length>=2)window._RM_STOPS=c.statii.map(s=>({n:s.nome||s.name||s.nume||'',p:s.pretDeLaStart||0,m:s.minuteDeLaStart||0,...(s.lat!=null&&s.lng!=null?{lat:s.lat,lng:s.lng}:{})}));
       if(c.dateBlocate)window._BLOCKED_DATES=[...c.dateBlocate];
     }
   }
@@ -4789,7 +4789,7 @@ window.renderRmStops = function renderRmStops(){
   el.innerHTML=`<div style="display:flex;gap:6px;margin-bottom:4px;padding-left:28px"><div style="flex:2;font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Stație</div><div style="width:90px;font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Preț (RON)</div><div style="width:80px;font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Min. start</div><div style="width:32px"></div></div>`+
   window._RM_STOPS.map((s,i)=>`<div data-stop-row="${i}" style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
     <div style="width:22px;height:22px;border-radius:50%;background:var(--amber);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
-    <input data-sn type="text" placeholder="${i===0?'Prima stație (plecare)':i===window._RM_STOPS.length-1?'Destinație finală':'Stație'}" value="${s.n}" style="flex:2;min-width:100px" onchange="window._RM_STOPS[${i}].n=this.value"/>
+    <input data-sn type="text" placeholder="${i===0?'Prima stație (plecare)':i===window._RM_STOPS.length-1?'Destinație finală':'Stație'}" value="${s.n}" style="flex:2;min-width:100px" onchange="window._RM_STOPS[${i}].n=this.value;delete window._RM_STOPS[${i}].lat;delete window._RM_STOPS[${i}].lng;"/>
     ${i===0?`<div style="width:90px;font-size:11px;color:var(--stone);text-align:center">0 RON</div><div style="width:80px;font-size:11px;color:var(--stone);text-align:center">0 min</div>`:
     `<input data-sp type="number" min="0" placeholder="RON" value="${s.p||''}" style="width:90px;flex-shrink:0" onchange="window._RM_STOPS[${i}].p=parseFloat(this.value)||0"/>
      <input data-sm type="number" min="0" placeholder="min" value="${s.m||''}" style="width:80px;flex-shrink:0" onchange="window._RM_STOPS[${i}].m=parseInt(this.value)||0"/>`}
@@ -4862,7 +4862,7 @@ window.openRouteMapPicker = async () => {
   if (existingStops.length >= 2) {
     toast('Se încarcă stațiile existente pe hartă...', 'in');
     for (const st of existingStops) {
-      const ll = await geocodeCached(st.n);
+      const ll = (st.lat!=null && st.lng!=null) ? [st.lat, st.lng] : await geocodeCached(st.n);
       if (ll) window._rmPickerPoints.push({ll, nume:st.n});
     }
     rmMapPickerRender();
@@ -4951,11 +4951,11 @@ async function rmMapPickerApplyToStops(){
   if (pts.length < 2) return;
   // Calculam distante cumulate folosind ORS pe perechi consecutive
   let totalKm = 0, totalMin = 0;
-  const newStops = [{n: pts[0].nume, p:0, m:0}];
+  const newStops = [{n: pts[0].nume, p:0, m:0, lat: pts[0].ll[0], lng: pts[0].ll[1]}];
   for (let i=1; i<pts.length; i++) {
     const dist = await calcDistORS(pts[i-1].nume, pts[i].nume);
     if (dist) { totalKm += dist.km; totalMin += dist.min; }
-    newStops.push({n: pts[i].nume, p: Math.round(totalKm*0.5), m: totalMin});
+    newStops.push({n: pts[i].nume, p: Math.round(totalKm*0.5), m: totalMin, lat: pts[i].ll[0], lng: pts[i].ll[1]});
   }
   window._RM_STOPS = newStops;
   renderRmStops();
@@ -5326,7 +5326,7 @@ window.saveRoute=async()=>{
   const vehId=document.getElementById('rm-vehicle').value;
   const veh=window._F.find(v=>v.id===vehId);
   const zile=[...document.querySelectorAll('[data-day].active')].map(b=>parseInt(b.dataset.day));
-  const statii=window._RM_STOPS.map((s,i)=>({nome:s.n,name:s.n,nume:s.n,pretDeLaStart:i===0?0:(s.p||0),minuteDeLaStart:i===0?0:(s.m||0)}));
+  const statii=window._RM_STOPS.map((s,i)=>({nome:s.n,name:s.n,nume:s.n,pretDeLaStart:i===0?0:(s.p||0),minuteDeLaStart:i===0?0:(s.m||0),...(s.lat!=null&&s.lng!=null?{lat:s.lat,lng:s.lng}:{})}));
   if(statii.length<2){toast('Minim 2 stații','wr');return;}
   if(statii.some(s=>!s.nome)){toast('Completați toate stațiile','wr');return;}
   for(let i=1;i<statii.length;i++){if(statii[i].pretDeLaStart<=statii[i-1].pretDeLaStart){toast(`Prețul stației "${statii[i].nome}" trebuie să fie mai mare decât stația anterioară`,'wr');return;}}
