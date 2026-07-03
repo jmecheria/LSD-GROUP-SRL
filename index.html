@@ -6,23 +6,24 @@
 <title>LSD Group SRL — Transport Persoane | Curse Regulate & Organizate</title>
 <meta name="description" content="Rezervă locuri online pentru curse regulate și organizate în România. Flotă modernă, șoferi autorizați. LSD Group SRL — transport persoane autorizat ARR."/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 /* ── RESET & ROOT ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --ink:#0f0d0a;--bone:#f5f2eb;--cream:#ede8d8;--card:#ffffff;
-  --amber:#c49a2a;--amber-d:#a07d1c;--amber-g:rgba(196,154,42,.11);--amber-b:rgba(196,154,42,.25);
-  --stone:#8a7f6e;--border:#ddd5be;--border-l:#e8e0ce;
+  --ink:#14120e;--bone:#f7f4ec;--cream:#ece4d2;--card:#fffdf9;
+  --amber:#a97c3f;--amber-d:#7d5a2b;--amber-g:rgba(169,124,63,.10);--amber-b:rgba(169,124,63,.28);
+  --stone:#7d7364;--border:#ddd2b8;--border-l:#e9e0cb;
   --green:#1a6b3c;--green-g:rgba(26,107,60,.1);
   --red:#b52d2d;--red-g:rgba(181,45,45,.08);
   --orange:#c46520;--orange-g:rgba(196,101,32,.1);
   --blue:#1e5fa8;--blue-g:rgba(30,95,168,.08);
-  --r:10px;--r-lg:16px;--r-xl:20px;
-  --sh:0 1px 4px rgba(15,13,10,.08),0 4px 16px rgba(15,13,10,.06);
-  --sh-lg:0 4px 24px rgba(15,13,10,.12),0 12px 40px rgba(15,13,10,.08);
-  --sh-amber:0 4px 20px rgba(196,154,42,.2);
+  --r:10px;--r-lg:18px;--r-xl:24px;
+  --sh:0 1px 2px rgba(20,18,14,.05),0 6px 20px rgba(20,18,14,.05);
+  --sh-lg:0 8px 30px rgba(20,18,14,.08),0 20px 60px rgba(20,18,14,.07);
+  --sh-amber:0 6px 24px rgba(169,124,63,.20);
   --nav-h:60px;--tick-h:34px;
+  --font-display:"Fraunces",Georgia,serif;
 }
 html{scroll-behavior:smooth}
 body{
@@ -30,7 +31,8 @@ body{
   font-family:"Inter",system-ui,sans-serif;font-size:14px;line-height:1.6;
   overflow-x:hidden;min-height:100vh;
 }
-h1,h2,h3,h4,h5{font-family:"Plus Jakarta Sans",sans-serif;line-height:1.2}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;line-height:1.1;letter-spacing:-.01em}
+h4,h5{font-family:"Plus Jakarta Sans",sans-serif;line-height:1.2}
 a{color:var(--amber);text-decoration:none;cursor:pointer}
 button{cursor:pointer;font-family:"Inter",sans-serif;transition:all .18s ease}
 input,select,textarea{
@@ -143,10 +145,10 @@ select option{background:var(--cream)}
   border:none;cursor:pointer;font-family:"Inter",sans-serif;transition:all .18s;
 }
 .btn-primary{
-  background:linear-gradient(135deg,var(--amber),var(--amber-d));color:#fff;
-  box-shadow:0 2px 8px rgba(196,154,42,.25);
+  background:linear-gradient(180deg,var(--amber) 0%,var(--amber-d) 100%);color:#fff;
+  box-shadow:var(--sh-amber);
 }
-.btn-primary:hover{background:var(--amber-d);transform:translateY(-1px);box-shadow:0 4px 14px rgba(196,154,42,.3)}
+.btn-primary:hover{background:var(--amber-d);transform:translateY(-1px);box-shadow:0 10px 28px rgba(169,124,63,.26)}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
 .btn-secondary{background:var(--card);color:var(--ink);border:1.5px solid var(--border)}
 .btn-secondary:hover{border-color:var(--amber);color:var(--amber)}
@@ -164,7 +166,7 @@ select option{background:var(--cream)}
   background:var(--card);border:1px solid var(--border-l);
   border-radius:var(--r-lg);box-shadow:var(--sh);overflow:hidden;
 }
-.card:hover{border-color:rgba(196,154,42,.3);box-shadow:var(--sh-lg);transform:translateY(-2px)}
+.card:hover{border-color:rgba(169,124,63,.3);box-shadow:var(--sh-lg);transform:translateY(-2px)}
 .card-pad{padding:20px}
 .card-img{
   position:relative;height:180px;background:var(--cream);
@@ -225,7 +227,7 @@ input.ok{border-color:var(--green)}
   position:sticky;top:0;background:var(--card);z-index:10;
   border-bottom:1px solid var(--border-l);
 }
-.modal-title{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:17px}
+.modal-title{font-family:var(--font-display);font-weight:600;font-size:19px}
 .modal-sub{font-size:12px;color:var(--stone);margin-top:2px}
 .modal-close{
   width:32px;height:32px;border-radius:8px;border:none;background:var(--cream);
@@ -298,7 +300,7 @@ input.ok{border-color:var(--green)}
 }
 .sch-card:hover{border-color:var(--amber-b);box-shadow:var(--sh)}
 .sch-route{
-  font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:19px;margin-bottom:10px;
+  font-family:var(--font-display);font-weight:600;font-size:21px;margin-bottom:10px;
 }
 .sch-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--stone);margin-bottom:12px}
 .sch-meta span{display:flex;align-items:center;gap:5px}
@@ -348,7 +350,7 @@ input.ok{border-color:var(--green)}
 .seat.occupied{background:var(--red-g);border-color:rgba(181,45,45,.25);color:var(--red);cursor:not-allowed}
 .seat.selected{
   background:linear-gradient(135deg,var(--amber),var(--amber-d));border-color:var(--amber);
-  color:#fff;transform:translateY(-2px);box-shadow:0 4px 12px rgba(196,154,42,.35);
+  color:#fff;transform:translateY(-2px);box-shadow:0 4px 12px rgba(169,124,63,.35);
 }
 .seat.driver{background:var(--cream);cursor:not-allowed;font-size:16px;border-style:dashed}
 .seat.blocked{background:var(--cream);cursor:not-allowed;opacity:.4;border-style:dashed}
@@ -392,7 +394,7 @@ input.ok{border-color:var(--green)}
 
 /* ── SECTION HEADER ── */
 .sec-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:10px}
-.sec-title{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:22px}
+.sec-title{font-family:var(--font-display);font-weight:600;font-size:26px;letter-spacing:-.01em}
 .sec-sub{color:var(--stone);font-size:13px;margin-top:3px}
 
 /* ── HERO ── */
@@ -405,8 +407,9 @@ input.ok{border-color:var(--green)}
   font-size:12px;font-weight:700;letter-spacing:.5px;margin-bottom:22px;
 }
 .hero h1{
-  font-size:clamp(2rem,5vw,3.6rem);font-weight:800;line-height:1.08;margin-bottom:18px;
-  letter-spacing:-.02em;
+  font-family:var(--font-display);
+  font-size:clamp(2.1rem,5.4vw,4.1rem);font-weight:600;line-height:1.04;margin-bottom:18px;
+  letter-spacing:-.01em;
 }
 .hero h1 .grad{
   background:linear-gradient(135deg,var(--amber),var(--amber-d));
@@ -487,11 +490,11 @@ input.ok{border-color:var(--green)}
 
 /* ── QUICK SEARCH ── */
 .quick-search-card{
-  background:linear-gradient(135deg,var(--amber-g),rgba(196,154,42,.03));
+  background:linear-gradient(135deg,var(--amber-g),rgba(169,124,63,.03));
   border:1.5px solid var(--amber-b);border-radius:var(--r-xl);
   padding:24px 28px;margin-bottom:48px;
 }
-.quick-search-title{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:16px;margin-bottom:14px}
+.quick-search-title{font-family:var(--font-display);font-weight:600;font-size:18px;margin-bottom:14px}
 .quick-search-row{display:flex;gap:10px;flex-wrap:wrap}
 .quick-search-row input{flex:1;min-width:220px;font-size:14px;padding:12px 16px}
 .quick-search-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -517,7 +520,7 @@ input.ok{border-color:var(--green)}
   transition:all .2s;
 }
 .hiw-step:hover .hiw-icon{border-color:var(--amber);background:var(--amber-g);transform:translateY(-3px)}
-.hiw-title{font-weight:700;font-size:14px;margin-bottom:6px;font-family:"Plus Jakarta Sans",sans-serif}
+.hiw-title{font-weight:600;font-size:15px;margin-bottom:6px;font-family:var(--font-display)}
 .hiw-desc{font-size:12px;color:var(--stone);line-height:1.5}
 .hiw-connector{
   flex:0 0 40px;height:2px;background:repeating-linear-gradient(90deg,var(--border) 0 6px,transparent 6px 12px);
@@ -593,9 +596,9 @@ input.ok{border-color:var(--green)}
   padding:28px 22px;text-align:center;cursor:pointer;transition:all .2s;
 }
 .org-mode-card:hover{border-color:var(--amber);box-shadow:var(--sh-lg);transform:translateY(-3px)}
-.org-mode-card:first-child{border-color:var(--amber-b);background:linear-gradient(135deg,var(--amber-g),rgba(196,154,42,.02))}
+.org-mode-card:first-child{border-color:var(--amber-b);background:linear-gradient(135deg,var(--amber-g),rgba(169,124,63,.02))}
 .org-mode-icon{font-size:38px;margin-bottom:12px}
-.org-mode-title{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:16px;margin-bottom:6px}
+.org-mode-title{font-family:var(--font-display);font-weight:600;font-size:18px;margin-bottom:6px}
 .org-mode-desc{font-size:12px;color:var(--stone);margin-bottom:14px;line-height:1.5}
 .org-mode-cta{font-size:12px;font-weight:700;color:var(--amber-d)}
 @media(max-width:700px){.org-mode-choice{grid-template-columns:1fr}}
@@ -603,7 +606,7 @@ input.ok{border-color:var(--green)}
 /* ── WIZARD MODAL ── */
 .wiz-progress-bar{height:4px;background:var(--cream);margin:0 24px}
 .wiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--amber-d));border-radius:2px;transition:width .35s ease}
-.wiz-question{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:18px;margin-bottom:6px}
+.wiz-question{font-family:var(--font-display);font-weight:600;font-size:20px;margin-bottom:6px}
 .wiz-hint{font-size:12px;color:var(--stone);margin-bottom:20px}
 .wiz-options-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .wiz-opt-card{
@@ -655,7 +658,7 @@ input.ok{border-color:var(--green)}
 .img-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer}
 .img-dot.active{background:var(--amber)}
 .bus-card-body{padding:16px}
-.bus-card-name{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:15px;margin-bottom:6px}
+.bus-card-name{font-family:var(--font-display);font-weight:600;font-size:17px;margin-bottom:6px}
 .bus-card-meta{font-size:12px;color:var(--stone);margin-bottom:10px;display:flex;gap:12px;flex-wrap:wrap}
 .bus-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
 .bus-card-link{font-size:12px;color:var(--amber);font-weight:600}
@@ -682,11 +685,11 @@ input.ok{border-color:var(--green)}
   border-radius:var(--r-xl);margin-bottom:24px;overflow:hidden;box-shadow:var(--sh);
 }
 .driver-card-head{
-  background:linear-gradient(135deg,var(--amber-g),rgba(196,154,42,.04));
+  background:linear-gradient(135deg,var(--amber-g),rgba(169,124,63,.04));
   border-bottom:1px solid var(--border-l);padding:18px 22px;
   display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;
 }
-.driver-route{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:19px}
+.driver-route{font-family:var(--font-display);font-weight:600;font-size:21px}
 .pax-card{
   background:var(--cream);border:1px solid var(--border);border-radius:10px;
   padding:12px 14px;display:flex;justify-content:space-between;
@@ -726,7 +729,7 @@ input.ok{border-color:var(--green)}
 .tl-block[draggable=true]{cursor:grab}
 .tl-block[draggable=true]:active{cursor:grabbing;opacity:.7}
 .tl-block.b-normal{background:var(--amber-g);border-color:var(--amber);color:#7a5c00}
-.tl-block.b-return{background:rgba(196,154,42,.06);border-color:rgba(196,154,42,.35);color:#8b6500;border-style:dashed}
+.tl-block.b-return{background:rgba(169,124,63,.06);border-color:rgba(169,124,63,.35);color:#8b6500;border-style:dashed}
 .tl-block.b-break{background:rgba(100,100,100,.08);border-color:rgba(150,150,150,.3);color:var(--stone)}
 .tl-block.b-warn{background:var(--orange-g);border-color:var(--orange);color:#7c3200}
     .tl-block.b-over{background:var(--red-g);border-color:var(--red);color:#7a0000}
@@ -766,7 +769,7 @@ input.ok{border-color:var(--green)}
   display:flex;justify-content:space-between;align-items:flex-start;
   margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid var(--amber);flex-wrap:wrap;gap:12px;
 }
-.invoice-logo{font-family:"Plus Jakarta Sans",sans-serif;font-size:20px;font-weight:800;color:var(--amber-d);margin-bottom:6px}
+.invoice-logo{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--amber-d);margin-bottom:6px}
 .invoice-parties{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
 .invoice-party{border:1.5px solid var(--border-l);border-radius:var(--r);padding:14px}
 .invoice-party-title{font-size:10px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border-l);padding-bottom:6px;margin-bottom:10px}
@@ -776,7 +779,7 @@ input.ok{border-color:var(--green)}
 .invoice-totals{margin-left:auto;width:300px}
 .invoice-total-row{display:flex;justify-content:space-between;padding:9px 14px;font-size:13px;border-bottom:1px solid var(--border-l)}
 .invoice-total-row.final{
-  background:linear-gradient(135deg,var(--amber-g),rgba(196,154,42,.06));
+  background:linear-gradient(135deg,var(--amber-g),rgba(169,124,63,.06));
   font-size:16px;font-weight:800;border-bottom:none;border-radius:0 0 var(--r) var(--r);
 }
 
@@ -815,7 +818,7 @@ footer{
 }
 .footer-inner{max-width:1200px;margin:0 auto;padding:48px 24px 24px}
 .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,.08)}
-.footer-brand{font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:18px;color:var(--amber);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.footer-brand{font-family:var(--font-display);font-weight:600;font-size:19px;color:var(--amber);margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .footer-desc{font-size:12px;color:rgba(255,255,255,.45);line-height:1.8}
 .footer-col-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
 .footer-col a,.footer-col span{display:block;font-size:13px;color:rgba(255,255,255,.45);margin-bottom:6px;cursor:pointer}
@@ -829,7 +832,7 @@ footer{
   display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.55);font-size:12px;font-weight:600;
 }
 .anpc-badge .badge-pill{
-  background:rgba(196,154,42,.25);border:1px solid rgba(196,154,42,.4);
+  background:rgba(169,124,63,.25);border:1px solid rgba(169,124,63,.4);
   color:var(--amber);padding:4px 10px;border-radius:6px;font-weight:700;font-size:11px;
 }
 .footer-bottom{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:11px;color:rgba(255,255,255,.3)}
@@ -937,8 +940,8 @@ footer{
     <svg class="loader-road-svg" viewBox="0 0 400 140" preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="loaderRoadGrad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#c49a2a"/>
-          <stop offset="100%" stop-color="#a07d1c"/>
+          <stop offset="0%" stop-color="#a97c3f"/>
+          <stop offset="100%" stop-color="#7d5a2b"/>
         </linearGradient>
       </defs>
       <path class="loader-road-bg" d="M 20 90 Q 110 40, 200 90 T 380 90"/>
@@ -961,7 +964,7 @@ footer{
   <div class="nav-logo" onclick="nav('home')" style="display:flex;align-items:center;gap:9px">
     <img src="data:image/png;base64,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" alt="LSD Group SRL" style="height:42px;width:auto;object-fit:contain;display:block;max-width:180px"/>
     <div style="display:flex;flex-direction:column;line-height:1.15">
-      <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:15px;color:var(--amber);letter-spacing:-.3px">LSD GROUP</span>
+      <span style="font-family:var(--font-display);font-weight:600;font-size:16px;color:var(--amber-d);letter-spacing:.01em">LSD GROUP</span>
       <span style="font-size:10px;color:var(--stone);font-weight:500;letter-spacing:.3px">Transport Persoane</span>
     </div>
   </div>
@@ -1011,8 +1014,8 @@ footer{
       <svg class="route-line-svg" viewBox="0 0 1000 110" preserveAspectRatio="none">
         <defs>
           <linearGradient id="routeGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#c49a2a"/>
-            <stop offset="100%" stop-color="#a07d1c"/>
+            <stop offset="0%" stop-color="#a97c3f"/>
+            <stop offset="100%" stop-color="#7d5a2b"/>
           </linearGradient>
         </defs>
         <path class="route-path-bg" d="M 20 55 Q 250 15, 500 55 T 980 55"/>
@@ -1641,7 +1644,7 @@ footer{
     <!-- Legendă -->
     <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;margin-bottom:12px;padding:8px 14px;background:var(--cream);border-radius:8px;border:1px solid var(--border-l)">
       <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:var(--amber-g);border:1.5px solid var(--amber);display:inline-block"></span>Dus</span>
-      <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:rgba(196,154,42,.06);border:1.5px dashed rgba(196,154,42,.4);display:inline-block"></span>Retur</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:rgba(169,124,63,.06);border:1.5px dashed rgba(169,124,63,.4);display:inline-block"></span>Retur</span>
       <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:var(--orange-g);border:1.5px solid var(--orange);display:inline-block"></span>>8h atenție</span>
       <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:var(--green-g);border:1.5px solid var(--green);border-left:3px solid var(--green);display:inline-block"></span>Șofer 2 preia</span>
       <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:10px;border-radius:2px;background:var(--blue-g);border:1.5px solid rgba(30,95,168,.3);display:inline-block"></span>Vehicul ocupat</span>
@@ -3020,7 +3023,7 @@ async function initHomeRoutesMap(){
     return;
   }
 
-  const colors = ['#c49a2a','#1e5fa8','#c46520','#1a6b3c','#b52d2d','#7c3aed'];
+  const colors = ['#a97c3f','#1e5fa8','#c46520','#1a6b3c','#b52d2d','#7c3aed'];
   const bounds = [];
   let colorIdx = 0;
   let anyRouteDrawn = false;
@@ -3274,13 +3277,13 @@ window.showRouteMapModal = async (cursaId) => {
   if (coords.length>=2) {
     const roadRoute = await getRoadRoute(coords.map(c2=>c2.ll));
     const drawCoords = roadRoute || coords.map(c2=>c2.ll);
-    L.polyline(drawCoords,{color:'#c49a2a',weight:roadRoute?5:3,opacity:.85,dashArray:roadRoute?null:'4,6'}).addTo(map);
+    L.polyline(drawCoords,{color:'#a97c3f',weight:roadRoute?5:3,opacity:.85,dashArray:roadRoute?null:'4,6'}).addTo(map);
     coords.forEach((c2,i)=>{
       const isEnd = i===0||i===coords.length-1;
-      const icon = L.divIcon({html:`<div style="background:${isEnd?'#c49a2a':'#fff'};color:${isEnd?'#fff':'#c49a2a'};border:2px solid #c49a2a;border-radius:50%;width:${isEnd?26:16}px;height:${isEnd?26:16}px;display:flex;align-items:center;justify-content:center;font-size:${isEnd?12:9}px;font-weight:800">${i===0?'A':i===coords.length-1?'B':''}</div>`,iconSize:[isEnd?26:16,isEnd?26:16],className:''});
+      const icon = L.divIcon({html:`<div style="background:${isEnd?'#a97c3f':'#fff'};color:${isEnd?'#fff':'#a97c3f'};border:2px solid #a97c3f;border-radius:50%;width:${isEnd?26:16}px;height:${isEnd?26:16}px;display:flex;align-items:center;justify-content:center;font-size:${isEnd?12:9}px;font-weight:800">${i===0?'A':i===coords.length-1?'B':''}</div>`,iconSize:[isEnd?26:16,isEnd?26:16],className:''});
       L.marker(c2.ll,{icon}).addTo(map).bindPopup(`<strong>${c2.nume}</strong>`);
     });
-    createBusMarkerOnRoute(map, drawCoords, '#c49a2a');
+    createBusMarkerOnRoute(map, drawCoords, '#a97c3f');
     map.fitBounds(coords.map(c2=>c2.ll),{padding:[30,30]});
   } else {
     mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:8px;padding:24px;text-align:center"><div style="font-size:32px">📍</div>Nu s-au putut localiza stațiile pe hartă.<br><span style="font-size:11px">Verifică denumirile stațiilor în Firestore.</span></div>';
@@ -3544,9 +3547,9 @@ window.printTicket = () => {
   const cards=tickets.map((r,idx)=>{
     const loc=r.locuriRezervate[0];
     const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent('LSD:'+r.biletId+'|'+(r.cursaId||'')+'|'+r.data+'|'+loc.locNr)}&bgcolor=ffffff&color=0f0d0a`;
-    return `<div class="ticket"><div class="t-head"><div><div style="font-size:16px;font-weight:800">${r.biletId}</div><div style="font-size:11px;opacity:.8">Bilet ${idx+1}/${tickets.length} · Loc ${loc.locNr}</div></div><div style="text-align:right;font-size:11px">${firma.name||'LSD Group SRL'}</div></div><div class="t-body"><div style="text-align:center"><img src="${qrUrl}" width="120" height="120" style="border-radius:6px;border:1px solid #e2d9c4"/><div style="font-size:10px;font-weight:800;color:#c49a2a;margin-top:4px">${r.biletId}</div></div><div class="t-rows">${[['Loc',''+loc.locNr],['Rută',r.ruta],['Urcare',loc.statieUrcare],['Coborâre',loc.statieCoborare],['Data',r.data+' · '+(r.ora||'-')],['Pasager',r.numeClient],['Vehicul',r.vehiculNume||'-'],['Preț',r.pretTotal+' RON']].map(([l,v])=>`<div class="t-row"><span class="t-lbl">${l}</span><span>${v}</span></div>`).join('')}</div></div></div>`;
+    return `<div class="ticket"><div class="t-head"><div><div style="font-size:16px;font-weight:800">${r.biletId}</div><div style="font-size:11px;opacity:.8">Bilet ${idx+1}/${tickets.length} · Loc ${loc.locNr}</div></div><div style="text-align:right;font-size:11px">${firma.name||'LSD Group SRL'}</div></div><div class="t-body"><div style="text-align:center"><img src="${qrUrl}" width="120" height="120" style="border-radius:6px;border:1px solid #e2d9c4"/><div style="font-size:10px;font-weight:800;color:#a97c3f;margin-top:4px">${r.biletId}</div></div><div class="t-rows">${[['Loc',''+loc.locNr],['Rută',r.ruta],['Urcare',loc.statieUrcare],['Coborâre',loc.statieCoborare],['Data',r.data+' · '+(r.ora||'-')],['Pasager',r.numeClient],['Vehicul',r.vehiculNume||'-'],['Preț',r.pretTotal+' RON']].map(([l,v])=>`<div class="t-row"><span class="t-lbl">${l}</span><span>${v}</span></div>`).join('')}</div></div></div>`;
   }).join('<div style="height:16px"></div>');
-  w.document.write(`<!DOCTYPE html><html><head><title>Bilete</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:16px;max-width:500px;margin:0 auto;color:#0f0d0a;font-size:13px}.ticket{border:1.5px solid #e2d9c4;border-radius:12px;overflow:hidden}.t-head{background:linear-gradient(135deg,#c49a2a,#a07d1c);color:#fff;padding:12px 16px;display:flex;justify-content:space-between}.t-body{display:flex;gap:14px;padding:14px}.t-rows{flex:1}.t-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ede8d8;font-size:12px}.t-lbl{color:#8a7f6e}.warn{background:#fef9ed;border:1.5px solid #c49a2a;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;text-align:center}.footer{font-size:10px;color:#8a7f6e;text-align:center;margin-top:14px;border-top:1px solid #ede8d8;padding-top:10px;line-height:1.8}@media print{body{padding:8px}@page{margin:6mm}}</style></head><body><div class="warn">📸 Prezentați codul QR la îmbarcare. Valabil o singură dată.</div>${cards}<div class="footer">${firma.name||'LSD Group SRL'} ${firma.cui?'· CUI: '+firma.cui:''} ${firma.addr?'· '+firma.addr:''}<br>Emis: ${new Date().toLocaleDateString('ro')} · Bilete electronice, netransferabile</div><script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head><title>Bilete</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:16px;max-width:500px;margin:0 auto;color:#0f0d0a;font-size:13px}.ticket{border:1.5px solid #e2d9c4;border-radius:12px;overflow:hidden}.t-head{background:linear-gradient(135deg,#a97c3f,#7d5a2b);color:#fff;padding:12px 16px;display:flex;justify-content:space-between}.t-body{display:flex;gap:14px;padding:14px}.t-rows{flex:1}.t-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ede8d8;font-size:12px}.t-lbl{color:#8a7f6e}.warn{background:#fef9ed;border:1.5px solid #a97c3f;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;text-align:center}.footer{font-size:10px;color:#8a7f6e;text-align:center;margin-top:14px;border-top:1px solid #ede8d8;padding-top:10px;line-height:1.8}@media print{body{padding:8px}@page{margin:6mm}}</style></head><body><div class="warn">📸 Prezentați codul QR la îmbarcare. Valabil o singură dată.</div>${cards}<div class="footer">${firma.name||'LSD Group SRL'} ${firma.cui?'· CUI: '+firma.cui:''} ${firma.addr?'· '+firma.addr:''}<br>Emis: ${new Date().toLocaleDateString('ro')} · Bilete electronice, netransferabile</div><script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
   w.document.close();
 };
 
@@ -3898,13 +3901,13 @@ async function renderOrgRoutePreviewMap(){
   if (coords.length>=2) {
     const roadRoute = await getRoadRoute(coords.map(c=>c.ll));
     const drawCoords = roadRoute || coords.map(c=>c.ll);
-    L.polyline(drawCoords,{color:'#c49a2a',weight:roadRoute?4:3,opacity:.85,dashArray:roadRoute?null:'4,6'}).addTo(map);
+    L.polyline(drawCoords,{color:'#a97c3f',weight:roadRoute?4:3,opacity:.85,dashArray:roadRoute?null:'4,6'}).addTo(map);
     coords.forEach((c,i)=>{
       const isEnd = i===0||i===coords.length-1;
-      const icon = L.divIcon({html:`<div style="background:${isEnd?'#c49a2a':'#fff'};color:${isEnd?'#fff':'#c49a2a'};border:2px solid #c49a2a;border-radius:50%;width:${isEnd?24:14}px;height:${isEnd?24:14}px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${i===0?'A':i===coords.length-1?'B':''}</div>`,iconSize:[isEnd?24:14,isEnd?24:14],className:''});
+      const icon = L.divIcon({html:`<div style="background:${isEnd?'#a97c3f':'#fff'};color:${isEnd?'#fff':'#a97c3f'};border:2px solid #a97c3f;border-radius:50%;width:${isEnd?24:14}px;height:${isEnd?24:14}px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${i===0?'A':i===coords.length-1?'B':''}</div>`,iconSize:[isEnd?24:14,isEnd?24:14],className:''});
       L.marker(c.ll,{icon}).addTo(map).bindPopup(`<strong>${c.nume}</strong>`);
     });
-    if (drawCoords.length >= 2) createBusMarkerOnRoute(map, drawCoords, '#c49a2a');
+    if (drawCoords.length >= 2) createBusMarkerOnRoute(map, drawCoords, '#a97c3f');
     map.fitBounds(coords.map(c=>c.ll),{padding:[24,24]});
   } else {
     mapEl.innerHTML='<div style="text-align:center;color:var(--stone);font-size:12px;padding:20px">Nu am putut localiza aceste nume.<br>Verifică ortografia (ex: "Iași" nu "iasi").</div>';
@@ -4443,7 +4446,7 @@ window.adminViewAs=role=>{
   if(role==='driver')nav('sofer'); else nav('home');
   // Add return bar
   let bar=document.getElementById('admin-return-bar');
-  if(!bar){bar=document.createElement('div');bar.id='admin-return-bar';bar.style.cssText='position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,var(--amber),var(--amber-d));padding:12px 20px;display:flex;justify-content:space-between;align-items:center;z-index:9990;box-shadow:0 -4px 16px rgba(196,154,42,.3)';document.body.appendChild(bar);}
+  if(!bar){bar=document.createElement('div');bar.id='admin-return-bar';bar.style.cssText='position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,var(--amber),var(--amber-d));padding:12px 20px;display:flex;justify-content:space-between;align-items:center;z-index:9990;box-shadow:0 -4px 16px rgba(169,124,63,.3)';document.body.appendChild(bar);}
   bar.innerHTML=`<span style="font-weight:700;color:#fff;font-size:13px">👑 Admin → ${role==='driver'?'Șofer':'Client'} (previzualizare)</span><button class="btn" style="background:#fff;color:var(--amber-d);font-weight:700;padding:7px 16px;border-radius:8px;border:none;cursor:pointer" onclick="returnToAdmin()">← Revin la Admin</button>`;
   bar.style.display='flex';
   document.getElementById('app').style.paddingBottom='60px';
@@ -4908,7 +4911,7 @@ async function rmMapPickerRender(){
   pts.forEach((p,i)=>{
     const isEnd = i===0 || i===pts.length-1;
     const icon = L.divIcon({
-      html:`<div style="background:${isEnd?'#c49a2a':'#fff'};color:${isEnd?'#fff':'#c49a2a'};border:2.5px solid #c49a2a;border-radius:50%;width:${isEnd?28:18}px;height:${isEnd?28:18}px;display:flex;align-items:center;justify-content:center;font-size:${isEnd?12:10}px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.25)">${i===0?'A':i===pts.length-1?'B':i}</div>`,
+      html:`<div style="background:${isEnd?'#a97c3f':'#fff'};color:${isEnd?'#fff':'#a97c3f'};border:2.5px solid #a97c3f;border-radius:50%;width:${isEnd?28:18}px;height:${isEnd?28:18}px;display:flex;align-items:center;justify-content:center;font-size:${isEnd?12:10}px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.25)">${i===0?'A':i===pts.length-1?'B':i}</div>`,
       iconSize:[isEnd?28:18,isEnd?28:18], iconAnchor:[isEnd?14:9,isEnd?14:9], className:''
     });
     const marker = L.marker(p.ll,{icon, draggable:true}).addTo(map).bindPopup(`<strong>${p.nume}</strong><br><button onclick="rmMapPickerRemovePoint(${i})" style="margin-top:6px;padding:3px 10px;background:#b52d2d;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">✕ Șterge</button>`);
@@ -4931,8 +4934,8 @@ async function rmMapPickerRender(){
     // Traseu real pe drum
     const roadRoute = await getRoadRoute(pts.map(p=>p.ll));
     const drawCoords = roadRoute || pts.map(p=>p.ll);
-    window._rmPickerLine = L.polyline(drawCoords,{color:'#c49a2a',weight:roadRoute?4:3,opacity:.85,dashArray:roadRoute?null:'4,6'}).addTo(map);
-    if (drawCoords.length>=2) window._rmPickerBus = createBusMarkerOnRoute(map, drawCoords, '#c49a2a');
+    window._rmPickerLine = L.polyline(drawCoords,{color:'#a97c3f',weight:roadRoute?4:3,opacity:.85,dashArray:roadRoute?null:'4,6'}).addTo(map);
+    if (drawCoords.length>=2) window._rmPickerBus = createBusMarkerOnRoute(map, drawCoords, '#a97c3f');
     map.fitBounds(pts.map(p=>p.ll),{padding:[30,30]});
     // Aplica automat la lista de statii text
     rmMapPickerApplyToStops();
@@ -5601,14 +5604,14 @@ window.printInvoice=()=>{
   const nrFact='LSD-'+(r.id||'').slice(-6).toUpperCase()+'-'+pct;
   const dataDoc=new Date().toLocaleDateString('ro-RO');
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><title>Factură ${nrFact}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:28px;max-width:800px;margin:0 auto;color:#0f0d0a;font-size:13px}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid #c49a2a;flex-wrap:wrap;gap:12px}.logo{font-size:20px;font-weight:800;color:#a07d1c;margin-bottom:6px}.parties{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}.party{border:1.5px solid #e2d9c4;border-radius:8px;padding:14px}.party-gold{border-color:#c49a2a;background:#fef9ed}.tbl{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#ede8d8;padding:9px 12px;font-size:11px;color:#8a7f6e;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border:1px solid #e2d9c4}td{padding:10px 12px;border:1px solid #e2d9c4;vertical-align:top}.totals{margin-left:auto;width:300px;border:1.5px solid #e2d9c4;border-radius:8px;overflow:hidden}.tot-row{display:flex;justify-content:space-between;padding:9px 14px;font-size:13px;border-bottom:1px solid #e2d9c4}.tot-final{background:#fef9ed;font-size:16px;font-weight:800;border-bottom:none}.footer{border-top:1px solid #e2d9c4;padding-top:14px;font-size:11px;color:#8a7f6e;text-align:center;line-height:1.9}@media print{body{padding:14px}@page{margin:8mm}}</style></head><body>
+  w.document.write(`<!DOCTYPE html><html><head><title>Factură ${nrFact}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:28px;max-width:800px;margin:0 auto;color:#0f0d0a;font-size:13px}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid #a97c3f;flex-wrap:wrap;gap:12px}.logo{font-size:20px;font-weight:800;color:#7d5a2b;margin-bottom:6px}.parties{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}.party{border:1.5px solid #e2d9c4;border-radius:8px;padding:14px}.party-gold{border-color:#a97c3f;background:#fef9ed}.tbl{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#ede8d8;padding:9px 12px;font-size:11px;color:#8a7f6e;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border:1px solid #e2d9c4}td{padding:10px 12px;border:1px solid #e2d9c4;vertical-align:top}.totals{margin-left:auto;width:300px;border:1.5px solid #e2d9c4;border-radius:8px;overflow:hidden}.tot-row{display:flex;justify-content:space-between;padding:9px 14px;font-size:13px;border-bottom:1px solid #e2d9c4}.tot-final{background:#fef9ed;font-size:16px;font-weight:800;border-bottom:none}.footer{border-top:1px solid #e2d9c4;padding-top:14px;font-size:11px;color:#8a7f6e;text-align:center;line-height:1.9}@media print{body{padding:14px}@page{margin:8mm}}</style></head><body>
   <div class="header"><div><div class="logo">LSD Group SRL</div><div style="font-size:12px;color:#8a7f6e;line-height:1.9">${firma.cui?'CUI: '+firma.cui+'<br>':''}${firma.reg?firma.reg+'<br>':''}${firma.addr?firma.addr+'<br>':''}${firma.tel?'Tel: '+firma.tel:''}</div></div>
-  <div style="text-align:right"><div style="font-size:10px;color:#8a7f6e;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Document fiscal</div><div style="font-size:20px;font-weight:800">FACTURĂ PROFORMĂ</div><div style="font-size:12px;color:#8a7f6e;margin-top:8px;line-height:2"><b>Nr.:</b> ${nrFact}<br><b>Data:</b> ${dataDoc}</div><div style="margin-top:10px;background:linear-gradient(135deg,#c49a2a,#a07d1c);border-radius:8px;padding:8px 16px;display:inline-block;color:#fff;text-align:center"><div style="font-size:10px;opacity:.8">Tranșă</div><div style="font-size:20px;font-weight:800">${pct}%</div></div></div></div>
+  <div style="text-align:right"><div style="font-size:10px;color:#8a7f6e;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Document fiscal</div><div style="font-size:20px;font-weight:800">FACTURĂ PROFORMĂ</div><div style="font-size:12px;color:#8a7f6e;margin-top:8px;line-height:2"><b>Nr.:</b> ${nrFact}<br><b>Data:</b> ${dataDoc}</div><div style="margin-top:10px;background:linear-gradient(135deg,#a97c3f,#7d5a2b);border-radius:8px;padding:8px 16px;display:inline-block;color:#fff;text-align:center"><div style="font-size:10px;opacity:.8">Tranșă</div><div style="font-size:20px;font-weight:800">${pct}%</div></div></div></div>
   <div class="parties"><div class="party"><div style="font-size:10px;font-weight:700;color:#8a7f6e;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid #e2d9c4;padding-bottom:6px;margin-bottom:10px">Furnizor</div><div style="font-weight:700;margin-bottom:4px">${firma.name||'LSD Group SRL'}</div><div style="font-size:12px;color:#8a7f6e;line-height:1.8">${firma.cui?'CUI: '+firma.cui+'<br>':''}${firma.addr||''}</div></div>
   <div class="party party-gold"><div style="font-size:10px;font-weight:700;color:#8a7f6e;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid #e2d9c4;padding-bottom:6px;margin-bottom:10px">Cumpărător</div><div style="font-weight:700;margin-bottom:4px">${r.numeClient||'-'}</div><div style="font-size:12px;color:#8a7f6e;line-height:1.8">${r.email||''}${r.telefon?'<br>Tel: '+r.telefon:''}</div></div></div>
   <table class="tbl"><thead><tr><th style="width:30px">#</th><th>Descriere</th><th style="width:50px;text-align:center">UM</th><th style="width:40px;text-align:right">Cant</th><th style="width:120px;text-align:right">Preț fără TVA</th><th style="width:120px;text-align:right">Valoare fără TVA</th></tr></thead>
-  <tbody><tr><td>1</td><td><b>Transport persoane — ${r.descriereCursa||'Cursă organizată'}</b><br><span style="font-size:11px;color:#8a7f6e">Traseu: ${r.traseu||'-'} · Data: ${r.data||'-'}${r.ora?' · Ora: '+r.ora:''} · Vehicul: ${r.vehiculNume||'De confirmat'}${discount>0?'<br><b style="color:green">Discount: -'+discount+' RON</b>':''}<br><b style="color:#a07d1c">Tranșă ${pct}%</b></span></td><td style="text-align:center">buc</td><td style="text-align:right">1</td><td style="text-align:right">${baza.toFixed(2)} RON</td><td style="text-align:right;font-weight:600">${baza.toFixed(2)} RON</td></tr></tbody></table>
-  <div style="display:flex;justify-content:flex-end;margin-bottom:24px"><div class="totals"><div class="tot-row"><span style="color:#8a7f6e">Bază impozabilă</span><span style="font-weight:600">${baza.toFixed(2)} RON</span></div><div class="tot-row"><span style="color:#8a7f6e">TVA 21%</span><span style="font-weight:600">${tva.toFixed(2)} RON</span></div><div class="tot-row tot-final"><span>TOTAL DE PLATĂ</span><span style="color:#a07d1c;font-size:18px">${suma.toFixed(2)} RON</span></div><div style="padding:6px 14px;font-size:11px;color:#8a7f6e;background:#f8f5eb;text-align:right">TVA 21% inclus</div></div></div>
+  <tbody><tr><td>1</td><td><b>Transport persoane — ${r.descriereCursa||'Cursă organizată'}</b><br><span style="font-size:11px;color:#8a7f6e">Traseu: ${r.traseu||'-'} · Data: ${r.data||'-'}${r.ora?' · Ora: '+r.ora:''} · Vehicul: ${r.vehiculNume||'De confirmat'}${discount>0?'<br><b style="color:green">Discount: -'+discount+' RON</b>':''}<br><b style="color:#7d5a2b">Tranșă ${pct}%</b></span></td><td style="text-align:center">buc</td><td style="text-align:right">1</td><td style="text-align:right">${baza.toFixed(2)} RON</td><td style="text-align:right;font-weight:600">${baza.toFixed(2)} RON</td></tr></tbody></table>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:24px"><div class="totals"><div class="tot-row"><span style="color:#8a7f6e">Bază impozabilă</span><span style="font-weight:600">${baza.toFixed(2)} RON</span></div><div class="tot-row"><span style="color:#8a7f6e">TVA 21%</span><span style="font-weight:600">${tva.toFixed(2)} RON</span></div><div class="tot-row tot-final"><span>TOTAL DE PLATĂ</span><span style="color:#7d5a2b;font-size:18px">${suma.toFixed(2)} RON</span></div><div style="padding:6px 14px;font-size:11px;color:#8a7f6e;background:#f8f5eb;text-align:right">TVA 21% inclus</div></div></div>
   <div class="footer"><div>Factură proformă — nu constituie document contabil primar conf. Legii 82/1991.</div><div>${firma.iban?'Plată prin transfer bancar la IBAN: <b>'+firma.iban+'</b> sau numerar la sediu.':''}</div><div>${firma.name||'LSD Group SRL'} ${firma.cui?'· CUI: '+firma.cui:''} · Nr.: <b>${nrFact}</b> · ${dataDoc}</div></div>
   <script>setTimeout(()=>window.print(),400)<\/script></body></html>`);
   w.document.close();
@@ -5823,11 +5826,11 @@ window.dailyReport=async()=>{
   const byRuta={};rez.forEach(r=>{const k=r.ruta||r.traseu||'Diverse';if(!byRuta[k])byRuta[k]=[];byRuta[k].push(r);});
   const total=rez.reduce((s,r)=>s+(r.pretTotal||r.pretFinal||0),0);
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><title>Raport ${date}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:24px;color:#0f0d0a;font-size:13px}h1{font-size:20px;color:#a07d1c;margin-bottom:4px}h2{font-size:15px;color:#0f0d0a;margin:20px 0 8px;padding-bottom:6px;border-bottom:2px solid #c49a2a}table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px}th{background:#c49a2a;color:#fff;padding:8px 10px;text-align:left;font-size:11px}td{padding:7px 10px;border-bottom:1px solid #ede8d8}tr:nth-child(even)td{background:#fef9ed}.total{background:#0f0d0a;color:#fff;padding:12px 16px;border-radius:8px;display:flex;justify-content:space-between;margin-top:16px;font-weight:700}.footer{margin-top:24px;font-size:10px;color:#8a7f6e;text-align:center;border-top:1px solid #ede8d8;padding-top:12px}@media print{body{padding:12px}@page{margin:8mm}}</style></head><body>
+  w.document.write(`<!DOCTYPE html><html><head><title>Raport ${date}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:24px;color:#0f0d0a;font-size:13px}h1{font-size:20px;color:#7d5a2b;margin-bottom:4px}h2{font-size:15px;color:#0f0d0a;margin:20px 0 8px;padding-bottom:6px;border-bottom:2px solid #a97c3f}table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px}th{background:#a97c3f;color:#fff;padding:8px 10px;text-align:left;font-size:11px}td{padding:7px 10px;border-bottom:1px solid #ede8d8}tr:nth-child(even)td{background:#fef9ed}.total{background:#0f0d0a;color:#fff;padding:12px 16px;border-radius:8px;display:flex;justify-content:space-between;margin-top:16px;font-weight:700}.footer{margin-top:24px;font-size:10px;color:#8a7f6e;text-align:center;border-top:1px solid #ede8d8;padding-top:12px}@media print{body{padding:12px}@page{margin:8mm}}</style></head><body>
   <h1>🚌 ${firma.name||'LSD Group SRL'} — Raport Zilnic</h1>
   <p style="color:#8a7f6e;margin-bottom:20px">${firma.cui?'CUI: '+firma.cui+' · ':''}<strong>${date}</strong> · Total rezervări: <strong>${rez.length}</strong></p>
-  ${Object.entries(byRuta).map(([ruta,list])=>`<h2>🚌 ${ruta} <span style="font-size:12px;color:#8a7f6e;font-weight:400">(${list.length})</span></h2><table><thead><tr><th>#</th><th>Client</th><th>Telefon</th><th>Bilet</th><th>Loc</th><th>Urcare</th><th>Coborâre</th><th>Ora</th><th>Plată</th><th>Preț</th></tr></thead><tbody>${list.map((r,i)=>{const loc=r.locuriRezervate?.[0];return`<tr><td>${i+1}</td><td><b>${r.numeClient||'-'}</b></td><td>${r.telefon||'-'}</td><td style="font-family:monospace;font-size:11px">${r.biletId||'-'}</td><td><b>${(r.locuriRezervate||[]).map(l=>l.locNr).join(', ')||'-'}</b></td><td>${loc?.statieUrcare||'-'}</td><td>${loc?.statieCoborare||'-'}</td><td><b>${r.ora||'-'}</b></td><td>${r.statusPlata==='platit_online'?'💳 Online':r.statusPlata==='confirmat_sofer'?'💵 Cash ✓':'💵 De încasat'}</td><td style="font-weight:700;color:#a07d1c">${r.pretTotal||r.pretFinal||0} RON</td></tr>`;}).join('')}</tbody></table>`).join('')}
-  <div class="total"><span>TOTAL VENITURI ${date}</span><span style="color:#c49a2a;font-size:18px">${total} RON</span></div>
+  ${Object.entries(byRuta).map(([ruta,list])=>`<h2>🚌 ${ruta} <span style="font-size:12px;color:#8a7f6e;font-weight:400">(${list.length})</span></h2><table><thead><tr><th>#</th><th>Client</th><th>Telefon</th><th>Bilet</th><th>Loc</th><th>Urcare</th><th>Coborâre</th><th>Ora</th><th>Plată</th><th>Preț</th></tr></thead><tbody>${list.map((r,i)=>{const loc=r.locuriRezervate?.[0];return`<tr><td>${i+1}</td><td><b>${r.numeClient||'-'}</b></td><td>${r.telefon||'-'}</td><td style="font-family:monospace;font-size:11px">${r.biletId||'-'}</td><td><b>${(r.locuriRezervate||[]).map(l=>l.locNr).join(', ')||'-'}</b></td><td>${loc?.statieUrcare||'-'}</td><td>${loc?.statieCoborare||'-'}</td><td><b>${r.ora||'-'}</b></td><td>${r.statusPlata==='platit_online'?'💳 Online':r.statusPlata==='confirmat_sofer'?'💵 Cash ✓':'💵 De încasat'}</td><td style="font-weight:700;color:#7d5a2b">${r.pretTotal||r.pretFinal||0} RON</td></tr>`;}).join('')}</tbody></table>`).join('')}
+  <div class="total"><span>TOTAL VENITURI ${date}</span><span style="color:#a97c3f;font-size:18px">${total} RON</span></div>
   <div class="footer">${firma.name||'LSD Group SRL'} ${firma.cui?'· CUI: '+firma.cui:''} · Generat: ${new Date().toLocaleString('ro')}</div>
   <script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
   w.document.close();
@@ -6303,7 +6306,7 @@ async function initLeafletHarta(){
       bounds.push([lat,lng]);
       const isCursa=loc.startsWith('cursa_');
       const vIcon=L.divIcon({
-        html:`<div style="background:${isCursa?'#c49a2a':'#c46520'};color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff">${v.icon||'🚌'}</div>`,
+        html:`<div style="background:${isCursa?'#a97c3f':'#c46520'};color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff">${v.icon||'🚌'}</div>`,
         iconSize:[36,36],iconAnchor:[18,18],className:''
       });
       const soferiAzi=[];
