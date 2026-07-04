@@ -399,7 +399,40 @@ input.ok{border-color:var(--green)}
 
 /* ── HERO ── */
 .hero{
-  text-align:center;padding:64px 0 48px;
+  position:relative;text-align:center;padding:64px 24px 48px;
+  border-radius:var(--r-xl);overflow:hidden;margin-bottom:8px;
+}
+.hero-bg{position:absolute;inset:0;z-index:0}
+.hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center 40%}
+.hero-bg::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(247,244,236,.35) 0%,rgba(247,244,236,.82) 58%,var(--bone) 92%);
+}
+.hero>*:not(.hero-bg){position:relative;z-index:1}
+
+/* ── PHOTO GALLERY (flotă în imagini) ── */
+.photo-gallery-grid{
+  display:grid;grid-template-columns:1.6fr 1fr 1fr;grid-template-rows:1fr 1fr;
+  gap:14px;height:420px;
+}
+.photo-gallery-item{
+  position:relative;border-radius:var(--r-lg);overflow:hidden;cursor:zoom-in;
+  box-shadow:var(--sh);background:var(--cream);
+}
+.photo-gallery-item.large{grid-row:1 / 3}
+.photo-gallery-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s ease}
+.photo-gallery-item:hover img{transform:scale(1.07)}
+.photo-gallery-item::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to top,rgba(15,13,10,.32),transparent 55%);
+}
+.photo-gallery-cap{
+  position:absolute;left:14px;bottom:12px;z-index:2;color:#fff;font-weight:700;font-size:13px;
+  text-shadow:0 1px 4px rgba(0,0,0,.5);pointer-events:none;
+}
+@media(max-width:700px){
+  .photo-gallery-grid{grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,150px);height:auto}
+  .photo-gallery-item.large{grid-column:1 / 3;grid-row:1;height:200px}
 }
 .hero-eyebrow{
   display:inline-block;background:var(--amber-g);border:1px solid var(--amber-b);
@@ -1002,6 +1035,7 @@ footer{
 <div id="pg-home" class="page active">
   <!-- HERO cu traseu animat -->
   <div class="hero hero-journey">
+    <div class="hero-bg"><img src="https://images.unsplash.com/photo-1546955870-9fc9e5534349?fm=jpg&q=80&w=1800&auto=format&fit=crop" alt="Autocar pe șosea la apus" loading="eager"/></div>
     <div class="hero-eyebrow">🛡️ Autorizat ARR · CUI: RO12345678</div>
     <h1>Călătoriți cu <span class="grad">confort</span><br>și siguranță</h1>
     <p class="hero-sub">Curse regulate și organizate în toată România. Flotă modernă, șoferi autorizați, bilete electronice.</p>
@@ -1045,6 +1079,35 @@ footer{
       <button class="btn btn-primary" onclick="homeQuickSearch()">Caută →</button>
     </div>
     <div class="quick-search-chips" id="home-search-suggestions"></div>
+  </div>
+
+  <!-- Galerie foto flotă -->
+  <div style="margin-bottom:56px">
+    <div class="sec-head">
+      <div>
+        <div class="sec-title">📸 Flota noastră în imagini</div>
+        <div class="sec-sub">Click pe o poză pentru a o vedea mărită</div>
+      </div>
+    </div>
+    <div class="photo-gallery-grid">
+      <div class="photo-gallery-item large" onclick="openLB('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?fm=jpg&q=85&w=1400&auto=format&fit=crop')">
+        <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?fm=jpg&q=80&w=900&auto=format&fit=crop" alt="Autocar LSD Group pe traseu montan" loading="lazy"/>
+        <div class="photo-gallery-cap">🚌 Pe traseu</div>
+      </div>
+      <div class="photo-gallery-item" onclick="openLB('https://images.unsplash.com/photo-1772380043258-c768a6b09691?fm=jpg&q=85&w=1200&auto=format&fit=crop')">
+        <img src="https://images.unsplash.com/photo-1772380043258-c768a6b09691?fm=jpg&q=80&w=700&auto=format&fit=crop" alt="Autocar parcat" loading="lazy"/>
+        <div class="photo-gallery-cap">✅ Îmbarcare</div>
+      </div>
+      <div class="photo-gallery-item" onclick="openLB('https://images.unsplash.com/photo-1557223562-6c77ef16210f?fm=jpg&q=85&w=1200&auto=format&fit=crop')">
+        <img src="https://images.unsplash.com/photo-1557223562-6c77ef16210f?fm=jpg&q=80&w=700&auto=format&fit=crop" alt="Autocar modern" loading="lazy"/>
+        <div class="photo-gallery-cap">🛣 Curse regulate</div>
+      </div>
+      <div class="photo-gallery-item" onclick="openLB('https://images.unsplash.com/photo-1554460196-e6afa9dc66b4?fm=jpg&q=85&w=1200&auto=format&fit=crop')">
+        <img src="https://images.unsplash.com/photo-1554460196-e6afa9dc66b4?fm=jpg&q=80&w=700&auto=format&fit=crop" alt="Autocar pe drum" loading="lazy"/>
+        <div class="photo-gallery-cap">🚐 Curse organizate</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--stone);margin-top:8px;text-align:right">Poze demonstrative (Unsplash) — vor fi înlocuite cu poze reale ale flotei.</div>
   </div>
 
   <!-- Autobuzele noastre -->
@@ -6922,9 +6985,12 @@ async function seedIfEmpty() {
      rows:[{type:'1+1',seats:[{nr:1},{nr:2}]},{type:'2+2',seats:[{nr:3},{nr:4},{nr:5},{nr:6}]},{type:'2+2',seats:[{nr:7},{nr:8},{nr:9},{nr:10}]},{type:'2+2',seats:[{nr:11},{nr:12},{nr:13},{nr:14}]},{type:'2+2',seats:[{nr:15},{nr:16},{nr:17},{nr:18}]},{type:'2+2',seats:[{nr:19},{nr:20},{nr:21},{nr:22}]},{type:'2+2',seats:[{nr:23},{nr:24},{nr:25},{nr:26}]},{type:'2+2',seats:[{nr:27},{nr:28},{nr:29},{nr:30}]},{type:'2+2',seats:[{nr:31},{nr:32},{nr:33},{nr:34}]},{type:'2+2',seats:[{nr:35},{nr:36},{nr:37},{nr:38}]},{type:'spate-5',seats:[{nr:39},{nr:40},{nr:41},{nr:42},{nr:43}]}],
      capacitate:43,dotari:['WiFi','AC','TV','Toaletă','Prize 220V'],disponibil:true,pretPerKm:5},
   ];
+  const imgSprinter=['https://images.unsplash.com/photo-1557223562-6c77ef16210f?fm=jpg&q=80&w=900&auto=format&fit=crop','https://images.unsplash.com/photo-1554460196-e6afa9dc66b4?fm=jpg&q=80&w=900&auto=format&fit=crop'];
+  const imgSetra=['https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?fm=jpg&q=80&w=900&auto=format&fit=crop','https://images.unsplash.com/photo-1772380043258-c768a6b09691?fm=jpg&q=80&w=900&auto=format&fit=crop'];
   const ids=[];
   for(const v of vd){
-    const ref=await addDoc(collection(db,'vehicule'),{...v,imagini:[]});
+    const imagini=v.capacitate===43?imgSetra:imgSprinter;
+    const ref=await addDoc(collection(db,'vehicule'),{...v,imagini});
     ids.push({id:ref.id,...v});
   }
   const s43=ids.find(v=>v.capacitate===43), s19=ids.find(v=>v.capacitate===19);
