@@ -302,6 +302,39 @@ input.ok{border-color:var(--green)}
 .sch-route{
   font-family:var(--font-display);font-weight:600;font-size:21px;margin-bottom:10px;
 }
+.sch-veh-thumb{
+  width:56px;height:56px;border-radius:12px;object-fit:cover;flex-shrink:0;
+  box-shadow:var(--sh);cursor:zoom-in;
+}
+.sch-veh-thumb-icon{
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  background:var(--cream);border:1px solid var(--border-l);cursor:default;
+}
+/* ── PAGE BANNER (foto decorativ pe pagini) ── */
+.page-banner{
+  position:relative;height:150px;border-radius:var(--r-xl);overflow:hidden;
+  margin-bottom:26px;box-shadow:var(--sh-lg);background:var(--cream);
+}
+.page-banner img{width:100%;height:100%;object-fit:cover;display:block}
+.page-banner::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(120deg,rgba(20,18,14,.62),rgba(169,124,63,.30) 55%,rgba(20,18,14,.18));
+}
+.page-banner-content{
+  position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+  padding:0 32px;color:#fff;z-index:2;
+}
+.page-banner-title{
+  font-family:var(--font-display);font-weight:600;font-size:26px;
+  text-shadow:0 2px 10px rgba(0,0,0,.4);
+}
+.page-banner-sub{font-size:13px;opacity:.92;margin-top:5px;text-shadow:0 1px 5px rgba(0,0,0,.4);max-width:420px}
+@media(max-width:700px){
+  .page-banner{height:110px;margin-bottom:20px}
+  .page-banner-title{font-size:19px}
+  .page-banner-content{padding:0 20px}
+  .page-banner-sub{display:none}
+}
 .sch-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--stone);margin-bottom:12px}
 .sch-meta span{display:flex;align-items:center;gap:5px}
 .sch-meta strong{color:var(--ink)}
@@ -410,16 +443,15 @@ input.ok{border-color:var(--green)}
 }
 .hero>*:not(.hero-bg){position:relative;z-index:1}
 
-/* ── PHOTO GALLERY (flotă în imagini) ── */
+/* ── PHOTO GALLERY (flotă în imagini) — grid simetric ── */
 .photo-gallery-grid{
-  display:grid;grid-template-columns:1.6fr 1fr 1fr;grid-template-rows:1fr 1fr;
-  gap:14px;height:420px;
+  display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr;
+  gap:14px;height:230px;
 }
 .photo-gallery-item{
   position:relative;border-radius:var(--r-lg);overflow:hidden;cursor:zoom-in;
   box-shadow:var(--sh);background:var(--cream);
 }
-.photo-gallery-item.large{grid-row:1 / 3}
 .photo-gallery-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s ease}
 .photo-gallery-item:hover img{transform:scale(1.07)}
 .photo-gallery-item::after{
@@ -427,12 +459,27 @@ input.ok{border-color:var(--green)}
   background:linear-gradient(to top,rgba(15,13,10,.32),transparent 55%);
 }
 .photo-gallery-cap{
-  position:absolute;left:14px;bottom:12px;z-index:2;color:#fff;font-weight:700;font-size:13px;
+  position:absolute;left:12px;bottom:10px;z-index:2;color:#fff;font-weight:700;font-size:12px;
   text-shadow:0 1px 4px rgba(0,0,0,.5);pointer-events:none;
 }
+.photo-gallery-empty{
+  grid-column:1 / -1;text-align:center;padding:32px 16px;color:var(--stone);
+  border:2px dashed var(--border);border-radius:var(--r-lg);font-size:13px;
+}
 @media(max-width:700px){
-  .photo-gallery-grid{grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,150px);height:auto}
-  .photo-gallery-item.large{grid-column:1 / 3;grid-row:1;height:200px}
+  .photo-gallery-grid{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,140px);height:auto}
+}
+/* ── GALERIE ADMIN (drag & drop) ── */
+.gal-preview-grid{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.gal-preview-item{position:relative;width:110px;height:82px;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.gal-preview-item img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.gal-preview-del{
+  position:absolute;top:4px;right:4px;background:rgba(15,13,10,.65);border:none;color:#fff;
+  width:22px;height:22px;border-radius:50%;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.gal-preview-cap-input{
+  position:absolute;bottom:0;left:0;right:0;background:rgba(15,13,10,.55);color:#fff;font-size:10px;
+  border:none;padding:3px 6px;width:100%;text-align:center;
 }
 .hero-eyebrow{
   display:inline-block;background:var(--amber-g);border:1px solid var(--amber-b);
@@ -625,11 +672,19 @@ input.ok{border-color:var(--green)}
 /* ── ORG MODE CHOICE ── */
 .org-mode-choice{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;max-width:760px}
 .org-mode-card{
-  background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-xl);
-  padding:28px 22px;text-align:center;cursor:pointer;transition:all .2s;
+  position:relative;background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-xl);
+  padding:28px 22px;text-align:center;cursor:pointer;transition:all .2s;overflow:hidden;isolation:isolate;
 }
 .org-mode-card:hover{border-color:var(--amber);box-shadow:var(--sh-lg);transform:translateY(-3px)}
 .org-mode-card:first-child{border-color:var(--amber-b);background:linear-gradient(135deg,var(--amber-g),rgba(169,124,63,.02))}
+.org-mode-bg{position:absolute;inset:0;z-index:0}
+.org-mode-bg img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
+.org-mode-card:hover .org-mode-bg img{transform:scale(1.06)}
+.org-mode-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,18,14,.25),rgba(20,18,14,.82))}
+.org-mode-card.has-photo{color:#fff}
+.org-mode-card.has-photo>*:not(.org-mode-bg){position:relative;z-index:1}
+.org-mode-card.has-photo .org-mode-desc{color:rgba(255,255,255,.88)}
+.org-mode-card.has-photo .org-mode-cta{color:#fff}
 .org-mode-icon{font-size:38px;margin-bottom:12px}
 .org-mode-title{font-family:var(--font-display);font-weight:600;font-size:18px;margin-bottom:6px}
 .org-mode-desc{font-size:12px;color:var(--stone);margin-bottom:14px;line-height:1.5}
@@ -1089,25 +1144,8 @@ footer{
         <div class="sec-sub">Click pe o poză pentru a o vedea mărită</div>
       </div>
     </div>
-    <div class="photo-gallery-grid">
-      <div class="photo-gallery-item large" onclick="openLB('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?fm=jpg&q=85&w=1400&auto=format&fit=crop')">
-        <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?fm=jpg&q=80&w=900&auto=format&fit=crop" alt="Autocar LSD Group pe traseu montan" loading="lazy"/>
-        <div class="photo-gallery-cap">🚌 Pe traseu</div>
-      </div>
-      <div class="photo-gallery-item" onclick="openLB('https://images.unsplash.com/photo-1772380043258-c768a6b09691?fm=jpg&q=85&w=1200&auto=format&fit=crop')">
-        <img src="https://images.unsplash.com/photo-1772380043258-c768a6b09691?fm=jpg&q=80&w=700&auto=format&fit=crop" alt="Autocar parcat" loading="lazy"/>
-        <div class="photo-gallery-cap">✅ Îmbarcare</div>
-      </div>
-      <div class="photo-gallery-item" onclick="openLB('https://images.unsplash.com/photo-1557223562-6c77ef16210f?fm=jpg&q=85&w=1200&auto=format&fit=crop')">
-        <img src="https://images.unsplash.com/photo-1557223562-6c77ef16210f?fm=jpg&q=80&w=700&auto=format&fit=crop" alt="Autocar modern" loading="lazy"/>
-        <div class="photo-gallery-cap">🛣 Curse regulate</div>
-      </div>
-      <div class="photo-gallery-item" onclick="openLB('https://images.unsplash.com/photo-1554460196-e6afa9dc66b4?fm=jpg&q=85&w=1200&auto=format&fit=crop')">
-        <img src="https://images.unsplash.com/photo-1554460196-e6afa9dc66b4?fm=jpg&q=80&w=700&auto=format&fit=crop" alt="Autocar pe drum" loading="lazy"/>
-        <div class="photo-gallery-cap">🚐 Curse organizate</div>
-      </div>
-    </div>
-    <div style="font-size:11px;color:var(--stone);margin-top:8px;text-align:right">Poze demonstrative (Unsplash) — vor fi înlocuite cu poze reale ale flotei.</div>
+    <div class="photo-gallery-grid" id="home-gallery-grid"></div>
+    <div style="font-size:11px;color:var(--stone);margin-top:8px;text-align:right" id="home-gallery-note"></div>
   </div>
 
   <!-- Autobuzele noastre -->
@@ -1200,6 +1238,7 @@ footer{
 
 <!-- ────────────────── REGULATE ────────────────── -->
 <div id="pg-regulate" class="page">
+  <div class="page-banner" id="reg-banner"></div>
   <div class="sec-head">
     <div>
       <div class="sec-title">Curse Regulate</div>
@@ -1222,6 +1261,7 @@ footer{
 
 <!-- ────────────────── ORGANIZATE ────────────────── -->
 <div id="pg-organizate" class="page">
+  <div class="page-banner" id="org-banner"></div>
   <div class="sec-head">
     <div>
       <div class="sec-title">Cursă Organizată</div>
@@ -1230,13 +1270,15 @@ footer{
   </div>
   <!-- Alegere mod completare -->
   <div class="org-mode-choice" id="org-mode-choice">
-    <div class="org-mode-card" onclick="openOrgWizard()">
+    <div class="org-mode-card has-photo" onclick="openOrgWizard()">
+      <div class="org-mode-bg" id="org-mode-bg-1"></div>
       <div class="org-mode-icon">🧭</div>
       <div class="org-mode-title">Te ghidez pas-cu-pas</div>
       <div class="org-mode-desc">Răspunzi la câteva întrebări simple, una câte una</div>
       <div class="org-mode-cta">Începe ghidat →</div>
     </div>
-    <div class="org-mode-card" onclick="document.getElementById('org-mode-choice').style.display='none';document.getElementById('org-form-wrap').style.display='block'">
+    <div class="org-mode-card has-photo" onclick="document.getElementById('org-mode-choice').style.display='none';document.getElementById('org-form-wrap').style.display='block'">
+      <div class="org-mode-bg" id="org-mode-bg-2"></div>
       <div class="org-mode-icon">📝</div>
       <div class="org-mode-title">Completez tot formularul</div>
       <div class="org-mode-desc">Văd toate câmpurile dintr-o dată, în ordinea mea</div>
@@ -1381,7 +1423,7 @@ footer{
 <!-- ────────────────── BILET MEU ────────────────── -->
 <div id="pg-bilet" class="page">
   <div style="max-width:520px;margin:0 auto">
-    <h2 style="font-size:26px;font-weight:800;margin-bottom:8px;font-family:'Plus Jakarta Sans',sans-serif">🎟 Verifică biletul</h2>
+    <div class="page-banner" id="bilet-banner"></div>
     <p style="color:var(--stone);margin-bottom:24px">Introdu codul biletului pentru a vedea detaliile călătoriei tale.</p>
     <div style="background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);padding:24px;box-shadow:var(--sh);margin-bottom:20px">
       <div class="fg">
@@ -1615,6 +1657,7 @@ footer{
     <button class="tab-btn" onclick="adminTab('weekly')">📊 Program săptămânal</button>
     <button class="tab-btn" onclick="adminTab('harta')">🗺 Hartă live</button>
     <button class="tab-btn" onclick="adminTab('ticker')">📢 Ticker</button>
+    <button class="tab-btn" onclick="adminTab('galerie')">🖼 Galerie</button>
     <button class="tab-btn" onclick="adminTab('settings')">⚙️ Setări</button>
   </div>
 
@@ -1780,6 +1823,24 @@ footer{
     <div class="tbl-wrap">
       <table class="tbl"><thead><tr><th>Mesaj</th><th>Activ</th><th></th></tr></thead>
       <tbody id="ticker-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- GALERIE FOTO HOMEPAGE -->
+  <div id="admin-tab-galerie" class="tab-panel">
+    <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;box-shadow:var(--sh)">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">🖼 Galerie foto — homepage</h3>
+      <p style="font-size:12px;color:var(--stone);margin-bottom:16px">Aceste poze apar în secțiunea „Flota noastră în imagini" de pe pagina principală. Trage poze aici sau apasă pentru a le selecta (max 8). Fiecare poză poate avea o etichetă scurtă (opțional).</p>
+      <div class="drop-zone" id="gal-dropzone" ondragover="galDzOver(event)" ondragleave="galDzLeave()" ondrop="galDzDrop(event)" onclick="document.getElementById('gal-file').click()">
+        <div style="font-size:28px;margin-bottom:6px">📸</div>
+        <p style="color:var(--stone);font-size:13px">Trage poze aici sau click pentru a le selecta</p>
+        <input type="file" id="gal-file" multiple accept="image/*" style="display:none" onchange="handleGalImages(this.files)"/>
+      </div>
+      <div class="gal-preview-grid" id="gal-preview"></div>
+      <div style="display:flex;gap:8px;margin-top:18px">
+        <button class="btn btn-primary btn-sm" onclick="saveGalerie()">💾 Salvează galeria</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadGaleriePanel()">↺ Resetează modificările</button>
+      </div>
     </div>
   </div>
 
@@ -2441,8 +2502,9 @@ footer{
     }
     if (!window._FB_READY) { window._PENDING_PAGE = page; return; }
     if (page === 'home') initHome();
-    if (page === 'regulate') loadRegulate();
-    if (page === 'organizate') loadOrgPage();
+    if (page === 'regulate') { fillPageBanner('reg-banner','Curse Regulate','Rezervă un loc pe traseele noastre zilnice',0); loadRegulate(); }
+    if (page === 'organizate') { fillPageBanner('org-banner','Cursă Organizată','Excursii, nunți, transferuri — la cerere',1); loadOrgPage(); }
+    if (page === 'bilet') fillPageBanner('bilet-banner','Verifică biletul','Introdu codul pentru detaliile călătoriei',2);
     if (page === 'cont') loadContPage();
     if (page === 'admin') loadAdmin();
     if (page === 'sofer') loadDriverPortal();
@@ -2652,8 +2714,10 @@ onAuthStateChanged(auth, async u => {
       const sd = sr.data();
       window._EJS = sd.emailjs || {};
       window._FIRMA = sd.firma || {};
+      window._GALERIE_HOME = sd.galerieHome || [];
       if (sd.soferContEmail) window.SOFER_EMAIL = sd.soferContEmail;
       renderFooter();
+      if (document.getElementById('pg-home')?.classList.contains('active')) renderHomeGallery();
     }
   } catch(e) { console.warn('Settings:', e.message); }
 
@@ -2967,8 +3031,53 @@ window.initHome = async function initHome() {
   renderHeroRouteLine();
   renderHomeStats();
   renderHomeSearchSuggestions();
+  renderHomeGallery();
   initHomeRoutesMap();
 }
+
+// ── GALERIE FOTO HOMEPAGE (poze reale încărcate de admin, drag&drop) ──
+window._GALERIE_HOME = window._GALERIE_HOME || [];
+window._GALERIE_DEFAULT = [
+  {src:'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?fm=jpg&q=80&w=900&auto=format&fit=crop',cap:'🚌 Pe traseu'},
+  {src:'https://images.unsplash.com/photo-1772380043258-c768a6b09691?fm=jpg&q=80&w=700&auto=format&fit=crop',cap:'✅ Îmbarcare'},
+  {src:'https://images.unsplash.com/photo-1557223562-6c77ef16210f?fm=jpg&q=80&w=700&auto=format&fit=crop',cap:'🛣 Curse regulate'},
+  {src:'https://images.unsplash.com/photo-1554460196-e6afa9dc66b4?fm=jpg&q=80&w=700&auto=format&fit=crop',cap:'🚐 Curse organizate'}
+];
+function renderHomeGallery(){
+  const grid = document.getElementById('home-gallery-grid');
+  const note = document.getElementById('home-gallery-note');
+  if (!grid) return;
+  const real = window._GALERIE_HOME||[];
+  const items = real.length ? real : window._GALERIE_DEFAULT;
+  grid.innerHTML = items.slice(0,8).map(it=>{
+    const src = it.src||it; const cap = it.cap||'';
+    return `<div class="photo-gallery-item" onclick="openLB('${src}')">
+      <img src="${src}" alt="${cap||'Autobuz LSD Group'}" loading="lazy"/>
+      ${cap?`<div class="photo-gallery-cap">${cap}</div>`:''}
+    </div>`;
+  }).join('');
+  if (note) note.textContent = real.length ? '' : 'Poze demonstrative (Unsplash) — adaugă poze reale din Admin → Galerie.';
+}
+window.renderHomeGallery = renderHomeGallery;
+
+// ── PAGE BANNER (foto decorativ pe Regulate / Organizate / Bilet) ──
+function fillPageBanner(elId, title, sub, idx){
+  const el = document.getElementById(elId); if (!el) return;
+  const pool = (window._GALERIE_HOME&&window._GALERIE_HOME.length) ? window._GALERIE_HOME : window._GALERIE_DEFAULT;
+  const it = pool[idx % pool.length] || pool[0];
+  const src = it.src || it;
+  el.innerHTML = `<img src="${src}" alt="${title}" loading="lazy"/><div class="page-banner-content"><div class="page-banner-title">${title}</div>${sub?`<div class="page-banner-sub">${sub}</div>`:''}</div>`;
+}
+window.fillPageBanner = fillPageBanner;
+
+function fillModeBg(elId, idx){
+  const el = document.getElementById(elId); if (!el) return;
+  const pool = (window._GALERIE_HOME&&window._GALERIE_HOME.length) ? window._GALERIE_HOME : window._GALERIE_DEFAULT;
+  const it = pool[idx % pool.length] || pool[0];
+  const src = it.src || it;
+  el.innerHTML = `<img src="${src}" alt="" loading="lazy"/>`;
+}
+window.fillModeBg = fillModeBg;
 
 function renderHeroRouteLine(){
   const wrap = document.getElementById('hero-route-stops');
@@ -3244,9 +3353,18 @@ window.loadRegulate = async () => {
           ${plin?'🔴 Loc complet':urgent?`🟠 Doar ${liber} locuri libere!`:`🟢 ${liber} locuri libere din ${capacit}`}
         </div>` : '';
 
+      const vehObj = (window._F||[]).find(v=>v.id===c.vehiculId);
+      const vehImg = vehObj?.imagini?.[0];
+      const vehThumb = vehImg
+        ? `<img src="${vehImg}" class="sch-veh-thumb" alt="${c.vehiculNume||'Autobuz'}" onclick="event.stopPropagation();openLB('${vehImg}')" loading="lazy"/>`
+        : `<div class="sch-veh-thumb sch-veh-thumb-icon">${vehObj?.icon||'🚌'}</div>`;
+
       cards.push(`<div class="sch-card route-card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-          <div class="sch-route">${c.ruta}</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:10px">
+          <div style="display:flex;gap:12px;align-items:flex-start;flex:1;min-width:0">
+            ${vehThumb}
+            <div class="sch-route">${c.ruta}</div>
+          </div>
           ${c.tipCursa==='roundtrip'?'<span class="chip chip-amber">↔️ Dus-Întors</span>':''}
         </div>
         <!-- Mini traseu vizual -->
@@ -3704,6 +3822,8 @@ window.loadOrgPage = async function() {
   window._ORG_TIP = '';
   renderOrgStops();
   updateOrgProgress();
+  fillModeBg('org-mode-bg-1',3);
+  fillModeBg('org-mode-bg-2',0);
   // Reset afisare: arata alegerea (wizard/formular) din nou
   const modeChoice = document.getElementById('org-mode-choice');
   const formWrap = document.getElementById('org-form-wrap');
@@ -4493,15 +4613,16 @@ window.loadAdmin = async () => {
 };
 window.refreshAdmin=async()=>{await loadAdmin();toast('Date actualizate!','ok');};
 window.adminTab=tab=>{
-  ['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','settings'].forEach(t=>{
+  ['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','galerie','settings'].forEach(t=>{
     document.getElementById('admin-tab-'+t)?.classList.toggle('active',t===tab);
   });
   document.querySelectorAll('#pg-admin .tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','settings'][i]===tab);
+    b.classList.toggle('active',['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','galerie','settings'][i]===tab);
   });
   if(tab==='schedule'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];loadSchedule();}
   if(tab==='weekly'){loadWeeklySchedule();}
   if(tab==='harta'){loadHartaAdmin();}
+  if(tab==='galerie'){loadGaleriePanel();}
 };
 window.adminViewAs=role=>{
   window._ROLE=role==='driver'?'driver':'client';
@@ -5841,6 +5962,50 @@ window.saveTicker=async()=>{
   closeModal('ticker');await loadTickerTbl();toast('Salvat!','ok');
 };
 
+// ── GALERIE FOTO HOMEPAGE ADMIN (drag & drop) ──────────────
+window._GAL_IMAGES = []; // staging array {src,cap} while se editeaza in admin
+window.loadGaleriePanel = () => {
+  window._GAL_IMAGES = (window._GALERIE_HOME||[]).map(it => typeof it==='string' ? {src:it,cap:''} : {src:it.src,cap:it.cap||''});
+  renderGalPreview();
+};
+window.galDzOver = e => { e.preventDefault(); document.getElementById('gal-dropzone')?.classList.add('drag-over'); };
+window.galDzLeave = () => document.getElementById('gal-dropzone')?.classList.remove('drag-over');
+window.galDzDrop = e => { e.preventDefault(); document.getElementById('gal-dropzone')?.classList.remove('drag-over'); handleGalImages(e.dataTransfer.files); };
+window.handleGalImages = files => {
+  [...files].forEach(f => {
+    if (!f.type.startsWith('image/') || window._GAL_IMAGES.length >= 8) { if(window._GAL_IMAGES.length>=8) toast('Maxim 8 poze în galerie','wr'); return; }
+    const reader = new FileReader();
+    reader.onload = e2 => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'); let w=img.width,h=img.height;
+        const mx=1000; if(w>mx||h>mx){const r=Math.min(mx/w,mx/h);w=Math.round(w*r);h=Math.round(h*r);}
+        c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+        window._GAL_IMAGES.push({src:c.toDataURL('image/jpeg',.78),cap:''});
+        renderGalPreview();
+      };
+      img.src = e2.target.result;
+    };
+    reader.readAsDataURL(f);
+  });
+};
+function renderGalPreview(){
+  const el = document.getElementById('gal-preview'); if (!el) return;
+  el.innerHTML = window._GAL_IMAGES.map((it,i) => `<div class="gal-preview-item">
+    <img src="${it.src}" onclick="openLB('${it.src}')"/>
+    <button class="gal-preview-del" onclick="window._GAL_IMAGES.splice(${i},1);renderGalPreview()">✕</button>
+    <input class="gal-preview-cap-input" placeholder="etichetă" value="${it.cap||''}" onchange="window._GAL_IMAGES[${i}].cap=this.value"/>
+  </div>`).join('') || '<div class="photo-gallery-empty" style="grid-column:unset">Nicio poză încă — trage poze mai sus.</div>';
+}
+window.saveGalerie = async () => {
+  try {
+    await setDoc(doc(db,'setari','global'), {galerieHome: window._GAL_IMAGES}, {merge:true});
+    window._GALERIE_HOME = [...window._GAL_IMAGES];
+    renderHomeGallery();
+    toast('✅ Galerie salvată! Se vede pe homepage.','ok');
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
+};
+
 // ── SETTINGS ADMIN ─────────────────────────────────────────
 async function loadAdminSettings(){
   try{const ref=await getDoc(doc(db,'setari','global'));if(ref.exists()){const d=ref.data();const s=d.emailjs||{};const f=d.firma||{};document.getElementById('ejs-sid').value=s.serviceId||'';document.getElementById('ejs-key').value=s.publicKey||'';document.getElementById('ejs-admin').value=s.adminEmail||window.ADMIN_EMAIL;document.getElementById('ejs-tmpl-client').value=s.templateIdClient||s.templateId||'';document.getElementById('ejs-tmpl-org').value=s.templateIdOrg||'';document.getElementById('ejs-tmpl-admin').value=s.templateIdAdmin||'';document.getElementById('firm-name').value=f.name||'';document.getElementById('firm-cui').value=f.cui||'';document.getElementById('firm-reg').value=f.reg||'';document.getElementById('firm-tel').value=f.tel||'';document.getElementById('firm-addr').value=f.addr||f.adr||'';document.getElementById('firm-iban').value=f.iban||'';document.getElementById('firm-bank').value=f.banca||'';document.getElementById('firm-driver-email').value=d.soferContEmail||'';const ok=s.serviceId&&s.publicKey;const b=document.getElementById('ejs-status');if(b){b.className='badge '+(ok?'badge-confirmata':'badge-anulata');b.textContent='● '+(ok?'Configurat':'Neconfigurat');}}}catch(e){}
@@ -7012,8 +7177,9 @@ async function seedIfEmpty() {
 
 // ── INIT ───────────────────────────────────────────────────
 (async()=>{
-  try{const sr=await getDoc(doc(db,'setari','global'));if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{};if(sr.data().soferContEmail)window.SOFER_EMAIL=sr.data().soferContEmail;}}catch(e){}
+  try{const sr=await getDoc(doc(db,'setari','global'));if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{};window._GALERIE_HOME=sr.data().galerieHome||[];if(sr.data().soferContEmail)window.SOFER_EMAIL=sr.data().soferContEmail;}}catch(e){}
   renderFooter();
+  renderHomeGallery();
   try{await loadFleet();}catch(e){}
   try{const rs=await getDocs(collection(db,'curse_regulate'));window._R=rs.docs.map(d=>({id:d.id,...d.data()}));}catch(e){}
   try{await seedIfEmpty();}catch(e){console.warn('seed:',e.message);}
