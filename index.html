@@ -1156,9 +1156,9 @@ footer{
   <!-- HERO cu traseu animat -->
   <div class="hero hero-journey">
     <div class="hero-bg"><img src="https://images.unsplash.com/photo-1546955870-9fc9e5534349?fm=jpg&q=80&w=1800&auto=format&fit=crop" alt="Autocar pe șosea la apus" loading="eager"/></div>
-    <div class="hero-eyebrow">🛡️ Autorizat ARR · CUI: RO12345678</div>
-    <h1>Călătoriți cu <span class="grad">confort</span><br>și siguranță</h1>
-    <p class="hero-sub">Curse regulate și organizate în toată România. Flotă modernă, șoferi autorizați, bilete electronice.</p>
+    <div class="hero-eyebrow" id="hero-eyebrow-text">🛡️ Autorizat ARR · CUI: RO12345678</div>
+    <h1><span id="hero-title-1">Călătoriți cu</span> <span class="grad" id="hero-title-grad">confort</span><br><span id="hero-title-2">și siguranță</span></h1>
+    <p class="hero-sub" id="hero-sub-text">Curse regulate și organizate în toată România. Flotă modernă, șoferi autorizați, bilete electronice.</p>
     <div class="hero-cta">
       <button class="btn btn-primary btn-lg" onclick="nav('regulate')">🔄 Curse Regulate</button>
       <button class="btn btn-secondary btn-lg" onclick="nav('organizate')">🚌 Cursă Organizată</button>
@@ -1241,61 +1241,61 @@ footer{
 
   <!-- Cum functioneaza -->
   <div style="margin-bottom:56px">
-    <div class="sec-head"><div><div class="sec-title">Cum funcționează</div><div class="sec-sub">De la căutare la îmbarcare, în 4 pași</div></div></div>
+    <div class="sec-head"><div><div class="sec-title" id="how-title">Cum funcționează</div><div class="sec-sub" id="how-sub">De la căutare la îmbarcare, în 4 pași</div></div></div>
     <div class="how-it-works-grid">
       <div class="hiw-step">
         <div class="hiw-num">1</div>
-        <div class="hiw-icon">🔍</div>
-        <div class="hiw-title">Alegi cursa</div>
-        <div class="hiw-desc">Regulată cu plecări zilnice sau organizată pentru grupul tău</div>
+        <div class="hiw-icon" id="how-1-icon">🔍</div>
+        <div class="hiw-title" id="how-1-title">Alegi cursa</div>
+        <div class="hiw-desc" id="how-1-desc">Regulată cu plecări zilnice sau organizată pentru grupul tău</div>
       </div>
       <div class="hiw-connector"></div>
       <div class="hiw-step">
         <div class="hiw-num">2</div>
-        <div class="hiw-icon">💺</div>
-        <div class="hiw-title">Alegi locul</div>
-        <div class="hiw-desc">Selectezi locul preferat direct pe harta autobuzului</div>
+        <div class="hiw-icon" id="how-2-icon">💺</div>
+        <div class="hiw-title" id="how-2-title">Alegi locul</div>
+        <div class="hiw-desc" id="how-2-desc">Selectezi locul preferat direct pe harta autobuzului</div>
       </div>
       <div class="hiw-connector"></div>
       <div class="hiw-step">
         <div class="hiw-num">3</div>
-        <div class="hiw-icon">🎟</div>
-        <div class="hiw-title">Primești biletul</div>
-        <div class="hiw-desc">Cod QR instant, pe ecran sau printat</div>
+        <div class="hiw-icon" id="how-3-icon">🎟</div>
+        <div class="hiw-title" id="how-3-title">Primești biletul</div>
+        <div class="hiw-desc" id="how-3-desc">Cod QR instant, pe ecran sau printat</div>
       </div>
       <div class="hiw-connector"></div>
       <div class="hiw-step">
         <div class="hiw-num">4</div>
-        <div class="hiw-icon">🚌</div>
-        <div class="hiw-title">Te îmbarci</div>
-        <div class="hiw-desc">Scanare rapidă la urcare, locul tău te așteaptă</div>
+        <div class="hiw-icon" id="how-4-icon">🚌</div>
+        <div class="hiw-title" id="how-4-title">Te îmbarci</div>
+        <div class="hiw-desc" id="how-4-desc">Scanare rapidă la urcare, locul tău te așteaptă</div>
       </div>
     </div>
   </div>
 
   <!-- De ce noi -->
   <div style="background:var(--cream);border:1px solid var(--border-l);border-radius:var(--r-xl);padding:36px;margin-bottom:32px">
-    <h2 style="font-size:20px;font-weight:700;margin-bottom:24px;text-align:center">De ce să alegi LSD Group?</h2>
+    <h2 id="why-title" style="font-size:20px;font-weight:700;margin-bottom:24px;text-align:center">De ce să alegi LSD Group?</h2>
     <div class="g4">
       <div class="why-card">
-        <div style="font-size:36px;margin-bottom:10px">🛡️</div>
-        <div style="font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">Autorizat ARR</div>
-        <div style="font-size:12px;color:var(--stone)">Licență transport persoane valabilă</div>
+        <div id="why-1-icon" style="font-size:36px;margin-bottom:10px">🛡️</div>
+        <div id="why-1-title" style="font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">Autorizat ARR</div>
+        <div id="why-1-desc" style="font-size:12px;color:var(--stone)">Licență transport persoane valabilă</div>
       </div>
       <div class="why-card">
-        <div style="font-size:36px;margin-bottom:10px">👨‍✈️</div>
-        <div style="font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">Șoferi profesioniști</div>
-        <div style="font-size:12px;color:var(--stone)">Permis categoria D, experiență verificată</div>
+        <div id="why-2-icon" style="font-size:36px;margin-bottom:10px">👨‍✈️</div>
+        <div id="why-2-title" style="font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">Șoferi profesioniști</div>
+        <div id="why-2-desc" style="font-size:12px;color:var(--stone)">Permis categoria D, experiență verificată</div>
       </div>
       <div class="why-card">
-        <div style="font-size:36px;margin-bottom:10px">📍</div>
-        <div style="font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">Trasee flexibile</div>
-        <div style="font-size:12px;color:var(--stone)">Opriri la cerere pe rutele regulate</div>
+        <div id="why-3-icon" style="font-size:36px;margin-bottom:10px">📍</div>
+        <div id="why-3-title" style="font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">Trasee flexibile</div>
+        <div id="why-3-desc" style="font-size:12px;color:var(--stone)">Opriri la cerere pe rutele regulate</div>
       </div>
       <div class="why-card">
-        <div style="font-size:36px;margin-bottom:10px">💳</div>
-        <div style="font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">Prețuri corecte</div>
-        <div style="font-size:12px;color:var(--stone)">Calculat transparent pe segmente</div>
+        <div id="why-4-icon" style="font-size:36px;margin-bottom:10px">💳</div>
+        <div id="why-4-title" style="font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">Prețuri corecte</div>
+        <div id="why-4-desc" style="font-size:12px;color:var(--stone)">Calculat transparent pe segmente</div>
       </div>
     </div>
   </div>
@@ -1306,8 +1306,8 @@ footer{
   <div class="page-banner" id="reg-banner"></div>
   <div class="sec-head">
     <div>
-      <div class="sec-title">Curse Regulate</div>
-      <div class="sec-sub">Selectați data pentru a vedea cursele disponibile</div>
+      <div class="sec-title" id="reg-title">Curse Regulate</div>
+      <div class="sec-sub" id="reg-sub">Selectați data pentru a vedea cursele disponibile</div>
     </div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
@@ -1329,8 +1329,8 @@ footer{
   <div class="page-banner" id="org-banner"></div>
   <div class="sec-head">
     <div>
-      <div class="sec-title">Cursă Organizată</div>
-      <div class="sec-sub">Completați cererea. Echipa noastră vă va contacta cu o ofertă personalizată.</div>
+      <div class="sec-title" id="org-title">Cursă Organizată</div>
+      <div class="sec-sub" id="org-sub">Completați cererea. Echipa noastră vă va contacta cu o ofertă personalizată.</div>
     </div>
   </div>
   <!-- Alegere mod completare -->
@@ -1462,10 +1462,10 @@ footer{
       <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh);margin-bottom:14px">
         <div style="font-weight:700;margin-bottom:12px;font-family:'Plus Jakarta Sans',sans-serif">📞 Cum funcționează?</div>
         <div style="font-size:13px;color:var(--stone);display:flex;flex-direction:column;gap:8px">
-          <div>1️⃣ Trimiți cererea cu detaliile</div>
-          <div>2️⃣ Echipa LSD analizează și pregătește oferta</div>
-          <div>3️⃣ Primești oferta pe email și în contul tău</div>
-          <div>4️⃣ Accepți oferta — cursa e confirmată</div>
+          <div id="org-how-1">1️⃣ Trimiți cererea cu detaliile</div>
+          <div id="org-how-2">2️⃣ Echipa LSD analizează și pregătește oferta</div>
+          <div id="org-how-3">3️⃣ Primești oferta pe email și în contul tău</div>
+          <div id="org-how-4">4️⃣ Accepți oferta — cursa e confirmată</div>
         </div>
       </div>
       <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:0;box-shadow:var(--sh);overflow:hidden">
@@ -1792,6 +1792,7 @@ footer{
     <button class="tab-btn" onclick="adminTab('harta')">🗺 Hartă live</button>
     <button class="tab-btn" onclick="adminTab('ticker')">📢 Ticker</button>
     <button class="tab-btn" onclick="adminTab('galerie')">🖼 Galerie</button>
+    <button class="tab-btn" onclick="adminTab('continut')">📝 Conținut</button>
     <button class="tab-btn" onclick="adminTab('settings')">⚙️ Setări</button>
   </div>
 
@@ -1975,6 +1976,16 @@ footer{
         <button class="btn btn-primary btn-sm" onclick="saveGalerie()">💾 Salvează galeria</button>
         <button class="btn btn-secondary btn-sm" onclick="loadGaleriePanel()">↺ Resetează modificările</button>
       </div>
+    </div>
+  </div>
+
+  <!-- CONȚINUT SITE (texte editabile) -->
+  <div id="admin-tab-continut" class="tab-panel">
+    <div class="info-box" style="margin-bottom:16px">✏️ Aici editezi textele de pe Homepage, Curse Regulate și Cursă Organizată. Modificările se văd instant pe site după ce apeși „Salvează conținutul". Câmpurile sunt precompletate cu textul curent de pe site.</div>
+    <div id="content-panel-body"></div>
+    <div style="display:flex;gap:8px;margin-top:8px;position:sticky;bottom:12px;background:var(--bone);padding:10px 0">
+      <button class="btn btn-primary" onclick="saveContentPanel()">💾 Salvează conținutul</button>
+      <button class="btn btn-secondary" onclick="loadContentPanel()">↺ Resetează modificările</button>
     </div>
   </div>
 
@@ -4758,16 +4769,17 @@ window.loadAdmin = async () => {
 };
 window.refreshAdmin=async()=>{await loadAdmin();toast('Date actualizate!','ok');};
 window.adminTab=tab=>{
-  ['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','galerie','settings'].forEach(t=>{
+  ['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','galerie','continut','settings'].forEach(t=>{
     document.getElementById('admin-tab-'+t)?.classList.toggle('active',t===tab);
   });
   document.querySelectorAll('#pg-admin .tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','galerie','settings'][i]===tab);
+    b.classList.toggle('active',['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','galerie','continut','settings'][i]===tab);
   });
   if(tab==='schedule'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];loadSchedule();}
   if(tab==='weekly'){loadWeeklySchedule();}
   if(tab==='harta'){loadHartaAdmin();}
   if(tab==='galerie'){loadGaleriePanel();}
+  if(tab==='continut'){loadContentPanel();}
 };
 window.adminViewAs=role=>{
   window._ROLE=role==='driver'?'driver':'client';
@@ -5212,20 +5224,29 @@ window.openRouteMapPicker = async () => {
 };
 
 async function rmMapPickerAddPoint(lat, lng){
-  // Reverse geocoding: coordonate -> nume localitate
-  let nume = `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
+  const idx = window._rmPickerPoints.length;
+  // Placeholder rapid — nu asteptam geocodarea inainte de a desena punctul
+  window._rmPickerPoints.push({ll:[lat,lng], nume:`${lat.toFixed(3)}, ${lng.toFixed(3)}`});
+  await rmMapPickerRender();
+  rmMapPickerResolveName(idx, lat, lng);
+}
+
+// Rezolva numele localitatii in fundal, fara sa blocheze desenarea hartii/traseului
+async function rmMapPickerResolveName(idx, lat, lng){
   try {
     const r = await fetch(`https://api.openrouteservice.org/geocode/reverse?api_key=${window.ORS_KEY}&point.lon=${lng}&point.lat=${lat}&size=1`);
-    if (r.ok) {
-      const d = await r.json();
-      const props = d.features?.[0]?.properties;
-      if (props) {
-        nume = props.locality || props.county || props.label || nume;
-      }
+    if (!r.ok) return;
+    const d = await r.json();
+    const props = d.features?.[0]?.properties;
+    const nume = props?.locality || props?.county || props?.label;
+    const p = window._rmPickerPoints[idx];
+    if (nume && p && p.ll[0]===lat && p.ll[1]===lng) {
+      p.nume = nume;
+      const marker = window._rmPickerMarkers[idx];
+      if (marker) marker.setPopupContent(`<strong>${nume}</strong><br><button onclick="rmMapPickerRemovePoint(${idx})" style="margin-top:6px;padding:3px 10px;background:#b52d2d;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">✕ Șterge</button>`);
+      rmMapPickerApplyToStops(); // ieftin acum — distantele sunt deja calculate/cache-uite
     }
-  } catch(e) { console.warn('Reverse geocode failed:', e.message); }
-  window._rmPickerPoints.push({ll:[lat,lng], nume});
-  await rmMapPickerRender();
+  } catch(e) { /* pastreaza numele placeholder cu coordonate */ }
 }
 
 window.rmMapPickerUndo = async () => {
@@ -5295,14 +5316,9 @@ async function rmMapPickerRender(){
     marker.on('dragend', async (ev)=>{
       const ll = ev.target.getLatLng();
       window._rmPickerPoints[i].ll = [ll.lat, ll.lng];
-      // Re-geocode reverse pentru noua pozitie
-      try {
-        const r = await fetch(`https://api.openrouteservice.org/geocode/reverse?api_key=${window.ORS_KEY}&point.lon=${ll.lng}&point.lat=${ll.lat}&size=1`);
-        const d = await r.json();
-        const props = d.features?.[0]?.properties;
-        if (props) window._rmPickerPoints[i].nume = props.locality || props.county || props.label || window._rmPickerPoints[i].nume;
-      } catch(e){}
-      await rmMapPickerRender();
+      window._rmPickerPoints[i].nume = `${ll.lat.toFixed(3)}, ${ll.lng.toFixed(3)}`;
+      await rmMapPickerRender(); // desenare instant, cu coordonatele noi
+      rmMapPickerResolveName(i, ll.lat, ll.lng); // numele se actualizeaza in fundal
     });
     window._rmPickerMarkers.push(marker);
   });
@@ -5326,14 +5342,36 @@ window.rmMapPickerRemovePoint = async (i) => {
   await rmMapPickerRender();
 };
 
+// Cache pentru distanta intre 2 puncte (pe coordonate, nu pe nume) — evita
+// refacerea calculului de geocodare + distanta pentru segmente nemodificate
+window._rmSegmentCache = window._rmSegmentCache || {};
+function segKey(ll1, ll2){ return ll1[0].toFixed(5)+','+ll1[1].toFixed(5)+'|'+ll2[0].toFixed(5)+','+ll2[1].toFixed(5); }
+async function getSegmentDist(ll1, ll2){
+  const key = segKey(ll1, ll2);
+  if (window._rmSegmentCache[key]) return window._rmSegmentCache[key];
+  try {
+    const r = await fetch('https://api.openrouteservice.org/v2/directions/driving-hgv', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':window.ORS_KEY},
+      body:JSON.stringify({coordinates:[[ll1[1],ll1[0]],[ll2[1],ll2[0]]]})
+    });
+    const d = await r.json();
+    const seg = d.routes?.[0]?.summary;
+    if (!seg) return null;
+    const result = {km: Math.round(seg.distance/1000), min: Math.round(seg.duration/60)};
+    window._rmSegmentCache[key] = result;
+    return result;
+  } catch(e) { return null; }
+}
+
 async function rmMapPickerApplyToStops(){
   const pts = window._rmPickerPoints;
   if (pts.length < 2) return;
-  // Calculam distante cumulate folosind ORS pe perechi consecutive
+  // Calculam distante cumulate direct din coordonate (fara re-geocodare), cu cache per segment
   let totalKm = 0, totalMin = 0;
   const newStops = [{n: pts[0].nume, p:0, m:0, lat: pts[0].ll[0], lng: pts[0].ll[1]}];
   for (let i=1; i<pts.length; i++) {
-    const dist = await calcDistORS(pts[i-1].nume, pts[i].nume);
+    const dist = await getSegmentDist(pts[i-1].ll, pts[i].ll);
     if (dist) { totalKm += dist.km; totalMin += dist.min; }
     newStops.push({n: pts[i].nume, p: Math.round(totalKm*0.5), m: totalMin, lat: pts[i].ll[0], lng: pts[i].ll[1]});
   }
@@ -6186,10 +6224,11 @@ function renderGalPreview(){
   const el = document.getElementById('gal-preview'); if (!el) return;
   el.innerHTML = window._GAL_IMAGES.map((it,i) => `<div class="gal-preview-item">
     <img src="${it.src}" onclick="openLB('${it.src}')"/>
-    <button class="gal-preview-del" onclick="window._GAL_IMAGES.splice(${i},1);renderGalPreview()">✕</button>
+    <button class="gal-preview-del" onclick="window._GAL_IMAGES.splice(${i},1);window.renderGalPreview()">✕</button>
     <input class="gal-preview-cap-input" placeholder="etichetă" value="${it.cap||''}" onchange="window._GAL_IMAGES[${i}].cap=this.value"/>
   </div>`).join('') || '<div class="photo-gallery-empty" style="grid-column:unset">Nicio poză încă — trage poze mai sus.</div>';
 }
+window.renderGalPreview = renderGalPreview;
 window.saveGalerie = async () => {
   try {
     await setDoc(doc(db,'setari','global'), {galerieHome: window._GAL_IMAGES}, {merge:true});
@@ -6198,6 +6237,102 @@ window.saveGalerie = async () => {
     toast('✅ Galerie salvată! Se vede pe homepage.','ok');
   } catch(e) { toast('Eroare: '+e.message,'er'); }
 };
+
+// ── CONȚINUT SITE (texte editabile — homepage / regulate / organizate) ────
+// Fiecare câmp = un element cu ID din HTML. Editorul citește textul curent
+// direct din DOM (adică exact ce e live pe site) și, la salvare, scrie
+// atât în DOM (efect instant) cât și în Firestore (setari/continut).
+const CONTENT_FIELDS = [
+  {grp:'🏠 Homepage — Hero',id:'hero-eyebrow-text',label:'Text eyebrow (banda mică din capul hero-ului)'},
+  {grp:'🏠 Homepage — Hero',id:'hero-title-1',label:'Titlu — partea 1'},
+  {grp:'🏠 Homepage — Hero',id:'hero-title-grad',label:'Titlu — cuvântul evidențiat (auriu)'},
+  {grp:'🏠 Homepage — Hero',id:'hero-title-2',label:'Titlu — partea 2 (pe rândul următor)'},
+  {grp:'🏠 Homepage — Hero',id:'hero-sub-text',label:'Subtitlu hero',type:'textarea'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-title',label:'Titlu secțiune'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-1-icon',label:'Card 1 — emoji'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-1-title',label:'Card 1 — titlu'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-1-desc',label:'Card 1 — descriere'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-2-icon',label:'Card 2 — emoji'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-2-title',label:'Card 2 — titlu'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-2-desc',label:'Card 2 — descriere'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-3-icon',label:'Card 3 — emoji'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-3-title',label:'Card 3 — titlu'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-3-desc',label:'Card 3 — descriere'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-4-icon',label:'Card 4 — emoji'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-4-title',label:'Card 4 — titlu'},
+  {grp:'🏠 Homepage — De ce noi',id:'why-4-desc',label:'Card 4 — descriere'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-title',label:'Titlu secțiune'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-sub',label:'Subtitlu secțiune'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-1-icon',label:'Pas 1 — emoji'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-1-title',label:'Pas 1 — titlu'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-1-desc',label:'Pas 1 — descriere'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-2-icon',label:'Pas 2 — emoji'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-2-title',label:'Pas 2 — titlu'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-2-desc',label:'Pas 2 — descriere'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-3-icon',label:'Pas 3 — emoji'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-3-title',label:'Pas 3 — titlu'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-3-desc',label:'Pas 3 — descriere'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-4-icon',label:'Pas 4 — emoji'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-4-title',label:'Pas 4 — titlu'},
+  {grp:'🏠 Homepage — Cum funcționează',id:'how-4-desc',label:'Pas 4 — descriere'},
+  {grp:'🔄 Curse Regulate',id:'reg-title',label:'Titlu pagină'},
+  {grp:'🔄 Curse Regulate',id:'reg-sub',label:'Subtitlu pagină'},
+  {grp:'🚌 Cursă Organizată',id:'org-title',label:'Titlu pagină'},
+  {grp:'🚌 Cursă Organizată',id:'org-sub',label:'Subtitlu pagină'},
+  {grp:'🚌 Cursă Organizată',id:'org-how-1',label:'Pas 1 (sidebar „Cum funcționează?")'},
+  {grp:'🚌 Cursă Organizată',id:'org-how-2',label:'Pas 2'},
+  {grp:'🚌 Cursă Organizată',id:'org-how-3',label:'Pas 3'},
+  {grp:'🚌 Cursă Organizată',id:'org-how-4',label:'Pas 4'},
+];
+
+window.loadContentPanel = () => {
+  const body = document.getElementById('content-panel-body');
+  if (!body) return;
+  const groups = {};
+  CONTENT_FIELDS.forEach(f => { (groups[f.grp] = groups[f.grp]||[]).push(f); });
+  body.innerHTML = Object.entries(groups).map(([grp, fields]) => `
+    <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:20px;margin-bottom:14px;box-shadow:var(--sh)">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;font-family:'Plus Jakarta Sans',sans-serif">${grp}</h3>
+      ${fields.map(f => {
+        const srcEl = document.getElementById(f.id);
+        const val = srcEl ? srcEl.textContent.trim() : '';
+        return `<div class="fg"><div class="fl">${f.label}</div>${
+          f.type==='textarea'
+            ? `<textarea id="cc-${f.id}" rows="2">${val}</textarea>`
+            : `<input type="text" id="cc-${f.id}" value="${val.replace(/"/g,'&quot;')}"/>`
+        }</div>`;
+      }).join('')}
+    </div>`).join('');
+};
+
+window.saveContentPanel = async () => {
+  const payload = {};
+  CONTENT_FIELDS.forEach(f => {
+    const input = document.getElementById('cc-'+f.id);
+    const target = document.getElementById(f.id);
+    if (!input) return;
+    const val = input.value;
+    payload[f.id] = val;
+    if (target) target.textContent = val;
+  });
+  try {
+    await setDoc(doc(db,'setari','continut'), payload, {merge:true});
+    toast('✅ Conținut salvat! Modificările sunt live pe site.','ok');
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
+};
+
+async function loadSavedContent(){
+  try {
+    const ref = await getDoc(doc(db,'setari','continut'));
+    if (!ref.exists()) return;
+    const data = ref.data();
+    Object.keys(data).forEach(key => {
+      const el = document.getElementById(key);
+      if (el && typeof data[key] === 'string') el.textContent = data[key];
+    });
+  } catch(e) { console.warn('Content load:', e.message); }
+}
+window.loadSavedContent = loadSavedContent;
 
 // ── SETTINGS ADMIN ─────────────────────────────────────────
 async function loadAdminSettings(){
@@ -7373,6 +7508,7 @@ async function seedIfEmpty() {
   try{const sr=await getDoc(doc(db,'setari','global'));if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{};window._GALERIE_HOME=sr.data().galerieHome||[];if(sr.data().soferContEmail)window.SOFER_EMAIL=sr.data().soferContEmail;}}catch(e){}
   renderFooter();
   renderHomeGallery();
+  try{await loadSavedContent();}catch(e){}
   try{await loadFleet();}catch(e){}
   try{const rs=await getDocs(collection(db,'curse_regulate'));window._R=rs.docs.map(d=>({id:d.id,...d.data()}));}catch(e){}
   try{await seedIfEmpty();}catch(e){console.warn('seed:',e.message);}
