@@ -3116,18 +3116,23 @@ async function getRoadRoute(latLngArray){
   if (latLngArray.length < 2) return null;
   try{
     const coords = latLngArray.map(([lat,lng])=>[lng,lat]); // ORS vrea [lng,lat]
-    const r = await fetch('https://api.openrouteservice.org/v2/directions/driving-hgv/geojson',{
+    const r = await fetch('https://api.openrouteservice.org/v2/directions/driving-car/geojson',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':window.ORS_KEY},
       body:JSON.stringify({coordinates:coords})
     });
-    if(!r.ok) throw new Error('Directions HTTP '+r.status);
+    if(!r.ok){
+      const errBody = await r.text().catch(()=>'');
+      throw new Error('Directions HTTP '+r.status+' — '+errBody.slice(0,200));
+    }
     const d = await r.json();
     const geom = d.features?.[0]?.geometry?.coordinates;
     if (!geom) return null;
     return geom.map(([lng,lat])=>[lat,lng]); // inapoi la [lat,lng] pt Leaflet
   }catch(e){
-    console.warn('Road route failed:', e.message);
+    // Logging detaliat — deschide consola (F12) pentru a vedea exact de ce a picat
+    // cererea la ORS (cheie invalidă, cotă epuizată, coordonate în afara ariei acoperite etc.)
+    console.warn('Road route failed, se folosește linie dreaptă ca fallback:', e.message, e);
     return null; // fallback la linie dreapta se face de apelant
   }
 }
@@ -3195,10 +3200,34 @@ function renderHomeGallery(){
   const note = document.getElementById('home-gallery-note');
   if (!grid) return;
   const real = window._GALERIE_HOME||[];
-  const items = real.length ? real : window._GALERIE_DEFAULT;
-  grid.innerHTML = items.slice(0,8).map(it=>{
+  const items = (real.length ? real : window._GALERIE_DEFAULT).slice(0,8);
+  const n = items.length;
+
+  // Layout dinamic: mozaic pentru puține poze, grid uniform pentru multe.
+  // Prima poză devine "hero" (mai mare) când sunt 3 sau 5 poze, pentru un aspect mai viu.
+  const isMobile = window.innerWidth <= 700;
+  let cols, rows, spans;
+  if (isMobile) {
+    // Pe mobil rămânem pe 2 coloane, fără span-uri de tip "hero" (evită rânduri goale/dezechilibrate)
+    cols = n===1 ? 1 : 2;
+    rows = n<=2 ? '140px' : `repeat(${Math.ceil(n/2)},140px)`;
+    spans = items.map(()=>null);
+  } else if (n <= 1) { cols = 1; rows = '1'; spans = [null]; }
+  else if (n === 2) { cols = 2; rows = '1'; spans = [null, null]; }
+  else if (n === 3) { cols = 3; rows = '1'; spans = [{col:'span 2'}, null, null]; }
+  else if (n === 4) { cols = 4; rows = '1'; spans = [null,null,null,null]; }
+  else if (n === 5) { cols = 4; rows = 'repeat(2,110px)'; spans = [{col:'span 2',row:'span 2'},null,null,null,null]; }
+  else { cols = 4; rows = 'repeat(2,110px)'; spans = items.map(()=>null); }
+
+  grid.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+  grid.style.gridTemplateRows = rows;
+  grid.style.height = (rows==='1') ? '230px' : 'auto';
+
+  grid.innerHTML = items.map((it,i)=>{
     const src = it.src||it; const cap = it.cap||'';
-    return `<div class="photo-gallery-item" onclick="openLB('${src}')">
+    const sp = spans[i];
+    const styleExtra = sp ? `grid-column:${sp.col||'auto'};${sp.row?'grid-row:'+sp.row+';':''}` : '';
+    return `<div class="photo-gallery-item" style="${styleExtra}" onclick="openLB('${src}')">
       <img src="${src}" alt="${cap||'Autobuz LSD Group'}" loading="lazy"/>
       ${cap?`<div class="photo-gallery-cap">${cap}</div>`:''}
     </div>`;
@@ -3443,30 +3472,39 @@ window.loadRegulate = async () => {
   if (!curse.length) { list.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><h3>Nicio cursă ${['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'][dow]}</h3><p>Încearcă altă dată sau <a onclick="nav('organizate')">solicită o cursă organizată</a>.</p></div>`; window._REG_CARDS=[]; return; }
 
   // Preincarcam ocuparea pentru toate cursele zilei (pentru bara de progres)
+  // FIX: cheia include și ora plecării, ca o cursă cu 2 plecări/zi (08:00 și 16:00)
+  // să nu arate ocuparea combinată/greșită pe fiecare card.
   const occByRoute = {};
   await Promise.all(curse.map(async c=>{
     try{
       const snap = await getDocs(query(collection(db,'rezervari'),where('cursaId','==',c.id),where('data','==',date)));
-      let nrOcup = 0;
-      snap.docs.forEach(d=>{ const r=d.data(); if(r.status!=='anulata') nrOcup += (r.locuriRezervate||[]).length; });
-      occByRoute[c.id] = nrOcup;
-    }catch(e){ occByRoute[c.id]=0; }
+      const docsData = snap.docs.map(d=>d.data()).filter(r=>r.status!=='anulata');
+      const pl = c.plecari?.length ? c.plecari : [{ora:c.ora}];
+      pl.forEach(p=>{
+        const oraInfo=getOraForDate(p,date);
+        const ora=oraInfo.ora||p.ora||'-';
+        const key=c.id+'|'+ora;
+        occByRoute[key]=docsData.filter(r=>(r.ora||'')===ora).reduce((s,r)=>s+(r.locuriRezervate||[]).length,0);
+      });
+    }catch(e){ }
   }));
 
   const cards=[];
   curse.forEach(c=>{
     const pl=c.plecari?.length?c.plecari:[{ora:c.ora,driverId:c.driverId}];
     const dayDots=window.DAYS_RO.map((d,i)=>`<div class="day-dot${(c.zile||[]).includes(i)?' active':''}">${d}</div>`).join('');
-    const ocupate = occByRoute[c.id]||0;
     const capacit = c.capacitate||0;
-    const liber = Math.max(0, capacit-ocupate);
-    const pctOcup = capacit>0 ? Math.min(100,Math.round(ocupate/capacit*100)) : 0;
-    const urgent = capacit>0 && liber<=3 && liber>0;
-    const plin = capacit>0 && liber===0;
 
     pl.forEach((p,pi)=>{
       const oraInfo=getOraForDate(p,date);
       const oraP=oraInfo.ora||'-';
+      // Ocuparea se calculează per PLECARE (cursaId + ora exactă), nu per cursă întreagă —
+      // altfel o cursă cu 2 plecări/zi arată aceeași ocupare pe amândouă.
+      const ocupate = occByRoute[c.id+'|'+oraP]||0;
+      const liber = Math.max(0, capacit-ocupate);
+      const pctOcup = capacit>0 ? Math.min(100,Math.round(ocupate/capacit*100)) : 0;
+      const urgent = capacit>0 && liber<=3 && liber>0;
+      const plin = capacit>0 && liber===0;
       const statii = c.statii||[];
       const lastMin = statii.length ? (statii[statii.length-1].minuteDeLaStart||60) : 60;
       const oraSosire = oraP!=='-' ? calcArrival(oraP,lastMin) : '';
@@ -3477,6 +3515,10 @@ window.loadRegulate = async () => {
         const pct = nStops===1?0:(i/(nStops-1))*100;
         return `<div class="mini-route-dot" style="left:${pct}%"></div>`;
       }).join('');
+
+      // ── Poziția reală a autobuzului pe traseu, calculată din ora curentă (fără cereri de rețea) ──
+      const busPct = calcBusProgressPct(oraP, statii);
+      const busStyle = busPct!==null ? `left:${busPct}%;animation:none` : '';
 
       const stopsHtml=(c.statii||[]).map((s,i)=>{
         const arr=i>0&&oraP!=='-'&&s.minuteDeLaStart?calcArrival(oraP,s.minuteDeLaStart):'';
@@ -3518,7 +3560,8 @@ window.loadRegulate = async () => {
         <div class="mini-route-line">
           <div class="mini-route-track"></div>
           ${miniDots}
-          <img class="mini-route-bus" data-bus="1" src="" alt=""/>
+          <img class="mini-route-bus" data-bus="1" src="" alt="" style="${busStyle}" title="${busPct!==null?'Autobuzul este pe traseu acum (poziție estimată)':''}"/>
+          ${busPct!==null?'<div style="position:absolute;top:-16px;left:'+busPct+'%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--green);white-space:nowrap;background:var(--green-g);padding:1px 6px;border-radius:8px;border:1px solid rgba(26,107,60,.25)">🚌 în cursă</div>':''}
           <div class="mini-route-time-start">${oraP}</div>
           <div class="mini-route-time-end">${oraSosire}</div>
         </div>
@@ -3548,6 +3591,31 @@ window.loadRegulate = async () => {
   const q=document.getElementById('reg-search')?.value||'';
   if(q) filterRegulate();
 };
+
+// Calculează procentul (0-100) la care se află autobuzul pe mini-traseul unei curse,
+// interpolând între stațiile cu minuteDeLaStart cunoscute. Returnează null dacă cursa
+// nu e "azi, acum, în desfășurare" (nu a plecat încă / nu e ziua curentă / a ajuns deja).
+function calcBusProgressPct(oraPlecare, statii) {
+  if (!oraPlecare || oraPlecare==='-' || !statii?.length || statii.length<2) return null;
+  const now = new Date();
+  const [h,m] = oraPlecare.split(':').map(Number);
+  if (isNaN(h)||isNaN(m)) return null;
+  const start = new Date(now); start.setHours(h,m,0,0);
+  const elapsedMin = (now - start) / 60000;
+  const totalMin = statii[statii.length-1].minuteDeLaStart || 60;
+  if (elapsedMin < 0 || elapsedMin > totalMin) return null; // nu a plecat încă sau a ajuns deja
+  for (let i=1;i<statii.length;i++){
+    const currMin = statii[i].minuteDeLaStart ?? (i===statii.length-1?totalMin:0);
+    if (elapsedMin <= currMin){
+      const prevMin = statii[i-1].minuteDeLaStart || 0;
+      const segPct = currMin>prevMin ? (elapsedMin-prevMin)/(currMin-prevMin) : 0;
+      const posPrev = (i-1)/(statii.length-1)*100, posCurr = i/(statii.length-1)*100;
+      return posPrev + (posCurr-posPrev)*segPct;
+    }
+  }
+  return 100;
+}
+window.calcBusProgressPct = calcBusProgressPct;
 
 function applyMiniBusImgs(){
   document.querySelectorAll('.mini-route-bus[data-bus]').forEach(img=>{ if(window.SPRINTER_B64) img.src = window.SPRINTER_B64; });
@@ -3670,8 +3738,13 @@ async function loadOccupancy(routeId,date){
   window._CINEMA_OCC.clear();
   try{
     const snap=await getDocs(query(collection(db,'rezervari'),where('cursaId','==',routeId),where('data','==',date)));
+    // FIX: o cursă poate avea mai multe plecări în aceeași zi (ex. 08:00 și 16:00).
+    // Ocuparea locurilor trebuie verificată și pe ora exactă a plecării curente,
+    // altfel un loc rezervat la 08:00 apare "ocupat" și la 16:00.
+    const oraCurenta = window._CINEMA_ROUTE?.ora || '';
     snap.docs.forEach(d=>{
       const r=d.data(); if(r.status==='anulata')return;
+      if((r.ora||'') !== oraCurenta) return; // ignoră rezervările de la altă plecare a aceleiași curse
       (r.locuriRezervate||[]).forEach(l=>{
         if(!window._CINEMA_OCC.has(l.locNr)) window._CINEMA_OCC.set(l.locNr,[]);
         const st=window._CINEMA_ROUTE?.statii||[];
@@ -4287,7 +4360,7 @@ async function calcDistORS(from,to){
     const geo=async loc=>{const r=await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${window.ORS_KEY}&text=${encodeURIComponent(loc+', Romania')}&size=1`);const d=await r.json();return d.features?.[0]?.geometry?.coordinates||null;};
     const [c1,c2]=await Promise.all([geo(from),geo(to)]);
     if(!c1||!c2)return null;
-    const r=await fetch('https://api.openrouteservice.org/v2/directions/driving-hgv',{method:'POST',headers:{'Content-Type':'application/json','Authorization':window.ORS_KEY},body:JSON.stringify({coordinates:[c1,c2]})});
+    const r=await fetch('https://api.openrouteservice.org/v2/directions/driving-car',{method:'POST',headers:{'Content-Type':'application/json','Authorization':window.ORS_KEY},body:JSON.stringify({coordinates:[c1,c2]})});
     const d=await r.json();
     const seg=d.routes?.[0]?.summary;
     if(!seg)return null;
@@ -5350,7 +5423,7 @@ async function getSegmentDist(ll1, ll2){
   const key = segKey(ll1, ll2);
   if (window._rmSegmentCache[key]) return window._rmSegmentCache[key];
   try {
-    const r = await fetch('https://api.openrouteservice.org/v2/directions/driving-hgv', {
+    const r = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':window.ORS_KEY},
       body:JSON.stringify({coordinates:[[ll1[1],ll1[0]],[ll2[1],ll2[0]]]})
@@ -6222,13 +6295,49 @@ window.handleGalImages = files => {
 };
 function renderGalPreview(){
   const el = document.getElementById('gal-preview'); if (!el) return;
-  el.innerHTML = window._GAL_IMAGES.map((it,i) => `<div class="gal-preview-item">
+  el.innerHTML = window._GAL_IMAGES.map((it,i) => `<div class="gal-preview-item" draggable="true" data-idx="${i}"
+      ondragstart="galDragStart(event,${i})"
+      ondragover="galDragOverItem(event)"
+      ondragleave="galDragLeaveItem(event)"
+      ondrop="galReorder(event,${i})"
+      ondragend="galDragEndItem(event)"
+      style="cursor:grab;position:relative" title="Trage pentru a reordona">
+    <div style="position:absolute;top:4px;left:4px;background:rgba(15,13,10,.55);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;z-index:2;pointer-events:none">#${i+1}</div>
     <img src="${it.src}" onclick="openLB('${it.src}')"/>
     <button class="gal-preview-del" onclick="window._GAL_IMAGES.splice(${i},1);window.renderGalPreview()">✕</button>
     <input class="gal-preview-cap-input" placeholder="etichetă" value="${it.cap||''}" onchange="window._GAL_IMAGES[${i}].cap=this.value"/>
   </div>`).join('') || '<div class="photo-gallery-empty" style="grid-column:unset">Nicio poză încă — trage poze mai sus.</div>';
+  const hint = document.getElementById('gal-reorder-hint');
+  if (!hint && window._GAL_IMAGES.length>1) {
+    const h = document.createElement('div');
+    h.id = 'gal-reorder-hint';
+    h.style.cssText = 'font-size:11px;color:var(--stone);margin-top:8px';
+    h.textContent = '💡 Trage o poză peste alta pentru a schimba ordinea în care apar pe homepage.';
+    el.parentNode.insertBefore(h, el.nextSibling);
+  }
 }
 window.renderGalPreview = renderGalPreview;
+
+window.galDragStart = (e, idx) => {
+  e.dataTransfer.setData('idx', String(idx));
+  e.dataTransfer.effectAllowed = 'move';
+  e.target.style.opacity = '.4';
+};
+window.galDragOverItem = (e) => {
+  e.preventDefault();
+  e.currentTarget.style.outline = '2px dashed var(--amber)';
+};
+window.galDragLeaveItem = (e) => { e.currentTarget.style.outline = 'none'; };
+window.galDragEndItem = (e) => { e.target.style.opacity = '1'; document.querySelectorAll('.gal-preview-item').forEach(el=>el.style.outline='none'); };
+window.galReorder = (e, toIdx) => {
+  e.preventDefault();
+  e.currentTarget.style.outline = 'none';
+  const fromIdx = parseInt(e.dataTransfer.getData('idx'));
+  if (isNaN(fromIdx) || fromIdx===toIdx) return;
+  const [moved] = window._GAL_IMAGES.splice(fromIdx,1);
+  window._GAL_IMAGES.splice(toIdx,0,moved);
+  renderGalPreview();
+};
 window.saveGalerie = async () => {
   try {
     await setDoc(doc(db,'setari','global'), {galerieHome: window._GAL_IMAGES}, {merge:true});
@@ -7523,6 +7632,9 @@ async function seedIfEmpty() {
   if(fy)fy.textContent=`© ${new Date().getFullYear()} ${window._FIRMA?.name||'LSD Group SRL'} · Toate drepturile rezervate · Autorizat ARR`;
   // Scroll to top button
   window.addEventListener('scroll',()=>{const fab=document.getElementById('fab-scroll');if(fab)fab.style.display=window.scrollY>300?'flex':'none';});
+  // Re-randeaza galeria homepage la schimbarea dimensiunii ferestrei (mobil/desktop)
+  let _galResizeTimer=null;
+  window.addEventListener('resize',()=>{clearTimeout(_galResizeTimer);_galResizeTimer=setTimeout(()=>{if(document.getElementById('pg-home')?.classList.contains('active'))renderHomeGallery();},250);});
   // Ascunde loader-ul de incarcare
   hideAppLoader();
 })();
@@ -7549,3 +7661,4 @@ setTimeout(hideAppLoader, 6000);
 </script>
 </body>
 </html>
+      
