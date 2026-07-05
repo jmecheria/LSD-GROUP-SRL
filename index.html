@@ -627,6 +627,19 @@ input.ok{border-color:var(--green)}
 .mini-route-dot:last-child{background:var(--amber-d)}
 .mini-route-time-start{position:absolute;top:24px;left:0;font-size:11px;font-weight:700;color:var(--amber-d)}
 .mini-route-time-end{position:absolute;top:24px;right:0;font-size:11px;font-weight:700;color:var(--amber-d)}
+.mini-route-bus{
+  position:absolute;top:-3px;width:24px;height:auto;z-index:3;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.28));
+  animation:miniBusBounce 6s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes miniBusBounce{
+  0%{left:0%;transform:scaleX(1)}
+  46%{left:calc(100% - 24px);transform:scaleX(1)}
+  50%{left:calc(100% - 24px);transform:scaleX(-1)}
+  96%{left:0%;transform:scaleX(-1)}
+  100%{left:0%;transform:scaleX(1)}
+}
 
 .seat-occ-bar{height:6px;background:var(--cream);border-radius:3px;overflow:hidden;margin-top:8px}
 .seat-occ-fill{height:100%;border-radius:3px;transition:width .4s ease}
@@ -1766,7 +1779,7 @@ footer{
       <button class="btn btn-primary btn-sm" onclick="openRouteModal()">+ Adaugă cursă</button>
     </div>
     <div class="tbl-wrap">
-      <table class="tbl"><thead><tr><th>Rută</th><th>Vehicul</th><th>Stații</th><th>Plecări</th><th>Activ</th><th></th></tr></thead>
+      <table class="tbl"><thead><tr><th>Poză</th><th>Rută</th><th>Vehicul</th><th>Stații</th><th>Plecări</th><th>Activ</th><th></th></tr></thead>
       <tbody id="routes-tbody"></tbody></table>
     </div>
   </div>
@@ -2169,11 +2182,13 @@ footer{
         <div id="rm-map-picker-wrap" style="display:none;margin-top:14px">
           <div style="font-size:11px;color:var(--stone);margin-bottom:6px">📍 Click pe hartă pentru a adăuga o stație în ordine (plecare → intermediare → sosire). Traseul real pe drum se desenează automat.</div>
           <div id="rm-map-picker" style="height:320px;border-radius:var(--r);overflow:hidden;background:var(--cream)"></div>
-          <div style="display:flex;gap:8px;margin-top:8px">
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
             <button class="btn btn-secondary btn-sm" onclick="rmMapPickerUndo()">↩ Șterge ultimul punct</button>
             <button class="btn btn-danger btn-sm" onclick="rmMapPickerClear()">🗑 Curăță toate</button>
+            <button class="btn btn-primary btn-sm" onclick="captureRouteSnapshot()">📸 Salvează poză traseu</button>
             <button class="btn btn-secondary btn-sm" onclick="document.getElementById('rm-map-picker-wrap').style.display='none'">✕ Închide harta</button>
           </div>
+          <div id="rm-snapshot-preview" style="margin-top:10px"></div>
         </div>
       </div>
       <div class="fg"><div class="fl">Vehicul *</div><select id="rm-vehicle" onchange="updateVehicleSeats()"></select></div>
@@ -3459,6 +3474,7 @@ window.loadRegulate = async () => {
         <div class="mini-route-line">
           <div class="mini-route-track"></div>
           ${miniDots}
+          <img class="mini-route-bus" data-bus="1" src="" alt=""/>
           <div class="mini-route-time-start">${oraP}</div>
           <div class="mini-route-time-end">${oraSosire}</div>
         </div>
@@ -3469,13 +3485,14 @@ window.loadRegulate = async () => {
         </div>
         ${occBarHtml}
         <div style="display:flex;gap:2px;flex-wrap:wrap;margin:10px 0 12px">${dayDots}</div>
+        ${c.hartaImg?`<div style="margin-bottom:12px"><img src="${c.hartaImg}" alt="Poza traseu ${c.ruta}" loading="lazy" style="width:100%;max-height:150px;object-fit:cover;border-radius:var(--r);cursor:zoom-in;border:1px solid var(--border-l)" onclick="openLB('${c.hartaImg}')"/></div>`:''}
         <div class="route-stops-collapsible">
           <button class="route-stops-toggle" onclick="this.parentElement.classList.toggle('open')">📍 Vezi toate stațiile și prețurile <span class="toggle-arrow">▾</span></button>
           <div class="route-stops-content">${stopsHtml}</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" style="flex:1;min-width:140px" onclick="openCinema('${c.id}','${date}','one-way',${pi})" ${plin?'disabled':''}>${plin?'🔴 Indisponibil':'🎟 Rezervă — '+oraP}</button>
-          <button class="btn btn-secondary btn-sm btn-icon" onclick="showRouteMapModal('${c.id}')" title="Vezi traseul pe hartă">🗺</button>
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="showRouteMapModal('${c.id}')" title="Vezi traseul pe hartă interactivă">🗺</button>
         </div>
         ${returnSection}
       </div>`);
@@ -3483,9 +3500,15 @@ window.loadRegulate = async () => {
   });
   window._REG_CARDS=cards;
   list.innerHTML=cards.join('');
+  applyMiniBusImgs();
   const q=document.getElementById('reg-search')?.value||'';
   if(q) filterRegulate();
 };
+
+function applyMiniBusImgs(){
+  document.querySelectorAll('.mini-route-bus[data-bus]').forEach(img=>{ if(window.SPRINTER_B64) img.src = window.SPRINTER_B64; });
+}
+window.applyMiniBusImgs = applyMiniBusImgs;
 
 // ── Mini-harta traseu (modal rapid) ──────────────────────────
 window.showRouteMapModal = async (cursaId) => {
@@ -3562,9 +3585,10 @@ window.filterRegulate = () => {
   const q=(document.getElementById('reg-search')?.value||'').toLowerCase().trim();
   const list=document.getElementById('reg-list');
   if(!window._REG_CARDS?.length){return;}
-  if(!q){list.innerHTML=window._REG_CARDS.join('');return;}
+  if(!q){list.innerHTML=window._REG_CARDS.join('');applyMiniBusImgs();return;}
   const filtered=window._REG_CARDS.filter(c=>c.toLowerCase().includes(q));
   list.innerHTML=filtered.length?filtered.join(''):`<div class="empty-state"><div class="empty-icon">🔍</div><h3>Nicio cursă pentru "${q}"</h3><p><a onclick="document.getElementById('reg-search').value='';filterRegulate()">Șterge filtrul</a></p></div>`;
+  applyMiniBusImgs();
 };
 
 // ── CINEMA (seat selection) ────────────────────────────────
@@ -5009,7 +5033,11 @@ async function loadRoutesTbl(){
   document.getElementById('routes-tbody').innerHTML=window._R.map(c=>{
     const pl=c.plecari||[{ora:c.ora,driverId:c.driverId}];
     const plHtml=pl.map(p=>{const sfN=p.driverId?numeSofer(p.driverId):'';return`<div style="font-size:12px"><strong>${p.ora||'-'}</strong>${sfN?` <span style="color:var(--stone)">(${sfN})</span>`:''}</div>`;}).join('');
+    const thumb=c.hartaImg
+      ?`<img src="${c.hartaImg}" style="width:56px;height:44px;object-fit:cover;border-radius:6px;cursor:zoom-in;border:1px solid var(--border-l)" onclick="openLB('${c.hartaImg}')"/>`
+      :`<div style="width:56px;height:44px;background:var(--cream);border:1px dashed var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--stone)">🗺</div>`;
     return`<tr>
+      <td>${thumb}</td>
       <td><strong>${c.ruta}</strong>${c.tipCursa==='roundtrip'?'<br><span class="chip chip-amber" style="font-size:10px">↔️ Dus-Întors</span>':''}</td>
       <td>${c.vehiculNume||'-'}</td>
       <td style="max-width:180px">${(c.statii||[]).map(s=>`<span class="chip">${s.nome||s.name||s.nume||''}</span>`).join('')}</td>
@@ -5028,6 +5056,8 @@ window.openRouteModal=async(id=null)=>{
   window._RM_DEPS=[{ora:'',driverId:'',orePerZi:{},exceptions:[]}];
   window._RM_RET_DEPS=[{ora:'',driverId:''}];
   window._BLOCKED_DATES=[];
+  window._RM_SNAPSHOT=null;
+  document.getElementById('rm-snapshot-preview').innerHTML='';
   document.getElementById('route-modal-title').textContent=id?'Editează cursă':'Adaugă cursă regulată';
   document.getElementById('rm-id').value=id||'';
   document.getElementById('rm-name').value='';
@@ -5054,6 +5084,10 @@ window.openRouteModal=async(id=null)=>{
       (c.zile||[]).forEach(d=>{const b=document.querySelector(`[data-day="${d}"]`);if(b)b.classList.add('active');});
       if(c.statii?.length>=2)window._RM_STOPS=c.statii.map(s=>({n:s.nome||s.name||s.nume||'',p:s.pretDeLaStart||0,m:s.minuteDeLaStart||0,...(s.lat!=null&&s.lng!=null?{lat:s.lat,lng:s.lng}:{})}));
       if(c.dateBlocate)window._BLOCKED_DATES=[...c.dateBlocate];
+      if(c.hartaImg){
+        window._RM_SNAPSHOT=c.hartaImg;
+        document.getElementById('rm-snapshot-preview').innerHTML=`<div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">✅ Poză traseu salvată:</div><img src="${c.hartaImg}" style="max-width:220px;border-radius:8px;border:1px solid var(--border-l);cursor:zoom-in" onclick="openLB('${c.hartaImg}')"/>`;
+      }
     }
   }
   renderRmStops();renderRmDeps();renderRmRetDeps();renderBlockedDates();
@@ -5168,6 +5202,44 @@ window.rmMapPickerUndo = async () => {
 window.rmMapPickerClear = async () => {
   window._rmPickerPoints = [];
   await rmMapPickerRender();
+};
+
+// ── SNAPSHOT STATIC AL TRASEULUI (poză, nu hartă interactivă) ──
+window._RM_SNAPSHOT = null;
+window._html2canvasLoaded = false;
+window.captureRouteSnapshot = async () => {
+  const mapEl = document.getElementById('rm-map-picker');
+  const previewEl = document.getElementById('rm-snapshot-preview');
+  if (!mapEl || !window._rmPickerMap) { toast('Deschide mai întâi harta și plasează stațiile','wr'); return; }
+  if ((window._rmPickerPoints||[]).length < 2) { toast('Adaugă cel puțin 2 stații pe hartă înainte de a face poza','wr'); return; }
+  previewEl.innerHTML = '<div style="font-size:12px;color:var(--stone)"><span class="spin" style="width:14px;height:14px;border-width:2px;margin-right:6px"></span>Se generează poza...</div>';
+  try {
+    if (!window._html2canvasLoaded) {
+      await new Promise((res,rej) => {
+        if (window.html2canvas) { res(); return; }
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        s.onload = res; s.onerror = () => rej(new Error('Nu s-a putut încărca librăria de captură'));
+        document.head.appendChild(s);
+        setTimeout(() => rej(new Error('Timeout la încărcare')), 10000);
+      });
+      window._html2canvasLoaded = true;
+    }
+    const canvas = await window.html2canvas(mapEl, {useCORS:true, logging:false, scale:1});
+    // Redimensionam la o dimensiune rezonabila pentru stocare in Firestore
+    const small = document.createElement('canvas');
+    const mx = 700; let w = canvas.width, h = canvas.height;
+    if (w > mx) { h = Math.round(h * (mx/w)); w = mx; }
+    small.width = w; small.height = h;
+    small.getContext('2d').drawImage(canvas, 0, 0, w, h);
+    const dataUrl = small.toDataURL('image/jpeg', 0.75);
+    window._RM_SNAPSHOT = dataUrl;
+    previewEl.innerHTML = `<div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">✅ Poză generată — se va salva odată cu cursa:</div><img src="${dataUrl}" style="max-width:220px;border-radius:8px;border:1px solid var(--border-l);cursor:zoom-in" onclick="openLB('${dataUrl}')"/>`;
+    toast('📸 Poză traseu generată! Nu uita să salvezi cursa.','ok');
+  } catch(e) {
+    previewEl.innerHTML = '';
+    toast('Eroare la generarea pozei: '+e.message,'er');
+  }
 };
 
 async function rmMapPickerRender(){
@@ -5616,7 +5688,7 @@ window.saveRoute=async()=>{
     statiiIntors=[...statii].reverse().map((s,i)=>({...s,pretDeLaStart:i===0?0:(maxPret-(statii[statii.length-1-i].pretDeLaStart||0)),minuteDeLaStart:i===0?0:(maxMin-(statii[statii.length-1-i].minuteDeLaStart||0))}));
     intorsPlecari=window._RM_RET_DEPS;
   }
-  const data={ruta,vehiculId:vehId,vehiculNume:veh?veh.nome||veh.name||veh.nume||'':'-',capacitate:veh?capVeh(veh):0,rows:veh?.rows||[],statii,plecari:window._RM_DEPS,tipCursa,ora:firstP.ora,driverId:firstP.driverId||null,zile,dataStart:document.getElementById('rm-date-start').value||null,dataEnd:document.getElementById('rm-date-end').value||null,activa:document.getElementById('rm-active').checked,dateBlocate:window._BLOCKED_DATES.length?[...window._BLOCKED_DATES]:null,...(tipCursa==='roundtrip'?{intorsPlecari,statiiIntors,rutaIntors:statii.map(s=>s.nome).reverse().join(' – ')}:{})};
+  const data={ruta,vehiculId:vehId,vehiculNume:veh?veh.nome||veh.name||veh.nume||'':'-',capacitate:veh?capVeh(veh):0,rows:veh?.rows||[],statii,plecari:window._RM_DEPS,tipCursa,ora:firstP.ora,driverId:firstP.driverId||null,zile,dataStart:document.getElementById('rm-date-start').value||null,dataEnd:document.getElementById('rm-date-end').value||null,activa:document.getElementById('rm-active').checked,dateBlocate:window._BLOCKED_DATES.length?[...window._BLOCKED_DATES]:null,...(window._RM_SNAPSHOT?{hartaImg:window._RM_SNAPSHOT}:{}),...(tipCursa==='roundtrip'?{intorsPlecari,statiiIntors,rutaIntors:statii.map(s=>s.nome).reverse().join(' – ')}:{})};
   try{
     if(id)await setDoc(doc(db,'curse_regulate',id),data,{merge:true});else await addDoc(collection(db,'curse_regulate'),data);
     closeModal('route');const snap=await getDocs(collection(db,'curse_regulate'));window._R=snap.docs.map(d=>({id:d.id,...d.data()}));loadRoutesTbl();toast('Cursă salvată!','ok');
