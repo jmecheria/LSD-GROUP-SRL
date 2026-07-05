@@ -968,6 +968,25 @@ footer{
   .footer-grid{grid-template-columns:1fr}
   #nav{padding:0 16px}
   .invoice-parties{grid-template-columns:1fr}
+
+  /* Spații mai mici pe mobil, ca să nu fie nevoie de scroll excesiv */
+  .hero{padding:32px 16px 24px}
+  .hero-sub{margin-bottom:24px}
+  .hero-cta{margin-bottom:28px}
+  [style*="margin-bottom:56px"]{margin-bottom:30px !important}
+  .quick-search-card{margin-bottom:28px !important;padding:18px 16px}
+  .stats-strip{margin-bottom:24px !important}
+  .sec-head{margin-bottom:14px}
+  .sec-title{font-size:20px}
+
+  /* Carduri alegere mod (Cursă Organizată) — compacte pe telefon */
+  .org-mode-choice{gap:12px;margin-bottom:20px !important}
+  .org-mode-card{padding:18px 14px;border-radius:var(--r-lg)}
+  .org-mode-card .org-mode-bg{min-height:100%}
+  .org-mode-icon{font-size:28px;margin-bottom:8px}
+  .org-mode-title{font-size:15px;margin-bottom:4px}
+  .org-mode-desc{font-size:11.5px;margin-bottom:10px}
+  .org-mode-cta{font-size:11px}
 }
 @media(max-width:480px){.page{padding:16px 12px}}
 
@@ -1474,25 +1493,94 @@ footer{
   <div style="max-width:800px;margin:0 auto">
     <h1 style="font-size:28px;font-weight:800;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">Politica de Confidențialitate</h1>
     <p style="color:var(--stone);margin-bottom:24px">LSD Group SRL — Actualizat: Ianuarie 2025</p>
-    <div class="info-box" style="margin-bottom:28px">Această politică se aplică tuturor utilizatorilor platformei LSD Group SRL și descrie modul în care prelucrăm datele personale conform GDPR (UE) 2016/679.</div>
+    <div class="info-box" style="margin-bottom:28px">Această politică se aplică tuturor utilizatorilor platformei LSD Group SRL (site web, aplicație, portal șofer) și descrie modul în care colectăm, folosim, stocăm și protejăm datele personale, în conformitate cu Regulamentul (UE) 2016/679 (GDPR) și legislația română aplicabilă (Legea 190/2018).</div>
     <div id="gdpr-content" style="line-height:1.75;color:var(--stone)">
+
       <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">1. Identitatea Operatorului</h2>
-      <p><strong style="color:var(--ink)">LSD Group SRL</strong> · CUI: RO12345678 · J40/1234/2020<br>Email: <a href="mailto:irimia.teodor.17@gmail.com">irimia.teodor.17@gmail.com</a></p>
-      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">2. Date colectate</h2>
-      <p>Colectăm: date de identificare (nume, prenume), contact (email, telefon), date rezervare (rute, date, locuri), date cont (Firebase UID), date tehnice (IP, browser).</p>
-      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">3. Scop și temei juridic</h2>
-      <ul style="margin-left:20px;margin-bottom:12px">
-        <li>Executarea contractului (Art. 6(1)(b)): procesarea rezervărilor, emiterea biletelor</li>
-        <li>Obligații legale (Art. 6(1)(c)): documente contabile conform Legii 82/1991</li>
-        <li>Consimțământ (Art. 6(1)(a)): notificări push</li>
-        <li>Interes legitim (Art. 6(1)(f)): securitatea platformei</li>
+      <p><strong style="color:var(--ink)">LSD Group SRL</strong>, societate română de transport persoane, autorizată ARR pentru transport rutier de persoane prin curse regulate și curse organizate.</p>
+      <p style="margin-top:8px">CUI: RO12345678 · Nr. Registrul Comerțului: J40/1234/2020<br>Email contact: <a href="mailto:irimia.teodor.17@gmail.com">irimia.teodor.17@gmail.com</a></p>
+      <p style="margin-top:8px">În sensul GDPR, LSD Group SRL acționează ca <strong style="color:var(--ink)">operator de date</strong> pentru datele colectate prin platforma proprie și ca <strong style="color:var(--ink)">persoană împuternicită</strong> în relația cu furnizorii de servicii tehnice enumerați la secțiunea 8.</p>
+
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">2. Ce date colectăm</h2>
+      <p>Colectăm și prelucrăm următoarele categorii de date cu caracter personal:</p>
+      <ul style="margin-left:20px;margin-top:8px;margin-bottom:12px">
+        <li><strong style="color:var(--ink)">Date de identificare:</strong> nume, prenume;</li>
+        <li><strong style="color:var(--ink)">Date de contact:</strong> adresă de email, număr de telefon;</li>
+        <li><strong style="color:var(--ink)">Date de rezervare:</strong> rute, date și ore de călătorie, stații de îmbarcare/debarcare, locuri alese, tip cursă (regulată/organizată), număr de persoane;</li>
+        <li><strong style="color:var(--ink)">Date de plată:</strong> modalitatea de plată aleasă (cash la șofer sau online) — nu stocăm datele complete ale cardurilor bancare, acestea fiind procesate exclusiv de procesatorul de plăți;</li>
+        <li><strong style="color:var(--ink)">Date de cont:</strong> identificator unic Firebase (UID), parolă (stocată criptat), istoricul rezervărilor și al mesajelor din contul de client;</li>
+        <li><strong style="color:var(--ink)">Date tehnice:</strong> adresă IP, tip browser și dispozitiv, pagini vizitate, module funcționale utilizate (colectate automat pentru funcționarea și securitatea platformei);</li>
+        <li><strong style="color:var(--ink)">Date de localizare aproximativă:</strong> doar în portalul șofer, pentru actualizarea manuală a statusului vehiculului (garaj / în cursă / la destinație), și nu urmărire GPS continuă;</li>
+        <li><strong style="color:var(--ink)">Comunicări:</strong> mesajele trimise prin platformă între client și echipa LSD Group referitoare la o rezervare.</li>
       </ul>
-      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">4. Drepturile dumneavoastră</h2>
-      <p>Aveți dreptul de acces, rectificare, ștergere, restricționare, portabilitate și opoziție. Contactați: <a href="mailto:irimia.teodor.17@gmail.com">irimia.teodor.17@gmail.com</a>. Răspuns în max. 30 zile.</p>
-      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">5. Parteneri și transferuri</h2>
-      <p>Google Firebase (stocare/autentificare), EmailJS (emailuri tranzacționale), OpenRouteService (calcul distanțe). Nu transferăm date terților comerciali.</p>
-      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">6. Reclamații</h2>
-      <p>Puteți depune plângere la <strong>ANSPDCP</strong>: <a href="https://www.dataprotection.ro" target="_blank">dataprotection.ro</a> sau platforma SOL: <a href="https://ec.europa.eu/consumers/odr" target="_blank">ec.europa.eu/consumers/odr</a></p>
+      <p>Nu colectăm categorii speciale de date (art. 9 GDPR — date de sănătate, origine etnică, opinii politice etc.), cu excepția cazului în care dumneavoastră ni le furnizați voluntar în câmpul de observații al unei cereri (ex. nevoi speciale de mobilitate), caz în care aceste date sunt folosite exclusiv pentru a pregăti corespunzător cursa solicitată.</p>
+
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">3. Scopul și temeiul juridic al prelucrării</h2>
+      <ul style="margin-left:20px;margin-bottom:12px">
+        <li><strong style="color:var(--ink)">Executarea contractului</strong> (Art. 6(1)(b) GDPR): procesarea rezervărilor, emiterea biletelor electronice, alocarea locurilor, comunicarea ofertelor pentru curse organizate, gestionarea plăților;</li>
+        <li><strong style="color:var(--ink)">Obligații legale</strong> (Art. 6(1)(c) GDPR): emiterea documentelor contabile și fiscale conform Legii contabilității nr. 82/1991, păstrarea evidențelor de transport conform legislației ARR;</li>
+        <li><strong style="color:var(--ink)">Consimțământ</strong> (Art. 6(1)(a) GDPR): trimiterea de notificări, oferte comerciale sau mesaje de marketing, dacă v-ați exprimat acordul explicit; consimțământul poate fi retras oricând, fără a afecta legalitatea prelucrărilor anterioare retragerii;</li>
+        <li><strong style="color:var(--ink)">Interes legitim</strong> (Art. 6(1)(f) GDPR): asigurarea securității platformei, prevenirea fraudei și a rezervărilor abuzive, îmbunătățirea serviciilor oferite, analiza statistică anonimizată a traficului.</li>
+      </ul>
+
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">4. Durata de stocare a datelor</h2>
+      <p>Păstrăm datele cu caracter personal doar atât timp cât este necesar pentru scopurile descrise mai sus:</p>
+      <ul style="margin-left:20px;margin-top:8px;margin-bottom:12px">
+        <li>Datele de cont și istoricul rezervărilor — pe toată durata existenței contului, plus o perioadă de maximum 2 ani după ultima activitate, pentru soluționarea eventualelor dispute;</li>
+        <li>Documentele financiar-contabile (facturi, chitanțe) — 10 ani, conform legislației fiscale în vigoare;</li>
+        <li>Datele tehnice (loguri, IP) — maximum 12 luni;</li>
+        <li>Mesajele din conversațiile cu echipa LSD Group — pe durata păstrării rezervării asociate.</li>
+      </ul>
+      <p>La expirarea perioadelor de mai sus, datele sunt șterse definitiv sau anonimizate ireversibil.</p>
+
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">5. Cum protejăm datele dumneavoastră</h2>
+      <p>Aplicăm măsuri tehnice și organizatorice adecvate pentru protecția datelor: comunicații criptate (HTTPS/TLS), autentificare securizată prin Firebase Authentication, parole stocate criptat (niciodată în text simplu), acces restricționat la datele administrative doar pentru personalul autorizat al LSD Group SRL, și reguli de acces la baza de date configurate astfel încât fiecare utilizator să își poată vedea doar propriile date. Codurile QR de pe bilete sunt unice și marcate ca „folosite" după prima scanare, pentru a preveni utilizarea frauduloasă.</p>
+
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">6. Module de tip cookie și tehnologii similare</h2>
+      <p>Platforma folosește un singur tip de modul strict necesar funcționării: o marcare locală în browser care reține faptul că ați acceptat această politică, pentru a nu afișa repetat bannerul informativ. Nu folosim module de urmărire publicitară și nu transmitem date de navigare către rețele de publicitate terțe.</p>
+
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">7. Drepturile dumneavoastră</h2>
+      <p>Conform GDPR, aveți următoarele drepturi în legătură cu datele dumneavoastră personale:</p>
+      <ul style="margin-left:20px;margin-top:8px;margin-bottom:12px">
+        <li><strong style="color:var(--ink)">Dreptul de acces</strong> — puteți solicita o copie a datelor pe care le deținem despre dumneavoastră;</li>
+        <li><strong style="color:var(--ink)">Dreptul la rectificare</strong> — puteți corecta datele inexacte sau incomplete direct din secțiunea „Contul meu" sau prin cerere scrisă;</li>
+        <li><strong style="color:var(--ink)">Dreptul la ștergere</strong> ("dreptul de a fi uitat") — puteți solicita ștergerea datelor, cu excepția celor pe care legea ne obligă să le păstrăm (ex. documente fiscale);</li>
+        <li><strong style="color:var(--ink)">Dreptul la restricționarea prelucrării</strong> — puteți solicita limitarea temporară a utilizării datelor dumneavoastră;</li>
+        <li><strong style="color:var(--ink)">Dreptul la portabilitate</strong> — puteți solicita datele într-un format structurat, pentru a le transfera altui operator;</li>
+        <li><strong style="color:var(--ink)">Dreptul la opoziție</strong> — vă puteți opune prelucrării bazate pe interes legitim sau în scop de marketing;</li>
+        <li><strong style="color:var(--ink)">Dreptul de a nu fi supus unei decizii automatizate</strong> — nu folosim procese de decizie automatizată sau profilare care să producă efecte juridice asupra dumneavoastră.</li>
+      </ul>
+      <p>Pentru exercitarea acestor drepturi, ne puteți contacta la <a href="mailto:irimia.teodor.17@gmail.com">irimia.teodor.17@gmail.com</a>. Vă vom răspunde în cel mult 30 de zile calendaristice de la primirea cererii; acest termen poate fi prelungit cu încă 60 de zile în cazul cererilor complexe, situație în care veți fi informat despre motivele întârzierii.</p>
+
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">8. Parteneri, împuterniciți și transferuri de date</h2>
+      <p>Pentru funcționarea platformei, folosim următorii furnizori de servicii, care acționează ca persoane împuternicite și prelucrează date exclusiv conform instrucțiunilor noastre:</p>
+      <ul style="margin-left:20px;margin-top:8px;margin-bottom:12px">
+        <li><strong style="color:var(--ink)">Google Firebase</strong> (Google Ireland Ltd.) — stocare de date, autentificare cont, bază de date în timp real;</li>
+        <li><strong style="color:var(--ink)">EmailJS</strong> — trimiterea de emailuri tranzacționale (confirmări rezervări, oferte, notificări de status);</li>
+        <li><strong style="color:var(--ink)">OpenRouteService</strong> — calculul distanțelor și traseelor pe hartă, fără transmiterea de date personale identificabile (se trimit doar denumiri de localități);</li>
+        <li><strong style="color:var(--ink)">OpenStreetMap</strong> — afișarea hărților interactive.</li>
+      </ul>
+      <p>Nu vindem și nu transferăm datele dumneavoastră către terți în scopuri comerciale sau de marketing. Unii dintre furnizorii de mai sus pot procesa date pe servere situate în Uniunea Europeană sau în state terțe cu decizie de adecvare a Comisiei Europene ori cu garanții contractuale standard (Clauze Contractuale Standard), conform art. 46 GDPR.</p>
+
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">9. Minori</h2>
+      <p>Serviciile noastre se adresează persoanelor cu capacitate deplină de exercițiu. Rezervările pentru minori se realizează exclusiv prin contul unui părinte, tutore legal sau organizator de grup (ex. cadru didactic, în cazul transportului de elevi), care își asumă responsabilitatea datelor introduse.</p>
+
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">10. Notificarea incidentelor de securitate</h2>
+      <p>În cazul unei breșe de securitate care ar putea afecta drepturile și libertățile dumneavoastră, vom notifica Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP) în termen de 72 de ore de la constatare, conform art. 33 GDPR, și vă vom informa direct atunci când riscul pentru dumneavoastră este ridicat.</p>
+
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">11. Modificări ale acestei politici</h2>
+      <p>Această politică poate fi actualizată periodic pentru a reflecta schimbări legislative sau operaționale. Data ultimei actualizări este afișată în partea de sus a acestei pagini. Modificările semnificative vor fi comunicate prin notificare pe platformă sau, dacă e cazul, prin email.</p>
+
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">12. Reclamații</h2>
+      <p>Dacă considerați că prelucrarea datelor dumneavoastră personale nu respectă legislația în vigoare, puteți depune o plângere la:</p>
+      <ul style="margin-left:20px;margin-top:8px;margin-bottom:12px">
+        <li><strong style="color:var(--ink)">ANSPDCP</strong> (Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal): <a href="https://www.dataprotection.ro" target="_blank">dataprotection.ro</a></li>
+        <li><strong style="color:var(--ink)">Platforma SOL</strong> (Soluționarea online a litigiilor, pentru consumatori din UE): <a href="https://ec.europa.eu/consumers/odr" target="_blank">ec.europa.eu/consumers/odr</a></li>
+      </ul>
+      <p>Vă recomandăm însă să ne contactați întâi direct — de cele mai multe ori putem rezolva rapid orice neclaritate legată de datele dumneavoastră.</p>
+
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">13. Contact</h2>
+      <p>Pentru orice întrebare legată de această politică sau despre modul în care vă prelucrăm datele, ne puteți scrie la <a href="mailto:irimia.teodor.17@gmail.com">irimia.teodor.17@gmail.com</a>.</p>
     </div>
   </div>
 </div>
