@@ -1003,6 +1003,39 @@ footer{
 }
 @media(max-width:480px){.page{padding:16px 12px}}
 
+/* ── CURSĂ ORGANIZATĂ — se adaptează frumos pe tabletă și laptop, nu doar telefon ── */
+/* Tabletă (701–1024px): formularul cu 2 coloane devine 1 coloană mai devreme, ca să nu fie strâns */
+@media(min-width:701px) and (max-width:1024px){
+  .org-g2{grid-template-columns:1fr !important}
+  .org-mode-choice{max-width:100%}
+  .org-mode-card{padding:24px 18px}
+  .org-mode-icon{font-size:34px}
+}
+/* Tabletă mică / telefon mare în landscape (701–900px): cardurile de alegere mod, puțin mai compacte */
+@media(min-width:701px) and (max-width:900px){
+  .org-mode-choice{gap:14px}
+  .org-mode-card{padding:20px 16px}
+  .org-mode-title{font-size:16px}
+  .org-mode-desc{font-size:12px}
+}
+/* Laptop/desktop larg (peste 1400px): formularul organizat nu se întinde exagerat */
+@media(min-width:1400px){
+  .org-g2{max-width:1180px;margin:0 auto}
+}
+
+/* ── TABLETĂ (701–1024px) — dimensiuni intermediare pentru cardurile Organizate ── */
+@media(min-width:701px) and (max-width:1024px){
+  .org-mode-card{padding:22px 16px}
+  .org-mode-icon{font-size:32px;margin-bottom:10px}
+  .org-mode-title{font-size:16px}
+  .org-mode-desc{font-size:11.5px}
+}
+/* Formularul Organizate (coloană principală + sidebar) trece pe o coloană
+   mai devreme decât restul grid-urilor g2, ca să nu fie strâmt pe tabletă */
+@media(max-width:1024px){
+  .org-g2{grid-template-columns:1fr}
+}
+
 /* ── APP LOADER ── */
 #app-loader{
   position:fixed;inset:0;z-index:100000;
@@ -1329,7 +1362,7 @@ footer{
     <div class="org-progress-line"></div>
     <div class="org-progress-step" data-step="4"><div class="org-progress-dot">4</div><div class="org-progress-label">Contact</div></div>
   </div>
-  <div class="g2" style="align-items:start">
+  <div class="g2 org-g2" style="align-items:start">
     <div>
       <!-- STEP 1: Detalii cursa -->
       <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:14px;box-shadow:var(--sh)">
