@@ -1603,7 +1603,8 @@ footer{
       <ul style="margin-left:20px;margin-top:8px;margin-bottom:12px">
         <li><strong style="color:var(--ink)">Google Firebase</strong> (Google Ireland Ltd.) — stocare de date, autentificare cont, bază de date în timp real;</li>
         <li><strong style="color:var(--ink)">EmailJS</strong> — trimiterea de emailuri tranzacționale (confirmări rezervări, oferte, notificări de status);</li>
-        <li><strong style="color:var(--ink)">OpenRouteService</strong> — calculul distanțelor și traseelor pe hartă, fără transmiterea de date personale identificabile (se trimit doar denumiri de localități);</li>
+        <li><strong style="color:var(--ink)">Nominatim / OpenStreetMap</strong> — identificarea coordonatelor stațiilor pe hartă, fără transmiterea de date personale identificabile (se trimit doar denumiri de localități);</li>
+        <li><strong style="color:var(--ink)">OSRM (Open Source Routing Machine)</strong> — calculul traseelor pe drum între stații, pe baza coordonatelor geografice, fără date personale;</li>
         <li><strong style="color:var(--ink)">OpenStreetMap</strong> — afișarea hărților interactive.</li>
       </ul>
       <p>Nu vindem și nu transferăm datele dumneavoastră către terți în scopuri comerciale sau de marketing. Unii dintre furnizorii de mai sus pot procesa date pe servere situate în Uniunea Europeană sau în state terțe cu decizie de adecvare a Comisiei Europene ori cu garanții contractuale standard (Clauze Contractuale Standard), conform art. 46 GDPR.</p>
@@ -2628,7 +2629,8 @@ footer{
   window._TICKET_DATA = null; // last ticket(s) shown
   window.SOFER_EMAIL = 'renaultromaniaofficial@gmail.com';
   window.ADMIN_EMAIL = 'irimia.teodor.17@gmail.com';
-  window.ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjljMTA5ZGY1ZWU5NTQ2ZjA5Nzc1NGVmYWU0MzNlOTFiIiwiaCI6Im11cm11cjY0In0=';
+  // MIGRARE: nu mai folosim OpenRouteService (necesita cheie API care poate expira/pica).
+  // Geocodare -> Nominatim (OpenStreetMap), Rutare pe drum -> OSRM. Ambele publice, fara cheie.
   window.DAYS_RO = ['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
   window.MONTHS_RO = ['Ianuarie','Februarie','Martie','Aprilie','Mai','Iunie','Iulie','August','Septembrie','Octombrie','Noiembrie','Decembrie'];
 
@@ -3091,17 +3093,30 @@ window.carStep = (id,dir) => {
 };
 
 // ── HOME ───────────────────────────────────────────────────
-// ── HELPER: Geocodare cu cache + traseu real pe drumuri (ORS Directions) ──
+// ── HELPER: Geocodare (Nominatim/OSM) + traseu real pe drumuri (OSRM) — ambele gratuite, fără cheie API ──
+
+// Throttle simplu: Nominatim și OSRM (servere publice) cer max 1 cerere/secundă.
+// Toate cererile trec prin această coadă, indiferent de unde sunt lansate în cod.
+window._geoQueue = window._geoQueue || Promise.resolve();
+function geoThrottled(fn){
+  const run = () => fn().catch(e=>{throw e;});
+  const p = window._geoQueue.then(()=>new Promise(res=>setTimeout(res,1100))).then(run, run);
+  window._geoQueue = p.catch(()=>{}); // nu lăsăm un eșec să blocheze coada pentru cererile următoare
+  return p;
+}
+
 window._geoCache = window._geoCache || {};
 async function geocodeCached(placeName){
   const key = placeName.trim().toLowerCase();
   if (window._geoCache[key] !== undefined) return window._geoCache[key];
   try{
-    const r = await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${window.ORS_KEY}&text=${encodeURIComponent(placeName+', Romania')}&size=1`);
-    if(!r.ok) throw new Error('Geocode HTTP '+r.status);
-    const d = await r.json();
-    const ll = d.features?.[0]?.geometry?.coordinates; // [lng,lat]
-    const result = ll ? [ll[1],ll[0]] : null;
+    const result = await geoThrottled(async () => {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ro&q=${encodeURIComponent(placeName+', Romania')}`);
+      if(!r.ok) throw new Error('Geocode HTTP '+r.status);
+      const d = await r.json();
+      const hit = d?.[0];
+      return hit ? [parseFloat(hit.lat), parseFloat(hit.lon)] : null;
+    });
     window._geoCache[key] = result;
     return result;
   }catch(e){
@@ -3111,27 +3126,23 @@ async function geocodeCached(placeName){
   }
 }
 
-// Obtine traseul REAL pe drum (nu linie dreapta) intre N puncte [lat,lng]
+// Obtine traseul REAL pe drum (nu linie dreapta) intre N puncte [lat,lng], via OSRM public
 async function getRoadRoute(latLngArray){
   if (latLngArray.length < 2) return null;
   try{
-    const coords = latLngArray.map(([lat,lng])=>[lng,lat]); // ORS vrea [lng,lat]
-    const r = await fetch('https://api.openrouteservice.org/v2/directions/driving-car/geojson',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':window.ORS_KEY},
-      body:JSON.stringify({coordinates:coords})
-    });
+    const coordsStr = latLngArray.map(([lat,lng])=>`${lng},${lat}`).join(';'); // OSRM vrea lng,lat
+    const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`);
     if(!r.ok){
       const errBody = await r.text().catch(()=>'');
-      throw new Error('Directions HTTP '+r.status+' — '+errBody.slice(0,200));
+      throw new Error('OSRM HTTP '+r.status+' — '+errBody.slice(0,200));
     }
     const d = await r.json();
-    const geom = d.features?.[0]?.geometry?.coordinates;
+    if (d.code !== 'Ok') throw new Error('OSRM: '+(d.message||d.code));
+    const geom = d.routes?.[0]?.geometry?.coordinates;
     if (!geom) return null;
     return geom.map(([lng,lat])=>[lat,lng]); // inapoi la [lat,lng] pt Leaflet
   }catch(e){
-    // Logging detaliat — deschide consola (F12) pentru a vedea exact de ce a picat
-    // cererea la ORS (cheie invalidă, cotă epuizată, coordonate în afara ariei acoperite etc.)
+    // Logging detaliat — deschide consola (F12) pentru a vedea exact de ce a picat cererea la OSRM
     console.warn('Road route failed, se folosește linie dreaptă ca fallback:', e.message, e);
     return null; // fallback la linie dreapta se face de apelant
   }
@@ -4357,17 +4368,18 @@ window.calcOrgPrice = async () => {
 };
 async function calcDistORS(from,to){
   try{
-    const geo=async loc=>{const r=await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${window.ORS_KEY}&text=${encodeURIComponent(loc+', Romania')}&size=1`);const d=await r.json();return d.features?.[0]?.geometry?.coordinates||null;};
-    const [c1,c2]=await Promise.all([geo(from),geo(to)]);
+    const [c1,c2]=await Promise.all([geocodeCached(from),geocodeCached(to)]); // [lat,lng]
     if(!c1||!c2)return null;
-    const r=await fetch('https://api.openrouteservice.org/v2/directions/driving-car',{method:'POST',headers:{'Content-Type':'application/json','Authorization':window.ORS_KEY},body:JSON.stringify({coordinates:[c1,c2]})});
+    const coordsStr = `${c1[1]},${c1[0]};${c2[1]},${c2[0]}`; // OSRM vrea lng,lat
+    const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=false`);
+    if(!r.ok) return null;
     const d=await r.json();
-    const seg=d.routes?.[0]?.summary;
+    const seg=d.routes?.[0];
     if(!seg)return null;
     const km=Math.round(seg.distance/1000),min=Math.round(seg.duration/60);
     const h=Math.floor(min/60),m=min%60;
     return{km,min,text:h+'h'+(m?' '+m+'min':'')};
-  }catch(e){return null;}
+  }catch(e){console.warn('calcDistORS (Nominatim/OSRM) failed:',e.message);return null;}
 }
 
 // ══════════════════════════════════════════════════════════
@@ -5307,11 +5319,13 @@ async function rmMapPickerAddPoint(lat, lng){
 // Rezolva numele localitatii in fundal, fara sa blocheze desenarea hartii/traseului
 async function rmMapPickerResolveName(idx, lat, lng){
   try {
-    const r = await fetch(`https://api.openrouteservice.org/geocode/reverse?api_key=${window.ORS_KEY}&point.lon=${lng}&point.lat=${lat}&size=1`);
-    if (!r.ok) return;
-    const d = await r.json();
-    const props = d.features?.[0]?.properties;
-    const nume = props?.locality || props?.county || props?.label;
+    const props = await geoThrottled(async () => {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=14&addressdetails=1`);
+      if (!r.ok) return null;
+      return await r.json();
+    });
+    const addr = props?.address;
+    const nume = addr?.village || addr?.town || addr?.city || addr?.municipality || addr?.county || props?.display_name?.split(',')[0];
     const p = window._rmPickerPoints[idx];
     if (nume && p && p.ll[0]===lat && p.ll[1]===lng) {
       p.nume = nume;
@@ -5319,7 +5333,7 @@ async function rmMapPickerResolveName(idx, lat, lng){
       if (marker) marker.setPopupContent(`<strong>${nume}</strong><br><button onclick="rmMapPickerRemovePoint(${idx})" style="margin-top:6px;padding:3px 10px;background:#b52d2d;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">✕ Șterge</button>`);
       rmMapPickerApplyToStops(); // ieftin acum — distantele sunt deja calculate/cache-uite
     }
-  } catch(e) { /* pastreaza numele placeholder cu coordonate */ }
+  } catch(e) { console.warn('Reverse geocode failed:', e.message); /* pastreaza numele placeholder cu coordonate */ }
 }
 
 window.rmMapPickerUndo = async () => {
@@ -5423,18 +5437,18 @@ async function getSegmentDist(ll1, ll2){
   const key = segKey(ll1, ll2);
   if (window._rmSegmentCache[key]) return window._rmSegmentCache[key];
   try {
-    const r = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':window.ORS_KEY},
-      body:JSON.stringify({coordinates:[[ll1[1],ll1[0]],[ll2[1],ll2[0]]]})
+    const result = await geoThrottled(async () => {
+      const coordsStr = `${ll1[1]},${ll1[0]};${ll2[1]},${ll2[0]}`; // OSRM vrea lng,lat
+      const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=false`);
+      if (!r.ok) return null;
+      const d = await r.json();
+      const seg = d.routes?.[0];
+      if (!seg) return null;
+      return {km: Math.round(seg.distance/1000), min: Math.round(seg.duration/60)};
     });
-    const d = await r.json();
-    const seg = d.routes?.[0]?.summary;
-    if (!seg) return null;
-    const result = {km: Math.round(seg.distance/1000), min: Math.round(seg.duration/60)};
-    window._rmSegmentCache[key] = result;
+    if (result) window._rmSegmentCache[key] = result;
     return result;
-  } catch(e) { return null; }
+  } catch(e) { console.warn('getSegmentDist (OSRM) failed:', e.message); return null; }
 }
 
 async function rmMapPickerApplyToStops(){
@@ -6960,14 +6974,12 @@ async function initLeafletHarta(){
   for(const v of window._F){
     const loc=v.locatieCurenta||'garaj';
     if(loc==='garaj'||!loc) continue;
-    // Geocodare cu OpenRouteService
+    // Geocodare cu Nominatim (OpenStreetMap) — gratuit, fără cheie, cu cache
     const dest=loc.startsWith('cursa_spre_')?loc.replace('cursa_spre_',''):loc;
     try{
-      const r=await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${window.ORS_KEY}&text=${encodeURIComponent(dest+', Romania')}&size=1`);
-      const d=await r.json();
-      const coords=d.features?.[0]?.geometry?.coordinates;
+      const coords=await geocodeCached(dest); // [lat,lng]
       if(!coords)continue;
-      const [lng,lat]=coords;
+      const [lat,lng]=coords;
       bounds.push([lat,lng]);
       const isCursa=loc.startsWith('cursa_');
       const vIcon=L.divIcon({
@@ -7661,4 +7673,3 @@ setTimeout(hideAppLoader, 6000);
 </script>
 </body>
 </html>
-      
