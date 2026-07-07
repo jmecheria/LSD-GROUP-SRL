@@ -614,19 +614,24 @@ input.ok{border-color:var(--green)}
 
 /* ── ROUTE CARD (curse regulate) ── */
 .route-card{transition:all .2s}
-.mini-route-line{position:relative;height:34px;margin:10px 0 16px;padding:0 4px}
+.mini-route-line{position:relative;height:50px;margin:16px 0 18px;padding:0 4px}
 .mini-route-track{
-  position:absolute;top:14px;left:4px;right:4px;height:2px;
+  position:absolute;top:24px;left:4px;right:4px;height:2px;
   background:linear-gradient(90deg,var(--amber),var(--amber-d));border-radius:2px;
 }
 .mini-route-dot{
-  position:absolute;top:9px;width:11px;height:11px;margin-left:-5.5px;
+  position:absolute;top:19px;width:11px;height:11px;margin-left:-5.5px;
   background:var(--card);border:2.5px solid var(--amber-d);border-radius:50%;
 }
 .mini-route-dot:first-child{background:var(--amber-d)}
 .mini-route-dot:last-child{background:var(--amber-d)}
-.mini-route-time-start{position:absolute;top:24px;left:0;font-size:11px;font-weight:700;color:var(--amber-d)}
-.mini-route-time-end{position:absolute;top:24px;right:0;font-size:11px;font-weight:700;color:var(--amber-d)}
+.mini-route-stop-label{
+  position:absolute;top:0;font-size:9px;font-weight:700;color:var(--stone);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:58px;line-height:1.2;
+}
+.mini-route-stop-label.endpoint{color:var(--amber-d);font-weight:800;font-size:10.5px;max-width:96px}
+.mini-route-time-start{position:absolute;top:34px;left:0;font-size:11px;font-weight:700;color:var(--amber-d)}
+.mini-route-time-end{position:absolute;top:34px;right:0;font-size:11px;font-weight:700;color:var(--amber-d)}
 .mini-route-bus{
   position:absolute;top:-3px;width:24px;height:auto;z-index:3;
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.28));
@@ -3443,12 +3448,25 @@ window.fillModeBg = fillModeBg;
 function renderHeroRouteLine(){
   const wrap = document.getElementById('hero-route-stops');
   if (!wrap) return;
-  // Ia primele 4-5 statii unice dintr-o cursa reprezentativa (cea cu cele mai multe statii)
+  // Ia originea comună (cel mai frecvent nume de primă stație dintre toate cursele active)
+  // și TOATE destinațiile finale distincte — practic „harta rețelei": Iași + toate capetele posibile.
   const curse = (window._R||[]).filter(c=>c.activa && (c.statii||[]).length>=2);
   let statii = ['Plecare','Stație','Stație','Sosire'];
   if (curse.length) {
-    const best = curse.reduce((a,b)=>((b.statii||[]).length>(a.statii||[]).length?b:a), curse[0]);
-    statii = (best.statii||[]).map(s=>s.nome||s.name||s.nume||'').filter(Boolean);
+    const originCount = {};
+    curse.forEach(c=>{
+      const o = c.statii[0]?.nome || c.statii[0]?.name || c.statii[0]?.nume || '';
+      if (o) originCount[o] = (originCount[o]||0)+1;
+    });
+    const origin = Object.entries(originCount).sort((a,b)=>b[1]-a[1])[0]?.[0]
+      || (curse[0].statii[0]?.nome || curse[0].statii[0]?.name || curse[0].statii[0]?.nume || 'Plecare');
+    const destSet = new Set();
+    curse.forEach(c=>{
+      const last = c.statii[c.statii.length-1];
+      const nume = last?.nome || last?.name || last?.nume || '';
+      if (nume && nume !== origin) destSet.add(nume);
+    });
+    statii = [origin, ...destSet];
     if (statii.length<2) statii=['Plecare','Sosire'];
   }
   const n = Math.min(statii.length, 6);
@@ -3694,11 +3712,29 @@ window.loadRegulate = async () => {
       const lastMin = statii.length ? (statii[statii.length-1].minuteDeLaStart||60) : 60;
       const oraSosire = oraP!=='-' ? calcArrival(oraP,lastMin) : '';
 
-      // Mini route line vizual (semnatura aplicata si la nivel de card)
-      const nStops = Math.min(statii.length,5);
-      const miniDots = statii.slice(0,nStops).map((s,i)=>{
-        const pct = nStops===1?0:(i/(nStops-1))*100;
-        return `<div class="mini-route-dot" style="left:${pct}%"></div>`;
+      // Mini route line vizual (semnatura aplicata si la nivel de card) — cu numele stațiilor reale
+      const totalMinRuta = statii.length ? (statii[statii.length-1].minuteDeLaStart||60) : 60;
+      const maxShow = 5;
+      let displayStops;
+      if (statii.length<=maxShow) {
+        displayStops = statii;
+      } else {
+        // Garantăm mereu prima și ultima stație reală; eșantionăm restul proporțional
+        const picks = new Set([0, statii.length-1]);
+        for (let k=1;k<=maxShow-2;k++) picks.add(Math.round(k*(statii.length-1)/(maxShow-1)));
+        displayStops = [...picks].sort((a,b)=>a-b).map(idx=>statii[idx]);
+      }
+      const miniDots = displayStops.map((s,idx)=>{
+        const pct = totalMinRuta>0 ? ((s.minuteDeLaStart||0)/totalMinRuta*100) : (idx/(displayStops.length-1||1)*100);
+        const isFirst = idx===0, isLast = idx===displayStops.length-1;
+        const nume = s.nome||s.name||s.nume||'';
+        const dotHtml = `<div class="mini-route-dot" style="left:${pct}%"></div>`;
+        let labelStyle;
+        if (isFirst) labelStyle = `left:0;text-align:left`;
+        else if (isLast) labelStyle = `right:0;left:auto;text-align:right`;
+        else labelStyle = `left:${pct}%;transform:translateX(-50%);text-align:center`;
+        const labelHtml = `<div class="mini-route-stop-label${(isFirst||isLast)?' endpoint':''}" style="${labelStyle}" title="${nume}">${nume}</div>`;
+        return dotHtml+labelHtml;
       }).join('');
 
       // ── Poziția reală a autobuzului pe traseu, calculată din ora curentă (fără cereri de rețea) ──
