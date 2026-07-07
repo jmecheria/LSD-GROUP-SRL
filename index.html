@@ -2217,11 +2217,26 @@ footer{
       <div style="background:var(--cream);border:1px solid var(--border-l);border-radius:var(--r);padding:16px;margin-bottom:16px">
         <div style="font-weight:700;font-size:13px;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">🗺 Stații și prețuri cumulate</div>
         <div style="font-size:12px;color:var(--stone);margin-bottom:12px">Prima stație = 0 RON. Restul = preț total de la start.</div>
+
+        <!-- Auto-generare traseu: completezi doar plecarea + destinația, restul se detectează automat -->
+        <div style="background:var(--amber-g);border:1.5px solid var(--amber-b);border-radius:var(--r);padding:12px;margin-bottom:14px">
+          <div style="font-weight:700;font-size:12px;color:var(--amber-d);margin-bottom:6px">🤖 Auto-generare traseu</div>
+          <div style="font-size:11px;color:var(--stone);margin-bottom:8px">Completează doar prima și ultima stație mai jos, apoi apasă butonul. <strong>Orașele mari de pe traseu sunt incluse garantat</strong>; satele apar doar dacă e un gol mare între orașe. Nu luăm nume ambigue — identificăm exact ce e pe drumul real.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <select id="rm-auto-density" style="max-width:230px;font-size:12px">
+              <option value="25">Umple golurile des (sate la ~25 min)</option>
+              <option value="40" selected>Normal (sate doar la goluri de ~40+ min)</option>
+              <option value="60">Doar orașe mari (ignoră satele mici)</option>
+            </select>
+            <button class="btn btn-primary btn-sm" id="btn-auto-route" onclick="buildRouteAuto()">🤖 Auto-generează traseul complet</button>
+          </div>
+        </div>
+
         <div id="rm-stops"></div>
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-          <button class="btn btn-secondary btn-sm" onclick="addRouteStop()">+ Adaugă stație</button>
-          <button class="btn btn-secondary btn-sm" onclick="calcDistances()">🗺 Calculează automat</button>
-          <button class="btn btn-primary btn-sm" onclick="openRouteMapPicker()">📍 Plasează pe hartă</button>
+          <button class="btn btn-secondary btn-sm" onclick="addRouteStop()">+ Adaugă stație la final</button>
+          <button class="btn btn-secondary btn-sm" onclick="calcDistances()">🗺 Calculează automat (doar preț/timp)</button>
+          <button class="btn btn-primary btn-sm" onclick="openRouteMapPicker()">📍 Plasează pe hartă (manual)</button>
         </div>
         <!-- Harta pentru plasare puncte -->
         <div id="rm-map-picker-wrap" style="display:none;margin-top:14px">
@@ -3127,26 +3142,185 @@ async function geocodeCached(placeName){
 }
 
 // Obtine traseul REAL pe drum (nu linie dreapta) intre N puncte [lat,lng], via OSRM public
-async function getRoadRoute(latLngArray){
+// Cerere OSRM completă (geometrie + distanță totală + durată totală), refolosită de mai multe funcții
+async function osrmRouteFull(latLngArray){
   if (latLngArray.length < 2) return null;
+  const coordsStr = latLngArray.map(([lat,lng])=>`${lng},${lat}`).join(';'); // OSRM vrea lng,lat
+  const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`);
+  if(!r.ok){
+    const errBody = await r.text().catch(()=>'');
+    throw new Error('OSRM HTTP '+r.status+' — '+errBody.slice(0,200));
+  }
+  const d = await r.json();
+  if (d.code !== 'Ok') throw new Error('OSRM: '+(d.message||d.code));
+  const route = d.routes?.[0];
+  if (!route) return null;
+  return {
+    coords: route.geometry.coordinates.map(([lng,lat])=>[lat,lng]), // [lat,lng] pt Leaflet
+    distanceM: route.distance,
+    durationS: route.duration
+  };
+}
+
+async function getRoadRoute(latLngArray){
   try{
-    const coordsStr = latLngArray.map(([lat,lng])=>`${lng},${lat}`).join(';'); // OSRM vrea lng,lat
-    const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`);
-    if(!r.ok){
-      const errBody = await r.text().catch(()=>'');
-      throw new Error('OSRM HTTP '+r.status+' — '+errBody.slice(0,200));
-    }
-    const d = await r.json();
-    if (d.code !== 'Ok') throw new Error('OSRM: '+(d.message||d.code));
-    const geom = d.routes?.[0]?.geometry?.coordinates;
-    if (!geom) return null;
-    return geom.map(([lng,lat])=>[lat,lng]); // inapoi la [lat,lng] pt Leaflet
+    const data = await osrmRouteFull(latLngArray);
+    return data ? data.coords : null;
   }catch(e){
     // Logging detaliat — deschide consola (F12) pentru a vedea exact de ce a picat cererea la OSRM
     console.warn('Road route failed, se folosește linie dreaptă ca fallback:', e.message, e);
     return null; // fallback la linie dreapta se face de apelant
   }
 }
+
+// Distanța haversine (linie dreaptă) în metri între 2 puncte [lat,lng] — folosită pentru
+// a găsi ce fracție din traseu corespunde fiecărui punct eșantionat din geometria OSRM.
+function haversineDist(p1, p2){
+  const R = 6371000;
+  const toRad = deg => deg*Math.PI/180;
+  const dLat = toRad(p2[0]-p1[0]), dLng = toRad(p2[1]-p1[1]);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(p1[0]))*Math.cos(toRad(p2[0]))*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Reverse-geocoding (Nominatim, prin coada throttled) — dintr-o coordonată exactă de pe traseu,
+// întoarce numele localității de acolo. Elimină ambiguitatea satelor cu nume identic:
+// nu căutăm după nume, ci după poziție, deci luăm garantat ce e pe drum.
+// Întoarce {name, level} pentru o coordonată — level indică importanța așezării:
+// 3 = oraș mare (city), 2 = oraș mic/municipiu (town/municipality), 1 = sat (village), 0 = cătun/fallback (hamlet/comună).
+// Această ierarhie e folosită la auto-generarea traseului ca să garantăm orașele mari
+// și să folosim satele doar ca "umplutură" pentru golurile mari dintre orașe.
+async function reverseGeocodeName(lat, lng){
+  try{
+    const props = await geoThrottled(async () => {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=14&addressdetails=1`);
+      if (!r.ok) return null;
+      return await r.json();
+    });
+    const addr = props?.address;
+    if (!addr) return { name: null, level: 0 };
+    if (addr.city) return { name: addr.city, level: 3 };
+    if (addr.town) return { name: addr.town, level: 2 };
+    if (addr.municipality) return { name: addr.municipality, level: 2 };
+    if (addr.village) return { name: addr.village, level: 1 };
+    if (addr.hamlet) return { name: addr.hamlet, level: 0 };
+    if (addr.county) return { name: addr.county, level: 0 };
+    return { name: props?.display_name?.split(',')[0] || null, level: 0 };
+  }catch(e){ console.warn('Reverse geocode failed:', e.message); return { name: null, level: 0 }; }
+}
+
+// ── AUTO-GENERARE TRASEU ──────────────────────────────────────────
+// Ia doar plecarea și destinația (deja completate de utilizator în lista de stații),
+// obține traseul real pe drum (OSRM), eșantionează puncte de-a lungul lui la interval
+// regulat (în funcție de densitatea aleasă), și pentru fiecare punct face reverse-geocoding
+// ca să afle exact ce localitate e ACOLO — nu una omonimă din altă parte a țării.
+window.buildRouteAuto = async function buildRouteAuto(){
+  const fromName = (window._RM_STOPS[0]?.n||'').trim();
+  const toName = (window._RM_STOPS[window._RM_STOPS.length-1]?.n||'').trim();
+  if (!fromName || !toName) { toast('Completează întâi prima și ultima stație (plecare/destinație)','wr'); return; }
+
+  const btn = document.getElementById('btn-auto-route');
+  const gapMin = parseInt(document.getElementById('rm-auto-density')?.value) || 40;
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin" style="width:14px;height:14px;border-width:2px"></span> Se generează...'; }
+  toast('🤖 Se localizează plecarea și destinația...', 'in');
+
+  try {
+    const c1 = await geocodeCached(fromName);
+    const c2 = await geocodeCached(toName);
+    if (!c1 || !c2) { toast('Nu am putut localiza "'+(!c1?fromName:toName)+'". Verifică ortografia.','er'); return; }
+
+    toast('🤖 Se calculează traseul pe drum...', 'in');
+    const routeData = await osrmRouteFull([c1, c2]);
+    if (!routeData) { toast('Nu am putut obține traseul pe drum între aceste localități.','er'); return; }
+    const { coords, distanceM, durationS } = routeData;
+
+    // Distanțe cumulate (haversine) de-a lungul geometriei, ca să putem localiza
+    // fiecare fracțiune a traseului într-un index din array-ul de coordonate.
+    const cumDist = [0];
+    for (let i=1;i<coords.length;i++) cumDist.push(cumDist[i-1] + haversineDist(coords[i-1], coords[i]));
+    const totalDistGeom = cumDist[cumDist.length-1] || 1;
+    const totalMin = durationS/60;
+
+    // Eșantionare DEASĂ (mai deasă decât gap-ul cerut de utilizator), ca să nu "sărim"
+    // peste un oraș mare care nu cade exact pe un punct rar. Satele/orașele mici sunt
+    // filtrate ulterior — aici doar culegem tot ce găsim pe traseu.
+    const sampleEveryMin = Math.min(gapMin, 12);
+    let nSamples = Math.round(totalMin / sampleEveryMin);
+    nSamples = Math.max(4, Math.min(24, nSamples)); // plafon ca timpul de așteptare să rămână rezonabil
+
+    toast(`🤖 Se scanează traseul pentru localități (${nSamples} puncte, ~${Math.ceil(nSamples*1.1)}s)...`, 'in');
+
+    // Colectăm TOATE localitățile găsite pe traseu, cu poziția lor (minut/km) și nivelul de importanță
+    const raw = []; // {name, level, minuteMark, kmMark, lat, lng}
+    const fromKey = fromName.toLowerCase(), toKey = toName.toLowerCase();
+    for (let i=1; i<=nSamples; i++){
+      const fracDist = (i/(nSamples+1)) * totalDistGeom;
+      let idx = cumDist.findIndex(d => d >= fracDist);
+      if (idx < 0) idx = coords.length-1;
+      const pt = coords[idx];
+      const { name, level } = await reverseGeocodeName(pt[0], pt[1]);
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (key===fromKey || key===toKey) continue; // deja avem plecarea/destinația
+      const fracOfTotal = cumDist[idx] / totalDistGeom;
+      raw.push({ name, level, minuteMark: fracOfTotal*totalMin, kmMark: fracOfTotal*(distanceM/1000), lat: pt[0], lng: pt[1] });
+    }
+
+    // Dedup: dacă același nume apare pe mai multe eșantioane consecutive, păstrăm o singură apariție
+    const dedup = [];
+    const seenNames = new Set();
+    raw.forEach(s => { const k=s.name.toLowerCase(); if(!seenNames.has(k)){ seenNames.add(k); dedup.push(s); } });
+
+    // PASUL 1: toate orașele/municipiile (level >= 2) sunt GARANTATE incluse, mereu.
+    const majors = dedup.filter(s => s.level >= 2).sort((a,b)=>a.minuteMark-b.minuteMark);
+
+    // PASUL 2: satele (level 1) umplu doar golurile mari rămase între opriri deja alese
+    // (inclusiv golul de la plecare până la primul oraș, și de la ultimul oraș la destinație).
+    const villages = dedup.filter(s => s.level === 1).sort((a,b)=>a.minuteMark-b.minuteMark);
+    const timeline = [{minuteMark:0}, ...majors, {minuteMark:totalMin}];
+    const gapThreshold = gapMin * 1.4; // umplem golul doar dacă e semnificativ mai mare decât densitatea cerută
+    const fillers = [];
+    for (let i=1;i<timeline.length;i++){
+      const prevM = timeline[i-1].minuteMark, nextM = timeline[i].minuteMark;
+      if (nextM - prevM <= gapThreshold) continue;
+      // alegem satul cel mai apropiat de mijlocul golului, dacă există unul în interval
+      const midM = (prevM+nextM)/2;
+      const candidates = villages.filter(v => v.minuteMark>prevM && v.minuteMark<nextM);
+      if (!candidates.length) continue;
+      const best = candidates.reduce((a,b)=> Math.abs(a.minuteMark-midM)<Math.abs(b.minuteMark-midM)?a:b);
+      fillers.push(best);
+    }
+
+    const finalStops = [...majors, ...fillers].sort((a,b)=>a.minuteMark-b.minuteMark);
+
+    const newStops = [{n: fromName, p:0, m:0, lat:c1[0], lng:c1[1]}];
+    finalStops.forEach(s => {
+      newStops.push({
+        n: s.name,
+        m: Math.round(s.minuteMark),
+        p: Math.max(1, Math.round(s.kmMark * 0.5)), // estimare preț ~0.5 RON/km, editabil manual
+        lat: s.lat, lng: s.lng
+      });
+    });
+    newStops.push({n: toName, p: Math.max(newStops[newStops.length-1]?.p||0, Math.round((distanceM/1000)*0.5)), m: Math.round(totalMin), lat:c2[0], lng:c2[1]});
+
+    window._RM_STOPS = newStops;
+    renderRmStops();
+
+    // Dacă harta de plasare manuală e deschisă, sincronizăm și pinii vizuali
+    if (window._rmPickerMap) {
+      window._rmPickerPoints = newStops.map(s => ({ll:[s.lat,s.lng], nume:s.n}));
+      await rmMapPickerRender();
+    }
+
+    const nOrase = majors.length, nSate = fillers.length;
+    toast(`✅ Traseu generat: ${newStops.length} stații (${nOrase} orașe + ${nSate} sate) · ${Math.round(distanceM/1000)} km · ~${(totalMin/60).toFixed(1)}h. Poți edita, șterge sau adăuga stații mai jos.`, 'ok');
+  } catch(e) {
+    toast('Eroare la generarea automată: '+e.message, 'er');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '🤖 Auto-generează traseul complet'; }
+  }
+};
 
 // Creeaza un marker autobuz SVG (nu emoji) care se misca pe un traseu real
 function createBusMarkerOnRoute(map, routeLatLngs, color){
@@ -5223,17 +5397,63 @@ window.openRouteModal=async(id=null)=>{
   renderRmStops();renderRmDeps();renderRmRetDeps();renderBlockedDates();
   openModal('route');
 };
+let _rmStopDragIdx = null;
+window.rmStopDragStart = (e, idx) => {
+  _rmStopDragIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.style.opacity = '.4';
+};
+window.rmStopDragOver = (e) => { e.preventDefault(); e.currentTarget.style.outline = '2px dashed var(--amber)'; };
+window.rmStopDragLeave = (e) => { e.currentTarget.style.outline = 'none'; };
+window.rmStopDragEnd = (e) => {
+  e.currentTarget.style.opacity = '1';
+  document.querySelectorAll('[data-stop-row]').forEach(el=>el.style.outline='none');
+};
+window.rmStopDrop = (e, toIdx) => {
+  e.preventDefault();
+  e.currentTarget.style.outline = 'none';
+  if (_rmStopDragIdx === null || _rmStopDragIdx === toIdx) return;
+  const n = window._RM_STOPS.length;
+  // Doar stațiile din mijloc (nu plecarea, nu destinația finală) pot fi mutate sau primi o mutare
+  if (_rmStopDragIdx <= 0 || _rmStopDragIdx >= n-1 || toIdx <= 0 || toIdx >= n-1) { _rmStopDragIdx = null; return; }
+  const [moved] = window._RM_STOPS.splice(_rmStopDragIdx, 1);
+  window._RM_STOPS.splice(toIdx, 0, moved);
+  _rmStopDragIdx = null;
+  renderRmStops();
+};
+
+// Inserează o stație nouă (goală) chiar după poziția i — util pentru trasee de tip "tren local"
+// unde adaugi manual opriri suplimentare pe lângă cele generate automat.
+window.rmInsertStopAfter = (i) => {
+  window._RM_STOPS.splice(i+1, 0, {n:'', p:0, m:0});
+  renderRmStops();
+  setTimeout(()=>{
+    const input = document.querySelector(`[data-stop-row="${i+1}"] input[data-sn]`);
+    if (input) input.focus();
+  }, 30);
+};
+
 window.renderRmStops = function renderRmStops(){
   const el=document.getElementById('rm-stops');if(!el)return;
-  el.innerHTML=`<div style="display:flex;gap:6px;margin-bottom:4px;padding-left:28px"><div style="flex:2;font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Stație</div><div style="width:90px;font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Preț (RON)</div><div style="width:80px;font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Min. start</div><div style="width:32px"></div></div>`+
-  window._RM_STOPS.map((s,i)=>`<div data-stop-row="${i}" style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+  const n = window._RM_STOPS.length;
+  el.innerHTML=`<div style="display:flex;gap:6px;margin-bottom:4px;padding-left:44px"><div style="flex:2;font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Stație</div><div style="width:90px;font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Preț (RON)</div><div style="width:80px;font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:.4px">Min. start</div><div style="width:56px"></div></div>`+
+  window._RM_STOPS.map((s,i)=>{
+    const isMiddle = i>0 && i<n-1; // doar stațiile intermediare pot fi mutate/șterse
+    const dragAttrs = isMiddle ? `draggable="true" ondragstart="rmStopDragStart(event,${i})" ondragover="rmStopDragOver(event)" ondragleave="rmStopDragLeave(event)" ondrop="rmStopDrop(event,${i})" ondragend="rmStopDragEnd(event)"` : '';
+    return `<div data-stop-row="${i}" ${dragAttrs} style="display:flex;align-items:center;gap:6px;margin-bottom:8px;${isMiddle?'cursor:grab':''}">
+    <div style="width:16px;text-align:center;color:var(--stone);font-size:13px;flex-shrink:0" title="${isMiddle?'Trage pentru a reordona':''}">${isMiddle?'⠿':''}</div>
     <div style="width:22px;height:22px;border-radius:50%;background:var(--amber);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
-    <input data-sn type="text" placeholder="${i===0?'Prima stație (plecare)':i===window._RM_STOPS.length-1?'Destinație finală':'Stație'}" value="${s.n}" style="flex:2;min-width:100px" onchange="window._RM_STOPS[${i}].n=this.value;delete window._RM_STOPS[${i}].lat;delete window._RM_STOPS[${i}].lng;"/>
+    <input data-sn type="text" placeholder="${i===0?'Prima stație (plecare)':i===n-1?'Destinație finală':'Stație'}" value="${s.n}" style="flex:2;min-width:100px" onchange="window._RM_STOPS[${i}].n=this.value;delete window._RM_STOPS[${i}].lat;delete window._RM_STOPS[${i}].lng;"/>
     ${i===0?`<div style="width:90px;font-size:11px;color:var(--stone);text-align:center">0 RON</div><div style="width:80px;font-size:11px;color:var(--stone);text-align:center">0 min</div>`:
     `<input data-sp type="number" min="0" placeholder="RON" value="${s.p||''}" style="width:90px;flex-shrink:0" onchange="window._RM_STOPS[${i}].p=parseFloat(this.value)||0"/>
      <input data-sm type="number" min="0" placeholder="min" value="${s.m||''}" style="width:80px;flex-shrink:0" onchange="window._RM_STOPS[${i}].m=parseInt(this.value)||0"/>`}
-    ${i>=2?`<button style="background:none;border:none;color:var(--stone);cursor:pointer;font-size:16px;width:32px" onclick="window._RM_STOPS.splice(${i},1);renderRmStops()">✕</button>`:`<div style="width:32px"></div>`}
-  </div>`).join('');
+    <div style="display:flex;gap:3px;flex-shrink:0">
+      <button type="button" title="Adaugă o stație nouă chiar după aceasta" style="background:var(--green-g);border:1px solid rgba(26,107,60,.25);color:var(--green);cursor:pointer;font-size:14px;font-weight:700;width:24px;height:24px;border-radius:6px;line-height:1" onclick="rmInsertStopAfter(${i})">+</button>
+      ${isMiddle?`<button type="button" title="Șterge stația" style="background:none;border:none;color:var(--stone);cursor:pointer;font-size:16px;width:24px" onclick="window._RM_STOPS.splice(${i},1);renderRmStops()">✕</button>`:`<div style="width:24px"></div>`}
+    </div>
+  </div>`;
+  }).join('')
+  + (n>2 ? '<div style="font-size:11px;color:var(--stone);margin-top:2px">💡 Trage ⠿ pentru a reordona stațiile intermediare, ca la opririle unui tren. Butonul <strong>+</strong> adaugă o stație nouă chiar după cea curentă.</div>' : '');
 }
 window.addRouteStop=()=>{window._RM_STOPS.splice(window._RM_STOPS.length-1,0,{n:'',p:0,m:0});renderRmStops();};
 window.calcDistances=async()=>{
@@ -5319,13 +5539,7 @@ async function rmMapPickerAddPoint(lat, lng){
 // Rezolva numele localitatii in fundal, fara sa blocheze desenarea hartii/traseului
 async function rmMapPickerResolveName(idx, lat, lng){
   try {
-    const props = await geoThrottled(async () => {
-      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=14&addressdetails=1`);
-      if (!r.ok) return null;
-      return await r.json();
-    });
-    const addr = props?.address;
-    const nume = addr?.village || addr?.town || addr?.city || addr?.municipality || addr?.county || props?.display_name?.split(',')[0];
+    const { name: nume } = await reverseGeocodeName(lat, lng);
     const p = window._rmPickerPoints[idx];
     if (nume && p && p.ll[0]===lat && p.ll[1]===lng) {
       p.nume = nume;
