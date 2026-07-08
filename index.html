@@ -1160,7 +1160,7 @@ footer{
 <div id="pg-home" class="page active">
   <!-- HERO cu traseu animat -->
   <div class="hero hero-journey">
-    <div class="hero-bg"><img src="https://images.unsplash.com/photo-1546955870-9fc9e5534349?fm=jpg&q=80&w=1800&auto=format&fit=crop" alt="Autocar pe șosea la apus" loading="eager"/></div>
+    <div class="hero-bg"><img id="hero-bg-img" src="https://images.unsplash.com/photo-1546955870-9fc9e5534349?fm=jpg&q=80&w=1800&auto=format&fit=crop" alt="Autocar pe șosea la apus" loading="eager"/></div>
     <div class="hero-eyebrow" id="hero-eyebrow-text">🛡️ Autorizat ARR · CUI: RO12345678</div>
     <h1><span id="hero-title-1">Călătoriți cu</span> <span class="grad" id="hero-title-grad">confort</span><br><span id="hero-title-2">și siguranță</span></h1>
     <p class="hero-sub" id="hero-sub-text">Curse regulate și organizate în toată România. Flotă modernă, șoferi autorizați, bilete electronice.</p>
@@ -1972,6 +1972,7 @@ footer{
     <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;box-shadow:var(--sh)">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">🖼 Galerie foto — homepage</h3>
       <p style="font-size:12px;color:var(--stone);margin-bottom:16px">Aceste poze apar în secțiunea „Flota noastră în imagini" de pe pagina principală. Trage poze aici sau apasă pentru a le selecta (max 8). Fiecare poză poate avea o etichetă scurtă (opțional).</p>
+      <div class="info-box" style="font-size:12px;margin-bottom:10px">🖼 <strong>Prima poză din listă</strong> (după reordonare cu drag&drop) devine automat și imaginea de fundal din titlul paginii (hero). Trage poza pe care o vrei acolo pe prima poziție.</div>
       <div class="drop-zone" id="gal-dropzone" ondragover="galDzOver(event)" ondragleave="galDzLeave()" ondrop="galDzDrop(event)" onclick="document.getElementById('gal-file').click()">
         <div style="font-size:28px;margin-bottom:6px">📸</div>
         <p style="color:var(--stone);font-size:13px">Trage poze aici sau click pentru a le selecta</p>
@@ -2503,7 +2504,7 @@ footer{
       <button class="modal-close" onclick="closeOrgWizard()">✕</button>
     </div>
     <div class="wiz-progress-bar"><div class="wiz-progress-fill" id="wiz-progress-fill"></div></div>
-    <div class="modal-body" id="wiz-body" style="min-height:280px"></div>
+    <div class="modal-body" id="wiz-body" style="min-height:280px" onkeydown="orgWizKeydown(event)"></div>
     <div class="modal-foot" style="justify-content:space-between">
       <button class="btn btn-secondary" id="wiz-btn-back" onclick="wizBack()">← Înapoi</button>
       <div style="display:flex;gap:8px">
@@ -3423,7 +3424,23 @@ function renderHomeGallery(){
     </div>`;
   }).join('');
   if (note) note.textContent = real.length ? '' : 'Poze demonstrative (Unsplash) — adaugă poze reale din Admin → Galerie.';
+  applyHeroImage();
 }
+
+// Prima poză din galeria homepage (Admin → Galerie) devine automat imaginea de fundal din hero.
+// Astfel poza din titlu se schimbă direct din admin, fără să mai fie nevoie de cod.
+function applyHeroImage(){
+  const heroImg = document.getElementById('hero-bg-img');
+  if (!heroImg) return;
+  const real = window._GALERIE_HOME||[];
+  if (real.length) {
+    const first = real[0];
+    const src = first.src || first;
+    if (src && heroImg.src !== src) heroImg.src = src;
+  }
+  // dacă galeria e goală, rămâne poza implicită deja setată în HTML
+}
+window.applyHeroImage = applyHeroImage;
 window.renderHomeGallery = renderHomeGallery;
 
 // ── PAGE BANNER (foto decorativ pe Regulate / Organizate / Bilet) ──
@@ -3574,12 +3591,22 @@ async function initHomeRoutesMap(){
     return;
   }
 
-  const colors = ['#a97c3f','#1e5fa8','#c46520','#1a6b3c','#b52d2d','#7c3aed'];
+  const colors = ['#a97c3f','#1e5fa8','#c46520','#1a6b3c','#b52d2d','#7c3aed','#0d9488','#be185d'];
   const bounds = [];
   let colorIdx = 0;
   let anyRouteDrawn = false;
 
-  for (const c of curse.slice(0,6)) {
+  // Notă de progres discretă în colțul hărții — util când sunt multe curse și geocodarea
+  // (pentru numele noi, ne-cache-uite încă) mai durează câteva secunde.
+  const progressNote = document.createElement('div');
+  progressNote.style.cssText = 'position:absolute;top:10px;right:10px;z-index:1000;background:rgba(15,13,10,.7);color:#fff;font-size:11px;padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:7px;pointer-events:none';
+  progressNote.innerHTML = `<div class="spin" style="width:11px;height:11px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:#fff"></div><span id="home-map-progress">Se încarcă traseele...</span>`;
+  mapEl.style.position = 'relative';
+  mapEl.appendChild(progressNote);
+
+  for (const [idx, c] of curse.entries()) {
+    const progEl = document.getElementById('home-map-progress');
+    if (progEl) progEl.textContent = `Traseu ${idx+1}/${curse.length}: ${c.ruta.slice(0,24)}`;
     const statii = c.statii||[];
     const coords = [];
     for (const st of statii) {
@@ -3609,6 +3636,7 @@ async function initHomeRoutesMap(){
       createBusMarkerOnRoute(map, drawCoords, col);
     }
   }
+  progressNote.remove();
 
   if (bounds.length) {
     map.fitBounds(bounds,{padding:[30,30]});
@@ -3862,7 +3890,11 @@ window.showRouteMapModal = async (cursaId) => {
   document.getElementById('rmq-title').textContent = '🗺 ' + c.ruta;
   modal.classList.add('open');
   const mapEl = document.getElementById('rmq-map');
-  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:8px"><div class="spin"></div><span style="font-size:12px">Se încarcă harta...</span></div>';
+  // Dacă avem deja o poză salvată a traseului, o arătăm instant ca preview,
+  // în timp ce harta interactivă (mai lentă) se încarcă în fundal.
+  mapEl.innerHTML = c.hartaImg
+    ? `<div style="position:relative;height:100%"><img src="${c.hartaImg}" style="width:100%;height:100%;object-fit:cover"/><div style="position:absolute;bottom:10px;right:10px;background:rgba(15,13,10,.68);color:#fff;font-size:11px;padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:7px"><div class="spin" style="width:12px;height:12px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:#fff"></div>Se încarcă harta interactivă...</div></div>`
+    : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:8px"><div class="spin"></div><span style="font-size:12px">Se încarcă harta...</span></div>';
 
   if (!_homeMapLoaded) {
     try {
@@ -3905,7 +3937,11 @@ window.showRouteMapModal = async (cursaId) => {
     L.polyline(drawCoords,{color:'#a97c3f',weight:roadRoute?5:3,opacity:.85,dashArray:roadRoute?null:'4,6'}).addTo(map);
     coords.forEach((c2,i)=>{
       const isEnd = i===0||i===coords.length-1;
-      const icon = L.divIcon({html:`<div style="background:${isEnd?'#a97c3f':'#fff'};color:${isEnd?'#fff':'#a97c3f'};border:2px solid #a97c3f;border-radius:50%;width:${isEnd?26:16}px;height:${isEnd?26:16}px;display:flex;align-items:center;justify-content:center;font-size:${isEnd?12:9}px;font-weight:800">${i===0?'A':i===coords.length-1?'B':''}</div>`,iconSize:[isEnd?26:16,isEnd?26:16],className:''});
+      const circleSize = isEnd?24:14;
+      const icon = L.divIcon({html:`<div style="position:relative;width:${circleSize}px">
+        <div style="background:${isEnd?'#a97c3f':'#fff'};color:${isEnd?'#fff':'#a97c3f'};border:2px solid #a97c3f;border-radius:50%;width:${circleSize}px;height:${circleSize}px;display:flex;align-items:center;justify-content:center;font-size:${isEnd?12:9}px;font-weight:800">${i===0?'🏁':i===coords.length-1?'🏳':''}</div>
+        <div style="position:absolute;top:${circleSize+3}px;left:50%;transform:translateX(-50%);background:rgba(255,253,249,.97);color:#1a1511;font-size:${isEnd?10.5:9.5}px;font-weight:${isEnd?800:700};padding:2px 7px;border-radius:5px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.2);border:1px solid rgba(169,124,63,.3);max-width:100px;overflow:hidden;text-overflow:ellipsis">${c2.nume}</div>
+      </div>`,iconSize:[circleSize,circleSize+24],iconAnchor:[circleSize/2,circleSize/2],className:''});
       L.marker(c2.ll,{icon}).addTo(map).bindPopup(`<strong>${c2.nume}</strong>`);
     });
     createBusMarkerOnRoute(map, drawCoords, '#a97c3f');
@@ -4299,6 +4335,10 @@ window.loadOrgPage = async function() {
   // Hide avail wrap until date+dur selected
   const aw=document.getElementById('org-avail-wrap');
   if(aw)aw.style.display='none';
+
+  // Deschide automat wizard-ul ghidat la intrarea pe pagină (fluxul implicit, nu ecranul de alegere).
+  // Formularul complet rămâne accesibil din butonul "📝 Trec pe formular" din footer-ul wizard-ului.
+  openOrgWizard();
 };
 
 async function refreshOrgSelects() {
@@ -4649,6 +4689,17 @@ window.wizBack = () => {
   if (window._WIZ_STEP > 1) { window._WIZ_STEP--; renderWizStep(); }
 };
 
+// Enter în orice câmp din wizard = același lucru ca apăsarea "Continuă →".
+// Excepție: textarea (acolo Enter trebuie să facă linie nouă) și butoanele
+// (au deja propriul comportament la click/Enter nativ, nu vrem dublu-trigger).
+window.orgWizKeydown = (e) => {
+  if (e.key !== 'Enter') return;
+  const tag = (e.target.tagName||'').toLowerCase();
+  if (tag === 'textarea' || tag === 'button') return;
+  e.preventDefault();
+  wizNext();
+};
+
 window.wizNext = async () => {
   if (!wizValidateStep()) return;
   if (window._WIZ_STEP < window._WIZ_TOTAL) {
@@ -4802,12 +4853,15 @@ function renderWizStep(){
 
 window.wizSelectTip = (val) => {
   window._WIZ_DATA.tip = val;
-  renderWizStep();
+  renderWizStep(); // arată selecția evidențiată vizual
+  // Avansează automat — nu mai trebuie să apeși și "Continuă" după ce ai ales
+  setTimeout(()=>{ if (window._WIZ_DATA.tip===val && window._WIZ_STEP===1) wizNext(); }, 350);
 };
 
 window.wizSelectVeh = (val) => {
   window._WIZ_DATA.vehId = val;
   renderWizStep();
+  setTimeout(()=>{ if (window._WIZ_DATA.vehId===val && window._WIZ_STEP===5) wizNext(); }, 350);
 };
 
 function renderWizStops(){
@@ -5524,7 +5578,9 @@ window.openRouteMapPicker = async () => {
 
   if (!window._rmPickerLeafletLoaded) {
     const mapDiv = document.getElementById('rm-map-picker');
-    mapDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)"><div class="spin"></div></div>';
+    mapDiv.innerHTML = window._RM_SNAPSHOT
+      ? `<div style="position:relative;height:100%"><img src="${window._RM_SNAPSHOT}" style="width:100%;height:100%;object-fit:cover"/><div style="position:absolute;bottom:10px;right:10px;background:rgba(15,13,10,.68);color:#fff;font-size:11px;padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:7px"><div class="spin" style="width:12px;height:12px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:#fff"></div>Se încarcă harta interactivă...</div></div>`
+      : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)"><div class="spin"></div></div>';
     try {
       await new Promise((res,rej)=>{
         if (window.L) { res(); return; }
@@ -5645,9 +5701,14 @@ async function rmMapPickerRender(){
   const pts = window._rmPickerPoints;
   pts.forEach((p,i)=>{
     const isEnd = i===0 || i===pts.length-1;
+    const circleSize = isEnd?26:16;
+    const nume = p.nume || '';
     const icon = L.divIcon({
-      html:`<div style="background:${isEnd?'#a97c3f':'#fff'};color:${isEnd?'#fff':'#a97c3f'};border:2.5px solid #a97c3f;border-radius:50%;width:${isEnd?28:18}px;height:${isEnd?28:18}px;display:flex;align-items:center;justify-content:center;font-size:${isEnd?12:10}px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.25)">${i===0?'A':i===pts.length-1?'B':i}</div>`,
-      iconSize:[isEnd?28:18,isEnd?28:18], iconAnchor:[isEnd?14:9,isEnd?14:9], className:''
+      html:`<div style="position:relative;width:${circleSize}px">
+        <div style="background:${isEnd?'#a97c3f':'#fff'};color:${isEnd?'#fff':'#a97c3f'};border:2.5px solid #a97c3f;border-radius:50%;width:${circleSize}px;height:${circleSize}px;display:flex;align-items:center;justify-content:center;font-size:${isEnd?13:9}px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.28)">${i===0?'🏁':i===pts.length-1?'🏳':''}</div>
+        <div style="position:absolute;top:${circleSize+4}px;left:50%;transform:translateX(-50%);background:rgba(255,253,249,.97);color:#1a1511;font-size:${isEnd?11:10}px;font-weight:${isEnd?800:700};padding:2px 8px;border-radius:5px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.22);border:1px solid rgba(169,124,63,.35);max-width:120px;overflow:hidden;text-overflow:ellipsis">${nume}</div>
+      </div>`,
+      iconSize:[circleSize, circleSize+26], iconAnchor:[circleSize/2,circleSize/2], className:''
     });
     const marker = L.marker(p.ll,{icon, draggable:true}).addTo(map).bindPopup(`<strong>${p.nume}</strong><br><button onclick="rmMapPickerRemovePoint(${i})" style="margin-top:6px;padding:3px 10px;background:#b52d2d;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">✕ Șterge</button>`);
     marker.on('dragend', async (ev)=>{
