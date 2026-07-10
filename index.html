@@ -1838,7 +1838,8 @@ footer::before{
 
   <!-- REGULATE -->
   <div id="admin-tab-routes" class="tab-panel">
-    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
+      <button class="btn btn-secondary btn-sm" onclick="backfillRouteCoords()" title="Geocodează o singură dată stațiile fără coordonate salvate din toate cursele — hărțile devin instant și corecte">🛰 Backfill coordonate hartă</button>
       <button class="btn btn-primary btn-sm" onclick="openRouteModal()">+ Adaugă cursă</button>
     </div>
     <div class="tbl-wrap">
@@ -3150,9 +3151,25 @@ function geoThrottled(fn){
 }
 
 window._geoCache = window._geoCache || {};
+function geoDocId(key){ return key.replace(/[\/\.\#\$\[\]]/g,'_').slice(0,300) || 'unknown'; }
+
+// Geocodare cu 3 niveluri: (1) memorie sesiune curentă, (2) cache PERMANENT în Firestore
+// (partajat între toți utilizatorii — o localitate se geocodează o singură dată, niciodată),
+// (3) abia dacă nu există în niciunul, se interoghează Nominatim (throttled 1/sec).
+// Acest cache Firestore e motivul principal pentru care hărțile deveneau lente: fără el,
+// fiecare vizitator nou re-geocoda aceleași localități de la zero, la fiecare încărcare de pagină.
 async function geocodeCached(placeName){
   const key = placeName.trim().toLowerCase();
   if (window._geoCache[key] !== undefined) return window._geoCache[key];
+  try{
+    const csnap = await getDoc(doc(db,'geocache',geoDocId(key)));
+    if (csnap.exists()) {
+      const d = csnap.data();
+      const result = (d.lat!=null && d.lng!=null) ? [d.lat, d.lng] : null;
+      window._geoCache[key] = result;
+      return result;
+    }
+  }catch(e){ /* dacă citirea cache-ului eșuează, continuăm cu geocodarea live */ }
   try{
     const result = await geoThrottled(async () => {
       const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ro&q=${encodeURIComponent(placeName+', Romania')}`);
@@ -3162,6 +3179,9 @@ async function geocodeCached(placeName){
       return hit ? [parseFloat(hit.lat), parseFloat(hit.lon)] : null;
     });
     window._geoCache[key] = result;
+    try{
+      await setDoc(doc(db,'geocache',geoDocId(key)), {name:placeName.trim(), lat:result?result[0]:null, lng:result?result[1]:null, createdAt:serverTimestamp()});
+    }catch(e2){ /* scrierea în cache nu trebuie să blocheze fluxul dacă regulile Firestore o refuză */ }
     return result;
   }catch(e){
     console.warn('Geocode failed for', placeName, e.message);
@@ -3634,6 +3654,7 @@ async function initHomeRoutesMap(){
     const coords = [];
     for (const st of statii) {
       const nume = st.nome||st.name||st.nume;
+      if (st.lat!=null && st.lng!=null) { coords.push([st.lat, st.lng]); continue; }
       if (!nume) continue;
       const ll = await geocodeCached(nume);
       if (ll) coords.push(ll);
@@ -3950,6 +3971,7 @@ window.showRouteMapModal = async (cursaId) => {
   const coords = [];
   for (const st of statii) {
     const nume = st.nome||st.name||st.nume;
+    if (st.lat!=null && st.lng!=null) { coords.push({ll:[st.lat, st.lng], nume}); continue; }
     if (!nume) continue;
     const ll = await geocodeCached(nume);
     if (ll) coords.push({ll, nume});
@@ -5467,6 +5489,33 @@ async function loadRoutesTbl(){
   }).join('');
 }
 window.toggleRoute=async(id,val)=>{await setDoc(doc(db,'curse_regulate',id),{activa:val},{merge:true});const r=window._R.find(x=>x.id===id);if(r)r.activa=val;};
+window.backfillRouteCoords=async()=>{
+  if(!confirm('Geocodează toate stațiile fără coordonate salvate din toate cursele regulate (dus + retur). Poate dura câteva minute, dar se face o singură dată — după asta hărțile se afișează instant. Continuați?'))return;
+  toast('🛰 Backfill pornit — nu închideți pagina...','in');
+  let curseActualizate=0, statiiGeocodate=0, esuate=[];
+  for(const c of window._R){
+    let changed=false;
+    for(const st of [...(c.statii||[]), ...(c.statiiIntors||[])]){
+      if(st.lat!=null && st.lng!=null) continue;
+      const nume=st.nome||st.name||st.nume;
+      if(!nume) continue;
+      const ll=await geocodeCached(nume);
+      if(ll){ st.lat=ll[0]; st.lng=ll[1]; changed=true; statiiGeocodate++; }
+      else esuate.push(nume);
+    }
+    if(changed){
+      try{
+        const upd={statii:c.statii};
+        if(c.statiiIntors) upd.statiiIntors=c.statiiIntors;
+        await setDoc(doc(db,'curse_regulate',c.id),upd,{merge:true});
+        curseActualizate++;
+      }catch(e){ console.warn('Backfill save failed for',c.ruta,e.message); }
+    }
+  }
+  toast(`✅ Backfill complet: ${curseActualizate} curse actualizate, ${statiiGeocodate} stații geocodate${esuate.length?', '+esuate.length+' nerezolvate (verificați ortografia)':''}.`,'ok');
+  if(esuate.length) console.warn('Stații nerezolvate la geocodare:', [...new Set(esuate)]);
+  await loadRoutesTbl();
+};
 window.deleteRoute=async id=>{if(!confirm('Ștergeți cursa?'))return;await deleteDoc(doc(db,'curse_regulate',id));await loadRoutesTbl();toast('Cursă ștearsă','ok');};
 window.openRouteModal=async(id=null)=>{
   window._RM_STOPS=[{n:'',p:0,m:0},{n:'',p:0,m:0}];
@@ -6165,6 +6214,17 @@ window.saveRoute=async()=>{
   const vehId=document.getElementById('rm-vehicle').value;
   const veh=window._F.find(v=>v.id===vehId);
   const zile=[...document.querySelectorAll('[data-day].active')].map(b=>parseInt(b.dataset.day));
+  // Geocodăm o singură dată orice stație fără coordonate salvate — astfel harta din
+  // homepage/modal citește direct lat/lng, fără să mai geocodeze nimic la runtime
+  // (mai rapid) și fără riscul unui nume ambiguu geocodat greșit de fiecare dată (mai corect).
+  const missingCoords=window._RM_STOPS.filter(s=>s.n && (s.lat==null||s.lng==null));
+  if(missingCoords.length){
+    toast('📍 Se localizează stațiile pe hartă...','in');
+    for(const s of missingCoords){
+      const ll=await geocodeCached(s.n);
+      if(ll){s.lat=ll[0];s.lng=ll[1];}
+    }
+  }
   const statii=window._RM_STOPS.map((s,i)=>({nome:s.n,name:s.n,nume:s.n,pretDeLaStart:i===0?0:(s.p||0),minuteDeLaStart:i===0?0:(s.m||0),...(s.lat!=null&&s.lng!=null?{lat:s.lat,lng:s.lng}:{})}));
   if(statii.length<2){toast('Minim 2 stații','wr');return;}
   if(statii.some(s=>!s.nome)){toast('Completați toate stațiile','wr');return;}
