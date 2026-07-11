@@ -350,6 +350,30 @@ input.ok{border-color:var(--green)}
   .page-banner-content{padding:0 20px}
   .page-banner-sub{display:none}
 }
+/* ── BILETUL MEU — pagină încadrată pe tot ecranul, cu fundal din poze de flotă ── */
+.bilet-wrap{
+  position:relative;min-height:calc(100vh - var(--tick-h) - var(--nav-h) - 64px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border-radius:var(--r-2xl);overflow:hidden;padding:56px 20px;text-align:center;
+}
+.bilet-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
+.bilet-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.8s ease}
+.bilet-bg img.active{opacity:1}
+.bilet-bg::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(248,245,238,.5) 0%,rgba(248,245,238,.93) 62%,var(--bone) 100%);
+}
+.bilet-inner{position:relative;z-index:1;max-width:460px;width:100%}
+.bilet-icon{font-size:44px;margin-bottom:10px}
+.bilet-title{font-family:var(--font-display);font-weight:600;font-size:30px;letter-spacing:-.01em;margin-bottom:8px;color:var(--ink)}
+.bilet-sub{color:var(--ink-soft);font-size:14px;margin-bottom:28px;line-height:1.6}
+.bilet-card{background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-xl);padding:26px;box-shadow:var(--sh-lg);margin-bottom:20px}
+.bilet-card input{font-size:17px;font-weight:700;letter-spacing:2px;text-align:center;padding:14px;margin-bottom:14px}
+@media(max-width:700px){
+  .bilet-wrap{min-height:calc(100vh - var(--tick-h) - var(--nav-h) - 36px);padding:36px 16px}
+  .bilet-title{font-size:23px}
+  .bilet-icon{font-size:36px}
+}
 .sch-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--stone);margin-bottom:12px}
 .sch-meta span{display:flex;align-items:center;gap:5px}
 .sch-meta strong{color:var(--ink)}
@@ -727,6 +751,14 @@ input.ok{border-color:var(--green)}
 @media(max-width:700px){.org-mode-choice{grid-template-columns:1fr}}
 
 /* ── WIZARD MODAL ── */
+/* Fundal cu poze din flotă, care se derulează încet în spatele conținutului wizard-ului,
+   estompat sub un strat aproape opac ca textul să rămână perfect lizibil (același look ca hero-ul). */
+#mo-org-wizard .modal{position:relative;overflow:hidden}
+.wiz-modal-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
+.wiz-modal-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.8s ease}
+.wiz-modal-bg img.active{opacity:1}
+.wiz-modal-bg::after{content:"";position:absolute;inset:0;background:var(--card);opacity:.88}
+#mo-org-wizard .modal-head,#mo-org-wizard .wiz-progress-bar,#mo-org-wizard .modal-body,#mo-org-wizard .modal-foot{position:relative;z-index:1;background:transparent!important}
 .wiz-progress-bar{height:4px;background:var(--cream);margin:0 26px;border-radius:2px;overflow:hidden}
 .wiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--amber-d));border-radius:2px;transition:width .4s var(--ease)}
 .wiz-question{font-family:var(--font-display);font-weight:600;font-size:21px;margin-bottom:7px;letter-spacing:-.01em}
@@ -1229,18 +1261,6 @@ footer::before{
     <div class="quick-search-chips" id="home-search-suggestions"></div>
   </div>
 
-  <!-- Galerie foto flotă -->
-  <div style="margin-bottom:64px">
-    <div class="sec-head">
-      <div>
-        <div class="sec-title">📸 Flota noastră în imagini</div>
-        <div class="sec-sub">Click pe o poză pentru a o vedea mărită</div>
-      </div>
-    </div>
-    <div class="photo-gallery-grid" id="home-gallery-grid"></div>
-    <div style="font-size:11px;color:var(--stone);margin-top:8px;text-align:right" id="home-gallery-note"></div>
-  </div>
-
   <!-- Autobuzele noastre -->
   <div style="margin-bottom:64px">
     <div class="sec-head">
@@ -1515,17 +1535,21 @@ footer::before{
 
 <!-- ────────────────── BILET MEU ────────────────── -->
 <div id="pg-bilet" class="page">
-  <div style="max-width:520px;margin:0 auto">
-    <div class="page-banner" id="bilet-banner"></div>
-    <p style="color:var(--stone);margin-bottom:24px">Introdu codul biletului pentru a vedea detaliile călătoriei tale.</p>
-    <div style="background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);padding:24px;box-shadow:var(--sh);margin-bottom:20px">
-      <div class="fg">
-        <div class="fl">Cod bilet</div>
-        <input type="text" id="bilet-input" placeholder="Ex: LSD-A1B2C3" style="text-transform:uppercase;font-size:16px;font-weight:700;letter-spacing:2px" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')cautaBilet()"/>
+  <div class="bilet-wrap">
+    <div class="bilet-bg" id="bilet-bg"></div>
+    <div class="bilet-inner">
+      <div class="bilet-icon">🎟</div>
+      <div class="bilet-title">Verifică biletul</div>
+      <p class="bilet-sub">Introdu codul biletului pentru a vedea detaliile călătoriei tale</p>
+      <div class="bilet-card">
+        <div class="fg">
+          <div class="fl">Cod bilet</div>
+          <input type="text" id="bilet-input" placeholder="Ex: LSD-A1B2C3" inputmode="text" enterkeyhint="search" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')cautaBilet()"/>
+        </div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="cautaBilet()">🔍 Verifică biletul</button>
       </div>
-      <button class="btn btn-primary btn-full" onclick="cautaBilet()">🔍 Verifică biletul</button>
+      <div id="bilet-result" style="text-align:left"></div>
     </div>
-    <div id="bilet-result"></div>
   </div>
 </div>
 
@@ -1995,7 +2019,7 @@ footer::before{
   <div id="admin-tab-galerie" class="tab-panel">
     <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;box-shadow:var(--sh)">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">🖼 Galerie foto — homepage</h3>
-      <p style="font-size:12px;color:var(--stone);margin-bottom:16px">Aceste poze apar în secțiunea „Flota noastră în imagini" de pe pagina principală. Trage poze aici sau apasă pentru a le selecta (max 8). Fiecare poză poate avea o etichetă scurtă (opțional).</p>
+      <p style="font-size:12px;color:var(--stone);margin-bottom:16px">Aceste poze apar ca fundal pe bannerele paginilor (Regulate, Organizate, Biletul meu) și în cardurile „Cursă Organizată". Trage poze aici sau apasă pentru a le selecta (max 8). Fiecare poză poate avea o etichetă scurtă (opțional).</p>
       <div class="info-box" style="font-size:12px;margin-bottom:10px">🖼 <strong>Prima poză din listă</strong> (după reordonare cu drag&drop) devine automat și imaginea de fundal din titlul paginii (hero). Trage poza pe care o vrei acolo pe prima poziție.</div>
       <div class="drop-zone" id="gal-dropzone" ondragover="galDzOver(event)" ondragleave="galDzLeave()" ondrop="galDzDrop(event)" onclick="document.getElementById('gal-file').click()">
         <div style="font-size:28px;margin-bottom:6px">📸</div>
@@ -2519,7 +2543,8 @@ footer::before{
 
 <!-- MODAL: Wizard Cursă Organizată -->
 <div class="modal-overlay" id="mo-org-wizard">
-  <div class="modal modal-md" style="overflow:visible">
+  <div class="modal modal-md">
+    <div class="wiz-modal-bg" id="wiz-modal-bg"></div>
     <div class="modal-head">
       <div>
         <div class="modal-title">🧭 Cursă Organizată — Ghidat</div>
@@ -2698,7 +2723,13 @@ footer::before{
     if (page === 'home') initHome();
     if (page === 'regulate') { fillPageBanner('reg-banner','Curse Regulate','Rezervă un loc pe traseele noastre zilnice',0); loadRegulate(); }
     if (page === 'organizate') { fillPageBanner('org-banner','Cursă Organizată','Excursii, nunți, transferuri — la cerere',1); loadOrgPage(); }
-    if (page === 'bilet') fillPageBanner('bilet-banner','Verifică biletul','Introdu codul pentru detaliile călătoriei',2);
+    if (page === 'bilet') {
+      const bi = document.getElementById('bilet-input');
+      if (bi) bi.focus(); // deschide direct tastatura pe dispozitive touch, în cadrul aceluiași gest de click
+      const fleetImgs = (window._F||[]).flatMap(v=>v.imagini||[]);
+      if (fleetImgs.length) window.startImgSlideshow('bilet-bg', fleetImgs, 5000);
+      else if (window.loadFleet) window.loadFleet().then(()=>window.startImgSlideshow('bilet-bg', (window._F||[]).flatMap(v=>v.imagini||[]), 5000)).catch(()=>{});
+    }
     if (page === 'cont') loadContPage();
     if (page === 'admin') loadAdmin();
     if (page === 'sofer') loadDriverPortal();
@@ -2762,9 +2793,10 @@ window.toast = (msg, type = 'in') => {
 window.openLB = src => { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('open'); };
 window.closeLightbox = () => document.getElementById('lightbox').classList.remove('open');
 
-document.querySelectorAll('.modal-overlay').forEach(o =>
-  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); })
-);
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  if (o.id === 'mo-org-wizard') return; // wizard-ul ghidat se închide DOAR cu ✕ sau la finalizare, nu la click în afara lui
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
 document.addEventListener('click', e => {
   const panel = document.getElementById('notif-panel');
   const bell = document.getElementById('notif-bell');
@@ -3104,6 +3136,7 @@ async function loadFleet() {
   const s = await getDocs(collection(db,'vehicule'));
   window._F = s.docs.map(d=>({id:d.id,...d.data()}));
 }
+window.loadFleet = loadFleet;
 window.vCard = function(v) {
   const imgs = v.imagini?.length ? v.imagini : [];
   const imgHtml = imgs.length ?
@@ -3429,59 +3462,22 @@ window._GALERIE_DEFAULT = [
   {src:'https://images.unsplash.com/photo-1557223562-6c77ef16210f?fm=jpg&q=80&w=700&auto=format&fit=crop',cap:'🛣 Curse regulate'},
   {src:'https://images.unsplash.com/photo-1554460196-e6afa9dc66b4?fm=jpg&q=80&w=700&auto=format&fit=crop',cap:'🚐 Curse organizate'}
 ];
+// Galeria foto separată de pe homepage a fost eliminată — fundalul din hero preia acum
+// direct o poză din flota de autobuze (vehicule), cu gradientul de estompare deja existent.
+// Funcția e păstrată sub același nume pentru compatibilitate cu apelurile vechi din admin.
 function renderHomeGallery(){
-  const grid = document.getElementById('home-gallery-grid');
-  const note = document.getElementById('home-gallery-note');
-  if (!grid) return;
-  const real = window._GALERIE_HOME||[];
-  const items = (real.length ? real : window._GALERIE_DEFAULT).slice(0,8);
-  const n = items.length;
-
-  // Layout dinamic: mozaic pentru puține poze, grid uniform pentru multe.
-  // Prima poză devine "hero" (mai mare) când sunt 3 sau 5 poze, pentru un aspect mai viu.
-  const isMobile = window.innerWidth <= 700;
-  let cols, rows, spans;
-  if (isMobile) {
-    // Pe mobil rămânem pe 2 coloane, fără span-uri de tip "hero" (evită rânduri goale/dezechilibrate)
-    cols = n===1 ? 1 : 2;
-    rows = n<=2 ? '140px' : `repeat(${Math.ceil(n/2)},140px)`;
-    spans = items.map(()=>null);
-  } else if (n <= 1) { cols = 1; rows = '1'; spans = [null]; }
-  else if (n === 2) { cols = 2; rows = '1'; spans = [null, null]; }
-  else if (n === 3) { cols = 3; rows = '1'; spans = [{col:'span 2'}, null, null]; }
-  else if (n === 4) { cols = 4; rows = '1'; spans = [null,null,null,null]; }
-  else if (n === 5) { cols = 4; rows = 'repeat(2,110px)'; spans = [{col:'span 2',row:'span 2'},null,null,null,null]; }
-  else { cols = 4; rows = 'repeat(2,110px)'; spans = items.map(()=>null); }
-
-  grid.style.gridTemplateColumns = `repeat(${cols},1fr)`;
-  grid.style.gridTemplateRows = rows;
-  grid.style.height = (rows==='1') ? '230px' : 'auto';
-
-  grid.innerHTML = items.map((it,i)=>{
-    const src = it.src||it; const cap = it.cap||'';
-    const sp = spans[i];
-    const styleExtra = sp ? `grid-column:${sp.col||'auto'};${sp.row?'grid-row:'+sp.row+';':''}` : '';
-    return `<div class="photo-gallery-item" style="${styleExtra}" onclick="openLB('${src}')">
-      <img src="${src}" alt="${cap||'Autobuz LSD Group'}" loading="lazy"/>
-      ${cap?`<div class="photo-gallery-cap">${cap}</div>`:''}
-    </div>`;
-  }).join('');
-  if (note) note.textContent = real.length ? '' : 'Poze demonstrative (Unsplash) — adaugă poze reale din Admin → Galerie.';
   applyHeroImage();
 }
 
-// Prima poză din galeria homepage (Admin → Galerie) devine automat imaginea de fundal din hero.
-// Astfel poza din titlu se schimbă direct din admin, fără să mai fie nevoie de cod.
 function applyHeroImage(){
   const heroImg = document.getElementById('hero-bg-img');
   if (!heroImg) return;
-  const real = window._GALERIE_HOME||[];
-  if (real.length) {
-    const first = real[0];
-    const src = first.src || first;
+  const fleetImgs = (window._F||[]).flatMap(v => v.imagini||[]);
+  if (fleetImgs.length) {
+    const src = fleetImgs[0];
     if (src && heroImg.src !== src) heroImg.src = src;
   }
-  // dacă galeria e goală, rămâne poza implicită deja setată în HTML
+  // dacă flota nu are încă poze încărcate, rămâne poza implicită deja setată în HTML
 }
 window.applyHeroImage = applyHeroImage;
 window.renderHomeGallery = renderHomeGallery;
@@ -3865,14 +3861,19 @@ window.loadRegulate = async () => {
         </div>
         ${occBarHtml}
         <div style="display:flex;gap:2px;flex-wrap:wrap;margin:10px 0 12px">${dayDots}</div>
-        ${c.hartaImg?`<div style="margin-bottom:12px"><img src="${c.hartaImg}" alt="Poza traseu ${c.ruta}" loading="lazy" style="width:100%;max-height:150px;object-fit:cover;border-radius:var(--r);cursor:zoom-in;border:1px solid var(--border-l)" onclick="openLB('${c.hartaImg}')"/></div>`:''}
+        <div style="margin-bottom:12px;cursor:zoom-in;position:relative" onclick="showRouteMapModal('${c.id}')" title="Apasă pentru harta interactivă a traseului">
+          ${c.hartaImg
+            ? `<img src="${c.hartaImg}" alt="Poza traseu ${c.ruta}" loading="lazy" style="width:100%;max-height:150px;object-fit:cover;border-radius:var(--r);border:1px solid var(--border-l);display:block"/>`
+            : `<div style="width:100%;height:88px;background:var(--cream);border:1px dashed var(--border);border-radius:var(--r);display:flex;align-items:center;justify-content:center;color:var(--stone);font-size:12px;font-weight:600;gap:6px">🗺 Vezi traseul pe hartă</div>`
+          }
+          <span style="position:absolute;bottom:8px;right:8px;background:rgba(15,13,10,.6);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;pointer-events:none">🔍 Mărește</span>
+        </div>
         <div class="route-stops-collapsible">
           <button class="route-stops-toggle" onclick="this.parentElement.classList.toggle('open')">📍 Vezi toate stațiile și prețurile <span class="toggle-arrow">▾</span></button>
           <div class="route-stops-content">${stopsHtml}</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-          <button class="btn btn-primary btn-sm" style="flex:1;min-width:140px" onclick="openCinema('${c.id}','${date}','one-way',${pi})" ${plin?'disabled':''}>${plin?'🔴 Indisponibil':'🎟 Rezervă — '+oraP}</button>
-          <button class="btn btn-secondary btn-sm btn-icon" onclick="showRouteMapModal('${c.id}')" title="Vezi traseul pe hartă interactivă">🗺</button>
+          <button class="btn btn-primary btn-sm btn-full" onclick="openCinema('${c.id}','${date}','one-way',${pi})" ${plin?'disabled':''}>${plin?'🔴 Indisponibil':'🎟 Rezervă — '+oraP}</button>
         </div>
         ${returnSection}
       </div>`);
@@ -4686,16 +4687,42 @@ window._WIZ_STEP = 1;
 window._WIZ_TOTAL = 6;
 window._WIZ_DATA = { stops:['',''], tip:'', desc:'', date:'', time:'flexibil', durH:'', durZile:'', vehId:'', persons:'' };
 
+// ── Derulare poze de fundal (folosită de wizard și de pagina "Biletul meu") ──
+// Alege poze din flota de autobuze și le derulează cu fade lent într-un container dat.
+window._slideshowTimers = window._slideshowTimers || {};
+window.startImgSlideshow = (containerId, images, intervalMs=4500) => {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  window.stopImgSlideshow(containerId);
+  const imgs = (images||[]).slice(0,8);
+  if (!imgs.length) { container.innerHTML=''; return; }
+  container.innerHTML = imgs.map((src,i)=>`<img src="${src}" class="${i===0?'active':''}" alt=""/>`).join('');
+  let idx = 0;
+  if (imgs.length > 1) {
+    window._slideshowTimers[containerId] = setInterval(()=>{
+      const list = container.querySelectorAll('img'); if (!list.length) return;
+      list[idx]?.classList.remove('active');
+      idx = (idx+1) % list.length;
+      list[idx]?.classList.add('active');
+    }, intervalMs);
+  }
+};
+window.stopImgSlideshow = (containerId) => {
+  if (window._slideshowTimers[containerId]) { clearInterval(window._slideshowTimers[containerId]); delete window._slideshowTimers[containerId]; }
+};
+
 window.openOrgWizard = () => {
   window._WIZ_STEP = 1;
   window._WIZ_DATA = { stops:['',''], tip:'', desc:'', date:'', time:'flexibil', durH:'', durZile:'', vehId:'', persons:'' };
   document.getElementById('org-mode-choice').style.display='none';
   openModal('org-wizard');
   renderWizStep();
+  window.startImgSlideshow('wiz-modal-bg', (window._F||[]).flatMap(v=>v.imagini||[]));
 };
 
 window.closeOrgWizard = () => {
   closeModal('org-wizard');
+  window.stopImgSlideshow('wiz-modal-bg');
   document.getElementById('org-mode-choice').style.display='grid';
 };
 
@@ -4703,6 +4730,7 @@ window.wizSwitchToForm = () => {
   // Transfera datele acumulate in wizard catre formularul complet
   applyWizDataToForm();
   closeModal('org-wizard');
+  window.stopImgSlideshow('wiz-modal-bg');
   document.getElementById('org-mode-choice').style.display='none';
   document.getElementById('org-form-wrap').style.display='block';
   updateOrgProgress();
@@ -4942,6 +4970,7 @@ async function wizSubmit(){
   const btn = document.getElementById('wiz-btn-next');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Se trimite...'; }
   closeModal('org-wizard');
+  window.stopImgSlideshow('wiz-modal-bg');
   document.getElementById('org-mode-choice').style.display='none';
   document.getElementById('org-form-wrap').style.display='block';
   await submitOrg();
