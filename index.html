@@ -475,7 +475,8 @@ input.ok{border-color:var(--green)}
   border-radius:var(--r-2xl);overflow:hidden;margin-bottom:8px;
 }
 .hero-bg{position:absolute;inset:0;z-index:0}
-.hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center 40%}
+.hero-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%;opacity:0;transition:opacity 1.8s ease}
+.hero-bg img.active{opacity:1}
 .hero-bg::after{
   content:"";position:absolute;inset:0;
   background:linear-gradient(180deg,rgba(248,245,238,.32) 0%,rgba(248,245,238,.84) 58%,var(--bone) 93%);
@@ -1215,7 +1216,7 @@ footer::before{
 <div id="pg-home" class="page active">
   <!-- HERO cu traseu animat -->
   <div class="hero hero-journey">
-    <div class="hero-bg"><img id="hero-bg-img" src="https://images.unsplash.com/photo-1546955870-9fc9e5534349?fm=jpg&q=80&w=1800&auto=format&fit=crop" alt="Autocar pe șosea la apus" loading="eager"/></div>
+    <div class="hero-bg" id="hero-bg"><img id="hero-bg-img" class="active" src="https://images.unsplash.com/photo-1546955870-9fc9e5534349?fm=jpg&q=80&w=1800&auto=format&fit=crop" alt="Autocar pe șosea la apus" loading="eager"/></div>
     <div class="hero-eyebrow" id="hero-eyebrow-text">🛡️ Autorizat ARR · CUI: RO12345678</div>
     <h1><span id="hero-title-1">Călătoriți cu</span> <span class="grad" id="hero-title-grad">confort</span><br><span id="hero-title-2">și siguranță</span></h1>
     <p class="hero-sub" id="hero-sub-text">Curse regulate și organizate în toată România — flotă modernă, șoferi autorizați și bilete electronice, pentru o călătorie fără bătăi de cap.</p>
@@ -3470,14 +3471,11 @@ function renderHomeGallery(){
 }
 
 function applyHeroImage(){
-  const heroImg = document.getElementById('hero-bg-img');
-  if (!heroImg) return;
   const fleetImgs = (window._F||[]).flatMap(v => v.imagini||[]);
-  if (fleetImgs.length) {
-    const src = fleetImgs[0];
-    if (src && heroImg.src !== src) heroImg.src = src;
+  if (fleetImgs.length && window.startImgSlideshow) {
+    window.startImgSlideshow('hero-bg', fleetImgs, 5000);
   }
-  // dacă flota nu are încă poze încărcate, rămâne poza implicită deja setată în HTML
+  // dacă flota nu are încă poze încărcate, rămâne poza implicită deja setată în HTML (clasa .active)
 }
 window.applyHeroImage = applyHeroImage;
 window.renderHomeGallery = renderHomeGallery;
@@ -3959,9 +3957,14 @@ window.showRouteMapModal = async (cursaId) => {
   }
 
   mapEl.innerHTML = '';
+  // BUG cunoscut: mapEl.innerHTML='' NU resetează proprietatea internă _leaflet_id pusă de
+  // Leaflet pe elementul DOM, deci la a doua cursă L.map(mapEl,...) arunca eroare
+  // "Map container is already initialized." Trebuie eliminată explicit harta anterioară.
+  if (window._quickRouteMap) { try{window._quickRouteMap.remove();}catch(e){} window._quickRouteMap=null; }
   let map;
   try {
     map = L.map(mapEl,{center:[46,25],zoom:7});
+    window._quickRouteMap = map;
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
   } catch(e) {
     mapEl.innerHTML = `<div style="text-align:center;color:var(--stone);padding:24px">⚠️ Eroare hartă: ${e.message}</div>`;
