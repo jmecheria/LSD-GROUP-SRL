@@ -596,12 +596,17 @@ input.ok{border-color:var(--green)}
 @keyframes stopPop{to{opacity:1;transform:scale(1)}}
 .route-stop-label{
   position:absolute;top:66px;font-size:10.5px;font-weight:700;color:var(--stone);
-  white-space:nowrap;transform:translateX(-50%);opacity:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:92px;
+  transform:translateX(-50%);opacity:0;
   animation:labelFade .4s ease-out forwards;
 }
 @keyframes labelFade{to{opacity:1}}
 
-/* Autobuzul foto-realist, urmareste curba traseului (sus-jos-sus) prin keyframes top/left */
+/* Autobuzul foto-realist, urmareste curba traseului (sus-jos-sus) prin keyframes top/left.
+   Traseul SVG (M 20 55 Q 250 15, 500 55 T 980 55) urcă spre vârf lângă 25% din drum,
+   apoi COBOARĂ spre o vale lângă 75% (comanda T reflectă punctul de control) — de aceea
+   keyframe-ul de la 75% trebuie să fie jos (top mare), nu sus; altfel autobuzul "sare"
+   de pe drum exact în a doua jumătate a animației. */
 .route-bus-wrap{
   position:absolute;top:0;left:0;width:62px;height:auto;
   margin:-31px 0 0 -31px;
@@ -615,13 +620,14 @@ input.ok{border-color:var(--green)}
   0%{left:2%;top:50%}
   25%{left:25%;top:14%}
   50%{left:50%;top:50%}
-  75%{left:75%;top:14%}
+  75%{left:75%;top:86%}
   100%{left:98%;top:50%}
 }
 @keyframes busFadeIn{to{opacity:1}}
 @media(max-width:700px){
   .route-line-wrap{height:80px}
-  .route-stop-label{display:none}
+  .route-line-svg{height:80px}
+  .route-stop-label{font-size:8.5px;top:50px;max-width:64px}
   .route-stop-dot{top:38px}
 }
 
@@ -3652,7 +3658,16 @@ async function initHomeRoutesMap(){
   const curse = (window._R||[]).filter(c=>c.activa && (c.statii||[]).length>=2);
   if (!curse.length) { mapEl.innerHTML = '<div style="text-align:center;color:var(--stone)"><div style="font-size:36px;margin-bottom:8px">🗺</div>Nicio cursă activă momentan</div>'; return; }
 
-  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:8px"><div class="spin"></div><span style="font-size:12px">Se încarcă harta...</span></div>';
+  // Poză de fundal cât se pregătește harta interactivă — la fel ca la Regulate (poza apoi harta
+  // completă dintr-odată, nu o hartă goală care se populează progresiv sub ochii clientului).
+  const previewImg = curse.find(c=>c.hartaImg)?.hartaImg || (window._F||[]).flatMap(v=>v.imagini||[])[0] || '';
+  mapEl.style.position = 'relative';
+  mapEl.innerHTML = `
+    <div id="home-map-container" style="position:absolute;inset:0"></div>
+    <div id="home-map-loading-overlay" style="position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center;padding:20px;${previewImg?`background:linear-gradient(rgba(15,13,10,.5),rgba(15,13,10,.5)),url('${previewImg}') center/cover`:'background:var(--cream)'}">
+      <div class="spin" style="${previewImg?'border-color:rgba(255,255,255,.3);border-top-color:#fff':''}"></div>
+      <span style="font-size:12px;font-weight:600;color:${previewImg?'#fff':'var(--stone)'}" id="home-map-progress">Se pregătește harta interactivă...</span>
+    </div>`;
 
   // Incarca Leaflet daca nu e deja
   if (!_homeMapLoaded) {
@@ -3673,10 +3688,10 @@ async function initHomeRoutesMap(){
   }
 
   if (window._homeLeafletMap) { try{window._homeLeafletMap.remove();}catch(e){} window._homeLeafletMap=null; }
-  mapEl.innerHTML = '';
+  const innerMapEl = document.getElementById('home-map-container');
   let map;
   try {
-    map = L.map(mapEl,{center:[46.0,25.0],zoom:7,scrollWheelZoom:false});
+    map = L.map(innerMapEl,{center:[46.0,25.0],zoom:7,scrollWheelZoom:false});
     window._homeLeafletMap = map;
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
   } catch(e) {
@@ -3689,17 +3704,9 @@ async function initHomeRoutesMap(){
   let colorIdx = 0;
   let anyRouteDrawn = false;
 
-  // Notă de progres discretă în colțul hărții — util când sunt multe curse și geocodarea
-  // (pentru numele noi, ne-cache-uite încă) mai durează câteva secunde.
-  const progressNote = document.createElement('div');
-  progressNote.style.cssText = 'position:absolute;top:10px;right:10px;z-index:1000;background:rgba(15,13,10,.7);color:#fff;font-size:11px;padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:7px;pointer-events:none';
-  progressNote.innerHTML = `<div class="spin" style="width:11px;height:11px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:#fff"></div><span id="home-map-progress">Se încarcă traseele...</span>`;
-  mapEl.style.position = 'relative';
-  mapEl.appendChild(progressNote);
-
   for (const [idx, c] of curse.entries()) {
     const progEl = document.getElementById('home-map-progress');
-    if (progEl) progEl.textContent = `Traseu ${idx+1}/${curse.length}: ${c.ruta.slice(0,24)}`;
+    if (progEl) progEl.textContent = `Se încarcă traseul ${idx+1}/${curse.length}...`;
     const statii = c.statii||[];
     const coords = [];
     for (const st of statii) {
@@ -3730,13 +3737,17 @@ async function initHomeRoutesMap(){
       createBusMarkerOnRoute(map, drawCoords, col);
     }
   }
-  progressNote.remove();
 
   if (bounds.length) {
     map.fitBounds(bounds,{padding:[30,30]});
   } else if (!anyRouteDrawn) {
+    document.getElementById('home-map-loading-overlay')?.remove();
     mapEl.innerHTML = '<div style="text-align:center;color:var(--stone);padding:24px"><div style="font-size:32px;margin-bottom:8px">📍</div><div style="font-weight:600;margin-bottom:4px">Nu am putut localiza stațiile</div><div style="font-size:12px">Verifică denumirile stațiilor din cursele regulate</div></div>';
+    return;
   }
+  // Harta e complet construită (toate traseele desenate, cadru ajustat) — abia acum scoatem
+  // poza/overlay-ul de încărcare, ca utilizatorul să vadă harta interactivă gata formată dintr-odată.
+  setTimeout(()=>{ map.invalidateSize(); document.getElementById('home-map-loading-overlay')?.remove(); }, 60);
 }
 
 // ── VEHICLE HOMEPAGE MODAL ──────────────────────────────────
