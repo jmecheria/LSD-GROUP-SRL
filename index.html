@@ -1575,9 +1575,9 @@ footer::before{
   <div class="bilet-wrap">
     <div class="bilet-bg" id="bilet-bg"></div>
     <div class="bilet-inner">
-      <div class="bilet-icon">🎟</div>
-      <div class="bilet-title">Verifică biletul</div>
-      <p class="bilet-sub">Introdu codul biletului pentru a vedea detaliile călătoriei tale</p>
+      <div class="bilet-icon" id="bilet-icon-text">🎟</div>
+      <div class="bilet-title" id="bilet-title-text">Verifică biletul</div>
+      <p class="bilet-sub" id="bilet-sub-text">Introdu codul biletului pentru a vedea detaliile călătoriei tale</p>
       <div class="bilet-card">
         <div class="fg">
           <div class="fl">Cod bilet</div>
@@ -1627,7 +1627,7 @@ footer::before{
 <div id="pg-gdpr" class="page">
   <div style="max-width:800px;margin:0 auto">
     <h1 style="font-size:28px;font-weight:800;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">Politica de Confidențialitate</h1>
-    <p style="color:var(--stone);margin-bottom:24px">LSD Group SRL — Actualizat: Ianuarie 2025</p>
+    <p style="color:var(--stone);margin-bottom:24px" id="gdpr-updated-text">LSD Group SRL — Actualizat: Ianuarie 2025</p>
     <div class="info-box" style="margin-bottom:28px">Această politică se aplică tuturor utilizatorilor platformei LSD Group SRL (site web, aplicație, portal șofer) și descrie modul în care colectăm, folosim, stocăm și protejăm datele personale, în conformitate cu Regulamentul (UE) 2016/679 (GDPR) și legislația română aplicabilă (Legea 190/2018).</div>
     <div id="gdpr-content" style="line-height:1.75;color:var(--stone)">
 
@@ -1881,7 +1881,6 @@ footer::before{
     <button class="tab-btn" onclick="adminTab('weekly')">📊 Program săptămânal</button>
     <button class="tab-btn" onclick="adminTab('harta')">🗺 Hartă live</button>
     <button class="tab-btn" onclick="adminTab('ticker')">📢 Ticker</button>
-    <button class="tab-btn" onclick="adminTab('galerie')">🖼 Galerie</button>
     <button class="tab-btn" onclick="adminTab('continut')">📝 Conținut</button>
     <button class="tab-btn" onclick="adminTab('settings')">⚙️ Setări</button>
   </div>
@@ -1950,7 +1949,7 @@ footer::before{
       <button class="btn btn-primary btn-sm" onclick="openDriverModal()">+ Adaugă șofer</button>
     </div>
     <div class="tbl-wrap">
-      <table class="tbl"><thead><tr><th>Nume</th><th>Telefon</th><th>Permis</th><th>Parolă portal</th><th>Activ</th><th></th></tr></thead>
+      <table class="tbl"><thead><tr><th>Nume</th><th>Telefon</th><th>Expirare / Angajare</th><th>Parolă portal</th><th>Activ</th><th></th></tr></thead>
       <tbody id="drivers-tbody"></tbody></table>
     </div>
   </div>
@@ -2052,24 +2051,6 @@ footer::before{
     </div>
   </div>
 
-  <!-- GALERIE FOTO HOMEPAGE -->
-  <div id="admin-tab-galerie" class="tab-panel">
-    <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;box-shadow:var(--sh)">
-      <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">🖼 Galerie foto — homepage</h3>
-      <p style="font-size:12px;color:var(--stone);margin-bottom:16px">Aceste poze apar ca fundal pe bannerele paginilor (Regulate, Organizate, Biletul meu) și în cardurile „Cursă Organizată". Trage poze aici sau apasă pentru a le selecta (max 8). Fiecare poză poate avea o etichetă scurtă (opțional).</p>
-      <div class="info-box" style="font-size:12px;margin-bottom:10px">🖼 <strong>Prima poză din listă</strong> (după reordonare cu drag&drop) devine automat și imaginea de fundal din titlul paginii (hero). Trage poza pe care o vrei acolo pe prima poziție.</div>
-      <div class="drop-zone" id="gal-dropzone" ondragover="galDzOver(event)" ondragleave="galDzLeave()" ondrop="galDzDrop(event)" onclick="document.getElementById('gal-file').click()">
-        <div style="font-size:28px;margin-bottom:6px">📸</div>
-        <p style="color:var(--stone);font-size:13px">Trage poze aici sau click pentru a le selecta</p>
-        <input type="file" id="gal-file" multiple accept="image/*" style="display:none" onchange="handleGalImages(this.files)"/>
-      </div>
-      <div class="gal-preview-grid" id="gal-preview"></div>
-      <div style="display:flex;gap:8px;margin-top:18px">
-        <button class="btn btn-primary btn-sm" onclick="saveGalerie()">💾 Salvează galeria</button>
-        <button class="btn btn-secondary btn-sm" onclick="loadGaleriePanel()">↺ Resetează modificările</button>
-      </div>
-    </div>
-  </div>
 
   <!-- CONȚINUT SITE (texte editabile) -->
   <div id="admin-tab-continut" class="tab-panel">
@@ -2259,23 +2240,38 @@ footer::before{
         <div style="font-size:12px;color:var(--stone);margin-bottom:12px">Adaugă rânduri. Rândul 1 = față (lângă șofer).</div>
         <div id="seat-builder"></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
-          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('1+1')">+ 1+1</button>
           <button class="btn btn-secondary btn-sm" onclick="addSeatRow('1+2')">+ 1+2</button>
+          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('2+1')">+ 2+1</button>
           <button class="btn btn-secondary btn-sm" onclick="addSeatRow('2+2')">+ 2+2</button>
-          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('2+3')">+ 2+3</button>
-          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('3+2')">+ 3+2</button>
-          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('3+3')">+ 3+3</button>
+          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('gol+2')">+ gol+2</button>
+          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('2+gol')">+ 2+gol</button>
+          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('1+gol')">+ 1+gol</button>
+          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('gol+1')">+ gol+1</button>
+          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('1+intrare')">+ 1+intrare</button>
+          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('intrare+1')">+ intrare+1</button>
+          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('intrare+2')">+ intrare+2</button>
+          <button class="btn btn-secondary btn-sm" onclick="addSeatRow('2+intrare')">+ 2+intrare</button>
           <button class="btn btn-secondary btn-sm" onclick="addSeatRow('spate-3')">+ Spate 3</button>
           <button class="btn btn-secondary btn-sm" onclick="addSeatRow('spate-4')">+ Spate 4</button>
           <button class="btn btn-secondary btn-sm" onclick="addSeatRow('spate-5')">+ Spate 5</button>
           <button class="btn btn-secondary btn-sm" onclick="addSeatRow('blocked')">+ Blocat 🚫</button>
-          <button class="btn btn-primary btn-sm" onclick="addSeatRowCustom()">+ Custom</button>
         </div>
         <div style="margin-top:12px;font-size:13px">Total locuri: <strong id="seat-total-count" style="color:var(--amber-d)">0</strong></div>
         <div style="margin-top:10px"><div class="fl" style="margin-bottom:6px">Preview:</div><div id="seat-preview"></div></div>
       </div>
-      <div class="fg"><div class="fl">Dotări (separate prin virgulă)</div><input type="text" id="vm-features" placeholder="AC, WiFi, USB, TV, Toaletă"/></div>
-      <div class="fg"><div class="fl">Preț per km RON (pentru charter)</div><input type="number" id="vm-price-km" min="0" step="0.1" placeholder="3.5"/></div>
+      <div class="fg">
+        <div class="fl">Dotări</div>
+        <div id="vm-dotari-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="vm-dotar-input" placeholder="Ex: AC, WiFi, USB, TV, Toaletă..." onkeydown="if(event.key==='Enter'){event.preventDefault();addVmDotare();}"/>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addVmDotare()">+ Adaugă</button>
+        </div>
+      </div>
+      <div class="f-row">
+        <div class="fg"><div class="fl">Preț per km RON (pentru charter)</div><input type="number" id="vm-price-km" min="0" step="0.1" placeholder="3.5"/></div>
+        <div class="fg"><div class="fl">Km parcurși (admin, crește din curse)</div><input type="number" id="vm-km" min="0" placeholder="0"/></div>
+      </div>
+      <div class="fg"><div class="fl">Curse finalizate (informativ)</div><input type="number" id="vm-curse-finalizate" min="0" placeholder="0"/></div>
       <div class="fg" style="display:flex;align-items:center;gap:12px">
         <div class="fl" style="margin-bottom:0">Disponibil charter</div>
         <label class="toggle"><input type="checkbox" id="vm-charter" checked/><div class="toggle-track"></div></label>
@@ -2300,7 +2296,7 @@ footer::before{
 <!-- MODAL: Cursă Regulată Admin -->
 <div class="modal-overlay" id="mo-route">
   <div class="modal modal-lg">
-    <div class="modal-head"><div><div class="modal-title" id="route-modal-title">Cursă regulată</div></div><button class="modal-close" onclick="closeModal('route')">✕</button></div>
+    <div class="modal-head"><div><div class="modal-title" id="route-modal-title">Cursă regulată</div><div class="modal-sub" id="rm-tickets-sold" style="display:none"></div></div><button class="modal-close" onclick="closeModal('route')">✕</button></div>
     <div class="modal-body">
       <input type="hidden" id="rm-id"/>
       <div class="fg"><div class="fl">Nume rută (auto-generat dacă e gol)</div><input type="text" id="rm-name" placeholder="Iași – Târgu Neamț"/></div>
@@ -2309,24 +2305,9 @@ footer::before{
         <div style="font-weight:700;font-size:13px;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">🗺 Stații și prețuri cumulate</div>
         <div style="font-size:12px;color:var(--stone);margin-bottom:12px">Prima stație = 0 RON. Restul = preț total de la start.</div>
 
-        <!-- Auto-generare traseu: completezi doar plecarea + destinația, restul se detectează automat -->
-        <div style="background:var(--amber-g);border:1.5px solid var(--amber-b);border-radius:var(--r);padding:12px;margin-bottom:14px">
-          <div style="font-weight:700;font-size:12px;color:var(--amber-d);margin-bottom:6px">🤖 Auto-generare traseu</div>
-          <div style="font-size:11px;color:var(--stone);margin-bottom:8px">Completează doar prima și ultima stație mai jos, apoi apasă butonul. <strong>Orașele mari de pe traseu sunt incluse garantat</strong>; satele apar doar dacă e un gol mare între orașe. Nu luăm nume ambigue — identificăm exact ce e pe drumul real.</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <select id="rm-auto-density" style="max-width:230px;font-size:12px">
-              <option value="25">Umple golurile des (sate la ~25 min)</option>
-              <option value="40" selected>Normal (sate doar la goluri de ~40+ min)</option>
-              <option value="60">Doar orașe mari (ignoră satele mici)</option>
-            </select>
-            <button class="btn btn-primary btn-sm" id="btn-auto-route" onclick="buildRouteAuto()">🤖 Auto-generează traseul complet</button>
-          </div>
-        </div>
-
         <div id="rm-stops"></div>
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
           <button class="btn btn-secondary btn-sm" onclick="addRouteStop()">+ Adaugă stație la final</button>
-          <button class="btn btn-secondary btn-sm" onclick="calcDistances()">🗺 Calculează automat (doar preț/timp)</button>
           <button class="btn btn-primary btn-sm" onclick="openRouteMapPicker()">📍 Plasează pe hartă (manual)</button>
         </div>
         <!-- Harta pentru plasare puncte -->
@@ -2416,39 +2397,28 @@ footer::before{
           <div class="fg"><div class="fl">Prenume *</div><input type="text" id="dm-fname" placeholder="Ion"/></div>
           <div class="fg"><div class="fl">Nume *</div><input type="text" id="dm-lname" placeholder="Popescu"/></div>
         </div>
-        <div class="f-row">
-          <div class="fg"><div class="fl">Telefon *</div><input type="tel" id="dm-phone" placeholder="07XX XXX XXX"/></div>
-          <div class="fg"><div class="fl">Email (opțional)</div><input type="email" id="dm-email"/></div>
-        </div>
+        <div class="fg"><div class="fl">Telefon *</div><input type="tel" id="dm-phone" placeholder="07XX XXX XXX"/></div>
+        <div class="fg"><div class="fl">Email (pentru transmitere acte, nu pentru login)</div><input type="email" id="dm-email" placeholder="ion.popescu@exemplu.ro"/></div>
         <div class="fg"><div class="fl">Adresă domiciliu</div><input type="text" id="dm-addr"/></div>
       </div>
       <div style="background:var(--cream);border:1px solid var(--border-l);border-radius:var(--r);padding:16px;margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">🪪 Permis conducere</div>
+        <div style="font-size:11px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">📅 Date & termene</div>
         <div class="f-row">
-          <div class="fg"><div class="fl">Nr. permis</div><input type="text" id="dm-license" placeholder="IS001234"/></div>
-          <div class="fg"><div class="fl">Categorie</div>
-            <select id="dm-cat"><option value="D">D (autocar)</option><option value="D+E">D+E</option><option value="D1">D1</option><option value="B">B</option></select>
-          </div>
-        </div>
-        <div class="f-row">
-          <div class="fg"><div class="fl">Expiră permis</div><input type="date" id="dm-exp"/></div>
+          <div class="fg"><div class="fl">Expiră permis <span id="dm-exp-warn" style="color:var(--red);font-weight:700"></span></div><input type="date" id="dm-exp"/></div>
           <div class="fg"><div class="fl">Data angajării</div><input type="date" id="dm-hired"/></div>
         </div>
       </div>
       <div style="background:var(--amber-g);border:1.5px solid var(--amber-b);border-radius:var(--r);padding:16px;margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;color:var(--amber-d);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">🔑 Parolă portal șofer</div>
+        <div style="font-size:11px;font-weight:700;color:var(--amber-d);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">🔑 Parolă portal comun</div>
         <div style="font-size:12px;color:var(--stone);margin-bottom:12px">Cu această parolă șoferul se identifică în portalul comun. Lasă gol pentru a nu schimba.</div>
         <div class="f-row">
           <div class="fg"><div class="fl">Parolă nouă (minim 4 caractere)</div><input type="password" id="dm-pin" placeholder="minim 4 caractere"/></div>
           <div class="fg"><div class="fl">Confirmă parola</div><input type="password" id="dm-pin2" placeholder="repetă parola"/></div>
         </div>
       </div>
-      <div class="f-row">
-        <div class="fg"><div class="fl">Observații interne</div><textarea id="dm-notes" rows="2" placeholder="Cunoaște ruta X, disponibil weekend..."></textarea></div>
-        <div class="fg">
-          <div class="fl">Cont activ</div>
-          <label class="toggle" style="margin-top:8px"><input type="checkbox" id="dm-active" checked/><div class="toggle-track"></div></label>
-        </div>
+      <div class="fg" style="display:flex;align-items:center;gap:12px">
+        <div class="fl" style="margin-bottom:0">Cont activ</div>
+        <label class="toggle"><input type="checkbox" id="dm-active" checked/><div class="toggle-track"></div></label>
       </div>
     </div>
     <div class="modal-foot">
@@ -2889,16 +2859,49 @@ function getOraForDate(p, dateStr) {
   return {ora:p.ora||'', driverId:p.driverId||''};
 }
 window.getOraForDate = getOraForDate;
+
+// ── LAYOUT RÂNDURI LOCURI (cinema) ──────────────────────────────
+// Un tip de rând e fie "spate-N" (N locuri lipite, fără interval), fie "blocked",
+// fie "STÂNGA+DREAPTA" unde fiecare parte e un număr de locuri sau unul din
+// cuvintele-cheie 'gol' (spațiu liber, fără loc) sau 'intrare' (ușă/interval intrare).
+function parseRowType(type){
+  if(!type || type==='blocked' || type.startsWith('spate-')) return null;
+  const parts = String(type).split('+');
+  if(parts.length!==2) return null;
+  const parsePart = p=>{
+    if(p==='gol') return {kind:'gol',count:1};
+    if(p==='intrare') return {kind:'intrare',count:1};
+    const n=parseInt(p); return {kind:'seat',count:isNaN(n)?0:n};
+  };
+  return {left:parsePart(parts[0]), right:parsePart(parts[1])};
+}
+function seatCountForType(type){
+  if(!type) return 0;
+  if(type==='blocked') return 0;
+  if(type.startsWith('spate-')) return parseInt(type.split('-')[1])||0;
+  const pr=parseRowType(type); if(!pr) return 0;
+  return (pr.left.kind==='seat'?pr.left.count:0)+(pr.right.kind==='seat'?pr.right.count:0);
+}
+window.seatCountForType = seatCountForType;
+// seatFn(seatObj)->html, spacerFn(kind:'gol'|'intrare')->html, aisleFn()->html
+function buildRowSlotsHtml(type, seats, seatFn, spacerFn, aisleFn){
+  if(type && type.startsWith('spate-')) return seats.map(s=>seatFn(s)).join('');
+  const pr=parseRowType(type);
+  if(!pr) return seats.map(s=>seatFn(s)).join('');
+  let si=0;
+  const renderSide=side=>{
+    if(side.kind==='seat'){let h='';for(let i=0;i<side.count;i++){h+=seatFn(seats[si]);si++;}return h;}
+    if(side.kind==='gol'||side.kind==='intrare') return spacerFn(side.kind);
+    return '';
+  };
+  return renderSide(pr.left) + aisleFn() + renderSide(pr.right);
+}
+window.buildRowSlotsHtml = buildRowSlotsHtml;
 function getSeatLayout(type, seats) {
   const sep = '<span style="width:12px;display:inline-block"></span>';
-  const s = i => seats[i] ? `<span class="seat-mini used">${seats[i].nr}</span>` : '';
-  if (type==='1+1') return s(0)+sep+s(1);
-  if (type==='1+2') return s(0)+sep+s(1)+s(2);
-  if (type==='2+2') return s(0)+s(1)+sep+s(2)+s(3);
-  if (type==='2+3') return s(0)+s(1)+sep+s(2)+s(3)+s(4);
-  if (type==='3+2') return s(0)+s(1)+s(2)+sep+s(3)+s(4);
-  if (type==='3+3') return s(0)+s(1)+s(2)+sep+s(3)+s(4)+s(5);
-  return seats.map(x=>`<span class="seat-mini used">${x.nr}</span>`).join('');
+  const s = seat => seat ? `<span class="seat-mini used">${seat.nr}</span>` : '';
+  const spacer = kind => `<span class="seat-mini" style="opacity:.5;font-size:9px">${kind==='intrare'?'🚪':'·'}</span>`;
+  return buildRowSlotsHtml(type, seats, s, spacer, ()=>sep);
 }
 window.showTermeni = () => {
   alert('Termeni și Condiții LSD Group SRL\n\n1. Anulare curse regulate: >24h = rambursare integrală; <24h = fără rambursare\n2. Anulare curse organizate: >72h = integral; 24-72h = 50%; <24h = fără rambursare\n3. Prezentare la îmbarcare cu min 10 min înainte\n4. Biletele sunt nominale și netransferabile\n5. Prețuri includ TVA 21%\n\nContact: irimia.teodor.17@gmail.com');
@@ -3354,118 +3357,6 @@ async function reverseGeocodeName(lat, lng){
   }catch(e){ console.warn('Reverse geocode failed:', e.message); return { name: null, level: 0 }; }
 }
 
-// ── AUTO-GENERARE TRASEU ──────────────────────────────────────────
-// Ia doar plecarea și destinația (deja completate de utilizator în lista de stații),
-// obține traseul real pe drum (OSRM), eșantionează puncte de-a lungul lui la interval
-// regulat (în funcție de densitatea aleasă), și pentru fiecare punct face reverse-geocoding
-// ca să afle exact ce localitate e ACOLO — nu una omonimă din altă parte a țării.
-window.buildRouteAuto = async function buildRouteAuto(){
-  const fromName = (window._RM_STOPS[0]?.n||'').trim();
-  const toName = (window._RM_STOPS[window._RM_STOPS.length-1]?.n||'').trim();
-  if (!fromName || !toName) { toast('Completează întâi prima și ultima stație (plecare/destinație)','wr'); return; }
-
-  const btn = document.getElementById('btn-auto-route');
-  const gapMin = parseInt(document.getElementById('rm-auto-density')?.value) || 40;
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin" style="width:14px;height:14px;border-width:2px"></span> Se generează...'; }
-  toast('🤖 Se localizează plecarea și destinația...', 'in');
-
-  try {
-    const c1 = await geocodeCached(fromName);
-    const c2 = await geocodeCached(toName);
-    if (!c1 || !c2) { toast('Nu am putut localiza "'+(!c1?fromName:toName)+'". Verifică ortografia.','er'); return; }
-
-    toast('🤖 Se calculează traseul pe drum...', 'in');
-    const routeData = await osrmRouteFull([c1, c2]);
-    if (!routeData) { toast('Nu am putut obține traseul pe drum între aceste localități.','er'); return; }
-    const { coords, distanceM, durationS } = routeData;
-
-    // Distanțe cumulate (haversine) de-a lungul geometriei, ca să putem localiza
-    // fiecare fracțiune a traseului într-un index din array-ul de coordonate.
-    const cumDist = [0];
-    for (let i=1;i<coords.length;i++) cumDist.push(cumDist[i-1] + haversineDist(coords[i-1], coords[i]));
-    const totalDistGeom = cumDist[cumDist.length-1] || 1;
-    const totalMin = durationS/60;
-
-    // Eșantionare DEASĂ (mai deasă decât gap-ul cerut de utilizator), ca să nu "sărim"
-    // peste un oraș mare care nu cade exact pe un punct rar. Satele/orașele mici sunt
-    // filtrate ulterior — aici doar culegem tot ce găsim pe traseu.
-    const sampleEveryMin = Math.min(gapMin, 12);
-    let nSamples = Math.round(totalMin / sampleEveryMin);
-    nSamples = Math.max(4, Math.min(24, nSamples)); // plafon ca timpul de așteptare să rămână rezonabil
-
-    toast(`🤖 Se scanează traseul pentru localități (${nSamples} puncte, ~${Math.ceil(nSamples*1.1)}s)...`, 'in');
-
-    // Colectăm TOATE localitățile găsite pe traseu, cu poziția lor (minut/km) și nivelul de importanță
-    const raw = []; // {name, level, minuteMark, kmMark, lat, lng}
-    const fromKey = fromName.toLowerCase(), toKey = toName.toLowerCase();
-    for (let i=1; i<=nSamples; i++){
-      const fracDist = (i/(nSamples+1)) * totalDistGeom;
-      let idx = cumDist.findIndex(d => d >= fracDist);
-      if (idx < 0) idx = coords.length-1;
-      const pt = coords[idx];
-      const { name, level } = await reverseGeocodeName(pt[0], pt[1]);
-      if (!name) continue;
-      const key = name.toLowerCase();
-      if (key===fromKey || key===toKey) continue; // deja avem plecarea/destinația
-      const fracOfTotal = cumDist[idx] / totalDistGeom;
-      raw.push({ name, level, minuteMark: fracOfTotal*totalMin, kmMark: fracOfTotal*(distanceM/1000), lat: pt[0], lng: pt[1] });
-    }
-
-    // Dedup: dacă același nume apare pe mai multe eșantioane consecutive, păstrăm o singură apariție
-    const dedup = [];
-    const seenNames = new Set();
-    raw.forEach(s => { const k=s.name.toLowerCase(); if(!seenNames.has(k)){ seenNames.add(k); dedup.push(s); } });
-
-    // PASUL 1: toate orașele/municipiile (level >= 2) sunt GARANTATE incluse, mereu.
-    const majors = dedup.filter(s => s.level >= 2).sort((a,b)=>a.minuteMark-b.minuteMark);
-
-    // PASUL 2: satele (level 1) umplu doar golurile mari rămase între opriri deja alese
-    // (inclusiv golul de la plecare până la primul oraș, și de la ultimul oraș la destinație).
-    const villages = dedup.filter(s => s.level === 1).sort((a,b)=>a.minuteMark-b.minuteMark);
-    const timeline = [{minuteMark:0}, ...majors, {minuteMark:totalMin}];
-    const gapThreshold = gapMin * 1.4; // umplem golul doar dacă e semnificativ mai mare decât densitatea cerută
-    const fillers = [];
-    for (let i=1;i<timeline.length;i++){
-      const prevM = timeline[i-1].minuteMark, nextM = timeline[i].minuteMark;
-      if (nextM - prevM <= gapThreshold) continue;
-      // alegem satul cel mai apropiat de mijlocul golului, dacă există unul în interval
-      const midM = (prevM+nextM)/2;
-      const candidates = villages.filter(v => v.minuteMark>prevM && v.minuteMark<nextM);
-      if (!candidates.length) continue;
-      const best = candidates.reduce((a,b)=> Math.abs(a.minuteMark-midM)<Math.abs(b.minuteMark-midM)?a:b);
-      fillers.push(best);
-    }
-
-    const finalStops = [...majors, ...fillers].sort((a,b)=>a.minuteMark-b.minuteMark);
-
-    const newStops = [{n: fromName, p:0, m:0, lat:c1[0], lng:c1[1]}];
-    finalStops.forEach(s => {
-      newStops.push({
-        n: s.name,
-        m: Math.round(s.minuteMark),
-        p: Math.max(1, Math.round(s.kmMark * 0.5)), // estimare preț ~0.5 RON/km, editabil manual
-        lat: s.lat, lng: s.lng
-      });
-    });
-    newStops.push({n: toName, p: Math.max(newStops[newStops.length-1]?.p||0, Math.round((distanceM/1000)*0.5)), m: Math.round(totalMin), lat:c2[0], lng:c2[1]});
-
-    window._RM_STOPS = newStops;
-    renderRmStops();
-
-    // Dacă harta de plasare manuală e deschisă, sincronizăm și pinii vizuali
-    if (window._rmPickerMap) {
-      window._rmPickerPoints = newStops.map(s => ({ll:[s.lat,s.lng], nume:s.n}));
-      await rmMapPickerRender();
-    }
-
-    const nOrase = majors.length, nSate = fillers.length;
-    toast(`✅ Traseu generat: ${newStops.length} stații (${nOrase} orașe + ${nSate} sate) · ${Math.round(distanceM/1000)} km · ~${(totalMin/60).toFixed(1)}h. Poți edita, șterge sau adăuga stații mai jos.`, 'ok');
-  } catch(e) {
-    toast('Eroare la generarea automată: '+e.message, 'er');
-  } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = '🤖 Auto-generează traseul complet'; }
-  }
-};
 
 // Creeaza un marker autobuz SVG (nu emoji) care se misca pe un traseu real
 function createBusMarkerOnRoute(map, routeLatLngs, color){
@@ -3543,9 +3434,16 @@ window.applyHeroImage = applyHeroImage;
 window.renderHomeGallery = renderHomeGallery;
 
 // ── PAGE BANNER (foto decorativ pe Regulate / Organizate / Bilet) ──
+// Galeria manuală din admin a fost eliminată — bannerele folosesc acum direct
+// pozele reale din flota de autobuze (vehicule), cu fallback la poze stock doar
+// dacă nu există încă nicio poză încărcată la niciun vehicul.
+function bannerPhotoPool(){
+  const fleetImgs = (window._F||[]).flatMap(v=>v.imagini||[]).map(src=>({src}));
+  return fleetImgs.length ? fleetImgs : window._GALERIE_DEFAULT;
+}
 function fillPageBanner(elId, title, sub, idx){
   const el = document.getElementById(elId); if (!el) return;
-  const pool = (window._GALERIE_HOME&&window._GALERIE_HOME.length) ? window._GALERIE_HOME : window._GALERIE_DEFAULT;
+  const pool = bannerPhotoPool();
   const it = pool[idx % pool.length] || pool[0];
   const src = it.src || it;
   el.innerHTML = `<img src="${src}" alt="${title}" loading="lazy"/><div class="page-banner-content"><div class="page-banner-title">${title}</div>${sub?`<div class="page-banner-sub">${sub}</div>`:''}</div>`;
@@ -3554,7 +3452,7 @@ window.fillPageBanner = fillPageBanner;
 
 function fillModeBg(elId, idx){
   const el = document.getElementById(elId); if (!el) return;
-  const pool = (window._GALERIE_HOME&&window._GALERIE_HOME.length) ? window._GALERIE_HOME : window._GALERIE_DEFAULT;
+  const pool = bannerPhotoPool();
   const it = pool[idx % pool.length] || pool[0];
   const src = it.src || it;
   el.innerHTML = `<img src="${src}" alt="" loading="lazy"/>`;
@@ -4177,16 +4075,10 @@ function renderCinemaSeats(){
     if(row.blocat){html+=`<div style="text-align:center;padding:4px;font-size:10px;color:var(--red);background:var(--red-g);border-radius:5px;margin:2px 0">${row.label||'🚫 Blocat'}</div>`;return;}
     const t=row.type||'2+2';
     const mkS=s=>{if(!s)return'';const n=s.nr;const st=seatStatus(n);const cl=window._CINEMA_SEL.includes(n)?'selected':(st||'');return`<div class="seat ${cl}" id="cs-${n}" onclick="toggleSeat(${n})">${n}</div>`;};
-    const aisle='<div class="seat-aisle"></div>';
+    const mkSpacer=kind=>kind==='intrare'?`<div class="seat" style="cursor:default;border-style:dashed;background:transparent;color:var(--stone);font-size:16px">🚪</div>`:`<div class="seat" style="cursor:default;border-style:dashed;background:transparent;visibility:hidden"></div>`;
+    const aisle=()=>'<div class="seat-aisle"></div>';
     html+=`<div class="seat-row${row.type?.startsWith('spate')?' back':''}">`;
-    if(t==='1+0')html+=mkS(seats[0]);
-    else if(t==='1+1')html+=mkS(seats[0])+aisle+mkS(seats[1]);
-    else if(t==='1+2')html+=mkS(seats[0])+aisle+mkS(seats[1])+mkS(seats[2]);
-    else if(t==='2+2')html+=mkS(seats[0])+mkS(seats[1])+aisle+mkS(seats[2])+mkS(seats[3]);
-    else if(t==='2+3')html+=mkS(seats[0])+mkS(seats[1])+aisle+mkS(seats[2])+mkS(seats[3])+mkS(seats[4]);
-    else if(t==='3+2')html+=mkS(seats[0])+mkS(seats[1])+mkS(seats[2])+aisle+mkS(seats[3])+mkS(seats[4]);
-    else if(t==='3+3')html+=mkS(seats[0])+mkS(seats[1])+mkS(seats[2])+aisle+mkS(seats[3])+mkS(seats[4])+mkS(seats[5]);
-    else seats.forEach(s=>html+=mkS(s));
+    html+=buildRowSlotsHtml(t, seats, mkS, mkSpacer, aisle);
     html+='</div>';
   });
   if(window._CINEMA_TO_IDX===null) html+='<div style="text-align:center;padding:16px;color:var(--stone);font-size:12px">☝️ Selectați stația de urcare și destinația</div>';
@@ -4909,8 +4801,8 @@ function renderWizStep(){
       ['Altele','📋','Altele']
     ];
     html = `<div class="wiz-fade-in">
-      <div class="wiz-question">Ce tip de cursă dorești?</div>
-      <div class="wiz-hint">Alege categoria care se potrivește cel mai bine</div>
+      <div class="wiz-question">${T('wiz-q1','Ce tip de cursă dorești?')}</div>
+      <div class="wiz-hint">${T('wiz-h1','Alege categoria care se potrivește cel mai bine')}</div>
       <div class="wiz-options-grid">
         ${tipOptions.map(([val,icon,label])=>`<div class="wiz-opt-card ${d.tip===val?'selected':''}" onclick="wizSelectTip('${val}')"><span class="wiz-opt-icon">${icon}</span><span class="wiz-opt-text">${label}</span></div>`).join('')}
       </div>
@@ -4919,16 +4811,16 @@ function renderWizStep(){
   }
   else if (step===2) {
     html = `<div class="wiz-fade-in">
-      <div class="wiz-question">De unde pleci și unde mergi?</div>
-      <div class="wiz-hint">Adaugă și opriri intermediare dacă e nevoie</div>
+      <div class="wiz-question">${T('wiz-q2','De unde pleci și unde mergi?')}</div>
+      <div class="wiz-hint">${T('wiz-h2','Adaugă și opriri intermediare dacă e nevoie')}</div>
       <div id="wiz-stops-list"></div>
       <button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="wizAddStop()">+ Adaugă oprire intermediară</button>
     </div>`;
   }
   else if (step===3) {
     html = `<div class="wiz-fade-in">
-      <div class="wiz-question">Când vrei să plece cursa?</div>
-      <div class="wiz-hint">Ora poate fi flexibilă dacă nu știi exact încă</div>
+      <div class="wiz-question">${T('wiz-q3','Când vrei să plece cursa?')}</div>
+      <div class="wiz-hint">${T('wiz-h3','Ora poate fi flexibilă dacă nu știi exact încă')}</div>
       <div class="fg"><div class="fl">Data dorită *</div><input type="date" id="wiz-date" value="${d.date}" min="${new Date().toISOString().split('T')[0]}" onchange="window._WIZ_DATA.date=this.value"/></div>
       <div class="fg"><div class="fl">Ora de plecare</div>
         <select id="wiz-time" onchange="window._WIZ_DATA.time=this.value">
@@ -4940,8 +4832,8 @@ function renderWizStep(){
   }
   else if (step===4) {
     html = `<div class="wiz-fade-in">
-      <div class="wiz-question">Cât durează călătoria?</div>
-      <div class="wiz-hint">Alege fie în ore, fie în zile (pentru excursii mai lungi)</div>
+      <div class="wiz-question">${T('wiz-q4','Cât durează călătoria?')}</div>
+      <div class="wiz-hint">${T('wiz-h4','Alege fie în ore, fie în zile (pentru excursii mai lungi)')}</div>
       <div class="f-row">
         <div class="fg"><div class="fl">Durata în ore</div>
           <select id="wiz-dur-h" onchange="window._WIZ_DATA.durH=this.value;if(this.value){document.getElementById('wiz-dur-zile').value='';window._WIZ_DATA.durZile='';}">
@@ -4962,8 +4854,8 @@ function renderWizStep(){
   else if (step===5) {
     const fleetOptions = (window._F||[]).map(v=>`<div class="wiz-opt-card ${d.vehId===v.id?'selected':''}" onclick="wizSelectVeh('${v.id}')" style="text-align:left;display:flex;align-items:center;gap:10px;padding:12px"><span style="font-size:22px">${v.icon||'🚌'}</span><div><div class="wiz-opt-text" style="font-size:13px">${v.nome||v.name||v.nume||''}</div><div style="font-size:11px;color:var(--stone);font-weight:400">${capVeh(v)} locuri${v.pretPerKm?' · '+v.pretPerKm+' RON/km':''}</div></div></div>`).join('');
     html = `<div class="wiz-fade-in">
-      <div class="wiz-question">Ai o preferință de vehicul?</div>
-      <div class="wiz-hint">Opțional — dacă nu alegi, echipa va selecta cel mai potrivit</div>
+      <div class="wiz-question">${T('wiz-q5','Ai o preferință de vehicul?')}</div>
+      <div class="wiz-hint">${T('wiz-h5','Opțional — dacă nu alegi, echipa va selecta cel mai potrivit')}</div>
       <div class="wiz-opt-card ${!d.vehId?'selected':''}" onclick="wizSelectVeh('')" style="margin-bottom:10px;text-align:left;padding:12px">
         <span class="wiz-opt-text">🤷 Nu am o preferință — alegeți voi</span>
       </div>
@@ -5267,16 +5159,15 @@ window.loadAdmin = async () => {
 };
 window.refreshAdmin=async()=>{await loadAdmin();toast('Date actualizate!','ok');};
 window.adminTab=tab=>{
-  ['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','galerie','continut','settings'].forEach(t=>{
+  ['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','continut','settings'].forEach(t=>{
     document.getElementById('admin-tab-'+t)?.classList.toggle('active',t===tab);
   });
   document.querySelectorAll('#pg-admin .tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','galerie','continut','settings'][i]===tab);
+    b.classList.toggle('active',['vehicles','routes','bookings','drivers','schedule','weekly','harta','ticker','continut','settings'][i]===tab);
   });
   if(tab==='schedule'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];loadSchedule();}
   if(tab==='weekly'){loadWeeklySchedule();}
   if(tab==='harta'){loadHartaAdmin();}
-  if(tab==='galerie'){loadGaleriePanel();}
   if(tab==='continut'){loadContentPanel();}
 };
 window.adminViewAs=role=>{
@@ -5437,11 +5328,22 @@ window.saveVehicleLocation=async(vehId, btn)=>{
   }catch(e){toast('Eroare: '+e.message,'er');}
 };
 window.deleteVehicle=async id=>{if(!confirm('Ștergeți vehiculul?'))return;await deleteDoc(doc(db,'vehicule',id));await loadFleet();loadVehiclesTbl();toast('Vehicul șters','ok');};
+window._VM_DOTARI = [];
+window.renderVmDotari = function renderVmDotari(){
+  const el=document.getElementById('vm-dotari-list'); if(!el) return;
+  el.innerHTML = window._VM_DOTARI.map((d,i)=>`<span class="chip chip-amber" style="display:inline-flex;align-items:center;gap:6px">${d}<button type="button" style="background:none;border:none;color:var(--amber-d);cursor:pointer;font-size:12px;line-height:1" onclick="window._VM_DOTARI.splice(${i},1);renderVmDotari()">✕</button></span>`).join('') || '<span style="font-size:12px;color:var(--stone)">Nicio dotare adăugată încă</span>';
+};
+window.addVmDotare = () => {
+  const inp=document.getElementById('vm-dotar-input'); const val=inp?.value?.trim(); if(!val) return;
+  if(!window._VM_DOTARI.includes(val)) window._VM_DOTARI.push(val);
+  if(inp) inp.value='';
+  renderVmDotari();
+};
 window.openVehicleModal=async(id=null)=>{
-  window._VM_IMAGES=[]; window._SEAT_ROWS=[];
+  window._VM_IMAGES=[]; window._SEAT_ROWS=[]; window._VM_DOTARI=[];
   document.getElementById('vehicle-modal-title').textContent=id?'Editează vehicul':'Adaugă vehicul nou';
   document.getElementById('vm-id').value=id||'';
-  ['vm-name','vm-icon','vm-plate','vm-model','vm-color','vm-features','vm-price-km'].forEach(x=>{const el=document.getElementById(x);if(el)el.value='';});
+  ['vm-name','vm-icon','vm-plate','vm-model','vm-color','vm-price-km','vm-km','vm-curse-finalizate'].forEach(x=>{const el=document.getElementById(x);if(el)el.value='';});
   document.getElementById('vm-icon').value='🚐';
   document.getElementById('vm-year').value='';
   document.getElementById('vm-charter').checked=true;
@@ -5455,15 +5357,17 @@ window.openVehicleModal=async(id=null)=>{
       document.getElementById('vm-year').value=v.anFab||'';
       document.getElementById('vm-model').value=v.model||'';
       document.getElementById('vm-color').value=v.culoare||'';
-      document.getElementById('vm-features').value=(v.dotari||[]).join(', ');
+      window._VM_DOTARI=[...(v.dotari||[])];
       document.getElementById('vm-price-km').value=v.pretPerKm||'';
+      document.getElementById('vm-km').value=v.kmParcursi||0;
+      document.getElementById('vm-curse-finalizate').value=v.curseFinalizate||0;
       document.getElementById('vm-charter').checked=v.disponibil!==false;
       window._VM_IMAGES=[...(v.imagini||[])];
       window._SEAT_ROWS=(v.rows||[]).map(r=>({...r,seats:(r.seats||[]).map(s=>({...s}))}));
       renderImgPreview();
     }
   }
-  renderSeatBuilder(); openModal('vehicle');
+  renderVmDotari(); renderSeatBuilder(); openModal('vehicle');
 };
 window.saveVehicle=async()=>{
   const id=document.getElementById('vm-id').value;
@@ -5479,8 +5383,10 @@ window.saveVehicle=async()=>{
     model:document.getElementById('vm-model').value.trim(),
     culoare:document.getElementById('vm-color').value.trim(),
     rows:window._SEAT_ROWS,capacitate:totalSeats,
-    dotari:document.getElementById('vm-features').value.split(',').map(s=>s.trim()).filter(Boolean),
+    dotari:[...window._VM_DOTARI],
     pretPerKm:parseFloat(document.getElementById('vm-price-km').value)||null,
+    kmParcursi:parseInt(document.getElementById('vm-km').value)||0,
+    curseFinalizate:parseInt(document.getElementById('vm-curse-finalizate').value)||0,
     disponibil:document.getElementById('vm-charter').checked,
     imagini:window._VM_IMAGES
   };
@@ -5492,21 +5398,11 @@ window.saveVehicle=async()=>{
 };
 // Seat builder
 window.addSeatRow=type=>{
-  let n=(window._SEAT_ROWS.reduce((s,r)=>s+(r.blocat?0:(r.seats||[]).length),0))+1;
-  let seats=[];
   if(type==='blocked'){window._SEAT_ROWS.push({type:'blocked',blocat:true,seats:[],label:'Blocat / Toaletă / Bagaje'});renderSeatBuilder();return;}
-  const cnts={'1+0':1,'1+1':2,'1+2':3,'2+2':4,'2+3':5,'3+2':5,'3+3':6,'spate-3':3,'spate-4':4,'spate-5':5};
-  const cnt=cnts[type]||4;
-  for(let i=0;i<cnt;i++)seats.push({nr:n+i});
-  window._SEAT_ROWS.push({type,seats});
-  renderSeatBuilder();
-};
-window.addSeatRowCustom=()=>{
-  const nr=parseInt(prompt('Câte locuri pe acest rând? (1-10)','4'));
-  if(!nr||nr<1||nr>10){toast('Număr invalid','wr');return;}
   const n=(window._SEAT_ROWS.reduce((s,r)=>s+(r.blocat?0:(r.seats||[]).length),0))+1;
-  const seats=[]; for(let i=0;i<nr;i++)seats.push({nr:n+i});
-  window._SEAT_ROWS.push({type:'custom-'+nr,seats,customNr:nr});
+  const cnt=seatCountForType(type);
+  const seats=[]; for(let i=0;i<cnt;i++)seats.push({nr:n+i});
+  window._SEAT_ROWS.push({type,seats});
   renderSeatBuilder();
 };
 window.renderSeatBuilder = function renderSeatBuilder(){
@@ -5517,32 +5413,21 @@ window.renderSeatBuilder = function renderSeatBuilder(){
   sb.innerHTML=window._SEAT_ROWS.map((row,ri)=>{
     if(row.blocat)return`<div class="sb-row" style="background:var(--red-g);border:1px solid rgba(181,45,45,.2)"><div class="sb-label" style="color:var(--red);font-size:10px">Rând ${ri+1}<br>🚫 Blocat</div><div style="flex:1"><input type="text" value="${row.label||'Blocat'}" style="font-size:12px;padding:4px 8px;width:200px;border:1px solid var(--border);border-radius:6px" onchange="window._SEAT_ROWS[${ri}].label=this.value" placeholder="Descriere"/></div><button style="background:none;border:none;color:var(--stone);cursor:pointer;font-size:16px" onclick="window._SEAT_ROWS.splice(${ri},1);renderSeatBuilder()">✕</button></div>`;
     const type=row.type||'2+2'; const seats=row.seats||[];
-    const typeLabels={'1+0':'1+0','1+1':'1+1','1+2':'1+2','2+2':'2+2','2+3':'2+3','3+2':'3+2','3+3':'3+3','spate-3':'Spate 3','spate-4':'Spate 4','spate-5':'Spate 5'};
-    const label=row.customNr?`Custom(${row.customNr})`:(typeLabels[type]||type);
-    return`<div class="sb-row"><div class="sb-label" style="font-size:10px;color:var(--stone)">Rând ${ri+1}<br><span style="color:var(--amber-d)">${label}</span></div><div class="sb-seats">${getSeatLayout(type,seats)}</div><button style="background:none;border:none;color:var(--stone);cursor:pointer;font-size:16px" onclick="window._SEAT_ROWS.splice(${ri},1);renderSeatBuilder()">✕</button></div>`;
+    return`<div class="sb-row"><div class="sb-label" style="font-size:10px;color:var(--stone)">Rând ${ri+1}<br><span style="color:var(--amber-d)">${type}</span></div><div class="sb-seats">${getSeatLayout(type,seats)}</div><button style="background:none;border:none;color:var(--stone);cursor:pointer;font-size:16px" onclick="window._SEAT_ROWS.splice(${ri},1);renderSeatBuilder()">✕</button></div>`;
   }).join('');
   renderSeatPreview();
 }
 function renderSeatPreview(){
   const preview=document.getElementById('seat-preview');if(!preview)return;
   if(!window._SEAT_ROWS.length){preview.innerHTML='';return;}
+  const aisle=()=>'<div style="width:10px"></div>';
+  const seatFn=seat=>seat?`<div class="seat-mini used">${seat.nr}</div>`:'';
+  const spacerFn=kind=>`<div class="seat-mini" style="opacity:.45;font-size:10px">${kind==='intrare'?'🚪':'·'}</div>`;
   let html='<div style="display:flex;flex-direction:column;gap:4px;max-width:320px">';
   html+='<div style="display:flex;gap:4px"><div class="seat-mini" style="font-size:14px">🚗</div></div>';
   window._SEAT_ROWS.forEach(row=>{
     if(row.blocat){html+=`<div style="background:var(--red-g);border:1px dashed rgba(181,45,45,.3);border-radius:5px;padding:2px 8px;font-size:10px;color:var(--red);text-align:center">${row.label||'Blocat'}</div>`;return;}
-    const t=row.type||'2+2'; const seats=row.seats||[];
-    const aisle='<div style="width:10px"></div>';
-    const s=i=>seats[i]?`<div class="seat-mini used">${seats[i].nr}</div>`:'';
-    html+='<div style="display:flex;gap:3px;justify-content:center">';
-    if(t==='1+0')html+=s(0);
-    else if(t==='1+1')html+=s(0)+aisle+s(1);
-    else if(t==='1+2')html+=s(0)+aisle+s(1)+s(2);
-    else if(t==='2+2')html+=s(0)+s(1)+aisle+s(2)+s(3);
-    else if(t==='2+3')html+=s(0)+s(1)+aisle+s(2)+s(3)+s(4);
-    else if(t==='3+2')html+=s(0)+s(1)+s(2)+aisle+s(3)+s(4);
-    else if(t==='3+3')html+=s(0)+s(1)+s(2)+aisle+s(3)+s(4)+s(5);
-    else seats.forEach(seat=>html+=`<div class="seat-mini used">${seat.nr}</div>`);
-    html+='</div>';
+    html+='<div style="display:flex;gap:3px;justify-content:center">'+buildRowSlotsHtml(row.type||'2+2', row.seats||[], seatFn, spacerFn, aisle)+'</div>';
   });
   html+='</div>';
   preview.innerHTML=html;
@@ -5658,11 +5543,28 @@ window.openRouteModal=async(id=null)=>{
         window._RM_SNAPSHOT=c.hartaImg;
         document.getElementById('rm-snapshot-preview').innerHTML=`<div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">✅ Poză traseu salvată:</div><img src="${c.hartaImg}" style="max-width:220px;border-radius:8px;border:1px solid var(--border-l);cursor:zoom-in" onclick="openLB('${c.hartaImg}')"/>`;
       }
+      loadRmTicketsSold(id);
     }
+  } else {
+    document.getElementById('rm-tickets-sold').style.display='none';
   }
   renderRmStops();renderRmDeps();renderRmRetDeps();renderBlockedDates();
   openModal('route');
 };
+// Numărul de bilete vândute pentru cursa curentă, total și per plecare (ora)
+async function loadRmTicketsSold(cursaId){
+  const el=document.getElementById('rm-tickets-sold'); if(!el) return;
+  el.style.display='block'; el.textContent='🎟 Se numără biletele...';
+  try{
+    const snap=await getDocs(query(collection(db,'rezervari'),where('cursaId','==',cursaId)));
+    const rez=snap.docs.map(d=>d.data()).filter(r=>r.status!=='anulata');
+    const total=rez.reduce((s,r)=>s+(r.nrLocuri||(r.locuriRezervate||[]).length||1),0);
+    const perOra={};
+    rez.forEach(r=>{const ora=r.ora||'-';perOra[ora]=(perOra[ora]||0)+(r.nrLocuri||(r.locuriRezervate||[]).length||1);});
+    const detaliu=Object.entries(perOra).sort((a,b)=>a[0].localeCompare(b[0])).map(([ora,n])=>`${ora}: ${n}`).join(' · ');
+    el.textContent=`🎟 ${total} bilete vândute în total${detaliu?' — '+detaliu:''}`;
+  }catch(e){ el.textContent='🎟 Nu s-au putut încărca biletele vândute'; }
+}
 let _rmStopDragIdx = null;
 window.rmStopDragStart = (e, idx) => {
   _rmStopDragIdx = idx;
@@ -5722,21 +5624,6 @@ window.renderRmStops = function renderRmStops(){
   + (n>2 ? '<div style="font-size:11px;color:var(--stone);margin-top:2px">💡 Trage ⠿ pentru a reordona stațiile intermediare, ca la opririle unui tren. Butonul <strong>+</strong> adaugă o stație nouă chiar după cea curentă.</div>' : '');
 }
 window.addRouteStop=()=>{window._RM_STOPS.splice(window._RM_STOPS.length-1,0,{n:'',p:0,m:0});renderRmStops();};
-window.calcDistances=async()=>{
-  const valid=window._RM_STOPS.filter(s=>s.n);
-  if(valid.length<2){toast('Adăugați minim 2 stații','wr');return;}
-  toast('Se calculează distanțele...','in');
-  let totalKm=0,totalMin=0;
-  for(let i=1;i<window._RM_STOPS.length;i++){
-    if(!window._RM_STOPS[i-1].n||!window._RM_STOPS[i].n)continue;
-    const dist=await calcDistORS(window._RM_STOPS[i-1].n,window._RM_STOPS[i].n);
-    if(dist){totalKm+=dist.km;totalMin+=dist.min;window._RM_STOPS[i].m=totalMin;window._RM_STOPS[i].p=Math.round(totalKm*0.5);}
-    else toast(`Nu s-a putut calcula: "${window._RM_STOPS[i-1].n}" → "${window._RM_STOPS[i].n}"`, 'wr');
-  }
-  window._RM_STOPS[0].m=0;window._RM_STOPS[0].p=0;
-  renderRmStops();
-  toast(`✅ ${totalKm} km total · ~${Math.round(totalMin/60*10)/10}h · Prețurile pot fi editate manual.`,'ok');
-};
 
 // ── HARTĂ INTERACTIVĂ PENTRU PLASARE STAȚII (admin curse regulate) ──
 window._rmPickerMap = null;
@@ -6637,12 +6524,15 @@ window.saveManualBooking=async()=>{
 async function loadDriversTbl(){
   try{const snap=await getDocs(collection(db,'soferi'));buildDriversCache(snap);}catch(e){}
   document.getElementById('drivers-tbody').innerHTML=window._DRIVERS_LIST.map(s=>{
-    const exp=s.expPermis?new Date(s.expPermis).toLocaleDateString('ro'):'';
-    const expOk=s.expPermis?new Date(s.expPermis)>new Date():true;
+    const exp=s.expPermis?new Date(s.expPermis).toLocaleDateString('ro'):'—';
+    const daysLeft=s.expPermis?Math.round((new Date(s.expPermis+'T12:00:00')-new Date())/86400000):null;
+    const expCol=daysLeft==null?'var(--stone)':daysLeft<0?'var(--red)':daysLeft<=30?'var(--orange)':'var(--green)';
+    const expTag=daysLeft==null?'':daysLeft<0?' ⚠️ EXPIRAT':daysLeft<=30?' ⚠️ '+daysLeft+'z':'';
+    const angaj=s.dataAngajarii?new Date(s.dataAngajarii).toLocaleDateString('ro'):'—';
     return`<tr>
-      <td><strong>${s.numeFull}</strong><br><span style="font-size:11px;color:var(--stone)">${s.email||'-'}</span></td>
+      <td><strong>${s.numeFull}</strong><br><span style="font-size:11px;color:var(--stone)">📧 ${s.email||'-'}</span></td>
       <td style="font-size:12px">${s.telefon||'-'}</td>
-      <td style="font-size:12px">${s.nrPermis||'-'} / Cat.${s.categoriePermis||'-'}<br><span style="color:${expOk?'var(--green)':'var(--red)'}">${exp}</span></td>
+      <td style="font-size:12px">Permis expiră: <span style="color:${expCol};font-weight:600">${exp}${expTag}</span><br><span style="color:var(--stone)">Angajat: ${angaj}</span></td>
       <td><span style="font-size:11px;padding:3px 8px;border-radius:6px;font-weight:600;background:${s.parolaPortal?'var(--green-g)':'var(--red-g)'};color:${s.parolaPortal?'var(--green)':'var(--red)'};border:1px solid ${s.parolaPortal?'rgba(26,107,60,.2)':'rgba(181,45,45,.2)'}">${s.parolaPortal?'🔑 Setată':'⚠️ Lipsă'}</span></td>
       <td><label class="toggle"><input type="checkbox" ${s.activ?'checked':''} onchange="toggleDriver('${s.id}',this.checked)"/><div class="toggle-track"></div></label></td>
       <td style="display:flex;gap:4px;padding:10px 12px;flex-wrap:wrap">
@@ -6658,24 +6548,34 @@ window.resetDriverPin=async(id,name)=>{const pin=prompt(`Parolă nouă de portal
 window.openDriverModal=async(id=null)=>{
   document.getElementById('driver-modal-title').textContent=id?'Editează șofer':'Adaugă șofer nou';
   document.getElementById('dm-id').value=id||'';
-  ['dm-fname','dm-lname','dm-email','dm-phone','dm-addr','dm-license','dm-notes','dm-pin','dm-pin2'].forEach(x=>{const el=document.getElementById(x);if(el)el.value='';});
-  document.getElementById('dm-cat').value='D';document.getElementById('dm-active').checked=true;
+  ['dm-fname','dm-lname','dm-email','dm-phone','dm-addr','dm-pin','dm-pin2'].forEach(x=>{const el=document.getElementById(x);if(el)el.value='';});
+  document.getElementById('dm-active').checked=true;
   document.getElementById('dm-exp').value='';document.getElementById('dm-hired').value='';
+  document.getElementById('dm-exp-warn').textContent='';
   if(id){
     const ref=await getDoc(doc(db,'soferi',id));
     if(ref.exists()){
       const s=ref.data();
       document.getElementById('dm-fname').value=s.prenume||'';document.getElementById('dm-lname').value=s.nume||'';
       document.getElementById('dm-email').value=s.email||'';document.getElementById('dm-phone').value=s.telefon||'';
-      document.getElementById('dm-addr').value=s.adresa||'';document.getElementById('dm-license').value=s.nrPermis||'';
-      document.getElementById('dm-cat').value=s.categoriePermis||'D';document.getElementById('dm-exp').value=s.expPermis||'';
-      document.getElementById('dm-hired').value=s.dataAngajarii||'';document.getElementById('dm-notes').value=s.observatii||'';
+      document.getElementById('dm-addr').value=s.adresa||'';document.getElementById('dm-exp').value=s.expPermis||'';
+      document.getElementById('dm-hired').value=s.dataAngajarii||'';
       document.getElementById('dm-active').checked=s.activ!==false;
+      updateDmExpWarn();
       const pinEl=document.getElementById('dm-pin');if(pinEl)pinEl.placeholder=s.parolaPortal?'••••• (setată — lasă gol pt a nu schimba)':'Setează parola de portal';
     }
   }
   openModal('driver');
 };
+window.updateDmExpWarn=()=>{
+  const v=document.getElementById('dm-exp')?.value; const w=document.getElementById('dm-exp-warn'); if(!w)return;
+  if(!v){w.textContent='';return;}
+  const days=Math.round((new Date(v+'T12:00:00')-new Date())/86400000);
+  if(days<0)w.textContent='⚠️ EXPIRAT de '+Math.abs(days)+' zile';
+  else if(days<=30)w.textContent='⚠️ expiră în '+days+' zile';
+  else w.textContent='';
+};
+document.getElementById('dm-exp')?.addEventListener('change',updateDmExpWarn);
 window.saveDriver=async()=>{
   const id=document.getElementById('dm-id').value;
   const fn=document.getElementById('dm-fname').value.trim(),ln=document.getElementById('dm-lname').value.trim();
@@ -6685,7 +6585,7 @@ window.saveDriver=async()=>{
   if(!tel||!validPhone(tel)){toast('Telefon invalid','wr');return;}
   const pin=document.getElementById('dm-pin')?.value||'',pin2=document.getElementById('dm-pin2')?.value||'';
   if(pin){if(pin.length<4){toast('Parola min 4 caractere','wr');return;}if(pin!==pin2){toast('Parolele nu coincid','wr');return;}}
-  const data={prenume:fn,nume:ln,email:document.getElementById('dm-email').value.trim()||'',telefon:tel,adresa:document.getElementById('dm-addr')?.value?.trim()||'',nrPermis:document.getElementById('dm-license').value.trim(),categoriePermis:document.getElementById('dm-cat').value,expPermis:document.getElementById('dm-exp').value||null,dataAngajarii:document.getElementById('dm-hired').value||null,observatii:document.getElementById('dm-notes').value.trim(),activ:document.getElementById('dm-active').checked};
+  const data={prenume:fn,nume:ln,email:document.getElementById('dm-email').value.trim()||'',telefon:tel,adresa:document.getElementById('dm-addr')?.value?.trim()||'',expPermis:document.getElementById('dm-exp').value||null,dataAngajarii:document.getElementById('dm-hired').value||null,activ:document.getElementById('dm-active').checked};
   if(pin)data.parolaPortal=btoa(unescape(encodeURIComponent(pin)));
   try{if(id)await setDoc(doc(db,'soferi',id),data,{merge:true});else{data.createdAt=serverTimestamp();await addDoc(collection(db,'soferi'),data);}closeModal('driver');await loadDriversTbl();toast('Șofer salvat!','ok');}catch(e){toast('Eroare: '+e.message,'er');}
 };
@@ -6860,6 +6760,12 @@ window.saveGalerie = async () => {
 };
 
 // ── CONȚINUT SITE (texte editabile — homepage / regulate / organizate) ────
+// Fiecare câmp e fie legat de un element din DOM (are un id, editorul îi
+// citește/scrie direct textContent), fie "virtual" (texte generate dinamic,
+// precum întrebările din asistentul ghidat Organizate) — acestea se citesc
+// prin T(cheie, textImplicit) și se salvează în același document Firestore.
+window._SITE_TEXTS = window._SITE_TEXTS || {};
+window.T = (key, fallback) => (window._SITE_TEXTS && window._SITE_TEXTS[key]) || fallback;
 // Fiecare câmp = un element cu ID din HTML. Editorul citește textul curent
 // direct din DOM (adică exact ce e live pe site) și, la salvare, scrie
 // atât în DOM (efect instant) cât și în Firestore (setari/continut).
@@ -6896,15 +6802,30 @@ const CONTENT_FIELDS = [
   {grp:'🏠 Homepage — Cum funcționează',id:'how-4-icon',label:'Pas 4 — emoji'},
   {grp:'🏠 Homepage — Cum funcționează',id:'how-4-title',label:'Pas 4 — titlu'},
   {grp:'🏠 Homepage — Cum funcționează',id:'how-4-desc',label:'Pas 4 — descriere'},
-  {grp:'🔄 Curse Regulate',id:'reg-title',label:'Titlu pagină'},
-  {grp:'🔄 Curse Regulate',id:'reg-sub',label:'Subtitlu pagină'},
-  {grp:'🚌 Cursă Organizată',id:'org-title',label:'Titlu pagină'},
-  {grp:'🚌 Cursă Organizată',id:'org-sub',label:'Subtitlu pagină'},
-  {grp:'🚌 Cursă Organizată',id:'org-how-1',label:'Pas 1 (sidebar „Cum funcționează?")'},
-  {grp:'🚌 Cursă Organizată',id:'org-how-2',label:'Pas 2'},
-  {grp:'🚌 Cursă Organizată',id:'org-how-3',label:'Pas 3'},
-  {grp:'🚌 Cursă Organizată',id:'org-how-4',label:'Pas 4'},
+  {grp:'🔄 Regulate',id:'reg-title',label:'Titlu pagină'},
+  {grp:'🔄 Regulate',id:'reg-sub',label:'Subtitlu pagină'},
+  {grp:'🚌 Organizate',id:'org-title',label:'Titlu pagină'},
+  {grp:'🚌 Organizate',id:'org-sub',label:'Subtitlu pagină'},
+  {grp:'🚌 Organizate',id:'org-how-1',label:'Pas 1 (sidebar „Cum funcționează?")'},
+  {grp:'🚌 Organizate',id:'org-how-2',label:'Pas 2'},
+  {grp:'🚌 Organizate',id:'org-how-3',label:'Pas 3'},
+  {grp:'🚌 Organizate',id:'org-how-4',label:'Pas 4'},
+  {grp:'🚌 Organizate — Asistent ghidat (întrebări pas-cu-pas)',virtual:true,key:'wiz-q1',default:'Ce tip de cursă dorești?',label:'Pasul 1 — întrebare'},
+  {grp:'🚌 Organizate — Asistent ghidat (întrebări pas-cu-pas)',virtual:true,key:'wiz-h1',default:'Alege categoria care se potrivește cel mai bine',label:'Pasul 1 — indiciu'},
+  {grp:'🚌 Organizate — Asistent ghidat (întrebări pas-cu-pas)',virtual:true,key:'wiz-q2',default:'De unde pleci și unde mergi?',label:'Pasul 2 — întrebare'},
+  {grp:'🚌 Organizate — Asistent ghidat (întrebări pas-cu-pas)',virtual:true,key:'wiz-h2',default:'Adaugă și opriri intermediare dacă e nevoie',label:'Pasul 2 — indiciu'},
+  {grp:'🚌 Organizate — Asistent ghidat (întrebări pas-cu-pas)',virtual:true,key:'wiz-q3',default:'Când vrei să plece cursa?',label:'Pasul 3 — întrebare'},
+  {grp:'🚌 Organizate — Asistent ghidat (întrebări pas-cu-pas)',virtual:true,key:'wiz-h3',default:'Ora poate fi flexibilă dacă nu știi exact încă',label:'Pasul 3 — indiciu'},
+  {grp:'🚌 Organizate — Asistent ghidat (întrebări pas-cu-pas)',virtual:true,key:'wiz-q4',default:'Cât durează călătoria?',label:'Pasul 4 — întrebare'},
+  {grp:'🚌 Organizate — Asistent ghidat (întrebări pas-cu-pas)',virtual:true,key:'wiz-h4',default:'Alege fie în ore, fie în zile (pentru excursii mai lungi)',label:'Pasul 4 — indiciu'},
+  {grp:'🚌 Organizate — Asistent ghidat (întrebări pas-cu-pas)',virtual:true,key:'wiz-q5',default:'Ai o preferință de vehicul?',label:'Pasul 5 — întrebare'},
+  {grp:'🚌 Organizate — Asistent ghidat (întrebări pas-cu-pas)',virtual:true,key:'wiz-h5',default:'Opțional — dacă nu alegi, echipa va selecta cel mai potrivit',label:'Pasul 5 — indiciu'},
+  {grp:'🎟 Biletul meu',id:'bilet-icon-text',label:'Emoji'},
+  {grp:'🎟 Biletul meu',id:'bilet-title-text',label:'Titlu'},
+  {grp:'🎟 Biletul meu',id:'bilet-sub-text',label:'Subtitlu',type:'textarea'},
+  {grp:'📄 GDPR',id:'gdpr-updated-text',label:'Linia „Actualizat: ..." de sub titlu'},
 ];
+
 
 window.loadContentPanel = () => {
   const body = document.getElementById('content-panel-body');
@@ -6915,26 +6836,30 @@ window.loadContentPanel = () => {
     <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:20px;margin-bottom:14px;box-shadow:var(--sh)">
       <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;font-family:'Plus Jakarta Sans',sans-serif">${grp}</h3>
       ${fields.map(f => {
-        const srcEl = document.getElementById(f.id);
-        const val = srcEl ? srcEl.textContent.trim() : '';
+        const fieldKey = f.virtual ? f.key : f.id;
+        const val = f.virtual ? T(f.key, f.default||'') : (document.getElementById(f.id)?.textContent.trim() || '');
         return `<div class="fg"><div class="fl">${f.label}</div>${
           f.type==='textarea'
-            ? `<textarea id="cc-${f.id}" rows="2">${val}</textarea>`
-            : `<input type="text" id="cc-${f.id}" value="${val.replace(/"/g,'&quot;')}"/>`
+            ? `<textarea id="cc-${fieldKey}" rows="2">${val}</textarea>`
+            : `<input type="text" id="cc-${fieldKey}" value="${val.replace(/"/g,'&quot;')}"/>`
         }</div>`;
       }).join('')}
-    </div>`).join('');
+    </div>`).join('') + `
+    <div style="background:var(--amber-g);border:1px solid var(--amber-b);border-radius:var(--r-lg);padding:16px 20px;font-size:12.5px;color:var(--amber-d)">
+      ⚙️ <strong>Setări</strong> (date firmă, EmailJS, cont șoferi) și <strong>GDPR</strong> (textul legal complet) se administrează din tab-ul <strong>⚙️ Setări</strong>, nu de aici — aici poți edita doar linia de „ultima actualizare" de sub titlul GDPR.
+    </div>`;
 };
 
 window.saveContentPanel = async () => {
   const payload = {};
   CONTENT_FIELDS.forEach(f => {
-    const input = document.getElementById('cc-'+f.id);
-    const target = document.getElementById(f.id);
+    const fieldKey = f.virtual ? f.key : f.id;
+    const input = document.getElementById('cc-'+fieldKey);
     if (!input) return;
     const val = input.value;
-    payload[f.id] = val;
-    if (target) target.textContent = val;
+    payload[fieldKey] = val;
+    if (f.virtual) { window._SITE_TEXTS[f.key] = val; }
+    else { const target = document.getElementById(f.id); if (target) target.textContent = val; }
   });
   try {
     await setDoc(doc(db,'setari','continut'), payload, {merge:true});
@@ -6950,6 +6875,7 @@ async function loadSavedContent(){
     Object.keys(data).forEach(key => {
       const el = document.getElementById(key);
       if (el && typeof data[key] === 'string') el.textContent = data[key];
+      else if (typeof data[key] === 'string') window._SITE_TEXTS[key] = data[key];
     });
   } catch(e) { console.warn('Content load:', e.message); }
 }
@@ -7199,11 +7125,10 @@ window.loadDriverVehicle = async () => {
         rows.forEach(row => {
           if (row.blocat) { seatMap += `<div style="background:var(--red-g);border:1px dashed rgba(181,45,45,.3);border-radius:5px;padding:2px 8px;font-size:10px;color:var(--red);text-align:center">${row.label||'🚫'}</div>`; return; }
           const t=row.type||'2+2'; const seats=row.seats||[];
-          const aisle='<div style="width:10px"></div>';
-          const s=i=>seats[i]?`<div class="seat-mini used">${seats[i].nr}</div>`:'';
-          seatMap+='<div style="display:flex;gap:3px;justify-content:center">';
-          if(t==='1+0')seatMap+=s(0);else if(t==='1+1')seatMap+=s(0)+aisle+s(1);else if(t==='1+2')seatMap+=s(0)+aisle+s(1)+s(2);else if(t==='2+2')seatMap+=s(0)+s(1)+aisle+s(2)+s(3);else if(t==='2+3')seatMap+=s(0)+s(1)+aisle+s(2)+s(3)+s(4);else if(t==='3+2')seatMap+=s(0)+s(1)+s(2)+aisle+s(3)+s(4);else if(t==='3+3')seatMap+=s(0)+s(1)+s(2)+aisle+s(3)+s(4)+s(5);else seats.forEach(seat=>seatMap+=`<div class="seat-mini used">${seat.nr}</div>`);
-          seatMap+='</div>';
+          const aisleFn=()=>'<div style="width:10px"></div>';
+          const sFn=seat=>seat?`<div class="seat-mini used">${seat.nr}</div>`:'';
+          const spacerFn=kind=>`<div class="seat-mini" style="opacity:.45;font-size:10px">${kind==='intrare'?'🚪':'·'}</div>`;
+          seatMap+='<div style="display:flex;gap:3px;justify-content:center">'+buildRowSlotsHtml(t, seats, sFn, spacerFn, aisleFn)+'</div>';
         });
         seatMap += '</div>';
       }
