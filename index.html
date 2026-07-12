@@ -2071,16 +2071,13 @@ footer::before{
         <div class="fg"><div class="fl">Service ID</div><input type="text" id="ejs-sid" placeholder="service_xxx"/></div>
         <div class="fg"><div class="fl">Public Key</div><input type="text" id="ejs-key"/></div>
       </div>
-      <div class="fg"><div class="fl">Email admin</div><input type="email" id="ejs-admin"/></div>
-      <div class="f-row">
-        <div class="fg"><div class="fl">Template ID — Client (regulate)</div><input type="text" id="ejs-tmpl-client" placeholder="template_xxx"/></div>
-        <div class="fg"><div class="fl">Template ID — Client (organizate)</div><input type="text" id="ejs-tmpl-org" placeholder="template_xxx"/></div>
+      <div class="fg"><div class="fl">Email admin (unde ajunge și lui copia fiecărui email)</div><input type="email" id="ejs-admin"/></div>
+      <div class="fg"><div class="fl">Template ID (un singur șablon, folosit pentru client și admin)</div><input type="text" id="ejs-tmpl-client" placeholder="template_xxx"/>
+        <div class="f-hint">Se trimite exact același conținut și către client, și către admin — doar adresa diferă.</div>
       </div>
-      <div class="fg"><div class="fl">Template ID — Admin</div><input type="text" id="ejs-tmpl-admin" placeholder="template_xxx"/></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 Salvează</button>
-        <button class="btn btn-secondary btn-sm" onclick="testEmail('client')">✉ Test client</button>
-        <button class="btn btn-secondary btn-sm" onclick="testEmail('admin')">✉ Test admin</button>
+        <button class="btn btn-secondary btn-sm" onclick="testEmail('client')">✉ Trimite test</button>
       </div>
     </div>
     <!-- Date firmă -->
@@ -4132,9 +4129,15 @@ async function renderCinemaContact(){
   if(u){
     let tel='';
     try{const ud=await getDoc(doc(db,'users',u.uid));if(ud.exists())tel=ud.data().tel||'';}catch(e){}
-    cf.innerHTML=`<div style="background:var(--cream);border:1px solid var(--border-l);border-radius:8px;padding:12px;font-size:13px;margin-top:12px"><div style="font-size:10px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Rezervare ca</div><div style="font-weight:600">${u.displayName||''}</div><div style="color:var(--stone)">${u.email}${tel?' · '+tel:''}</div></div>`;
+    cf.innerHTML=`<div style="background:var(--cream);border:1px solid var(--border-l);border-radius:8px;padding:12px;font-size:13px;margin-top:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Rezervare ca</div>
+      <div style="font-weight:600;margin-bottom:8px">${u.displayName||''}${tel?' · '+tel:''}</div>
+      <div class="fl">Email pentru bilet *</div>
+      <input type="email" id="cin-email-logged" value="${u.email||''}"/>
+      <div class="f-hint">Aici primești biletul cu codul QR. Poți schimba adresa dacă vrei să meargă pe alt email.</div>
+    </div>`;
   } else {
-    cf.innerHTML=`<div style="margin-top:14px"><div class="f-row"><div class="fg"><div class="fl">Nume complet *</div><input type="text" id="cin-name"/></div><div class="fg"><div class="fl">Telefon *</div><input type="tel" id="cin-phone"/></div></div><div class="fg"><div class="fl">Email *</div><input type="email" id="cin-email"/></div></div>`;
+    cf.innerHTML=`<div style="margin-top:14px"><div class="f-row"><div class="fg"><div class="fl">Nume complet *</div><input type="text" id="cin-name"/></div><div class="fg"><div class="fl">Telefon *</div><input type="tel" id="cin-phone"/></div></div><div class="fg"><div class="fl">Email * (aici primești biletul)</div><input type="email" id="cin-email"/></div></div>`;
   }
 }
 window.confirmSeats = async () => {
@@ -4143,7 +4146,9 @@ window.confirmSeats = async () => {
   if(!u&&window._CINEMA_SEL.length>1){toast('Fără cont maxim 1 loc!','wr');return;}
   let nc,em,tel;
   if(u){
-    nc=u.displayName||''; em=u.email||'';
+    nc=u.displayName||'';
+    em=document.getElementById('cin-email-logged')?.value?.trim()||u.email||'';
+    if(!validEmail(em)){toast('Introdu un email valid pentru bilet','wr');return;}
     try{const ud=await getDoc(doc(db,'users',u.uid));tel=ud.exists()?ud.data().tel||'-':'-';}catch(e){tel='-';}
   } else {
     nc=document.getElementById('cin-name')?.value?.trim()||'';
@@ -4170,8 +4175,17 @@ window.confirmSeats = async () => {
     closeModal('cinema');
     showTickets(bilete);
     toast('🎉 '+bilete.length+' bilet'+(bilete.length>1?'e rezervate':'rezervat')+'!','ok');
-    // Email
-    sendEmailClient({to_email:em,nume:nc,subiect:'Bilet confirmat — LSD Group',mesaj:`Biletul tău pentru ruta ${window._CINEMA_ROUTE?.ruta} pe data ${window._CINEMA_DATE} ora ${window._CINEMA_ROUTE?.ora} a fost confirmat! Cod: ${bilete.map(b=>b.biletId).join(', ')}`,bilet_id:bilete.map(b=>b.biletId).join(', '),ruta:window._CINEMA_ROUTE?.ruta||'',data:window._CINEMA_DATE,ora:window._CINEMA_ROUTE?.ora||'',status:'Confirmată'});
+    // Email — un singur șablon, trimis și la client, și la admin, cu bilet(e) QR + poza autobuzului
+    const cinemaVeh=(window._F||[]).find(v=>v.id===window._CINEMA_ROUTE?.vehiculId);
+    sendUnifiedEmail({
+      to_email:em, nume:nc,
+      subiect:'Bilet confirmat — LSD Group',
+      mesaj:`Biletul tău pentru ruta ${window._CINEMA_ROUTE?.ruta} pe data ${window._CINEMA_DATE} ora ${window._CINEMA_ROUTE?.ora} a fost confirmat!`,
+      traseu:window._CINEMA_ROUTE?.ruta||'', data:window._CINEMA_DATE, ora:window._CINEMA_ROUTE?.ora||'',
+      status:'Confirmată', pret:(window._CINEMA_PRICE*bilete.length)+' RON',
+      qr_block:bilete.map(b=>buildQrBlock(b.biletId,'LSD:'+b.biletId)).join(''),
+      vehicul_block:buildVehiculBlock(window._CINEMA_ROUTE?.vehiculNume||'', cinemaVeh?.imagini?.[0]||'')
+    });
   }catch(e){toast('Eroare la salvare: '+e.message,'er');}
 };
 
@@ -4995,8 +5009,14 @@ window.submitOrg = async () => {
   try{
     await addDoc(collection(db,'rezervari'),rez);
     const durText=durMin>0?(durZile>0?durZile+' zile':durH+'h'):'neprecizată';
-    sendEmailOrg({to_email:em,nume:nc,subiect:'Cerere primită — LSD Group SRL',mesaj:'Cererea ta de cursă organizată a fost primită! Echipa noastră o va analiza și te va contacta în curând cu o ofertă.',traseu:stops.join(' → '),data:date,ora,vehicul:veh?veh.nome||veh.name||veh.nume||'':'De confirmat',pret:pretEstim?pretEstim+' RON (estimativ)':'La cerere',status:'În așteptare'});
-    sendEmailAdmin({subiect:'Cerere organizată nouă — '+stops.join(' – '),mesaj:desc+' | Durată: '+durText+(rez.observatii?' | Obs: '+rez.observatii:''),nume_client:nc,telefon:tel,tip:desc,traseu:stops.join(' – ')});
+    sendUnifiedEmail({
+      to_email:em, nume:nc,
+      subiect:'Cerere primită — LSD Group SRL',
+      mesaj:`Cererea ta de cursă organizată a fost primită! (${desc} · durată ${durText}${rez.observatii?' · Obs: '+rez.observatii:''}) Echipa noastră o va analiza și te va contacta în curând cu o ofertă.`,
+      traseu:stops.join(' → '), data:date, ora,
+      status:'În așteptare', pret:pretEstim?pretEstim+' RON (estimativ)':'La cerere',
+      vehicul_block:buildVehiculBlock(veh?veh.nome||veh.name||veh.nume||'':'', veh?.imagini?.[0]||'')
+    });
     toast('✅ Cererea a fost trimisă! Veți fi contactat în curând.','ok');
     if(btn){btn.disabled=false;btn.innerHTML='Trimite cererea 📨';}
     window._ORG_STOPS=['',''];window._ORG_TIP='';
@@ -6399,7 +6419,16 @@ window.sendBookingReply=async()=>{
   upd.driverId2=sfId2||null;
   await setDoc(doc(db,'rezervari',rezId),upd,{merge:true});
   if(text){
-    sendEmailOrg({to_email:r.email,nume:r.numeClient,subiect:'Răspuns echipă LSD Group',mesaj:text+(pret?'\n\nPreț ofertă: '+pret+' RON (inclus TVA 21%)'+(discount>0?'\nDiscount aplicat: '+discount+' RON':''):''),traseu:r.traseu||'',data:r.data||'',ora:r.ora||'',vehicul:upd.vehiculNume||r.vehiculNume||'',pret:pret?((pret-discount)+' RON'):'',status});
+    const replyVeh=(window._F||[]).find(v=>v.id===(upd.vehiculId||r.vehiculId));
+    const mesajComplet=text + (r.observatii?`\n\n📋 Observațiile tale trimise cu cererea: "${r.observatii}"`:'');
+    sendUnifiedEmail({
+      to_email:r.email, nume:r.numeClient,
+      subiect:'Răspuns echipă LSD Group',
+      mesaj:mesajComplet,
+      traseu:r.traseu||'', data:r.data||'', ora:r.ora||'',
+      status, pret:pret?((pret-discount)+' RON'+(discount>0?' (discount '+discount+' RON aplicat)':'')):'',
+      vehicul_block:buildVehiculBlock(upd.vehiculNume||r.vehiculNume||'', replyVeh?.imagini?.[0]||'')
+    });
     if(r.uid)sendAdminNotif(rezId,r.uid,status==='confirmata'?'Rezervare confirmată ✅':'Actualizare rezervare 📋',text.slice(0,80)+'...');
   }
   closeModal('booking-detail');await loadBookingsTbl();await loadAdminStats();toast('Răspuns trimis!','ok');
@@ -6883,13 +6912,13 @@ window.loadSavedContent = loadSavedContent;
 
 // ── SETTINGS ADMIN ─────────────────────────────────────────
 async function loadAdminSettings(){
-  try{const ref=await getDoc(doc(db,'setari','global'));if(ref.exists()){const d=ref.data();const s=d.emailjs||{};const f=d.firma||{};document.getElementById('ejs-sid').value=s.serviceId||'';document.getElementById('ejs-key').value=s.publicKey||'';document.getElementById('ejs-admin').value=s.adminEmail||window.ADMIN_EMAIL;document.getElementById('ejs-tmpl-client').value=s.templateIdClient||s.templateId||'';document.getElementById('ejs-tmpl-org').value=s.templateIdOrg||'';document.getElementById('ejs-tmpl-admin').value=s.templateIdAdmin||'';document.getElementById('firm-name').value=f.name||'';document.getElementById('firm-cui').value=f.cui||'';document.getElementById('firm-reg').value=f.reg||'';document.getElementById('firm-tel').value=f.tel||'';document.getElementById('firm-addr').value=f.addr||f.adr||'';document.getElementById('firm-iban').value=f.iban||'';document.getElementById('firm-bank').value=f.banca||'';document.getElementById('firm-driver-email').value=d.soferContEmail||'';const ok=s.serviceId&&s.publicKey;const b=document.getElementById('ejs-status');if(b){b.className='badge '+(ok?'badge-confirmata':'badge-anulata');b.textContent='● '+(ok?'Configurat':'Neconfigurat');}}}catch(e){}
+  try{const ref=await getDoc(doc(db,'setari','global'));if(ref.exists()){const d=ref.data();const s=d.emailjs||{};const f=d.firma||{};document.getElementById('ejs-sid').value=s.serviceId||'';document.getElementById('ejs-key').value=s.publicKey||'';document.getElementById('ejs-admin').value=s.adminEmail||window.ADMIN_EMAIL;document.getElementById('ejs-tmpl-client').value=s.templateId||s.templateIdClient||'';document.getElementById('firm-name').value=f.name||'';document.getElementById('firm-cui').value=f.cui||'';document.getElementById('firm-reg').value=f.reg||'';document.getElementById('firm-tel').value=f.tel||'';document.getElementById('firm-addr').value=f.addr||f.adr||'';document.getElementById('firm-iban').value=f.iban||'';document.getElementById('firm-bank').value=f.banca||'';document.getElementById('firm-driver-email').value=d.soferContEmail||'';const ok=s.serviceId&&s.publicKey;const b=document.getElementById('ejs-status');if(b){b.className='badge '+(ok?'badge-confirmata':'badge-anulata');b.textContent='● '+(ok?'Configurat':'Neconfigurat');}}}catch(e){}
 }
 window.saveSettings=async()=>{
-  const ejs={serviceId:document.getElementById('ejs-sid').value.trim(),templateIdClient:document.getElementById('ejs-tmpl-client').value.trim(),templateIdOrg:document.getElementById('ejs-tmpl-org').value.trim(),templateIdAdmin:document.getElementById('ejs-tmpl-admin').value.trim(),templateId:document.getElementById('ejs-tmpl-client').value.trim(),publicKey:document.getElementById('ejs-key').value.trim(),adminEmail:document.getElementById('ejs-admin').value.trim()||window.ADMIN_EMAIL};
+  const ejs={serviceId:document.getElementById('ejs-sid').value.trim(),templateId:document.getElementById('ejs-tmpl-client').value.trim(),publicKey:document.getElementById('ejs-key').value.trim(),adminEmail:document.getElementById('ejs-admin').value.trim()||window.ADMIN_EMAIL};
   const ref=await getDoc(doc(db,'setari','global'));const existing=ref.exists()?ref.data():{};
   await setDoc(doc(db,'setari','global'),{...existing,emailjs:ejs},{merge:false});
-  window._EJS=ejs;const ok=ejs.serviceId&&ejs.templateIdClient&&ejs.publicKey;const b=document.getElementById('ejs-status');if(b){b.className='badge '+(ok?'badge-confirmata':'badge-anulata');b.textContent='● '+(ok?'Configurat':'Neconfigurat');}
+  window._EJS=ejs;const ok=ejs.serviceId&&ejs.templateId&&ejs.publicKey;const b=document.getElementById('ejs-status');if(b){b.className='badge '+(ok?'badge-confirmata':'badge-anulata');b.textContent='● '+(ok?'Configurat':'Neconfigurat');}
   toast('Setări EmailJS salvate!','ok');
 };
 window.saveFirmSettings=async()=>{
@@ -6900,7 +6929,18 @@ window.saveFirmSettings=async()=>{
   window._FIRMA=firma;renderFooter();
   toast('Date firmă salvate! Email cont șoferi: '+(soferEmail||'(nesetat)'),'ok');
 };
-window.testEmail=async tip=>{const ok=tip==='client'?await sendEmailClient({to_email:window._EJS.adminEmail||window.ADMIN_EMAIL,nume:'Test',subiect:'Test email client',mesaj:'Acesta este un test pentru template-ul client.',bilet_id:'LSD-TEST',ruta:'Iași → Test',data:new Date().toISOString().split('T')[0],ora:'08:00',status:'confirmata'}):await sendEmailAdmin({subiect:'Test email admin',mesaj:'Test template admin',nume_client:'Test',telefon:'0700000000',tip:'Test',traseu:'Test'});toast(ok?'✅ Email trimis!':'❌ EmailJS neconfigurat sau eroare',ok?'ok':'er');};
+window.testEmail=async()=>{
+  const testVeh=(window._F||[])[0];
+  const ok=await sendUnifiedEmail({
+    to_email:window._EJS.adminEmail||window.ADMIN_EMAIL, nume:'Test',
+    subiect:'Test email — LSD Group', mesaj:'Acesta este un email de test pentru șablonul unificat.',
+    traseu:'Iași → Test', data:new Date().toISOString().split('T')[0], ora:'08:00',
+    status:'Confirmată', pret:'100 RON',
+    qr_block:buildQrBlock('LSD-TEST123','LSD:TEST'),
+    vehicul_block:buildVehiculBlock(testVeh?.nome||testVeh?.name||testVeh?.nume||'Autobuz test', testVeh?.imagini?.[0]||'')
+  });
+  toast(ok?'✅ Email trimis!':'❌ EmailJS neconfigurat sau eroare',ok?'ok':'er');
+};
 
 // ── EMAILJS ────────────────────────────────────────────────
 async function initEJS(){
@@ -6908,9 +6948,41 @@ async function initEJS(){
   if(!window.emailjs){await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});window.emailjs.init({publicKey:cfg.publicKey});}
   return true;
 }
-async function sendEmailClient(p){const cfg=window._EJS;if(!cfg?.serviceId||!cfg?.templateIdClient||!cfg?.publicKey)return false;try{await initEJS();await window.emailjs.send(cfg.serviceId,cfg.templateIdClient,{to_email:p.to_email||p.email,from_name:'LSD Group SRL',...p});return true;}catch(e){console.error('EJS client:',e);return false;}}
-async function sendEmailOrg(p){const cfg=window._EJS;const tmpl=cfg?.templateIdOrg||cfg?.templateIdClient;if(!cfg?.serviceId||!tmpl||!cfg?.publicKey)return false;try{await initEJS();await window.emailjs.send(cfg.serviceId,tmpl,{to_email:p.to_email||p.email,from_name:'LSD Group SRL',...p});return true;}catch(e){console.error('EJS org:',e);return false;}}
-async function sendEmailAdmin(p){const cfg=window._EJS;if(!cfg?.serviceId||!cfg?.templateIdAdmin||!cfg?.publicKey)return false;try{await initEJS();await window.emailjs.send(cfg.serviceId,cfg.templateIdAdmin,{to_email:cfg.adminEmail||window.ADMIN_EMAIL,from_name:'LSD Group SRL - Notificare',...p});return true;}catch(e){console.error('EJS admin:',e);return false;}}
+// Bloc HTML gata format cu codul QR + numărul biletului. Se trimite ca variabilă
+// {{qr_block}} către EmailJS, care face substituție simplă (fără escaping), deci
+// HTML-ul apare exact așa cum e construit aici. Gol dacă nu există încă bilet.
+function buildQrBlock(biletId, qrData){
+  if(!biletId) return '';
+  const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData||biletId)}&bgcolor=ffffff&color=0f0d0a`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td align="center" style="padding:16px;background-color:#fef9ed;border:1.5px solid #a97c3f;border-radius:12px;">
+    <img src="${qrUrl}" width="150" height="150" style="display:block;margin:0 auto 10px;border-radius:8px;border:1px solid #e2d9c4;"/>
+    <div style="font-size:11px;color:#7d7364;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;">Cod bilet</div>
+    <div style="font-size:20px;font-weight:800;color:#6f4d24;letter-spacing:2px;">${biletId}</div>
+  </td></tr></table>`;
+}
+// Bloc HTML cu poza + numele autobuzului (poza e base64 direct din Firestore, se afișează inline
+// fără hosting extern). Gol dacă nu s-a alocat încă un vehicul.
+function buildVehiculBlock(numeVeh, imgSrc){
+  if(!numeVeh) return '';
+  const imgHtml=imgSrc?`<img src="${imgSrc}" width="100%" style="display:block;border-radius:10px;margin-bottom:8px;max-height:220px;object-fit:cover;"/>`:'';
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td>${imgHtml}<div style="font-size:13px;color:#4a4438;text-align:center;font-weight:600;">🚌 ${numeVeh}</div></td></tr></table>`;
+}
+// Un singur șablon EmailJS (window._EJS.templateId), trimis IDENTIC și către client
+// (p.to_email), și către admin (cfg.adminEmail) — exact ce a cerut clientul: nu
+// contează dacă e „diferit” pentru admin, se trimite pur și simplu de 2 ori.
+async function sendUnifiedEmail(p){
+  const cfg=window._EJS;
+  if(!cfg?.serviceId||!cfg?.templateId||!cfg?.publicKey)return false;
+  try{
+    await initEJS();
+    const mesajHtml=(p.mesaj||'').replace(/\n/g,'<br/>');
+    const base={from_name:'LSD Group SRL', qr_block:'', vehicul_block:'', pret:'', ...p, mesaj:mesajHtml};
+    if(p.to_email) await window.emailjs.send(cfg.serviceId,cfg.templateId,{...base,to_email:p.to_email});
+    const adminEmail=cfg.adminEmail||window.ADMIN_EMAIL;
+    if(adminEmail && adminEmail!==p.to_email) await window.emailjs.send(cfg.serviceId,cfg.templateId,{...base,to_email:adminEmail});
+    return true;
+  }catch(e){console.error('EJS unified:',e);return false;}
+}
 
 // ── EXPORT / REPORTS ───────────────────────────────────────
 window.exportCSV=async()=>{
