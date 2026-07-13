@@ -4183,8 +4183,10 @@ window.confirmSeats = async () => {
       mesaj:`Biletul tău pentru ruta ${window._CINEMA_ROUTE?.ruta} pe data ${window._CINEMA_DATE} ora ${window._CINEMA_ROUTE?.ora} a fost confirmat!`,
       traseu:window._CINEMA_ROUTE?.ruta||'', data:window._CINEMA_DATE, ora:window._CINEMA_ROUTE?.ora||'',
       status:'Confirmată', pret:(window._CINEMA_PRICE*bilete.length)+' RON',
-      qr_block:bilete.map(b=>buildQrBlock(b.biletId,'LSD:'+b.biletId)).join(''),
-      vehicul_block:buildVehiculBlock(window._CINEMA_ROUTE?.vehiculNume||'', cinemaVeh?.imagini?.[0]||'')
+      qr_url:buildQrUrl('LSD:'+bilete[0].biletId),
+      bilet_id:bilete.map(b=>b.biletId).join(', '),
+      vehicul_nume:window._CINEMA_ROUTE?.vehiculNume||'',
+      vehicul_img:cinemaVeh?.imagini?.[0]||''
     });
   }catch(e){toast('Eroare la salvare: '+e.message,'er');}
 };
@@ -5015,7 +5017,8 @@ window.submitOrg = async () => {
       mesaj:`Cererea ta de cursă organizată a fost primită! (${desc} · durată ${durText}${rez.observatii?' · Obs: '+rez.observatii:''}) Echipa noastră o va analiza și te va contacta în curând cu o ofertă.`,
       traseu:stops.join(' → '), data:date, ora,
       status:'În așteptare', pret:pretEstim?pretEstim+' RON (estimativ)':'La cerere',
-      vehicul_block:buildVehiculBlock(veh?veh.nome||veh.name||veh.nume||'':'', veh?.imagini?.[0]||'')
+      vehicul_nume:veh?veh.nome||veh.name||veh.nume||'':'',
+      vehicul_img:veh?.imagini?.[0]||''
     });
     toast('✅ Cererea a fost trimisă! Veți fi contactat în curând.','ok');
     if(btn){btn.disabled=false;btn.innerHTML='Trimite cererea 📨';}
@@ -6427,7 +6430,8 @@ window.sendBookingReply=async()=>{
       mesaj:mesajComplet,
       traseu:r.traseu||'', data:r.data||'', ora:r.ora||'',
       status, pret:pret?((pret-discount)+' RON'+(discount>0?' (discount '+discount+' RON aplicat)':'')):'',
-      vehicul_block:buildVehiculBlock(upd.vehiculNume||r.vehiculNume||'', replyVeh?.imagini?.[0]||'')
+      vehicul_nume:upd.vehiculNume||r.vehiculNume||'',
+      vehicul_img:replyVeh?.imagini?.[0]||''
     });
     if(r.uid)sendAdminNotif(rezId,r.uid,status==='confirmata'?'Rezervare confirmată ✅':'Actualizare rezervare 📋',text.slice(0,80)+'...');
   }
@@ -6936,8 +6940,10 @@ window.testEmail=async()=>{
     subiect:'Test email — LSD Group', mesaj:'Acesta este un email de test pentru șablonul unificat.',
     traseu:'Iași → Test', data:new Date().toISOString().split('T')[0], ora:'08:00',
     status:'Confirmată', pret:'100 RON',
-    qr_block:buildQrBlock('LSD-TEST123','LSD:TEST'),
-    vehicul_block:buildVehiculBlock(testVeh?.nome||testVeh?.name||testVeh?.nume||'Autobuz test', testVeh?.imagini?.[0]||'')
+    qr_url:buildQrUrl('LSD:TEST'),
+    bilet_id:'LSD-TEST123',
+    vehicul_nume:testVeh?.nome||testVeh?.name||testVeh?.nume||'Autobuz test',
+    vehicul_img:testVeh?.imagini?.[0]||''
   });
   toast(ok?'✅ Email trimis!':'❌ EmailJS neconfigurat sau eroare',ok?'ok':'er');
 };
@@ -6948,35 +6954,31 @@ async function initEJS(){
   if(!window.emailjs){await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});window.emailjs.init({publicKey:cfg.publicKey});}
   return true;
 }
-// Bloc HTML gata format cu codul QR + numărul biletului. Se trimite ca variabilă
-// {{qr_block}} către EmailJS, care face substituție simplă (fără escaping), deci
-// HTML-ul apare exact așa cum e construit aici. Gol dacă nu există încă bilet.
-function buildQrBlock(biletId, qrData){
-  if(!biletId) return '';
-  const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData||biletId)}&bgcolor=ffffff&color=0f0d0a`;
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td align="center" style="padding:16px;background-color:#fef9ed;border:1.5px solid #a97c3f;border-radius:12px;">
-    <img src="${qrUrl}" width="150" height="150" style="display:block;margin:0 auto 10px;border-radius:8px;border:1px solid #e2d9c4;"/>
-    <div style="font-size:11px;color:#7d7364;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;">Cod bilet</div>
-    <div style="font-size:20px;font-weight:800;color:#6f4d24;letter-spacing:2px;">${biletId}</div>
-  </td></tr></table>`;
-}
-// Bloc HTML cu poza + numele autobuzului (poza e base64 direct din Firestore, se afișează inline
-// fără hosting extern). Gol dacă nu s-a alocat încă un vehicul.
-function buildVehiculBlock(numeVeh, imgSrc){
-  if(!numeVeh) return '';
-  const imgHtml=imgSrc?`<img src="${imgSrc}" width="100%" style="display:block;border-radius:10px;margin-bottom:8px;max-height:220px;object-fit:cover;"/>`:'';
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td>${imgHtml}<div style="font-size:13px;color:#4a4438;text-align:center;font-weight:600;">🚌 ${numeVeh}</div></td></tr></table>`;
+// Construiește URL-ul public al codului QR pentru un bilet (folosește același
+// serviciu ca și biletul afișat pe site). Variabilă simplă, text — nu bloc HTML —
+// ca EmailJS să o poată substitui garantat, indiferent de modul de editare folosit.
+function buildQrUrl(qrData){
+  if(!qrData) return '';
+  return `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}&bgcolor=ffffff&color=0f0d0a`;
 }
 // Un singur șablon EmailJS (window._EJS.templateId), trimis IDENTIC și către client
 // (p.to_email), și către admin (cfg.adminEmail) — exact ce a cerut clientul: nu
 // contează dacă e „diferit” pentru admin, se trimite pur și simplu de 2 ori.
+// IMPORTANT: variabilele trimise sunt toate simple (text/URL), nu blocuri HTML
+// gata construite — imaginile se afișează direct în șablon cu <img src="{{qr_url}}">
+// și <img src="{{vehicul_img}}">, ca substituția să fie garantată în EmailJS.
 async function sendUnifiedEmail(p){
   const cfg=window._EJS;
   if(!cfg?.serviceId||!cfg?.templateId||!cfg?.publicKey)return false;
   try{
     await initEJS();
     const mesajHtml=(p.mesaj||'').replace(/\n/g,'<br/>');
-    const base={from_name:'LSD Group SRL', qr_block:'', vehicul_block:'', pret:'', ...p, mesaj:mesajHtml};
+    const base={
+      from_name:'LSD Group SRL', pret:'',
+      bilet_id:'', qr_url:'', vehicul_nume:'', vehicul_img:'',
+      ...p, mesaj:mesajHtml
+    };
+    console.log('[EMAIL] Trimit către', base.to_email, '— bilet_id:', base.bilet_id, '· qr_url:', base.qr_url?'DA':'lipsă', '· vehicul_nume:', base.vehicul_nume, '· vehicul_img:', base.vehicul_img?'DA ('+base.vehicul_img.length+' caractere)':'lipsă');
     if(p.to_email) await window.emailjs.send(cfg.serviceId,cfg.templateId,{...base,to_email:p.to_email});
     const adminEmail=cfg.adminEmail||window.ADMIN_EMAIL;
     if(adminEmail && adminEmail!==p.to_email) await window.emailjs.send(cfg.serviceId,cfg.templateId,{...base,to_email:adminEmail});
