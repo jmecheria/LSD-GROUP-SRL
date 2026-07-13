@@ -4188,6 +4188,7 @@ window.confirmSeats = async () => {
       vehicul_nume:window._CINEMA_ROUTE?.vehiculNume||'',
       vehicul_img:cinemaVeh?.imagini?.[0]||''
     });
+    if(u)sendAdminNotif(bilete[0].id,u.uid,'Bilet confirmat ✅',`${bilete.length} bilet(e) pentru ${window._CINEMA_ROUTE?.ruta||''} pe ${window._CINEMA_DATE}`);
   }catch(e){toast('Eroare la salvare: '+e.message,'er');}
 };
 
@@ -6379,8 +6380,35 @@ window.filterBookings=()=>{
       </div></td></tr>`;
   }).join(''):`<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--stone)"><div style="font-size:32px;margin-bottom:8px">📋</div>Nicio rezervare${q?' pentru "'+q+'"':''}</td></tr>`;
 };
-window.quickConfirm=async id=>{if(!confirm('Confirmi această rezervare?'))return;await setDoc(doc(db,'rezervari',id),{status:'confirmata'},{merge:true});toast('✅ Confirmată!','ok');await loadBookingsTbl();await loadAdminStats();};
-window.quickCancel=async id=>{if(!confirm('Anulezi această rezervare?'))return;await setDoc(doc(db,'rezervari',id),{status:'anulata'},{merge:true});toast('Anulată','ok');await loadBookingsTbl();};
+// Trimite email + notificare (clopoțel) + salvează un mesaj în conversație, ori de câte
+// ori adminul schimbă statusul unei rezervări din tabel (butoanele rapide ✅/❌), nu doar
+// din modalul de detalii. Așa clientul e mereu anunțat, indiferent pe unde acționează adminul.
+async function notifyBookingStatus(rezId, status, customText){
+  const ref=await getDoc(doc(db,'rezervari',rezId)); if(!ref.exists()) return;
+  const r=ref.data();
+  const defaultStatusMsg={
+    confirmata:'Rezervarea ta a fost confirmată de echipa LSD Group! Te așteptăm la data stabilită.',
+    oferta_trimisa:'Ai primit o ofertă nouă din partea echipei LSD Group pentru cererea ta.',
+    anulata:'Rezervarea ta a fost anulată de echipa LSD Group.',
+    in_asteptare:'Cererea ta este în continuare în analiza echipei LSD Group.'
+  };
+  const statusLabel={confirmata:'✅ Confirmată',oferta_trimisa:'📩 Ofertă trimisă',anulata:'❌ Anulată',in_asteptare:'⏳ În așteptare'}[status]||status;
+  const mesajFinal = customText || defaultStatusMsg[status] || 'Rezervarea ta a fost actualizată.';
+  const mesaje=[...(r.mesaje||[]), {from:'admin', text:mesajFinal, timestamp:Timestamp.now()}];
+  try{ await setDoc(doc(db,'rezervari',rezId), {mesaje}, {merge:true}); }catch(e){}
+  const veh=(window._F||[]).find(v=>v.id===r.vehiculId);
+  sendUnifiedEmail({
+    to_email:r.email, nume:r.numeClient,
+    subiect: status==='confirmata'?'Rezervare confirmată — LSD Group':status==='anulata'?'Rezervare anulată — LSD Group':status==='oferta_trimisa'?'Ofertă nouă — LSD Group':'Actualizare rezervare — LSD Group',
+    mesaj: mesajFinal + (r.observatii?`\n\n📋 Observațiile tale trimise cu cererea: "${r.observatii}"`:''),
+    traseu:r.traseu||r.ruta||'', data:r.data||'', ora:r.ora||'',
+    status:statusLabel, pret:r.pretFinal?r.pretFinal+' RON':(r.pretTotal?r.pretTotal+' RON':''),
+    vehicul_nume:r.vehiculNume||'', vehicul_img:veh?.imagini?.[0]||''
+  });
+  if(r.uid)sendAdminNotif(rezId,r.uid,status==='confirmata'?'Rezervare confirmată ✅':status==='anulata'?'Rezervare anulată ❌':status==='oferta_trimisa'?'Ofertă nouă 📩':'Actualizare rezervare 📋', mesajFinal.slice(0,80)+(mesajFinal.length>80?'...':''));
+}
+window.quickConfirm=async id=>{if(!confirm('Confirmi această rezervare?'))return;await setDoc(doc(db,'rezervari',id),{status:'confirmata'},{merge:true});await notifyBookingStatus(id,'confirmata');toast('✅ Confirmată — clientul a fost anunțat prin email și notificare!','ok');await loadBookingsTbl();await loadAdminStats();};
+window.quickCancel=async id=>{if(!confirm('Anulezi această rezervare?'))return;await setDoc(doc(db,'rezervari',id),{status:'anulata'},{merge:true});await notifyBookingStatus(id,'anulata');toast('Anulată — clientul a fost anunțat prin email și notificare','ok');await loadBookingsTbl();};
 window.deleteBooking2=async id=>{const ref=await getDoc(doc(db,'rezervari',id));if(!ref.exists())return;const r=ref.data();if(!confirm(`⚠️ ȘTERGERE DEFINITIVĂ\n\n${r.numeClient||''} · ${r.data||''}\n\nNu poate fi recuperată!`))return;try{await deleteDoc(doc(db,'rezervari',id));toast('🗑 Ștearsă definitiv','ok');await loadBookingsTbl();}catch(e){toast('Eroare: '+e.message,'er');}};
 window.openBookingDetail=async rezId=>{
   window._ACTIVE_BOOKING_ID=rezId;
@@ -6481,8 +6509,22 @@ window.sendBookingReply=async()=>{
   const pret=parseFloat(document.getElementById('alloc-price').value)||null;
   const discount=parseFloat(document.getElementById('alloc-discount').value)||0;
   const ref=await getDoc(doc(db,'rezervari',rezId));if(!ref.exists())return;
-  const r=ref.data(); const mesaje=[...(r.mesaje||[])];
-  if(text)mesaje.push({from:'admin',text,timestamp:Timestamp.now()});
+  const r=ref.data();
+  const statusChanged = status !== (r.status||'in_asteptare');
+  // Mesaj implicit pentru fiecare status, folosit când adminul schimbă doar starea
+  // fără să scrie un text — ca și așa clientul să primească notificare + email
+  // și să știe clar că a fost contactat, chiar dacă adminul n-a tastat nimic.
+  const defaultStatusMsg={
+    confirmata:'Rezervarea ta a fost confirmată de echipa LSD Group! Te așteptăm la data stabilită.',
+    oferta_trimisa:'Ai primit o ofertă nouă din partea echipei LSD Group pentru cererea ta.',
+    anulata:'Rezervarea ta a fost anulată de echipa LSD Group.',
+    in_asteptare:'Cererea ta este în continuare în analiza echipei LSD Group.'
+  };
+  const statusLabel={confirmata:'✅ Confirmată',oferta_trimisa:'📩 Ofertă trimisă',anulata:'❌ Anulată',in_asteptare:'⏳ În așteptare'}[status]||status;
+  const mesajFinal = text || (statusChanged ? defaultStatusMsg[status] : '');
+  const shouldNotify = !!mesajFinal; // text scris SAU status schimbat -> mereu se trimite ceva
+  const mesaje=[...(r.mesaje||[])];
+  if(mesajFinal)mesaje.push({from:'admin',text:mesajFinal,timestamp:Timestamp.now()});
   const upd={mesaje,status};
   if(pret)upd.pretFinal=pret;
   if(discount>0)upd.discount=discount;
@@ -6493,21 +6535,21 @@ window.sendBookingReply=async()=>{
   if(sfId){upd.driverId=sfId;const sfObj=window._DRIVERS[sfId];upd.soferEmail=sfObj?.email||sfId;}
   upd.driverId2=sfId2||null;
   await setDoc(doc(db,'rezervari',rezId),upd,{merge:true});
-  if(text){
+  if(shouldNotify){
     const replyVeh=(window._F||[]).find(v=>v.id===(upd.vehiculId||r.vehiculId));
-    const mesajComplet=text + (r.observatii?`\n\n📋 Observațiile tale trimise cu cererea: "${r.observatii}"`:'');
+    const mesajComplet=mesajFinal + (r.observatii?`\n\n📋 Observațiile tale trimise cu cererea: "${r.observatii}"`:'');
     sendUnifiedEmail({
       to_email:r.email, nume:r.numeClient,
-      subiect:'Răspuns echipă LSD Group',
+      subiect: status==='confirmata'?'Rezervare confirmată — LSD Group':status==='anulata'?'Rezervare anulată — LSD Group':status==='oferta_trimisa'?'Ofertă nouă — LSD Group':'Actualizare rezervare — LSD Group',
       mesaj:mesajComplet,
       traseu:r.traseu||'', data:r.data||'', ora:r.ora||'',
-      status, pret:pret?((pret-discount)+' RON'+(discount>0?' (discount '+discount+' RON aplicat)':'')):'',
+      status:statusLabel, pret:pret?((pret-discount)+' RON'+(discount>0?' (discount '+discount+' RON aplicat)':'')):'',
       vehicul_nume:upd.vehiculNume||r.vehiculNume||'',
       vehicul_img:replyVeh?.imagini?.[0]||''
     });
-    if(r.uid)sendAdminNotif(rezId,r.uid,status==='confirmata'?'Rezervare confirmată ✅':'Actualizare rezervare 📋',text.slice(0,80)+'...');
+    if(r.uid)sendAdminNotif(rezId,r.uid,status==='confirmata'?'Rezervare confirmată ✅':status==='anulata'?'Rezervare anulată ❌':status==='oferta_trimisa'?'Ofertă nouă 📩':'Actualizare rezervare 📋',mesajFinal.slice(0,80)+(mesajFinal.length>80?'...':''));
   }
-  closeModal('booking-detail');await loadBookingsTbl();await loadAdminStats();toast('Răspuns trimis!','ok');
+  closeModal('booking-detail');await loadBookingsTbl();await loadAdminStats();toast(shouldNotify?'Răspuns trimis — clientul a fost anunțat prin email și notificare!':'Salvat (fără notificare — nu s-a schimbat nimic relevant)','ok');
 };
 window.deleteBooking=async()=>{if(window._ACTIVE_BOOKING_ID){await deleteBooking2(window._ACTIVE_BOOKING_ID);closeModal('booking-detail');}};
 window.updateInvoicePreview=()=>{};
