@@ -8232,9 +8232,9 @@ window.tlSaveAssign=async(cursaId,pi)=>{
 (async()=>{
   try{const sr=await getDoc(doc(db,'setari','global'));if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{};if(sr.data().soferContEmail)window.SOFER_EMAIL=sr.data().soferContEmail;}}catch(e){}
   renderFooter();
-  renderHomeGallery();
   try{await loadSavedContent();}catch(e){}
   try{await loadFleet();}catch(e){}
+  renderHomeGallery();
   try{const rs=await getDocs(collection(db,'curse_regulate'));window._R=rs.docs.map(d=>({id:d.id,...d.data()}));}catch(e){}
   const today=new Date().toISOString().split('T')[0];
   const di=document.getElementById('rdate');if(di){di.value=today;di.min=today;}
