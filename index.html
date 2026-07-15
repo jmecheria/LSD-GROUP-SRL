@@ -2929,7 +2929,8 @@ onAuthStateChanged(auth, async u => {
     }
   } catch(e) { console.warn('Settings:', e.message); }
 
-  if (!u) { window._ROLE='client'; buildNav('guest'); return; }
+  if (!u) { window._ROLE='client'; buildNav('guest'); startGuestNotifListener(); return; }
+  stopGuestNotifListener();
 
   if (u.email === window.ADMIN_EMAIL) {
     window._ROLE = 'admin';
@@ -4106,6 +4107,7 @@ window.confirmSeats = async () => {
   try{
     const refs=await Promise.all(bilete.map(r=>addDoc(collection(db,'rezervari'),r)));
     refs.forEach((ref,i)=>{bilete[i].id=ref.id;});
+    if(!u){ bilete.forEach(b=>guestBookingsAdd(b.id)); startGuestNotifListener(); }
     closeModal('cinema');
     showTickets(bilete);
     toast('🎉 '+bilete.length+' bilet'+(bilete.length>1?'e rezervate':'rezervat')+'!','ok');
@@ -5002,6 +5004,7 @@ window.submitOrg = async (opts={}) => {
     durataEstimataH:durH||null,durataEstimataZile:durZile||null,durataEstimataMin:durMin||null,
     persoane:persoaneVal||null,
     vehiculId:vehId||null,vehiculNume:veh?veh.nome||veh.name||veh.nume||'':null,
+    vehiculPrefId:vehId||null,vehiculPrefNume:veh?veh.nome||veh.name||veh.nume||'':null,
     driverPrefId:drivPref||null,pretEstimativ:pretEstim,pretFinal:null,
     observatii:document.getElementById('org-obs')?.value?.trim()||'',
     status:'in_asteptare',mesaje:[],createdAt:serverTimestamp()
@@ -5009,7 +5012,8 @@ window.submitOrg = async (opts={}) => {
   const btn=document.getElementById('btn-submit-org');
   if(!opts.silent&&btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> Se trimite...';}
   try{
-    await addDoc(collection(db,'rezervari'),rez);
+    const orgRezRef=await addDoc(collection(db,'rezervari'),rez);
+    if(!u){ guestBookingsAdd(orgRezRef.id); startGuestNotifListener(); }
     const durText=durMin>0?(durZile>0?durZile+' zile':durH+'h'):'neprecizată';
     sendUnifiedEmail({
       to_email:em, nume:nc,
@@ -5178,6 +5182,92 @@ window.toggleNotifPanel=()=>{const p=document.getElementById('notif-panel');if(p
 window.markNotifRead=async id=>{await setDoc(doc(db,'notificari',id),{citita:true},{merge:true});};
 window.markAllRead=async()=>{const u=window._U;if(!u)return;const snap=await getDocs(query(collection(db,'notificari'),where('uid','==',u.uid),where('citita','==',false)));await Promise.all(snap.docs.map(d=>setDoc(doc(db,'notificari',d.id),{citita:true},{merge:true})));toast('Toate notificările marcate citite','ok');};
 async function sendAdminNotif(rezId,uid,title,body){if(!uid)return;try{await addDoc(collection(db,'notificari'),{uid,title,body,citita:false,createdAt:serverTimestamp(),rezId});}catch(e){}}
+
+// ── NOTIFICĂRI PENTRU VIZITATORI FĂRĂ CONT ──────────────────
+// Cei fără cont nu au uid, deci nu pot fi găsiți în colecția 'notificari'.
+// În schimb, ținem minte în acest browser (localStorage) codurile rezervărilor
+// făcute ca vizitator și ascultăm live direct documentul din 'rezervari' —
+// astfel clopoțelul arată status-ul curent (confirmată/ofertă/anulată) chiar
+// și fără cont, iar la click se deschide fix ca la un client logat.
+function guestBookingsGet(){ try{return JSON.parse(localStorage.getItem('lsd_guest_rez')||'[]');}catch(e){return [];} }
+function guestBookingsAdd(id){
+  if(!id) return;
+  const arr=guestBookingsGet();
+  if(!arr.includes(id)){ arr.unshift(id); if(arr.length>25) arr.length=25; try{localStorage.setItem('lsd_guest_rez',JSON.stringify(arr));}catch(e){} }
+}
+function guestSeenGet(){ try{return JSON.parse(localStorage.getItem('lsd_guest_seen')||'{}');}catch(e){return {};} }
+function guestSeenMark(id,sig){ const o=guestSeenGet(); o[id]=sig; try{localStorage.setItem('lsd_guest_seen',JSON.stringify(o));}catch(e){} }
+window._guestUnsubs = window._guestUnsubs || [];
+window._GUEST_NOTIFS = window._GUEST_NOTIFS || {};
+
+function stopGuestNotifListener(){
+  (window._guestUnsubs||[]).forEach(unsub=>{try{unsub();}catch(e){}});
+  window._guestUnsubs=[]; window._GUEST_NOTIFS={};
+}
+
+function renderGuestNotifPanel(){
+  if (window._U) return; // clienții logați folosesc panoul standard
+  const bell=document.getElementById('notif-bell');
+  const badge=document.getElementById('notif-badge');
+  const list=document.getElementById('notif-list');
+  const items=Object.values(window._GUEST_NOTIFS).filter(Boolean);
+  if(!items.length){ if(bell) bell.style.display='none'; return; }
+  if(bell) bell.style.display='flex';
+  const seen=guestSeenGet();
+  const sl={in_asteptare:'⏳ În așteptare',oferta_trimisa:'📩 Ofertă trimisă',confirmata:'✅ Confirmată',anulata:'❌ Anulată'};
+  const withMeta=items.map(r=>{const sig=(r.status||'')+'|'+(r.mesaje||[]).length; return {...r,_sig:sig,_unread:seen[r.id]!==sig};});
+  const unreadCount=withMeta.filter(x=>x._unread).length;
+  if(badge){badge.textContent=unreadCount;badge.style.display=unreadCount>0?'flex':'none';}
+  if(list){
+    list.innerHTML=withMeta.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(r=>{
+      const title = r.tipRezervare==='regulata' ? ('🎟 '+(r.ruta||r.traseu||'Bilet')) : ('🚌 '+(r.descriereCursa||r.traseu||'Cursă organizată'));
+      const body = `${sl[r.status]||r.status||''}${r.data?' · '+r.data:''}`;
+      return `<div style="padding:10px 12px;border-radius:var(--r);margin-bottom:5px;background:${r._unread?'var(--amber-g)':'var(--cream)'};border:1px solid ${r._unread?'var(--amber-b)':'var(--border-l)'};cursor:pointer" onclick="openGuestNotif('${r.id}')"><div style="font-weight:${r._unread?700:400};font-size:13px;margin-bottom:2px">${title}</div><div style="font-size:12px;color:var(--stone)">${body}</div></div>`;
+    }).join('');
+  }
+}
+
+function startGuestNotifListener(){
+  if (window._U) return; // doar pentru vizitatori fără cont
+  stopGuestNotifListener();
+  const ids=guestBookingsGet();
+  const bell=document.getElementById('notif-bell');
+  if(!ids.length){ if(bell) bell.style.display='none'; return; }
+  ids.forEach(id=>{
+    const unsub=onSnapshot(doc(db,'rezervari',id), snap=>{
+      if(!snap.exists()){ delete window._GUEST_NOTIFS[id]; renderGuestNotifPanel(); return; }
+      window._GUEST_NOTIFS[id]={id,...snap.data()};
+      renderGuestNotifPanel();
+    }, err=>console.warn('Guest notif:',err.message));
+    window._guestUnsubs.push(unsub);
+  });
+}
+window.openGuestNotif = async (rezId) => {
+  const r = window._GUEST_NOTIFS[rezId];
+  if(!r){ toast('Rezervarea nu a fost găsită','er'); return; }
+  guestSeenMark(rezId,(r.status||'')+'|'+(r.mesaje||[]).length);
+  renderGuestNotifPanel();
+  const panel=document.getElementById('notif-panel'); if(panel)panel.style.display='none';
+  if (r.biletId) { showTicketById(rezId); return; }
+  openGuestOrgDetail(r);
+};
+window.openGuestOrgDetail = (r) => {
+  let modal=document.getElementById('mo-guest-org-detail');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='mo-guest-org-detail'; modal.className='modal-overlay';
+    modal.innerHTML='<div class="modal modal-md"><div class="modal-head"><div class="modal-title">📋 Detalii cerere</div><button class="modal-close" onclick="document.getElementById(\'mo-guest-org-detail\').classList.remove(\'open\')">✕</button></div><div class="modal-body" id="guest-org-detail-body"></div></div>';
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
+  }
+  const sl={in_asteptare:'⏳ În așteptare',oferta_trimisa:'📩 Ofertă trimisă',confirmata:'✅ Confirmată',anulata:'❌ Anulată'};
+  const msgs=r.mesaje||[];
+  const rows=[['Traseu',r.traseu||r.descriereCursa||'-'],['Data',r.data||'-'],['Status',sl[r.status]||r.status||'-'],...(r.pretFinal?[['Preț ofertă',r.pretFinal+' RON']]:[])];
+  const body=document.getElementById('guest-org-detail-body');
+  body.innerHTML = rows.map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600;text-align:right;max-width:60%">${v}</span></div>`).join('') +
+    (msgs.length ? `<div style="margin-top:14px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">💬 Conversație</div><div class="msg-thread">${msgs.map(m=>`<div class="msg-bubble ${m.from==='admin'?'msg-admin':'msg-client'}"><div class="msg-meta">${m.from==='admin'?'👑 Echipa LSD Group':'👤 Tu'}</div>${m.text}</div>`).join('')}</div></div>` : '<div style="margin-top:12px;font-size:12px;color:var(--stone)">Nicio conversație încă. Veți primi și un email cu detaliile.</div>');
+  modal.classList.add('open');
+};
 
 // ── ADMIN ──────────────────────────────────────────────────
 window.loadAdmin = async () => {
@@ -6392,8 +6482,9 @@ window.openBookingDetail=async rezId=>{
       return`<option value="${sf.id}" ${curVal===sf.id?'selected':''} style="color:${totalMin>=600?'#b52d2d':totalMin>=480?'#c46520':'#1a6b3c'}">${sf.numeFull}${statusStr}</option>`;
     }).join('');
     const sfS=document.getElementById('alloc-driver');
-    sfS.innerHTML='<option value="">— nu a fost alocat —</option>'+buildSfAllocOpts(r.driverId||'');
+    sfS.innerHTML='<option value="">— nu a fost alocat —</option>'+buildSfAllocOpts(r.driverId||r.driverPrefId||'');
     if(r.driverId)sfS.value=r.driverId;
+    else if(r.driverPrefId&&window._DRIVERS[r.driverPrefId])sfS.value=r.driverPrefId;
     const sf2S=document.getElementById('alloc-driver2');
     sf2S.innerHTML='<option value="">— fără șofer 2 —</option>'+buildSfAllocOpts(r.driverId2||'');
     if(r.driverId2)sf2S.value=r.driverId2;
@@ -6403,7 +6494,7 @@ window.openBookingDetail=async rezId=>{
   if(invoiceBtns)invoiceBtns.style.display=r.status==='confirmata'&&r.pretFinal?'block':'none';
   // Info
   const locs=r.locuriRezervate||[];
-  const rows=[['Client',r.numeClient||'-'],['Email',r.email||'-'],['Telefon',r.telefon||'-'],['Tip',r.tipRezervare==='regulata'?'🔄 Regulată':'🚌 Organizată'],['Descriere',r.descriereCursa||'-'],['Traseu',r.traseu||r.ruta||'-'],['Data',r.data||'-'],['Ora',r.ora||'-'],['Vehicul',r.vehiculNume||'Nealocat'],['Șofer 1',r.driverId?numeSofer(r.driverId):'Nealocat'],['Șofer 2',r.driverId2?numeSofer(r.driverId2):'—'],['Km estimați',r.distantaKm||'-'],['Preț final',r.pretFinal?r.pretFinal+' RON':'Nesetat'],['Discount',r.discount?r.discount+' RON':'—'],...(locs.length?[['Locuri',locs.map(l=>`Loc ${l.locNr}: ${l.statieUrcare}→${l.statieCoborare}`).join(', ')]]:[])];
+  const rows=[['Client',r.numeClient||'-'],['Email',r.email||'-'],['Telefon',r.telefon||'-'],['Tip',r.tipRezervare==='regulata'?'🔄 Regulată':'🚌 Organizată'],['Descriere',r.descriereCursa||'-'],['Traseu',r.traseu||r.ruta||'-'],['Data',r.data||'-'],['Ora',r.ora||'-'],...(r.tipRezervare==='organizata'?[['Vehicul preferat (ales de client)',r.vehiculPrefNume||'Fără preferință'],['Șofer preferat (ales de client)',r.driverPrefId?numeSofer(r.driverPrefId):'Fără preferință']]:[]),['Vehicul alocat',r.vehiculNume||'Nealocat'],['Șofer 1 alocat',r.driverId?numeSofer(r.driverId):'Nealocat'],['Șofer 2 alocat',r.driverId2?numeSofer(r.driverId2):'—'],['Km estimați',r.distantaKm||'-'],['Preț final',r.pretFinal?r.pretFinal+' RON':'Nesetat'],['Discount',r.discount?r.discount+' RON':'—'],...(locs.length?[['Locuri',locs.map(l=>`Loc ${l.locNr}: ${l.statieUrcare}→${l.statieCoborare}`).join(', ')]]:[])];
   document.getElementById('booking-detail-info').innerHTML='<div style="font-weight:700;margin-bottom:10px;font-family:\'Plus Jakarta Sans\',sans-serif">📋 Date rezervare</div>'+rows.map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="text-align:right;max-width:200px">${v}</span></div>`).join('');
   // Thread
   const th=document.getElementById('booking-thread'),msgs=r.mesaje||[];
@@ -8058,6 +8149,13 @@ window.tlSaveAssign=async(cursaId,pi)=>{
   renderOrgStops();
   const hflota=document.getElementById('home-fleet');
   if(hflota&&window._F.length)hflota.innerHTML=window._F.map(v=>window.vCard(v)).join('');
+  // La prima încărcare pagina "Acasă" e deja activă în HTML, deci nav('home') nu se
+  // declanșează niciodată — fără aceste apeluri, bara de statistici și harta traseelor
+  // rămâneau goale până la o navigare ulterioară care re-declanșa initHome().
+  try{renderHeroRouteLine();}catch(e){}
+  try{renderHomeStats();}catch(e){}
+  try{renderHomeSearchSuggestions();}catch(e){}
+  try{initHomeRoutesMap();}catch(e){}
   // Auto-populate footer year
   const fy=document.getElementById('footer-year');
   if(fy)fy.textContent=`© ${new Date().getFullYear()} ${window._FIRMA?.name||'LSD Group SRL'} · Toate drepturile rezervate · Autorizat ARR`;
