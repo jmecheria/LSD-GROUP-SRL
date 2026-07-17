@@ -2395,6 +2395,12 @@ footer::before{
             <div class="fg"><div class="fl">Preț final ofertă (RON)</div><input type="number" id="alloc-price" min="0" placeholder="Ex: 1200"/></div>
             <div class="fg"><div class="fl">Discount (RON)</div><input type="number" id="alloc-discount" min="0" placeholder="0" oninput="updateInvoicePreview()"/></div>
           </div>
+          <div id="booking-map-wrap" style="display:none;margin-top:16px;background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);padding:16px;box-shadow:var(--sh)">
+            <div style="font-weight:700;font-size:13px;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">🗺️ Traseul exact ales de client pe hartă</div>
+            <div style="font-size:11px;color:var(--stone);margin-bottom:10px">Trageți un punct dacă autobuzul nu poate ajunge exact acolo (stradă îngustă etc.), apoi salvați ajustarea.</div>
+            <div id="booking-map" style="height:280px;border-radius:var(--r);overflow:hidden;background:var(--cream)"></div>
+            <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="saveBookingMapAdjustments()">💾 Salvează ajustările poziției</button>
+          </div>
           <!-- Invoice buttons -->
           <div id="booking-invoice-btns" style="display:none;margin-top:14px">
             <div style="font-size:12px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">📄 Facturi Proformă</div>
@@ -4455,6 +4461,7 @@ async function refreshOrgSelects() {
     📅 <strong>${dateStr}</strong>${intervalText}${zileText}: <strong>${liberV}</strong> vehicul${liberV!==1?'e':''} 🟢 libere · <strong>${conflictV}</strong> 🔴 cu conflict de orar
   </div>`;
 }
+window._ORG_STOP_COORDS = [];
 function renderOrgStops(){
   const c=document.getElementById('org-stops-container'); if(!c)return;
   c.innerHTML='';
@@ -4462,20 +4469,20 @@ function renderOrgStops(){
     const row=document.createElement('div'); row.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center';
     const inp=document.createElement('input'); inp.type='text'; inp.value=s;
     inp.placeholder=i===0?'Punct de plecare *':(i===window._ORG_STOPS.length-1?'Destinație finală *':'Oprire '+i);
-    inp.addEventListener('input',e=>{window._ORG_STOPS[i]=e.target.value;triggerOrgCalc();});
+    inp.addEventListener('input',e=>{window._ORG_STOPS[i]=e.target.value;window._ORG_STOP_COORDS[i]=null;triggerOrgCalc();});
     row.appendChild(inp);
     const mapBtn=document.createElement('button'); mapBtn.type='button'; mapBtn.className='btn btn-secondary btn-sm btn-icon'; mapBtn.title='Alege pe hartă'; mapBtn.textContent='📍';
     mapBtn.addEventListener('click',()=>openOrgStopMapPicker(i));
     row.appendChild(mapBtn);
     if(i>0&&i<window._ORG_STOPS.length-1){
       const del=document.createElement('button'); del.className='btn btn-danger btn-sm btn-icon'; del.textContent='✕';
-      del.addEventListener('click',()=>{window._ORG_STOPS.splice(i,1);renderOrgStops();});
+      del.addEventListener('click',()=>{window._ORG_STOPS.splice(i,1);window._ORG_STOP_COORDS.splice(i,1);renderOrgStops();});
       row.appendChild(del);
     }
     c.appendChild(row);
   });
 }
-window.addOrgStop=()=>{window._ORG_STOPS.splice(window._ORG_STOPS.length-1,0,'');renderOrgStops();};
+window.addOrgStop=()=>{const at=window._ORG_STOPS.length-1;window._ORG_STOPS.splice(at,0,'');window._ORG_STOP_COORDS.splice(at,0,null);renderOrgStops();};
 
 // ── HARTĂ ALEGERE PUNCT PENTRU CLIENT (Cursă Organizată) ──────────────
 // La fel ca la admin (rm-map-picker), dar simplificată: un singur click,
@@ -4484,6 +4491,7 @@ window.addOrgStop=()=>{window._ORG_STOPS.splice(window._ORG_STOPS.length-1,0,'')
 // existent, prin calcDistORS/triggerOrgCalc) pornește normal, ca și cum
 // clientul ar fi scris numele de mână.
 window._orgStopMapPick = null;
+window._orgStopMapPickLL = null;
 window.openOrgStopMapPicker = async (idx, target) => {
   window._CLIENT_MAP_STOP_IDX = idx;
   window._CLIENT_MAP_TARGET = target || 'form';
@@ -4546,6 +4554,7 @@ window.openOrgStopMapPicker = async (idx, target) => {
     let name = null;
     try { const r = await reverseGeocodeName(lat,lng); name = r?.name; } catch(e2){}
     window._orgStopMapPick = name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    window._orgStopMapPickLL = {lat,lng};
     document.getElementById('org-stop-map-selected').innerHTML = `📍 <strong>${window._orgStopMapPick}</strong>`;
     document.getElementById('btn-org-stop-map-confirm').disabled = false;
   });
@@ -4554,11 +4563,16 @@ window.openOrgStopMapPicker = async (idx, target) => {
 window.confirmOrgStopMapPick = () => {
   const idx = window._CLIENT_MAP_STOP_IDX;
   if (idx == null || !window._orgStopMapPick) return;
+  const ll = window._orgStopMapPickLL;
   if (window._CLIENT_MAP_TARGET === 'wiz') {
     window._WIZ_DATA.stops[idx] = window._orgStopMapPick;
+    if (!window._WIZ_DATA.stopCoords) window._WIZ_DATA.stopCoords = [];
+    window._WIZ_DATA.stopCoords[idx] = ll;
     renderWizStops();
   } else {
     window._ORG_STOPS[idx] = window._orgStopMapPick;
+    if (!window._ORG_STOP_COORDS) window._ORG_STOP_COORDS = [];
+    window._ORG_STOP_COORDS[idx] = ll;
     renderOrgStops();
     triggerOrgCalc();
   }
@@ -4702,11 +4716,14 @@ window.confirmOrgMultiMapPick = () => {
   const pts = window._orgMultiPickerPoints;
   if (pts.length < 2) { toast('Adaugă cel puțin 2 puncte (plecare și destinație)','wr'); return; }
   const names = pts.map(p=>p.nume);
+  const coords = pts.map(p=>({lat:p.ll[0], lng:p.ll[1]}));
   if (window._orgMultiPickerTarget === 'wiz') {
     window._WIZ_DATA.stops = names;
+    window._WIZ_DATA.stopCoords = coords;
     renderWizStops();
   } else {
     window._ORG_STOPS = names;
+    window._ORG_STOP_COORDS = coords;
     renderOrgStops();
     triggerOrgCalc();
   }
@@ -4851,8 +4868,64 @@ async function calcDistORS(from,to){
 // astfel incat la final submitOrg() functioneaza identic indiferent de calea aleasa.
 // ══════════════════════════════════════════════════════════
 window._WIZ_STEP = 1;
-window._WIZ_TOTAL = 6;
-window._WIZ_DATA = { stops:['',''], tip:'', desc:'', date:'', time:'flexibil', durH:'', durZile:'', vehId:'', persons:'' };
+// ── Disponibilitate vehicule/șoferi, reutilizabilă și de wizard (nu doar de formularul complet) ──
+async function computeOrgAvailability(dateStr, oraStr, durH, durZile) {
+  const durMin = durH>0 ? durH*60 : durZile>0 ? durZile*1440 : 0;
+  if (!dateStr) return {vehicles:[], drivers:[], affectedDays:[], reqStart:-1, reqEnd:-1};
+  const reqStart = oraStr && oraStr!=='flexibil' ? timeToMin(oraStr) : -1;
+  const reqEnd = reqStart>=0 && durMin>0 ? reqStart+durMin : -1;
+  const affectedDays = [];
+  if (durZile>0) {
+    for (let i=0;i<durZile;i++){ const d=new Date(dateStr+'T12:00:00'); d.setDate(d.getDate()+i); affectedDays.push(d.toISOString().split('T')[0]); }
+  } else {
+    affectedDays.push(dateStr);
+    if (reqEnd>1440) { const d=new Date(dateStr+'T12:00:00'); d.setDate(d.getDate()+1); affectedDays.push(d.toISOString().split('T')[0]); }
+  }
+  const vehIvsMap = new Map();
+  for (const dayStr of affectedDays) {
+    getIntervalsForDate(dayStr, (info) => {
+      if (!info.vehiculId) return;
+      if (!vehIvsMap.has(info.vehiculId)) vehIvsMap.set(info.vehiculId, []);
+      vehIvsMap.get(info.vehiculId).push({start:info.startMin, end:info.endMin, ruta:info.ruta, data:dayStr});
+    });
+    try {
+      const snap = await getDocs(query(collection(db,'rezervari'), where('data','==',dayStr)));
+      snap.docs.forEach(d => {
+        const r = d.data();
+        if (r.status==='anulata' || r.tipRezervare==='regulata' || !r.vehiculId || !r.ora) return;
+        const sMin = timeToMin(r.ora);
+        const eMin = sMin + (r.durataEstimataH||2)*60;
+        if (!vehIvsMap.has(r.vehiculId)) vehIvsMap.set(r.vehiculId, []);
+        vehIvsMap.get(r.vehiculId).push({start:sMin, end:eMin, ruta:r.descriereCursa||'Org.', data:dayStr});
+      });
+    } catch(e) {}
+  }
+  function hasConflict(ivs) {
+    if (reqStart<0 || reqEnd<0) return false;
+    return ivs.some(iv => {
+      if (!iv.data) return reqStart<iv.end && reqEnd>iv.start;
+      const ivDayIdx = affectedDays.indexOf(iv.data);
+      if (ivDayIdx<0) return false;
+      const reqSDay = ivDayIdx===0 ? reqStart : 0;
+      const reqEDay = ivDayIdx===0 ? Math.min(reqEnd,1440) : Math.max(0, reqEnd-1440*ivDayIdx);
+      return reqSDay<iv.end && reqEDay>iv.start;
+    });
+  }
+  const vehicles = (window._F||[]).filter(v=>v.disponibil!==false).map(v => {
+    const ivs = (vehIvsMap.get(v.id)||[]).sort((a,b)=>a.start-b.start);
+    return {id:v.id, v, conflict:hasConflict(ivs), ivs};
+  });
+  const drivers = (window._DRIVERS_LIST||[]).map(sf => {
+    const ivs = [];
+    affectedDays.forEach(dayStr => { getDriverIntervals(sf.id, dayStr).forEach(iv=>ivs.push({...iv,data:dayStr})); });
+    const totalMin = ivs.reduce((s,iv)=>s+(iv.end-iv.start),0);
+    return {id:sf.id, sf, ivs, totalMin, conflict:hasConflict(ivs)};
+  });
+  return {vehicles, drivers, affectedDays, reqStart, reqEnd};
+}
+
+window._WIZ_TOTAL = 7;
+window._WIZ_DATA = { stops:['',''], tip:'', desc:'', date:'', time:'flexibil', durH:'', durZile:'', vehId:'', persons:'', driverPrefId:'' };
 
 // ── Derulare poze de fundal (folosită de wizard și de pagina "Biletul meu") ──
 // Alege poze din flota de autobuze și le derulează cu fade lent într-un container dat.
@@ -4880,7 +4953,7 @@ window.stopImgSlideshow = (containerId) => {
 
 window.openOrgWizard = () => {
   window._WIZ_STEP = 1;
-  window._WIZ_DATA = { stops:['',''], tip:'', desc:'', date:'', time:'flexibil', durH:'', durZile:'', vehId:'', persons:'' };
+  window._WIZ_DATA = { stops:['',''], tip:'', desc:'', date:'', time:'flexibil', durH:'', durZile:'', vehId:'', persons:'', driverPrefId:'' };
   document.getElementById('org-mode-choice').style.display='none';
   openModal('org-wizard');
   renderWizStep();
@@ -4907,6 +4980,7 @@ window.wizSwitchToForm = async () => {
 async function applyWizDataToForm(){
   const d = window._WIZ_DATA;
   window._ORG_STOPS = [...d.stops];
+  window._ORG_STOP_COORDS = [...(d.stopCoords||[])];
   window._ORG_TIP = d.tip;
   renderOrgStops();
   if (document.getElementById('org-desc')) document.getElementById('org-desc').value = d.desc;
@@ -4926,6 +5000,7 @@ async function applyWizDataToForm(){
   // deci selecția făcută în wizard trebuie restaurată AICI, după ce lista e gata,
   // altfel vehiculul ales de client se pierde silențios la trimitere.
   if (d.vehId) { const vehSel=document.getElementById('org-veh'); if (vehSel) vehSel.value = d.vehId; }
+  if (d.driverPrefId) { const drvSel=document.getElementById('org-driver-pref'); if (drvSel) drvSel.value = d.driverPrefId; }
   triggerOrgCalc();
 }
 
@@ -4966,7 +5041,7 @@ function wizValidateStep(){
   if (step===3 && !d.date) { toast('Selectează data','wr'); return false; }
   if (step===4 && !d.durH && !d.durZile) { toast('Selectează durata estimată','wr'); return false; }
   if (step===5 && !d.persons && !d.vehId) { toast('Completează numărul de persoane sau alege un vehicul, ca să știm ce capacitate ai nevoie','wr'); return false; }
-  if (step===6) {
+  if (step===7) {
     const u = window._U;
     if (!u) {
       const nc = document.getElementById('wiz-name')?.value?.trim();
@@ -5062,21 +5137,31 @@ function renderWizStep(){
     </div>`;
   }
   else if (step===5) {
-    const fleetOptions = (window._F||[]).map(v=>`<div class="wiz-opt-card ${d.vehId===v.id?'selected':''}" onclick="wizSelectVeh('${v.id}')" style="text-align:left;display:flex;align-items:center;gap:10px;padding:12px"><span style="font-size:22px">${v.icon||'🚌'}</span><div><div class="wiz-opt-text" style="font-size:13px">${v.nome||v.name||v.nume||''}</div><div style="font-size:11px;color:var(--stone);font-weight:400">${capVeh(v)} locuri${v.pretPerKm?' · '+v.pretPerKm+' RON/km':''}</div></div></div>`).join('');
     html = `<div class="wiz-fade-in">
       <div class="wiz-question">${T('wiz-q5','Ai o preferință de vehicul?')}</div>
       <div class="wiz-hint">${d.persons?T('wiz-h5','Opțional — dacă nu alegi, echipa va selecta cel mai potrivit'):'⚠️ Nu ai completat numărul de persoane — alege un vehicul aici, ca să știm ce capacitate ai nevoie.'}</div>
       <div class="wiz-opt-card ${!d.vehId?'selected':''}" onclick="${d.persons?"wizSelectVeh('')":"toast('Completează mai întâi numărul de persoane (pasul anterior) sau alege un autobuz din listă','wr')"}" style="margin-bottom:10px;text-align:left;padding:12px;${!d.persons?'opacity:.5;cursor:not-allowed':''}">
         <span class="wiz-opt-text">🤷 Nu am o preferință — alegeți voi</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr;gap:8px;max-height:240px;overflow-y:auto">${fleetOptions||'<div style="color:var(--stone);font-size:12px;text-align:center;padding:16px">Nicio flotă disponibilă momentan</div>'}</div>
+      <div id="wiz-vehicle-list" style="display:grid;grid-template-columns:1fr;gap:8px;max-height:240px;overflow-y:auto"><div style="text-align:center;padding:16px"><div class="spin"></div></div></div>
     </div>`;
   }
   else if (step===6) {
+    html = `<div class="wiz-fade-in">
+      <div class="wiz-question">Ai o preferință de șofer?</div>
+      <div class="wiz-hint">Opțional — dacă nu alegi, echipa va aloca un șofer disponibil</div>
+      <div class="wiz-opt-card ${!d.driverPrefId?'selected':''}" onclick="wizSelectDriverPref('')" style="margin-bottom:10px;text-align:left;padding:12px">
+        <span class="wiz-opt-text">🤷 Fără preferință — alegeți voi</span>
+      </div>
+      <div id="wiz-driver-list" style="display:grid;grid-template-columns:1fr;gap:8px;max-height:240px;overflow-y:auto"><div style="text-align:center;padding:16px"><div class="spin"></div></div></div>
+    </div>`;
+  }
+  else if (step===7) {
     const u = window._U;
     const stops = d.stops.filter(Boolean);
     const durText = d.durH ? d.durH+' oră/ore' : d.durZile ? d.durZile+' zi/zile' : 'nespecificat';
     const vehName = d.vehId ? ((window._F||[]).find(v=>v.id===d.vehId)?.nome || (window._F||[]).find(v=>v.id===d.vehId)?.name || '') : 'Fără preferință';
+    const drvName = d.driverPrefId ? numeSofer(d.driverPrefId) : 'Fără preferință';
     html = `<div class="wiz-fade-in">
       <div class="wiz-question">Aproape gata! Verifică detaliile</div>
       <div class="wiz-hint">${u?'Cererea va fi asociată contului tău':'Completează datele de contact pentru a primi oferta'}</div>
@@ -5086,9 +5171,10 @@ function renderWizStep(){
         <div class="wiz-summary-row wiz-row-reveal" style="animation-delay:.35s"><span>Data</span><span>${d.date||'-'} ${d.time!=='flexibil'?'· '+d.time:'(oră flexibilă)'}</span></div>
         <div class="wiz-summary-row wiz-row-reveal" style="animation-delay:.5s"><span>Durată</span><span>${durText}</span></div>
         <div class="wiz-summary-row wiz-row-reveal" style="animation-delay:.65s"><span>Vehicul</span><span>${vehName}</span></div>
-        ${d.persons?`<div class="wiz-summary-row wiz-row-reveal" style="animation-delay:.8s"><span>Persoane</span><span>${d.persons}</span></div>`:''}
+        <div class="wiz-summary-row wiz-row-reveal" style="animation-delay:.75s"><span>Șofer preferat</span><span>${drvName}</span></div>
+        ${d.persons?`<div class="wiz-summary-row wiz-row-reveal" style="animation-delay:.9s"><span>Persoane</span><span>${d.persons}</span></div>`:''}
       </div>
-      ${u ? `<div class="info-box wiz-row-reveal" style="font-size:12px;animation-delay:.9s">👤 Trimiți ca <strong>${u.displayName||u.email}</strong></div>` : `
+      ${u ? `<div class="info-box wiz-row-reveal" style="font-size:12px;animation-delay:1s">👤 Trimiți ca <strong>${u.displayName||u.email}</strong></div>` : `
       <div class="fg"><div class="fl">Nume complet *</div><input type="text" id="wiz-name" placeholder="Ion Popescu"/></div>
       <div class="fg"><div class="fl">Telefon *</div><input type="tel" id="wiz-phone" placeholder="07XX XXX XXX"/></div>
       <div class="fg"><div class="fl">Email *</div><input type="email" id="wiz-email" placeholder="email@exemplu.ro"/></div>
@@ -5099,6 +5185,54 @@ function renderWizStep(){
 
   body.innerHTML = html;
   if (step===2) { renderWizStops(); }
+  if (step===5) { renderWizVehicleListAsync(); }
+  if (step===6) { renderWizDriverListAsync(); }
+}
+
+async function renderWizVehicleListAsync() {
+  const d = window._WIZ_DATA;
+  const listEl = document.getElementById('wiz-vehicle-list');
+  if (!listEl) return;
+  if (!d.date || (!d.durH && !d.durZile)) {
+    listEl.innerHTML = (window._F||[]).map(v=>`<div class="wiz-opt-card ${d.vehId===v.id?'selected':''}" onclick="wizSelectVeh('${v.id}')" style="text-align:left;display:flex;align-items:center;gap:10px;padding:12px"><span style="font-size:22px">${v.icon||'🚌'}</span><div><div class="wiz-opt-text" style="font-size:13px">${v.nome||v.name||v.nume||''}</div><div style="font-size:11px;color:var(--stone);font-weight:400">${capVeh(v)} locuri${v.pretPerKm?' · '+v.pretPerKm+' RON/km':''}</div></div></div>`).join('') || '<div style="color:var(--stone);font-size:12px;text-align:center;padding:16px">Nicio flotă disponibilă momentan</div>';
+    return;
+  }
+  const avail = await computeOrgAvailability(d.date, d.time, d.durH, d.durZile);
+  if (window._WIZ_STEP !== 5) return; // clientul a navigat deja în altă parte pana s-a terminat calculul
+  const cur = document.getElementById('wiz-vehicle-list'); if (!cur) return;
+  cur.innerHTML = avail.vehicles.map(({id,v,conflict})=>{
+    const badge = conflict
+      ? '<span style="background:var(--red-g);color:var(--red);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(181,45,45,.25);white-space:nowrap;flex-shrink:0">🔴 Ocupat</span>'
+      : '<span style="background:var(--green-g);color:var(--green);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(26,107,60,.2);white-space:nowrap;flex-shrink:0">🟢 Liber</span>';
+    return `<div class="wiz-opt-card ${d.vehId===id?'selected':''}" onclick="wizSelectVeh('${id}')" style="text-align:left;display:flex;align-items:center;gap:10px;padding:12px">
+      <span style="font-size:22px">${v.icon||'🚌'}</span>
+      <div style="flex:1;min-width:0"><div class="wiz-opt-text" style="font-size:13px">${v.nome||v.name||v.nume||''}</div><div style="font-size:11px;color:var(--stone);font-weight:400">${capVeh(v)} locuri${v.pretPerKm?' · '+v.pretPerKm+' RON/km':''}</div></div>
+      ${badge}
+    </div>`;
+  }).join('') || '<div style="color:var(--stone);font-size:12px;text-align:center;padding:16px">Nicio flotă disponibilă momentan</div>';
+}
+
+async function renderWizDriverListAsync() {
+  const d = window._WIZ_DATA;
+  const listEl = document.getElementById('wiz-driver-list');
+  if (!listEl) return;
+  if (!window._DRIVERS_LIST?.length) { try { const sfSnap=await getDocs(collection(db,'soferi')); buildDriversCache(sfSnap); } catch(e){} }
+  if (!d.date) {
+    listEl.innerHTML = (window._DRIVERS_LIST||[]).map(sf=>`<div class="wiz-opt-card ${d.driverPrefId===sf.id?'selected':''}" onclick="wizSelectDriverPref('${sf.id}')" style="text-align:left;padding:12px"><span class="wiz-opt-text" style="font-size:13px">${sf.numeFull}</span></div>`).join('') || '<div style="color:var(--stone);font-size:12px;text-align:center;padding:16px">Niciun șofer disponibil momentan</div>';
+    return;
+  }
+  const avail = await computeOrgAvailability(d.date, d.time, d.durH, d.durZile);
+  if (window._WIZ_STEP !== 6) return;
+  const cur = document.getElementById('wiz-driver-list'); if (!cur) return;
+  cur.innerHTML = avail.drivers.map(({id,sf,totalMin,conflict})=>{
+    const icon = conflict ? '🔴' : totalMin>=480 ? '🟡' : '🟢';
+    const col = conflict?'var(--red)':totalMin>=480?'var(--orange)':'var(--green)';
+    const bg = conflict?'var(--red-g)':totalMin>=480?'var(--orange-g)':'var(--green-g)';
+    return `<div class="wiz-opt-card ${d.driverPrefId===id?'selected':''}" onclick="wizSelectDriverPref('${id}')" style="text-align:left;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px">
+      <span class="wiz-opt-text" style="font-size:13px">${sf.numeFull}</span>
+      <span style="background:${bg};color:${col};font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0">${icon} ${(totalMin/60).toFixed(1)}h azi</span>
+    </div>`;
+  }).join('') || '<div style="color:var(--stone);font-size:12px;text-align:center;padding:16px">Niciun șofer disponibil momentan</div>';
 }
 
 window.wizSelectTip = (val) => {
@@ -5114,23 +5248,34 @@ window.wizSelectVeh = (val) => {
   setTimeout(()=>{ if (window._WIZ_DATA.vehId===val && window._WIZ_STEP===5) wizNext(); }, 350);
 };
 
+window.wizSelectDriverPref = (val) => {
+  window._WIZ_DATA.driverPrefId = val;
+  renderWizStep();
+  setTimeout(()=>{ if (window._WIZ_DATA.driverPrefId===val && window._WIZ_STEP===6) wizNext(); }, 350);
+};
+
 function renderWizStops(){
   const c = document.getElementById('wiz-stops-list');
   if (!c) return;
   const stops = window._WIZ_DATA.stops;
+  if (!window._WIZ_DATA.stopCoords) window._WIZ_DATA.stopCoords = [];
   c.innerHTML = stops.map((s,i)=>{
     const label = i===0 ? 'A' : i===stops.length-1 ? 'B' : (i+1);
     const placeholder = i===0?'Punct de plecare *':(i===stops.length-1?'Destinație finală *':'Oprire intermediară');
     const delBtn = (i>0 && i<stops.length-1) ? `<button class="btn btn-ghost btn-sm" onclick="wizRemoveStop(${i})">✕</button>` : '';
-    return `<div class="wiz-stop-row"><div class="wiz-stop-badge">${label}</div><input type="text" value="${s}" placeholder="${placeholder}" oninput="window._WIZ_DATA.stops[${i}]=this.value" style="flex:1"/><button type="button" class="btn btn-secondary btn-sm btn-icon" title="Alege pe hartă" onclick="openOrgStopMapPicker(${i},'wiz')">📍</button>${delBtn}</div>`;
+    return `<div class="wiz-stop-row"><div class="wiz-stop-badge">${label}</div><input type="text" value="${s}" placeholder="${placeholder}" oninput="window._WIZ_DATA.stops[${i}]=this.value;window._WIZ_DATA.stopCoords[${i}]=null" style="flex:1"/><button type="button" class="btn btn-secondary btn-sm btn-icon" title="Alege pe hartă" onclick="openOrgStopMapPicker(${i},'wiz')">📍</button>${delBtn}</div>`;
   }).join('');
 }
 window.wizAddStop = () => {
-  window._WIZ_DATA.stops.splice(window._WIZ_DATA.stops.length-1, 0, '');
+  const at = window._WIZ_DATA.stops.length-1;
+  window._WIZ_DATA.stops.splice(at, 0, '');
+  if (!window._WIZ_DATA.stopCoords) window._WIZ_DATA.stopCoords = [];
+  window._WIZ_DATA.stopCoords.splice(at, 0, null);
   renderWizStops();
 };
 window.wizRemoveStop = (i) => {
   window._WIZ_DATA.stops.splice(i,1);
+  if (window._WIZ_DATA.stopCoords) window._WIZ_DATA.stopCoords.splice(i,1);
   renderWizStops();
 };
 
@@ -5179,6 +5324,7 @@ function renderWizSendingScreen(){
   const durText = d.durH ? d.durH+' oră/ore' : d.durZile ? d.durZile+' zi/zile' : 'nespecificat';
   const vehObj = d.vehId ? (window._F||[]).find(v=>v.id===d.vehId) : null;
   const vehName = vehObj ? (vehObj.nome||vehObj.name||vehObj.nume||'') : 'Fără preferință — alege echipa';
+  const drvName = d.driverPrefId ? numeSofer(d.driverPrefId) : 'Fără preferință';
   const body = document.getElementById('wiz-body');
   if (!body) return;
   body.innerHTML = `<div class="wiz-fade-in" style="text-align:center;padding:10px 0 4px">
@@ -5191,7 +5337,8 @@ function renderWizSendingScreen(){
       <div class="wiz-summary-row wiz-row-reveal" style="animation-delay:.9s"><span>Data</span><span>${d.date||'-'} ${d.time!=='flexibil'?'· '+d.time:'(oră flexibilă)'}</span></div>
       <div class="wiz-summary-row wiz-row-reveal" style="animation-delay:1.3s"><span>Durată</span><span>${durText}</span></div>
       <div class="wiz-summary-row wiz-row-reveal" style="animation-delay:1.7s"><span>Vehicul</span><span>${vehName}</span></div>
-      ${d.persons?`<div class="wiz-summary-row wiz-row-reveal" style="animation-delay:2.1s"><span>Persoane</span><span>${d.persons}</span></div>`:''}
+      <div class="wiz-summary-row wiz-row-reveal" style="animation-delay:2s"><span>Șofer preferat</span><span>${drvName}</span></div>
+      ${d.persons?`<div class="wiz-summary-row wiz-row-reveal" style="animation-delay:2.3s"><span>Persoane</span><span>${d.persons}</span></div>`:''}
     </div>
     <div style="height:8px;background:var(--border-l);border-radius:4px;overflow:hidden">
       <div id="wiz-sending-bar" style="height:100%;width:6%;background:linear-gradient(90deg,var(--amber),var(--amber-d));border-radius:4px;transition:width 1s ease"></div>
@@ -5250,10 +5397,15 @@ window.submitOrg = async (opts={}) => {
   const pretEstim=veh?.pretPerKm&&durMin>0?Math.round(veh.pretPerKm*(durMin/60)*65/60):null; // estimare bazata pe durata
   const drivPref=document.getElementById('org-driver-pref')?.value||null;
   const ora=document.getElementById('org-time')?.value||'flexibil';
+  // Coordonatele exacte (lat/lng) alese de client pe hartă, dacă a folosit unealta de hartă —
+  // altfel rămân necunoscute și adminul va vedea doar numele scris de mână, fără hartă.
+  const stopsCoords = window._ORG_STOPS.map((nume,i)=> nume ? {nume, lat: window._ORG_STOP_COORDS?.[i]?.lat ?? null, lng: window._ORG_STOP_COORDS?.[i]?.lng ?? null} : null).filter(Boolean);
+  const hasCoords = stopsCoords.some(s=>s.lat!=null && s.lng!=null);
   const rez={
     uid:u?u.uid:null,numeClient:nc,email:em,telefon:tel,
     tipRezervare:'organizata',tipCursa:tipCursa,descriereCursa:desc,
     stops,traseu:stops.join(' → '),
+    ...(hasCoords?{stopsCoords}:{}),
     data:date,ora,
     durataEstimataH:durH||null,durataEstimataZile:durZile||null,durataEstimataMin:durMin||null,
     persoane:persoaneVal||null,
@@ -5282,7 +5434,7 @@ window.submitOrg = async (opts={}) => {
       toast('✅ Cererea a fost trimisă! Veți fi contactat în curând.','ok');
       if(btn){btn.disabled=false;btn.innerHTML='Trimite cererea 📨';}
     }
-    window._ORG_STOPS=['',''];window._ORG_TIP='';
+    window._ORG_STOPS=['',''];window._ORG_STOP_COORDS=[null,null];window._ORG_TIP='';
     ['org-desc','org-persons','org-date','org-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     document.querySelectorAll('.org-tip-btn').forEach(b=>b.classList.replace('btn-primary','btn-secondary'));
     document.getElementById('org-avail-wrap').style.display='none';
@@ -6746,6 +6898,13 @@ window.openBookingDetail=async rezId=>{
   } else allocEl.style.display='none';
   const invoiceBtns=document.getElementById('booking-invoice-btns');
   if(invoiceBtns)invoiceBtns.style.display=r.status==='confirmata'&&r.pretFinal?'block':'none';
+  // Harta cu traseul exact ales de client (dacă a folosit unealta de plasare pe hartă)
+  const mapWrap=document.getElementById('booking-map-wrap');
+  const hasClientCoords = (r.stopsCoords||[]).some(s=>s.lat!=null && s.lng!=null);
+  if (mapWrap) {
+    if (hasClientCoords) { mapWrap.style.display='block'; renderBookingMap(r.stopsCoords); }
+    else mapWrap.style.display='none';
+  }
   // Info
   const locs=r.locuriRezervate||[];
   const rows=[['Client',r.numeClient||'-'],['Email',r.email||'-'],['Telefon',r.telefon||'-'],['Tip',r.tipRezervare==='regulata'?'🔄 Regulată':'🚌 Organizată'],['Descriere',r.descriereCursa||'-'],['Traseu',r.traseu||r.ruta||'-'],['Data',r.data||'-'],['Ora',r.ora||'-'],...(r.tipRezervare==='organizata'?[['Vehicul preferat (ales de client)',r.vehiculPrefNume||'Fără preferință'],['Șofer preferat (ales de client)',r.driverPrefId?numeSofer(r.driverPrefId):'Fără preferință']]:[]),['Vehicul alocat',r.vehiculNume||'Nealocat'],['Șofer 1 alocat',r.driverId?numeSofer(r.driverId):'Nealocat'],['Șofer 2 alocat',r.driverId2?numeSofer(r.driverId2):'—'],['Km estimați',r.distantaKm||'-'],['Preț final',r.pretFinal?r.pretFinal+' RON':'Nesetat'],['Discount',r.discount?r.discount+' RON':'—'],...(locs.length?[['Locuri',locs.map(l=>`Loc ${l.locNr}: ${l.statieUrcare}→${l.statieCoborare}`).join(', ')]]:[])];
@@ -6761,6 +6920,77 @@ window.openBookingDetail=async rezId=>{
 window._QUICK_REPLIES_DATA=tmpls;
   openModal('booking-detail');
 };
+
+// ── HARTA CU TRASEUL EXACT AL CLIENTULUI (admin) — vizualizare + ajustare ──
+// Punctele vin exact din harta pe care clientul a construit-o (Cursă Organizată).
+// Adminul poate trage un marker dacă autobuzul nu poate ajunge chiar acolo
+// (stradă îngustă, zonă pietonală etc.) și salvează poziția corectată.
+window._bookingMapPoints = [];
+window._bookingMapLeaflet = null;
+let _bookingMapLeafletLoaded = false;
+async function renderBookingMap(stopsCoords) {
+  window._bookingMapPoints = (stopsCoords||[]).map(s=>({...s}));
+  const mapEl = document.getElementById('booking-map');
+  if (!mapEl) return;
+  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)"><div class="spin"></div></div>';
+  if (!_bookingMapLeafletLoaded) {
+    try {
+      await new Promise((res, rej) => {
+        if (window.L) { res(); return; }
+        const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(link);
+        const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+        s.onload = res; s.onerror = () => rej(new Error('Harta nu s-a putut încărca'));
+        document.head.appendChild(s);
+        setTimeout(() => rej(new Error('Timeout la încărcarea hărții')), 10000);
+      });
+      _bookingMapLeafletLoaded = true;
+    } catch(e) { mapEl.innerHTML = `<div style="text-align:center;color:var(--stone);padding:20px">⚠️ ${e.message}</div>`; return; }
+  }
+  if (window._bookingMapLeaflet) { try{window._bookingMapLeaflet.remove();}catch(e){} window._bookingMapLeaflet=null; }
+  mapEl.innerHTML = '';
+  const map = L.map(mapEl, {center:[45.9,24.9], zoom:7});
+  window._bookingMapLeaflet = map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap', maxZoom:18}).addTo(map);
+
+  const pts = window._bookingMapPoints.filter(p=>p.lat!=null && p.lng!=null);
+  const bounds = [];
+  pts.forEach((p,i) => {
+    const isEnd = i===0 || i===pts.length-1;
+    const circleSize = isEnd?26:16;
+    const icon = L.divIcon({
+      html:`<div style="position:relative;width:${circleSize}px">
+        <div style="background:${isEnd?'#a97c3f':'#fff'};color:${isEnd?'#fff':'#a97c3f'};border:2.5px solid #a97c3f;border-radius:50%;width:${circleSize}px;height:${circleSize}px;display:flex;align-items:center;justify-content:center;font-size:${isEnd?13:9}px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.28);cursor:grab">${i===0?'🏁':i===pts.length-1?'🏳':''}</div>
+        <div style="position:absolute;top:${circleSize+4}px;left:50%;transform:translateX(-50%);background:rgba(255,253,249,.97);color:#1a1511;font-size:${isEnd?11:10}px;font-weight:${isEnd?800:700};padding:2px 8px;border-radius:5px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.22);border:1px solid rgba(169,124,63,.35);max-width:120px;overflow:hidden;text-overflow:ellipsis">${p.nume||''}</div>
+      </div>`,
+      iconSize:[circleSize, circleSize+26], iconAnchor:[circleSize/2,circleSize/2], className:''
+    });
+    const marker = L.marker([p.lat,p.lng], {icon, draggable:true}).addTo(map);
+    marker.on('dragend', (ev) => {
+      const ll = ev.target.getLatLng();
+      window._bookingMapPoints[i].lat = ll.lat;
+      window._bookingMapPoints[i].lng = ll.lng;
+      toast('📍 Punct mutat — apasă "Salvează ajustările" ca să rămână', 'in');
+    });
+    bounds.push([p.lat,p.lng]);
+  });
+  if (pts.length >= 2) {
+    const roadRoute = await getRoadRoute(pts.map(p=>[p.lat,p.lng]));
+    const drawCoords = roadRoute || pts.map(p=>[p.lat,p.lng]);
+    L.polyline(drawCoords, {color:'#a97c3f', weight:roadRoute?4:3, opacity:.85, dashArray:roadRoute?null:'4,6'}).addTo(map);
+    if (drawCoords.length>=2) createBusMarkerOnRoute(map, drawCoords, '#a97c3f');
+  }
+  if (bounds.length) map.fitBounds(bounds, {padding:[30,30]});
+  setTimeout(()=>map.invalidateSize(), 60);
+}
+window.saveBookingMapAdjustments = async () => {
+  const rezId = window._ACTIVE_BOOKING_ID;
+  if (!rezId) return;
+  try {
+    await setDoc(doc(db,'rezervari',rezId), {stopsCoords: window._bookingMapPoints}, {merge:true});
+    toast('✅ Poziția ajustată a fost salvată', 'ok');
+  } catch(e) { toast('Eroare: '+e.message, 'er'); }
+};
+
 function checkS2Need(r){
   const alertEl=document.getElementById('alloc-s2-alert'),s2WrapEl=document.getElementById('alloc-s2-wrap');
   if(!alertEl||!s2WrapEl)return;
