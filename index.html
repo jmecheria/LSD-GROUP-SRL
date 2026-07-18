@@ -1856,20 +1856,31 @@ footer::before{
     </div>
   </div>
 
-  <!-- PROGRAM (listă zilnică — curse + șofer + vehicul, editare instant) -->
+  <!-- PROGRAM (listă zilnică/săptămânală — curse + șofer + vehicul, editare instant) -->
   <div id="admin-tab-program" class="tab-panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px">
       <div>
-        <h3 style="font-size:16px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif">📅 Programul zilei</h3>
-        <p style="font-size:12px;color:var(--stone)">Toate cursele din ziua selectată. Schimbă șoferul sau vehiculul direct din listă.</p>
+        <h3 style="font-size:16px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif">📅 Program</h3>
+        <p style="font-size:12px;color:var(--stone)">Cursele planificate. Schimbă șoferul sau vehiculul direct din listă.</p>
       </div>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-secondary btn-sm" onclick="progPrevDay()">←</button>
-        <input type="date" id="prog-date" onchange="loadProgram()" style="width:150px;font-size:13px"/>
-        <button class="btn btn-secondary btn-sm" onclick="progToday()">Azi</button>
-        <button class="btn btn-secondary btn-sm" onclick="progNextDay()">→</button>
-        <button class="btn btn-primary btn-sm" onclick="loadProgram()">🔄</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" id="prog-mode-day" onclick="progSetMode('day')">📅 Zi</button>
+        <button class="btn btn-sm" id="prog-mode-week" onclick="progSetMode('week')">📆 Săptămână</button>
       </div>
+    </div>
+    <div id="prog-nav-day" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-secondary btn-sm" onclick="progPrevDay()">←</button>
+      <input type="date" id="prog-date" onchange="loadProgram()" style="width:150px;font-size:13px"/>
+      <button class="btn btn-secondary btn-sm" onclick="progToday()">Azi</button>
+      <button class="btn btn-secondary btn-sm" onclick="progNextDay()">→</button>
+      <button class="btn btn-primary btn-sm" onclick="loadProgram()">🔄</button>
+    </div>
+    <div id="prog-nav-week" style="display:none;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-secondary btn-sm" onclick="progWeekPrev()">← Săpt. anterioară</button>
+      <span id="prog-week-label" style="font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:var(--amber-d)"></span>
+      <button class="btn btn-secondary btn-sm" onclick="progWeekToday()">Săpt. curentă</button>
+      <button class="btn btn-secondary btn-sm" onclick="progWeekNext()">Săpt. următoare →</button>
+      <button class="btn btn-primary btn-sm" onclick="loadProgramWeek()">🔄</button>
     </div>
     <div id="program-list"></div>
   </div>
@@ -5218,8 +5229,8 @@ window.loadContPage = async () => {
       </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--stone);margin-bottom:8px">
         <span>📅 ${r.data||'-'}</span><span>🕐 ${r.ora||'-'}</span>
-        ${r.vehiculNume?`<span>🚌 ${r.vehiculNume}</span>`:''}
-        ${numeSoferPtRezervare(r)?`<span>👨‍✈️ ${numeSoferPtRezervare(r)}</span>`:''}
+        ${(r.vehiculNume&&(r.tipRezervare==='regulata'||r.status==='confirmata'))?`<span>🚌 ${r.vehiculNume}</span>`:''}
+        ${(numeSoferPtRezervare(r)&&(r.tipRezervare==='regulata'||r.status==='confirmata'))?`<span>👨‍✈️ ${numeSoferPtRezervare(r)}</span>`:''}
         ${r.descriereCursa?`<span>📋 ${r.descriereCursa}</span>`:''}
         ${r.pretTotal?`<span style="color:var(--amber-d);font-weight:600">💰 ${r.pretTotal} RON</span>`:''}
         ${r.pretFinal&&!r.pretTotal?`<span style="color:var(--amber-d);font-weight:700">💰 Ofertă: ${r.pretFinal} RON</span>`:''}
@@ -5382,7 +5393,7 @@ window.openGuestOrgDetail = (r) => {
   }
   const sl={in_asteptare:'⏳ În așteptare',oferta_trimisa:'📩 Ofertă trimisă',confirmata:'✅ Confirmată',anulata:'❌ Anulată'};
   const msgs=r.mesaje||[];
-  const rows=[['Traseu',r.traseu||r.descriereCursa||'-'],['Data',r.data||'-'],['Status',sl[r.status]||r.status||'-'],...(r.vehiculNume?[['Autobuz',r.vehiculNume]]:[]),...(numeSoferPtRezervare(r)?[['Șofer',numeSoferPtRezervare(r)]]:[]),...(r.pretFinal?[['Preț ofertă',r.pretFinal+' RON']]:[])];
+  const rows=[['Traseu',r.traseu||r.descriereCursa||'-'],['Data',r.data||'-'],['Status',sl[r.status]||r.status||'-'],...(r.status==='confirmata'&&r.vehiculNume?[['Autobuz',r.vehiculNume]]:[]),...(r.status==='confirmata'&&numeSoferPtRezervare(r)?[['Șofer',numeSoferPtRezervare(r)]]:[]),...(r.pretFinal?[['Preț ofertă',r.pretFinal+' RON']]:[])];
   const body=document.getElementById('guest-org-detail-body');
   body.innerHTML = rows.map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600;text-align:right;max-width:60%">${v}</span></div>`).join('') +
     (msgs.length ? `<div style="margin-top:14px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">💬 Conversație</div><div class="msg-thread">${msgs.map(m=>`<div class="msg-bubble ${m.from==='admin'?'msg-admin':'msg-client'}"><div class="msg-meta">${m.from==='admin'?'👑 Echipa LSD Group':'👤 Tu'}</div>${m.text}</div>`).join('')}</div></div>` : '<div style="margin-top:12px;font-size:12px;color:var(--stone)">Nicio conversație încă. Veți primi și un email cu detaliile.</div>');
@@ -5405,7 +5416,7 @@ window.adminTab=tab=>{
   document.querySelectorAll('#pg-admin .tab-btn').forEach((b,i)=>{
     b.classList.toggle('active',['vehicles','routes','bookings','drivers','program','harta','ticker','continut','settings'][i]===tab);
   });
-  if(tab==='program'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];loadProgram();}
+  if(tab==='program'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];progSetMode(window._PROG_MODE||'day');}
   if(tab==='harta'){loadHartaAdmin();}
   if(tab==='continut'){loadContentPanel();}
 };
@@ -6602,10 +6613,83 @@ window.saveDriver=async()=>{
   try{if(id)await setDoc(doc(db,'soferi',id),data,{merge:true});else{data.createdAt=serverTimestamp();await addDoc(collection(db,'soferi'),data);}closeModal('driver');await loadDriversTbl();toast('Șofer salvat!','ok');}catch(e){toast('Eroare: '+e.message,'er');}
 };
 
-// ── PROGRAM (listă zilnică minimalistă — curse regulate + organizate, editare instant) ──
+// ── PROGRAM (listă zilnică/săptămânală minimalistă — curse regulate + organizate, editare instant) ──
+window._PROG_MODE = 'day';
+window._PROG_WEEK_START = null; // luni din săptămâna afișată (weekly mode)
+
 window.progToday = () => { document.getElementById('prog-date').value=new Date().toISOString().split('T')[0]; loadProgram(); };
 window.progPrevDay = () => { const el=document.getElementById('prog-date'); if(!el.value)el.value=new Date().toISOString().split('T')[0]; const d=new Date(el.value+'T12:00:00');d.setDate(d.getDate()-1);el.value=d.toISOString().split('T')[0];loadProgram(); };
 window.progNextDay = () => { const el=document.getElementById('prog-date'); if(!el.value)el.value=new Date().toISOString().split('T')[0]; const d=new Date(el.value+'T12:00:00');d.setDate(d.getDate()+1);el.value=d.toISOString().split('T')[0];loadProgram(); };
+
+window.progSetMode = (mode) => {
+  window._PROG_MODE = mode;
+  document.getElementById('prog-mode-day').className = 'btn btn-sm ' + (mode==='day'?'btn-primary':'btn-secondary');
+  document.getElementById('prog-mode-week').className = 'btn btn-sm ' + (mode==='week'?'btn-primary':'btn-secondary');
+  document.getElementById('prog-nav-day').style.display = mode==='day'?'flex':'none';
+  document.getElementById('prog-nav-week').style.display = mode==='week'?'flex':'none';
+  if (mode==='day') loadProgram(); else loadProgramWeek();
+};
+
+function progGetWeekStart(dateStr){
+  const d=new Date(dateStr+'T12:00:00'); const dow=d.getDay(); const diff=(dow===0?-6:1-dow);
+  d.setDate(d.getDate()+diff); return d.toISOString().split('T')[0];
+}
+window.progWeekToday = () => { window._PROG_WEEK_START=progGetWeekStart(new Date().toISOString().split('T')[0]); loadProgramWeek(); };
+window.progWeekPrev = () => { if(!window._PROG_WEEK_START)window._PROG_WEEK_START=progGetWeekStart(new Date().toISOString().split('T')[0]); const d=new Date(window._PROG_WEEK_START+'T12:00:00');d.setDate(d.getDate()-7);window._PROG_WEEK_START=d.toISOString().split('T')[0];loadProgramWeek(); };
+window.progWeekNext = () => { if(!window._PROG_WEEK_START)window._PROG_WEEK_START=progGetWeekStart(new Date().toISOString().split('T')[0]); const d=new Date(window._PROG_WEEK_START+'T12:00:00');d.setDate(d.getDate()+7);window._PROG_WEEK_START=d.toISOString().split('T')[0];loadProgramWeek(); };
+
+// Adună rândurile (curse regulate + organizate) pentru o singură zi. Nu atinge DOM.
+async function gatherProgramRows(date){
+  const dow=new Date(date+'T12:00:00').getDay();
+  const rows=[];
+  window._R.filter(c=>{
+    if(!c.activa)return false;
+    if(!(c.zile||[]).includes(dow))return false;
+    if(c.dataStart&&date<c.dataStart)return false;
+    if(c.dataEnd&&date>c.dataEnd)return false;
+    if(c.dateBlocate?.includes(date))return false;
+    return true;
+  }).forEach(c=>{
+    const pl=c.plecari?.length?c.plecari:[{ora:c.ora,driverId:c.driverId}];
+    pl.forEach((p,pi)=>{
+      const oraInfo=getOraForDate(p,date);
+      rows.push({
+        data:date, tip:'regulata', ora:oraInfo.ora||p.ora||'-', ruta:c.ruta,
+        vehiculId:c.vehiculId, driverId:oraInfo.driverId||p.driverId||'',
+        cursaId:c.id, pi
+      });
+    });
+  });
+  try{
+    const orgSnap=await getDocs(query(collection(db,'rezervari'),where('data','==',date)));
+    orgSnap.docs.forEach(d=>{
+      const r=d.data();
+      if(r.tipRezervare!=='organizata'||r.status==='anulata')return;
+      rows.push({
+        data:date, tip:'organizata', ora:r.ora||'flexibil', ruta:r.descriereCursa||r.traseu||'Cursă organizată',
+        vehiculId:r.vehiculId||'', driverId:r.driverId||'', rezId:d.id
+      });
+    });
+  }catch(e){}
+  rows.sort((a,b)=>(a.ora||'').localeCompare(b.ora||''));
+  return rows;
+}
+
+function progRenderRow(r, showDay){
+  const vehOpts=window._F.map(v=>`<option value="${v.id}" ${r.vehiculId===v.id?'selected':''}>${v.icon||''} ${v.nome||v.name||v.nume||''}</option>`).join('');
+  const sfOpts=window._DRIVERS_LIST.map(sf=>`<option value="${sf.id}" ${r.driverId===sf.id?'selected':''}>${sf.numeFull}</option>`).join('');
+  const tipBadge=r.tip==='regulata'?'<span class="chip chip-amber">🔄 Regulată</span>':'<span class="chip" style="background:var(--orange-g);border-color:rgba(196,101,32,.25);color:var(--orange)">🚌 Organizată</span>';
+  const dataAttrs=r.tip==='regulata'?`data-cursaid="${r.cursaId}" data-pi="${r.pi}"`:`data-rezid="${r.rezId}"`;
+  const dayCell=showDay?`<td style="white-space:nowrap"><strong>${window.DAYS_RO[new Date(r.data+'T12:00:00').getDay()]}</strong><br><span style="font-size:11px;color:var(--stone)">${r.data.slice(5)}</span></td>`:'';
+  return `<tr>
+    ${dayCell}
+    <td><strong>${r.ora}</strong></td>
+    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.ruta}</td>
+    <td>${tipBadge}</td>
+    <td><select ${dataAttrs} onchange="progUpdateField(this,'vehiculId')"><option value="">— fără vehicul —</option>${vehOpts}</select></td>
+    <td><select ${dataAttrs} onchange="progUpdateField(this,'driverId')"><option value="">— fără șofer —</option>${sfOpts}</select></td>
+  </tr>`;
+}
 
 window.loadProgram = async () => {
   const dateEl=document.getElementById('prog-date');
@@ -6618,59 +6702,32 @@ window.loadProgram = async () => {
     const sfSnap=await getDocs(collection(db,'soferi')); buildDriversCache(sfSnap);
     const regSnap=await getDocs(collection(db,'curse_regulate'));
     window._R=regSnap.docs.map(d=>({id:d.id,...d.data()}));
-    const dow=new Date(date+'T12:00:00').getDay();
-
-    // Curse regulate active în ziua selectată
-    const rows=[];
-    window._R.filter(c=>{
-      if(!c.activa)return false;
-      if(!(c.zile||[]).includes(dow))return false;
-      if(c.dataStart&&date<c.dataStart)return false;
-      if(c.dataEnd&&date>c.dataEnd)return false;
-      if(c.dateBlocate?.includes(date))return false;
-      return true;
-    }).forEach(c=>{
-      const pl=c.plecari?.length?c.plecari:[{ora:c.ora,driverId:c.driverId}];
-      pl.forEach((p,pi)=>{
-        const oraInfo=getOraForDate(p,date);
-        rows.push({
-          tip:'regulata', ora:oraInfo.ora||p.ora||'-', ruta:c.ruta,
-          vehiculId:c.vehiculId, driverId:oraInfo.driverId||p.driverId||'',
-          cursaId:c.id, pi
-        });
-      });
-    });
-
-    // Curse organizate confirmate/programate în ziua selectată
-    try{
-      const orgSnap=await getDocs(query(collection(db,'rezervari'),where('data','==',date)));
-      orgSnap.docs.forEach(d=>{
-        const r=d.data();
-        if(r.tipRezervare!=='organizata'||r.status==='anulata')return;
-        rows.push({
-          tip:'organizata', ora:r.ora||'flexibil', ruta:r.descriereCursa||r.traseu||'Cursă organizată',
-          vehiculId:r.vehiculId||'', driverId:r.driverId||'', rezId:d.id
-        });
-      });
-    }catch(e){}
-
-    rows.sort((a,b)=>(a.ora||'').localeCompare(b.ora||''));
-
+    const rows=await gatherProgramRows(date);
     if(!rows.length){listEl.innerHTML='<div class="empty-state"><div class="empty-icon">😴</div><h3>Nicio cursă în această zi</h3></div>';return;}
+    listEl.innerHTML=`<div class="tbl-wrap"><table class="tbl"><thead><tr><th style="width:70px">Ora</th><th>Traseu</th><th>Tip</th><th style="width:220px">Vehicul</th><th style="width:200px">Șofer</th></tr></thead><tbody>${rows.map(r=>progRenderRow(r,false)).join('')}</tbody></table></div>`;
+  }catch(e){ listEl.innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><p>'+e.message+'</p></div>'; }
+};
 
-    listEl.innerHTML=`<div class="tbl-wrap"><table class="tbl"><thead><tr><th style="width:70px">Ora</th><th>Traseu</th><th>Tip</th><th style="width:220px">Vehicul</th><th style="width:200px">Șofer</th></tr></thead><tbody>${rows.map((r,i)=>{
-      const vehOpts=window._F.map(v=>`<option value="${v.id}" ${r.vehiculId===v.id?'selected':''}>${v.icon||''} ${v.nome||v.name||v.nume||''}</option>`).join('');
-      const sfOpts=window._DRIVERS_LIST.map(sf=>`<option value="${sf.id}" ${r.driverId===sf.id?'selected':''}>${sf.numeFull}</option>`).join('');
-      const tipBadge=r.tip==='regulata'?'<span class="chip chip-amber">🔄 Regulată</span>':'<span class="chip" style="background:var(--orange-g);border-color:rgba(196,101,32,.25);color:var(--orange)">🚌 Organizată</span>';
-      const dataAttrs=r.tip==='regulata'?`data-cursaid="${r.cursaId}" data-pi="${r.pi}"`:`data-rezid="${r.rezId}"`;
-      return `<tr>
-        <td><strong>${r.ora}</strong></td>
-        <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.ruta}</td>
-        <td>${tipBadge}</td>
-        <td><select ${dataAttrs} onchange="progUpdateField(this,'vehiculId')"><option value="">— fără vehicul —</option>${vehOpts}</select></td>
-        <td><select ${dataAttrs} onchange="progUpdateField(this,'driverId')"><option value="">— fără șofer —</option>${sfOpts}</select></td>
-      </tr>`;
-    }).join('')}</tbody></table></div>`;
+window.loadProgramWeek = async () => {
+  if(!window._PROG_WEEK_START) window._PROG_WEEK_START=progGetWeekStart(new Date().toISOString().split('T')[0]);
+  const listEl=document.getElementById('program-list');
+  listEl.innerHTML='<div class="loading-state"><div class="spin"></div></div>';
+  try{
+    await loadFleet().catch(()=>{});
+    const sfSnap=await getDocs(collection(db,'soferi')); buildDriversCache(sfSnap);
+    const regSnap=await getDocs(collection(db,'curse_regulate'));
+    window._R=regSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    const days=[]; for(let i=0;i<7;i++){const d=new Date(window._PROG_WEEK_START+'T12:00:00');d.setDate(d.getDate()+i);days.push(d.toISOString().split('T')[0]);}
+    const labelEl=document.getElementById('prog-week-label');
+    if(labelEl){const dS=new Date(days[0]+'T12:00:00'),dE=new Date(days[6]+'T12:00:00');labelEl.textContent=`${dS.getDate()} ${window.MONTHS_RO[dS.getMonth()].slice(0,3)} – ${dE.getDate()} ${window.MONTHS_RO[dE.getMonth()].slice(0,3)} ${dE.getFullYear()}`;}
+
+    let allRows=[];
+    for(const date of days){ allRows=allRows.concat(await gatherProgramRows(date)); }
+
+    if(!allRows.length){listEl.innerHTML='<div class="empty-state"><div class="empty-icon">😴</div><h3>Nicio cursă în această săptămână</h3></div>';return;}
+
+    listEl.innerHTML=`<div class="tbl-wrap"><table class="tbl"><thead><tr><th style="width:70px">Zi</th><th style="width:70px">Ora</th><th>Traseu</th><th>Tip</th><th style="width:200px">Vehicul</th><th style="width:190px">Șofer</th></tr></thead><tbody>${allRows.map(r=>progRenderRow(r,true)).join('')}</tbody></table></div>`;
   }catch(e){ listEl.innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><p>'+e.message+'</p></div>'; }
 };
 
@@ -6700,6 +6757,10 @@ window.progUpdateField = async (selectEl, field) => {
       }
     }
     toast('✅ Salvat','ok');
+    if(field==='vehiculId'&&selectEl.dataset.cursaid){
+      // vehiculul e stocat la nivel de cursă (nu per zi) — reîmprospătăm ca toate aparițiile din tabel să reflecte schimbarea
+      if(window._PROG_MODE==='week') loadProgramWeek(); else loadProgram();
+    }
   }catch(e){ toast('Eroare: '+e.message,'er'); }
 };
 
