@@ -1370,6 +1370,7 @@ footer::before{
             <button class="btn btn-secondary btn-sm" onclick="addOrgStop()">+ Adaugă oprire intermediară</button>
             <button class="btn btn-primary btn-sm" onclick="openOrgMultiMapPicker('form')">🗺️ Plasează tot traseul pe hartă</button>
           </div>
+          <div id="org-attractions-box" style="margin-top:10px"></div>
         </div>
         <div class="fg"><div class="fl">Nr. persoane aproximativ</div>
           <input type="number" id="org-persons" min="1" max="100" placeholder="Ex: 20" style="max-width:120px"/>
@@ -3226,6 +3227,71 @@ async function reverseGeocodeName(lat, lng){
   }catch(e){ console.warn('Reverse geocode failed:', e.message); return { name: null, level: 0 }; }
 }
 
+// ── RECOMANDĂRI OBIECTIVE TURISTICE (Overpass API / OpenStreetMap — gratuit, fără cheie) ──
+// Când clientul completează destinația unei curse organizate, căutăm obiective turistice
+// din apropiere (muzee, monumente, puncte de belvedere etc.) ca sursă de inspirație pentru traseu.
+function haversineKm(lat1,lng1,lat2,lng2){
+  const R=6371, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+async function fetchNearbyAttractions(lat,lng){
+  const q=`[out:json][timeout:15];(node["tourism"~"attraction|museum|viewpoint|gallery|zoo|theme_park"](around:20000,${lat},${lng});node["historic"~"monument|castle|memorial|ruins|archaeological_site|fort"](around:20000,${lat},${lng});node["natural"="waterfall"](around:20000,${lat},${lng}););out center 50;`;
+  try{
+    const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:q});
+    if(!r.ok) return [];
+    const d=await r.json();
+    const seen=new Set();
+    const items=(d.elements||[])
+      .filter(e=>e.tags?.name && e.lat!=null && e.lon!=null)
+      .map(e=>({name:e.tags.name, lat:e.lat, lng:e.lon, dist:haversineKm(lat,lng,e.lat,e.lon)}))
+      .filter(it=>{ if(seen.has(it.name)) return false; seen.add(it.name); return true; });
+    items.sort((a,b)=>a.dist-b.dist);
+    return items.slice(0,4);
+  }catch(e){ console.warn('Overpass attractions failed:', e.message); return []; }
+}
+let _orgAttractionsTimer=null;
+window.checkDestinationAttractions = (target) => {
+  clearTimeout(_orgAttractionsTimer);
+  _orgAttractionsTimer=setTimeout(async () => {
+    const stopsArr = target==='wiz' ? (window._WIZ_DATA?.stops||[]) : window._ORG_STOPS;
+    const dest = stopsArr.filter(Boolean).slice(-1)[0];
+    const boxEl = document.getElementById(target==='wiz'?'wiz-attractions-box':'org-attractions-box');
+    if(!boxEl) return;
+    if(!dest){ boxEl.innerHTML=''; return; }
+    boxEl.innerHTML=`<div style="font-size:12px;color:var(--stone)"><span class="spin" style="width:12px;height:12px;border-width:2px;margin-right:6px;vertical-align:middle"></span>Căutăm obiective turistice lângă ${dest}...</div>`;
+    const ll = await geocodeCached(dest);
+    if(!ll){ boxEl.innerHTML=''; return; }
+    const attractions = await fetchNearbyAttractions(ll[0], ll[1]);
+    if(!attractions.length){ boxEl.innerHTML=''; return; }
+    boxEl.innerHTML=`<div style="background:var(--amber-g);border:1px solid var(--amber-b);border-radius:var(--r);padding:12px 14px">
+      <div style="font-weight:700;font-size:12.5px;color:var(--amber-d);margin-bottom:8px">💡 Aproape de ${dest}, ați putea vizita:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${attractions.map(a=>`<span class="chip" style="cursor:pointer;background:var(--card)" onclick="addAttractionStop('${target}','${a.name.replace(/'/g,"\\'")}',${a.lat},${a.lng})" title="Adaugă ca oprire">📍 ${a.name} <strong style="color:var(--amber-d)">+</strong></span>`).join('')}
+      </div>
+    </div>`;
+  }, 500);
+};
+window.addAttractionStop = (target, name, lat, lng) => {
+  if(target==='wiz'){
+    const stops=window._WIZ_DATA.stops;
+    const insertAt=Math.max(0,stops.length-1);
+    stops.splice(insertAt,0,name);
+    if(!window._WIZ_DATA.stopCoords) window._WIZ_DATA.stopCoords=[];
+    window._WIZ_DATA.stopCoords.splice(insertAt,0,{lat,lng});
+    renderWizStops();
+  } else {
+    const insertAt=Math.max(0,window._ORG_STOPS.length-1);
+    window._ORG_STOPS.splice(insertAt,0,name);
+    if(!window._ORG_STOP_COORDS) window._ORG_STOP_COORDS=[];
+    window._ORG_STOP_COORDS.splice(insertAt,0,{lat,lng});
+    renderOrgStops();
+    triggerOrgCalc();
+  }
+  toast('📍 '+name+' adăugat ca oprire','ok');
+};
+
 
 // Creeaza un marker autobuz SVG (nu emoji) care se misca pe un traseu real
 function createBusMarkerOnRoute(map, routeLatLngs, color){
@@ -4245,31 +4311,83 @@ window.loadOrgPage = async function() {
   openOrgWizard();
 };
 
+// ── Disponibilitate simplă, pe zi (nu pe oră) — doar ca informare pentru client,
+// nu ca blocaj: arată dacă vehiculul/șoferul are deja ceva în ziua/zilele cerute.
+async function getSimpleBusyDays(dateStr, durH, durZile) {
+  const affectedDays = [];
+  if (durZile>0) {
+    for (let i=0;i<durZile;i++){ const d=new Date(dateStr+'T12:00:00'); d.setDate(d.getDate()+i); affectedDays.push(d.toISOString().split('T')[0]); }
+  } else {
+    affectedDays.push(dateStr);
+  }
+  const busyVeh = new Map(), busyDrv = new Map(); // id -> [zile]
+  const markBusy = (map, id, day) => { if(!id) return; if(!map.has(id)) map.set(id,[]); if(!map.get(id).includes(day)) map.get(id).push(day); };
+  for (const day of affectedDays) {
+    const dow = new Date(day+'T12:00:00').getDay();
+    (window._R||[]).forEach(c=>{
+      if(!c.activa) return;
+      if(!(c.zile||[]).includes(dow)) return;
+      if(c.dataStart&&day<c.dataStart) return;
+      if(c.dataEnd&&day>c.dataEnd) return;
+      if(c.dateBlocate?.includes(day)) return;
+      markBusy(busyVeh, c.vehiculId, day);
+      const pl=c.plecari?.length?c.plecari:[{ora:c.ora,driverId:c.driverId}];
+      pl.forEach(p=>{ const oi=getOraForDate(p,day); markBusy(busyDrv, oi.driverId||p.driverId, day); });
+    });
+    try {
+      const snap = await getDocs(query(collection(db,'rezervari'), where('data','==',day)));
+      snap.docs.forEach(d=>{
+        const r=d.data();
+        if(r.status==='anulata') return;
+        markBusy(busyVeh, r.vehiculId, day);
+        markBusy(busyDrv, r.driverId, day);
+      });
+    } catch(e){}
+  }
+  return { affectedDays, busyVeh, busyDrv };
+}
+function busyBadgeText(busyMap, id, affectedDays){
+  const zile = busyMap.get(id);
+  if (!zile || !zile.length) return '🟢 liber';
+  if (zile.length >= affectedDays.length) return '🔴 ocupat';
+  return `🟡 ocupat ${zile.length}/${affectedDays.length} zile`;
+}
+
 async function refreshOrgSelects() {
   const dateStr=document.getElementById('org-date')?.value||'';
   if(!dateStr)return;
+  const durH=parseInt(document.getElementById('org-dur-h')?.value)||0;
+  const durZile=parseInt(document.getElementById('org-dur-zile')?.value)||0;
 
-  // Versiune minimalistă: se afișează pur și simplu toate vehiculele/șoferii disponibili,
-  // fără verificare de conflicte de orar — echipa LSD Group confirmă manual alocarea.
+  const {affectedDays, busyVeh, busyDrv} = await getSimpleBusyDays(dateStr, durH, durZile);
+
   const orgVeh=document.getElementById('org-veh');
   if(orgVeh){
+    const curVal=orgVeh.value;
     orgVeh.innerHTML='<option value="">— selectați vehiculul dorit —</option>'+
       window._F.filter(v=>v.disponibil!==false).map(v=>{
         const vNume=`${v.icon||''} ${v.nome||v.name||v.nume||''}`.trim();
         const locuri=capVeh(v);
         const pret=v.pretPerKm?` · ${v.pretPerKm} RON/km`:'';
-        return `<option value="${v.id}">${vNume} — ${locuri} locuri${pret}</option>`;
+        const badge=busyBadgeText(busyVeh, v.id, affectedDays);
+        return `<option value="${v.id}">${vNume} — ${locuri} locuri${pret} — ${badge}</option>`;
       }).join('');
+    if(curVal) orgVeh.value=curVal;
   }
 
   const sel=document.getElementById('org-driver-pref');
   if(sel){
+    const curVal=sel.value;
     sel.innerHTML='<option value="">— fără preferință —</option>'+
-      window._DRIVERS_LIST.map(s=>`<option value="${s.id}">${s.numeFull}</option>`).join('');
+      window._DRIVERS_LIST.map(s=>{
+        const badge=busyBadgeText(busyDrv, s.id, affectedDays);
+        return `<option value="${s.id}">${s.numeFull} — ${badge}</option>`;
+      }).join('');
+    if(curVal) sel.value=curVal;
   }
 
   const infoBoxEl=document.getElementById('org-avail-info');
-  if(infoBoxEl) infoBoxEl.innerHTML='';
+  if(infoBoxEl) infoBoxEl.innerHTML=`<div style="background:var(--blue-g);border:1px solid rgba(30,95,168,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:10px">📅 Disponibilitate estimată pentru <strong>${affectedDays.length}</strong> zi${affectedDays.length!==1?'le':'a'} cerută${affectedDays.length!==1?'':''} (${affectedDays[0]}${affectedDays.length>1?' – '+affectedDays[affectedDays.length-1]:''}). Confirmarea finală o face echipa LSD Group.</div>`;
 }
 window._ORG_STOP_COORDS = [];
 function renderOrgStops(){
@@ -4278,8 +4396,10 @@ function renderOrgStops(){
   window._ORG_STOPS.forEach((s,i)=>{
     const row=document.createElement('div'); row.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center';
     const inp=document.createElement('input'); inp.type='text'; inp.value=s;
-    inp.placeholder=i===0?'Punct de plecare *':(i===window._ORG_STOPS.length-1?'Destinație finală *':'Oprire '+i);
+    const isDest=i===window._ORG_STOPS.length-1;
+    inp.placeholder=i===0?'Punct de plecare *':(isDest?'Destinație finală *':'Oprire '+i);
     inp.addEventListener('input',e=>{window._ORG_STOPS[i]=e.target.value;window._ORG_STOP_COORDS[i]=null;triggerOrgCalc();});
+    if(isDest) inp.addEventListener('change',()=>checkDestinationAttractions('form'));
     row.appendChild(inp);
     const mapBtn=document.createElement('button'); mapBtn.type='button'; mapBtn.className='btn btn-secondary btn-sm btn-icon'; mapBtn.title='Alege pe hartă'; mapBtn.textContent='📍';
     mapBtn.addEventListener('click',()=>openOrgStopMapPicker(i));
@@ -4374,6 +4494,9 @@ window.confirmOrgStopMapPick = () => {
   const idx = window._CLIENT_MAP_STOP_IDX;
   if (idx == null || !window._orgStopMapPick) return;
   const ll = window._orgStopMapPickLL;
+  const target = window._CLIENT_MAP_TARGET === 'wiz' ? 'wiz' : 'form';
+  const stopsArr = target==='wiz' ? window._WIZ_DATA.stops : window._ORG_STOPS;
+  const isDest = idx === stopsArr.length-1;
   if (window._CLIENT_MAP_TARGET === 'wiz') {
     window._WIZ_DATA.stops[idx] = window._orgStopMapPick;
     if (!window._WIZ_DATA.stopCoords) window._WIZ_DATA.stopCoords = [];
@@ -4386,6 +4509,7 @@ window.confirmOrgStopMapPick = () => {
     renderOrgStops();
     triggerOrgCalc();
   }
+  if (isDest) checkDestinationAttractions(target);
   document.getElementById('mo-org-stop-map').classList.remove('open');
   toast('📍 Locație setată: ' + window._orgStopMapPick, 'ok');
 };
@@ -4527,6 +4651,7 @@ window.confirmOrgMultiMapPick = () => {
   if (pts.length < 2) { toast('Adaugă cel puțin 2 puncte (plecare și destinație)','wr'); return; }
   const names = pts.map(p=>p.nume);
   const coords = pts.map(p=>({lat:p.ll[0], lng:p.ll[1]}));
+  const target = window._orgMultiPickerTarget === 'wiz' ? 'wiz' : 'form';
   if (window._orgMultiPickerTarget === 'wiz') {
     window._WIZ_DATA.stops = names;
     window._WIZ_DATA.stopCoords = coords;
@@ -4537,6 +4662,7 @@ window.confirmOrgMultiMapPick = () => {
     renderOrgStops();
     triggerOrgCalc();
   }
+  checkDestinationAttractions(target);
   document.getElementById('mo-org-multi-map').classList.remove('open');
   toast('✅ Traseu setat: '+pts.length+' puncte','ok');
 };
@@ -4948,7 +5074,18 @@ async function renderWizVehicleListAsync() {
   const d = window._WIZ_DATA;
   const listEl = document.getElementById('wiz-vehicle-list');
   if (!listEl) return;
-  listEl.innerHTML = (window._F||[]).filter(v=>v.disponibil!==false).map(v=>`<div class="wiz-opt-card ${d.vehId===v.id?'selected':''}" onclick="wizSelectVeh('${v.id}')" style="text-align:left;display:flex;align-items:center;gap:10px;padding:12px"><span style="font-size:22px">${v.icon||'🚌'}</span><div><div class="wiz-opt-text" style="font-size:13px">${v.nome||v.name||v.nume||''}</div><div style="font-size:11px;color:var(--stone);font-weight:400">${capVeh(v)} locuri${v.pretPerKm?' · '+v.pretPerKm+' RON/km':''}</div></div></div>`).join('') || '<div style="color:var(--stone);font-size:12px;text-align:center;padding:16px">Nicio flotă disponibilă momentan</div>';
+  let busyVeh = new Map(), affectedDays = [];
+  if (d.date) { try { const av = await getSimpleBusyDays(d.date, d.durH, d.durZile); busyVeh=av.busyVeh; affectedDays=av.affectedDays; } catch(e){} }
+  if (window._WIZ_STEP !== 5) return; // clientul a navigat deja în altă parte până s-a terminat calculul
+  const cur = document.getElementById('wiz-vehicle-list'); if (!cur) return;
+  cur.innerHTML = (window._F||[]).filter(v=>v.disponibil!==false).map(v=>{
+    const badge = affectedDays.length ? busyBadgeText(busyVeh, v.id, affectedDays) : '';
+    return `<div class="wiz-opt-card ${d.vehId===v.id?'selected':''}" onclick="wizSelectVeh('${v.id}')" style="text-align:left;display:flex;align-items:center;gap:10px;padding:12px">
+      <span style="font-size:22px">${v.icon||'🚌'}</span>
+      <div style="flex:1;min-width:0"><div class="wiz-opt-text" style="font-size:13px">${v.nome||v.name||v.nume||''}</div><div style="font-size:11px;color:var(--stone);font-weight:400">${capVeh(v)} locuri${v.pretPerKm?' · '+v.pretPerKm+' RON/km':''}</div></div>
+      ${badge?`<span style="font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0">${badge}</span>`:''}
+    </div>`;
+  }).join('') || '<div style="color:var(--stone);font-size:12px;text-align:center;padding:16px">Nicio flotă disponibilă momentan</div>';
 }
 
 async function renderWizDriverListAsync() {
@@ -4956,7 +5093,17 @@ async function renderWizDriverListAsync() {
   const listEl = document.getElementById('wiz-driver-list');
   if (!listEl) return;
   if (!window._DRIVERS_LIST?.length) { try { const sfSnap=await getDocs(collection(db,'soferi')); buildDriversCache(sfSnap); } catch(e){} }
-  listEl.innerHTML = (window._DRIVERS_LIST||[]).map(sf=>`<div class="wiz-opt-card ${d.driverPrefId===sf.id?'selected':''}" onclick="wizSelectDriverPref('${sf.id}')" style="text-align:left;padding:12px"><span class="wiz-opt-text" style="font-size:13px">${sf.numeFull}</span></div>`).join('') || '<div style="color:var(--stone);font-size:12px;text-align:center;padding:16px">Niciun șofer disponibil momentan</div>';
+  let busyDrv = new Map(), affectedDays = [];
+  if (d.date) { try { const av = await getSimpleBusyDays(d.date, d.durH, d.durZile); busyDrv=av.busyDrv; affectedDays=av.affectedDays; } catch(e){} }
+  if (window._WIZ_STEP !== 6) return;
+  const cur = document.getElementById('wiz-driver-list'); if (!cur) return;
+  cur.innerHTML = (window._DRIVERS_LIST||[]).map(sf=>{
+    const badge = affectedDays.length ? busyBadgeText(busyDrv, sf.id, affectedDays) : '';
+    return `<div class="wiz-opt-card ${d.driverPrefId===sf.id?'selected':''}" onclick="wizSelectDriverPref('${sf.id}')" style="text-align:left;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px">
+      <span class="wiz-opt-text" style="font-size:13px">${sf.numeFull}</span>
+      ${badge?`<span style="font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0">${badge}</span>`:''}
+    </div>`;
+  }).join('') || '<div style="color:var(--stone);font-size:12px;text-align:center;padding:16px">Niciun șofer disponibil momentan</div>';
 }
 
 window.wizSelectTip = (val) => {
@@ -4987,8 +5134,9 @@ function renderWizStops(){
     const label = i===0 ? 'A' : i===stops.length-1 ? 'B' : (i+1);
     const placeholder = i===0?'Punct de plecare *':(i===stops.length-1?'Destinație finală *':'Oprire intermediară');
     const delBtn = (i>0 && i<stops.length-1) ? `<button class="btn btn-ghost btn-sm" onclick="wizRemoveStop(${i})">✕</button>` : '';
-    return `<div class="wiz-stop-row"><div class="wiz-stop-badge">${label}</div><input type="text" value="${s}" placeholder="${placeholder}" oninput="window._WIZ_DATA.stops[${i}]=this.value;window._WIZ_DATA.stopCoords[${i}]=null" style="flex:1"/><button type="button" class="btn btn-secondary btn-sm btn-icon" title="Alege pe hartă" onclick="openOrgStopMapPicker(${i},'wiz')">📍</button>${delBtn}</div>`;
-  }).join('');
+    const destChange = i===stops.length-1 ? ` onchange="checkDestinationAttractions('wiz')"` : '';
+    return `<div class="wiz-stop-row"><div class="wiz-stop-badge">${label}</div><input type="text" value="${s}" placeholder="${placeholder}" oninput="window._WIZ_DATA.stops[${i}]=this.value;window._WIZ_DATA.stopCoords[${i}]=null"${destChange} style="flex:1"/><button type="button" class="btn btn-secondary btn-sm btn-icon" title="Alege pe hartă" onclick="openOrgStopMapPicker(${i},'wiz')">📍</button>${delBtn}</div>`;
+  }).join('') + '<div id="wiz-attractions-box" style="margin-top:10px"></div>';
 }
 window.wizAddStop = () => {
   const at = window._WIZ_DATA.stops.length-1;
