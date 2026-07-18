@@ -1784,6 +1784,7 @@ footer::before{
     <button class="tab-btn" onclick="adminTab('program')">📅 Program</button>
     <button class="tab-btn" onclick="adminTab('harta')">🗺 Hartă live</button>
     <button class="tab-btn" onclick="adminTab('ticker')">📢 Ticker</button>
+    <button class="tab-btn" onclick="adminTab('conectari')">🔐 Conectări</button>
     <button class="tab-btn" onclick="adminTab('continut')">📝 Conținut</button>
     <button class="tab-btn" onclick="adminTab('settings')">⚙️ Setări</button>
   </div>
@@ -1925,6 +1926,21 @@ footer::before{
     </div>
   </div>
 
+
+  <!-- CONECTĂRI (login logs — IP + ultima conectare, ora României) -->
+  <div id="admin-tab-conectari" class="tab-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div>
+        <h3 style="font-size:16px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif">🔐 Conectări conturi</h3>
+        <p style="font-size:12px;color:var(--stone)">Ultima conectare (dată/oră România) și adresa IP, pentru fiecare cont — admin, șoferi, clienți.</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="loadLoginLogs()">🔄 Refresh</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl"><thead><tr><th>Cont</th><th>Rol</th><th>Ultima conectare (RO)</th><th>Adresă IP</th></tr></thead>
+      <tbody id="conectari-tbody"></tbody></table>
+    </div>
+  </div>
 
   <!-- CONȚINUT SITE (texte editabile) -->
   <div id="admin-tab-continut" class="tab-panel">
@@ -2653,6 +2669,31 @@ window.SPRINTER_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAACDCAM
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 
+// ── LIMITE HARTĂ ROMÂNIA (folosite la toate hărțile interactive de alegere puncte) ──
+window.ROMANIA_BOUNDS = [[43.4,19.8],[48.7,30.3]];
+
+// ── TRACKING CONECTĂRI (IP + oră România) ──────────────────
+async function getPublicIP(){
+  try{
+    const r = await fetch('https://api.ipify.org?format=json');
+    if(!r.ok) return null;
+    const d = await r.json();
+    return d.ip || null;
+  }catch(e){ console.warn('IP lookup failed:', e.message); return null; }
+}
+async function logUserLogin(idKey, email, role, nume){
+  if(!idKey) return;
+  try{
+    const ip = await getPublicIP();
+    await setDoc(doc(db,'login_logs',idKey), {
+      email: email||'', role: role||'', nume: nume||'',
+      ip: ip||'necunoscut',
+      lastLoginAt: serverTimestamp()
+    }, {merge:true});
+  }catch(e){ console.warn('logUserLogin failed:', e.message); }
+}
+window.logUserLogin = logUserLogin;
+
 // ── HELPERS ────────────────────────────────────────────────
 window.toast = (msg, type = 'in') => {
   const icons = {ok:'✅', er:'❌', in:'ℹ️', wr:'⚠️'};
@@ -2871,6 +2912,7 @@ onAuthStateChanged(auth, async u => {
 
   if (u.email === window.ADMIN_EMAIL) {
     window._ROLE = 'admin';
+    logUserLogin(u.uid, u.email, 'admin', u.displayName||'Admin');
     try { const sfSnap = await getDocs(collection(db,'soferi')); buildDriversCache(sfSnap); } catch(e) {}
     buildNav('admin');
     const active = document.querySelector('.page.active');
@@ -2890,6 +2932,7 @@ onAuthStateChanged(auth, async u => {
     if (!ss.empty && ss.docs[0].data().activ !== false) {
       window._DRIVER_DOC = {id:ss.docs[0].id,...ss.docs[0].data()};
       window._ROLE = 'driver';
+      logUserLogin(window._DRIVER_DOC.id, u.email, 'driver', ((window._DRIVER_DOC.prenume||'')+' '+(window._DRIVER_DOC.nume||'')).trim());
       buildNav('driver');
       nav('sofer');
       return;
@@ -2897,6 +2940,7 @@ onAuthStateChanged(auth, async u => {
   } catch(e) {}
 
   window._ROLE = 'client';
+  logUserLogin(u.uid, u.email, 'client', u.displayName||'');
   buildNav('client');
   startNotifListener();
   window._FB_READY = true;
@@ -3068,6 +3112,7 @@ window.verifyDriverPin = () => {
   errEl.style.display='none';
   window._DRIVER_DOC = {id:sf.id,...sf};
   window._ROLE = 'driver';
+  logUserLogin(sf.id, sf.email||window.SOFER_EMAIL, 'driver', ((sf.prenume||'')+' '+(sf.nume||'')).trim());
   buildDriversCache({docs: (window._DRIVER_LOGIN_LIST||[]).map(d=>({id:d.id,data:()=>d}))});
   closeModal('driver-login');
   document.getElementById('btn-change-driver').style.display='flex';
@@ -3237,19 +3282,34 @@ function haversineKm(lat1,lng1,lat2,lng2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 async function fetchNearbyAttractions(lat,lng){
-  const q=`[out:json][timeout:15];(node["tourism"~"attraction|museum|viewpoint|gallery|zoo|theme_park"](around:20000,${lat},${lng});node["historic"~"monument|castle|memorial|ruins|archaeological_site|fort"](around:20000,${lat},${lng});node["natural"="waterfall"](around:20000,${lat},${lng}););out center 50;`;
+  // Cautam obiective turistice folosind Wikipedia (geosearch) — gratuit, fara cheie, si
+  // ne ofera in acelasi timp o poza + un scurt rezumat pentru fiecare loc, spre deosebire
+  // de Overpass/OSM care intoarce doar nume brute.
   try{
-    const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:q});
-    if(!r.ok) return [];
-    const d=await r.json();
-    const seen=new Set();
-    const items=(d.elements||[])
-      .filter(e=>e.tags?.name && e.lat!=null && e.lon!=null)
-      .map(e=>({name:e.tags.name, lat:e.lat, lng:e.lon, dist:haversineKm(lat,lng,e.lat,e.lon)}))
-      .filter(it=>{ if(seen.has(it.name)) return false; seen.add(it.name); return true; });
+    const geoUrl=`https://ro.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}%7C${lng}&gsradius=15000&gslimit=6&format=json&origin=*`;
+    const gr=await fetch(geoUrl);
+    if(!gr.ok) return [];
+    const gd=await gr.json();
+    const pages=(gd?.query?.geosearch||[]).filter(p=>p.pageid);
+    if(!pages.length) return [];
+    const ids=pages.map(p=>p.pageid).join('|');
+    const detUrl=`https://ro.wikipedia.org/w/api.php?action=query&pageids=${ids}&prop=pageimages%7Cextracts&exintro=1&explaintext=1&exsentences=2&piprop=thumbnail&pithumbsize=300&format=json&origin=*`;
+    const dr=await fetch(detUrl);
+    const dd=dr.ok?await dr.json():null;
+    const detPages=dd?.query?.pages||{};
+    const items=pages.map(p=>{
+      const det=detPages[String(p.pageid)]||{};
+      return {
+        name:p.title,
+        lat:p.lat, lng:p.lon,
+        dist:(p.dist!=null?p.dist/1000:haversineKm(lat,lng,p.lat,p.lon)),
+        img:det.thumbnail?.source||'',
+        desc:(det.extract||'').trim()
+      };
+    });
     items.sort((a,b)=>a.dist-b.dist);
     return items.slice(0,4);
-  }catch(e){ console.warn('Overpass attractions failed:', e.message); return []; }
+  }catch(e){ console.warn('Wikipedia geosearch attractions failed:', e.message); return []; }
 }
 let _orgAttractionsTimer=null;
 window.checkDestinationAttractions = (target) => {
@@ -3259,16 +3319,25 @@ window.checkDestinationAttractions = (target) => {
     const dest = stopsArr.filter(Boolean).slice(-1)[0];
     const boxEl = document.getElementById(target==='wiz'?'wiz-attractions-box':'org-attractions-box');
     if(!boxEl) return;
-    if(!dest){ boxEl.innerHTML=''; return; }
-    boxEl.innerHTML=`<div style="font-size:12px;color:var(--stone)"><span class="spin" style="width:12px;height:12px;border-width:2px;margin-right:6px;vertical-align:middle"></span>Căutăm obiective turistice lângă ${dest}...</div>`;
+    if(!dest || dest.trim().length<3){ boxEl.innerHTML=''; return; }
+    boxEl.innerHTML=`<div style="font-size:12px;color:var(--stone)"><span class="spin" style="width:12px;height:12px;border-width:2px;margin-right:6px;vertical-align:middle"></span>Căutăm "${dest}" în România...</div>`;
+    // geocodeCached e restricționat la countrycodes=ro (Nominatim), deci dacă nu găsește
+    // nimic înseamnă că acel loc nu există în România — informăm clar clientul, nu ascundem eroarea.
     const ll = await geocodeCached(dest);
-    if(!ll){ boxEl.innerHTML=''; return; }
+    if(!ll){ boxEl.innerHTML=`<div style="background:var(--red-g);border:1px solid rgba(181,45,45,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--red)">⚠️ Nu am găsit "${dest}" în România. Verificați ortografia — lucrăm doar cu destinații din România.</div>`; return; }
     const attractions = await fetchNearbyAttractions(ll[0], ll[1]);
     if(!attractions.length){ boxEl.innerHTML=''; return; }
     boxEl.innerHTML=`<div style="background:var(--amber-g);border:1px solid var(--amber-b);border-radius:var(--r);padding:12px 14px">
-      <div style="font-weight:700;font-size:12.5px;color:var(--amber-d);margin-bottom:8px">💡 Aproape de ${dest}, ați putea vizita:</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${attractions.map(a=>`<span class="chip" style="cursor:pointer;background:var(--card)" onclick="addAttractionStop('${target}','${a.name.replace(/'/g,"\\'")}',${a.lat},${a.lng})" title="Adaugă ca oprire">📍 ${a.name} <strong style="color:var(--amber-d)">+</strong></span>`).join('')}
+      <div style="font-weight:700;font-size:12.5px;color:var(--amber-d);margin-bottom:10px">💡 Aproape de ${dest}, ați putea vizita:</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${attractions.map(a=>`<div style="display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--border-l);border-radius:8px;padding:8px;cursor:pointer" onclick="addAttractionStop('${target}','${a.name.replace(/'/g,"\\'")}',${a.lat},${a.lng})" title="Adaugă ca oprire">
+          ${a.img?`<img src="${a.img}" alt="${a.name}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;flex-shrink:0"/>`:`<div style="width:52px;height:52px;border-radius:6px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📍</div>`}
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name} <span style="font-weight:400;color:var(--stone);font-size:10.5px">(~${a.dist.toFixed(1)} km)</span></div>
+            ${a.desc?`<div style="font-size:11px;color:var(--stone);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${a.desc}</div>`:''}
+          </div>
+          <span style="color:var(--amber-d);font-weight:800;flex-shrink:0">+</span>
+        </div>`).join('')}
       </div>
     </div>`;
   }, 500);
@@ -4399,7 +4468,7 @@ function renderOrgStops(){
     const isDest=i===window._ORG_STOPS.length-1;
     inp.placeholder=i===0?'Punct de plecare *':(isDest?'Destinație finală *':'Oprire '+i);
     inp.addEventListener('input',e=>{window._ORG_STOPS[i]=e.target.value;window._ORG_STOP_COORDS[i]=null;triggerOrgCalc();});
-    if(isDest) inp.addEventListener('change',()=>checkDestinationAttractions('form'));
+    if(isDest) inp.addEventListener('input',()=>checkDestinationAttractions('form'));
     row.appendChild(inp);
     const mapBtn=document.createElement('button'); mapBtn.type='button'; mapBtn.className='btn btn-secondary btn-sm btn-icon'; mapBtn.title='Alege pe hartă'; mapBtn.textContent='📍';
     mapBtn.addEventListener('click',()=>openOrgStopMapPicker(i));
@@ -4463,7 +4532,7 @@ window.openOrgStopMapPicker = async (idx, target) => {
 
   if (window._orgStopPickMap) { try{window._orgStopPickMap.remove();}catch(e){} window._orgStopPickMap = null; }
   mapEl.innerHTML = '';
-  const map = L.map(mapEl, {center:[45.9,24.9], zoom:7});
+  const map = L.map(mapEl, {center:[45.9,24.9], zoom:7, maxBounds:window.ROMANIA_BOUNDS, maxBoundsViscosity:0.85, minZoom:6});
   window._orgStopPickMap = map;
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap', maxZoom:18}).addTo(map);
 
@@ -4566,7 +4635,7 @@ window.openOrgMultiMapPicker = async (target) => {
 
   if (window._orgMultiPickerMap) { try{window._orgMultiPickerMap.remove();}catch(e){} window._orgMultiPickerMap = null; }
   mapEl.innerHTML = '';
-  const map = L.map(mapEl, {center:[45.9,24.9], zoom:7});
+  const map = L.map(mapEl, {center:[45.9,24.9], zoom:7, maxBounds:window.ROMANIA_BOUNDS, maxBoundsViscosity:0.85, minZoom:6});
   window._orgMultiPickerMap = map;
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap', maxZoom:18}).addTo(map);
   map.on('click', async (e) => { await orgMultiPickerAddPoint(e.latlng.lat, e.latlng.lng); });
@@ -5134,7 +5203,7 @@ function renderWizStops(){
     const label = i===0 ? 'A' : i===stops.length-1 ? 'B' : (i+1);
     const placeholder = i===0?'Punct de plecare *':(i===stops.length-1?'Destinație finală *':'Oprire intermediară');
     const delBtn = (i>0 && i<stops.length-1) ? `<button class="btn btn-ghost btn-sm" onclick="wizRemoveStop(${i})">✕</button>` : '';
-    const destChange = i===stops.length-1 ? ` onchange="checkDestinationAttractions('wiz')"` : '';
+    const destChange = i===stops.length-1 ? ` oninput="checkDestinationAttractions('wiz')"` : '';
     return `<div class="wiz-stop-row"><div class="wiz-stop-badge">${label}</div><input type="text" value="${s}" placeholder="${placeholder}" oninput="window._WIZ_DATA.stops[${i}]=this.value;window._WIZ_DATA.stopCoords[${i}]=null"${destChange} style="flex:1"/><button type="button" class="btn btn-secondary btn-sm btn-icon" title="Alege pe hartă" onclick="openOrgStopMapPicker(${i},'wiz')">📍</button>${delBtn}</div>`;
   }).join('') + '<div id="wiz-attractions-box" style="margin-top:10px"></div>';
 }
@@ -5558,15 +5627,34 @@ window.loadAdmin = async () => {
 };
 window.refreshAdmin=async()=>{await loadAdmin();toast('Date actualizate!','ok');};
 window.adminTab=tab=>{
-  ['vehicles','routes','bookings','drivers','program','harta','ticker','continut','settings'].forEach(t=>{
+  ['vehicles','routes','bookings','drivers','program','harta','ticker','conectari','continut','settings'].forEach(t=>{
     document.getElementById('admin-tab-'+t)?.classList.toggle('active',t===tab);
   });
   document.querySelectorAll('#pg-admin .tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['vehicles','routes','bookings','drivers','program','harta','ticker','continut','settings'][i]===tab);
+    b.classList.toggle('active',['vehicles','routes','bookings','drivers','program','harta','ticker','conectari','continut','settings'][i]===tab);
   });
   if(tab==='program'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];progSetMode(window._PROG_MODE||'day');}
   if(tab==='harta'){loadHartaAdmin();}
+  if(tab==='conectari'){loadLoginLogs();}
   if(tab==='continut'){loadContentPanel();}
+};
+
+// ── LISTA CONECTĂRI (admin) ─────────────────────────────────
+window.loadLoginLogs = async () => {
+  const tbody = document.getElementById('conectari-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px"><div class="spin"></div></td></tr>';
+  try{
+    const snap = await getDocs(collection(db,'login_logs'));
+    const rows = snap.docs.map(d=>({id:d.id,...d.data()}));
+    rows.sort((a,b)=>(b.lastLoginAt?.seconds||0)-(a.lastLoginAt?.seconds||0));
+    if(!rows.length){ tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--stone)">Nicio conectare înregistrată încă</td></tr>'; return; }
+    const roleLabel={admin:'👑 Admin',driver:'🚌 Șofer',client:'👤 Client'};
+    tbody.innerHTML = rows.map(r=>{
+      const dt = r.lastLoginAt ? new Date(r.lastLoginAt.seconds*1000).toLocaleString('ro-RO',{timeZone:'Europe/Bucharest',dateStyle:'medium',timeStyle:'medium'}) : '—';
+      return `<tr><td><strong>${r.nume||'-'}</strong><br><span style="font-size:11px;color:var(--stone)">${r.email||'-'}</span></td><td>${roleLabel[r.role]||r.role||'-'}</td><td>${dt}</td><td style="font-family:monospace;font-size:12px">${r.ip||'—'}</td></tr>`;
+    }).join('');
+  }catch(e){ tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--red)">Eroare: ${e.message}${e.code==='permission-denied'?' — verificați regulile Firestore pentru colecția login_logs':''}</td></tr>`; }
 };
 window.adminViewAs=role=>{
   window._ROLE=role==='driver'?'driver':'client';
@@ -6056,7 +6144,7 @@ window.openRouteMapPicker = async () => {
   const mapDiv = document.getElementById('rm-map-picker');
   if (window._rmPickerMap) { try{window._rmPickerMap.remove();}catch(e){} window._rmPickerMap=null; }
   mapDiv.innerHTML = '';
-  const map = L.map(mapDiv,{center:[46.0,25.0],zoom:7});
+  const map = L.map(mapDiv,{center:[46.0,25.0],zoom:7, maxBounds:window.ROMANIA_BOUNDS, maxBoundsViscosity:0.85, minZoom:6});
   window._rmPickerMap = map;
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
 
