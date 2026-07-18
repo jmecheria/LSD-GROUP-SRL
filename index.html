@@ -1780,6 +1780,7 @@ footer::before{
     <button class="tab-btn" onclick="adminTab('routes')">🔄 Regulate</button>
     <button class="tab-btn" onclick="adminTab('bookings')">📋 Rezervări</button>
     <button class="tab-btn" onclick="adminTab('drivers')">👤 Șoferi</button>
+    <button class="tab-btn" onclick="adminTab('program')">📅 Program</button>
     <button class="tab-btn" onclick="adminTab('harta')">🗺 Hartă live</button>
     <button class="tab-btn" onclick="adminTab('ticker')">📢 Ticker</button>
     <button class="tab-btn" onclick="adminTab('continut')">📝 Conținut</button>
@@ -1855,6 +1856,23 @@ footer::before{
     </div>
   </div>
 
+  <!-- PROGRAM (listă zilnică — curse + șofer + vehicul, editare instant) -->
+  <div id="admin-tab-program" class="tab-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div>
+        <h3 style="font-size:16px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif">📅 Programul zilei</h3>
+        <p style="font-size:12px;color:var(--stone)">Toate cursele din ziua selectată. Schimbă șoferul sau vehiculul direct din listă.</p>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="progPrevDay()">←</button>
+        <input type="date" id="prog-date" onchange="loadProgram()" style="width:150px;font-size:13px"/>
+        <button class="btn btn-secondary btn-sm" onclick="progToday()">Azi</button>
+        <button class="btn btn-secondary btn-sm" onclick="progNextDay()">→</button>
+        <button class="btn btn-primary btn-sm" onclick="loadProgram()">🔄</button>
+      </div>
+    </div>
+    <div id="program-list"></div>
+  </div>
 
   <!-- HARTA LIVE -->
   <div id="admin-tab-harta" class="tab-panel">
@@ -2671,6 +2689,23 @@ function resSf(val) {
   if (window._DRIVERS[val]) return window._DRIVERS[val];
   if (window._DRIVERS_BY_EMAIL[val]) return window._DRIVERS_BY_EMAIL[val];
   return {id:val, email:val, numeFull:val};
+}
+// Determină numele șoferului pentru o rezervare (client-facing): fie alocat direct pe rezervare
+// (curse organizate), fie preluat live din cursa regulată + ora plecării (curse regulate),
+// ca informația să rămână corectă chiar dacă adminul schimbă șoferul ulterior.
+function numeSoferPtRezervare(r) {
+  if (!r) return '';
+  if (r.driverId) return numeSofer(r.driverId);
+  if (r.tipRezervare==='regulata' && r.cursaId) {
+    const c = (window._R||[]).find(x=>x.id===r.cursaId);
+    if (c) {
+      const pl = c.plecari?.length ? c.plecari : [{ora:c.ora, driverId:c.driverId}];
+      const dep = pl.find(p => (getOraForDate(p, r.data).ora||p.ora) === r.ora) || pl[0];
+      const drvId = dep ? (getOraForDate(dep, r.data).driverId || dep.driverId) : '';
+      if (drvId) return numeSofer(drvId);
+    }
+  }
+  return '';
 }
 function buildDriversCache(snap) {
   window._DRIVERS = {}; window._DRIVERS_BY_EMAIL = {}; window._DRIVERS_LIST = [];
@@ -3811,14 +3846,16 @@ window.openCinema = async (routeId, date, direction='one-way', depIdx=0) => {
     route={...c, statii:c.statiiIntors||[...c.statii].reverse()};
     const rp=(c.intorsPlecari||[])[depIdx]||(c.intorsPlecari||[])[0];
     route.ora=rp?.ora||c.ora;
+    route.driverId=rp?.driverId||'';
   } else {
     const pl=(c.plecari||[{ora:c.ora}])[depIdx]||(c.plecari||[{ora:c.ora}])[0];
     const oraInfo=getOraForDate(pl,date);
     route.ora=oraInfo.ora||c.ora;
+    route.driverId=oraInfo.driverId||pl.driverId||'';
   }
   window._CINEMA_ROUTE=route;
   document.getElementById('cinema-title').textContent=(direction==='return'?'↩ RETUR: ':'')+route.ruta;
-  document.getElementById('cinema-sub').textContent=`📅 ${date} · 🕐 ${route.ora} · 🚌 ${c.vehiculNume||'-'}`;
+  document.getElementById('cinema-sub').textContent=`📅 ${date} · 🕐 ${route.ora} · 🚌 ${c.vehiculNume||'-'}${route.driverId?' · 👨‍✈️ '+numeSofer(route.driverId):''}`;
   document.getElementById('cinema-price-box').style.display='none';
   document.getElementById('cinema-summary').style.display='none';
   document.getElementById('btn-cinema-confirm').disabled=true;
@@ -4037,7 +4074,7 @@ function showTickets(tickets){
           <div style="font-size:10px;color:var(--stone);margin-top:2px">Scanați la îmbarcare</div>
         </div>
         <div style="flex:1;min-width:160px">
-          ${[['🪑 Loc',''+loc.locNr],['📍 Urcare',loc.statieUrcare],['📍 Coborâre',loc.statieCoborare],['📅 Data',r.data],['🕐 Ora',r.ora||'-'],['🚌 Vehicul',r.vehiculNume||'-'],['👤 Pasager',r.numeClient],['💰 Preț',r.pretTotal+' RON'],['💳 Plată',r.statusPlata==='platit_online'?'Online ✓':'La șofer']].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-l);font-size:12px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
+          ${[['🪑 Loc',''+loc.locNr],['📍 Urcare',loc.statieUrcare],['📍 Coborâre',loc.statieCoborare],['📅 Data',r.data],['🕐 Ora',r.ora||'-'],['🚌 Vehicul',r.vehiculNume||'-'],...(numeSoferPtRezervare(r)?[['👨‍✈️ Șofer',numeSoferPtRezervare(r)]]:[]),['👤 Pasager',r.numeClient],['💰 Preț',r.pretTotal+' RON'],['💳 Plată',r.statusPlata==='platit_online'?'Online ✓':'La șofer']].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-l);font-size:12px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
         </div>
       </div>
     </div>`;
@@ -4070,7 +4107,7 @@ window.printTicket = () => {
   const cards=tickets.map((r,idx)=>{
     const loc=r.locuriRezervate[0];
     const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent('LSD:'+r.biletId+'|'+(r.cursaId||'')+'|'+r.data+'|'+loc.locNr)}&bgcolor=ffffff&color=0f0d0a`;
-    return `<div class="ticket"><div class="t-head"><div><div style="font-size:16px;font-weight:800">${r.biletId}</div><div style="font-size:11px;opacity:.8">Bilet ${idx+1}/${tickets.length} · Loc ${loc.locNr}</div></div><div style="text-align:right;font-size:11px">${firma.name||'LSD Group SRL'}</div></div><div class="t-body"><div style="text-align:center"><img src="${qrUrl}" width="120" height="120" style="border-radius:6px;border:1px solid #e2d9c4"/><div style="font-size:10px;font-weight:800;color:#a97c3f;margin-top:4px">${r.biletId}</div></div><div class="t-rows">${[['Loc',''+loc.locNr],['Rută',r.ruta],['Urcare',loc.statieUrcare],['Coborâre',loc.statieCoborare],['Data',r.data+' · '+(r.ora||'-')],['Pasager',r.numeClient],['Vehicul',r.vehiculNume||'-'],['Preț',r.pretTotal+' RON']].map(([l,v])=>`<div class="t-row"><span class="t-lbl">${l}</span><span>${v}</span></div>`).join('')}</div></div></div>`;
+    return `<div class="ticket"><div class="t-head"><div><div style="font-size:16px;font-weight:800">${r.biletId}</div><div style="font-size:11px;opacity:.8">Bilet ${idx+1}/${tickets.length} · Loc ${loc.locNr}</div></div><div style="text-align:right;font-size:11px">${firma.name||'LSD Group SRL'}</div></div><div class="t-body"><div style="text-align:center"><img src="${qrUrl}" width="120" height="120" style="border-radius:6px;border:1px solid #e2d9c4"/><div style="font-size:10px;font-weight:800;color:#a97c3f;margin-top:4px">${r.biletId}</div></div><div class="t-rows">${[['Loc',''+loc.locNr],['Rută',r.ruta],['Urcare',loc.statieUrcare],['Coborâre',loc.statieCoborare],['Data',r.data+' · '+(r.ora||'-')],['Pasager',r.numeClient],['Vehicul',r.vehiculNume||'-'],...(numeSoferPtRezervare(r)?[['Șofer',numeSoferPtRezervare(r)]]:[]),['Preț',r.pretTotal+' RON']].map(([l,v])=>`<div class="t-row"><span class="t-lbl">${l}</span><span>${v}</span></div>`).join('')}</div></div></div>`;
   }).join('<div style="height:16px"></div>');
   w.document.write(`<!DOCTYPE html><html><head><title>Bilete</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:16px;max-width:500px;margin:0 auto;color:#0f0d0a;font-size:13px}.ticket{border:1.5px solid #e2d9c4;border-radius:12px;overflow:hidden}.t-head{background:linear-gradient(135deg,#a97c3f,#7d5a2b);color:#fff;padding:12px 16px;display:flex;justify-content:space-between}.t-body{display:flex;gap:14px;padding:14px}.t-rows{flex:1}.t-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ede8d8;font-size:12px}.t-lbl{color:#8a7f6e}.warn{background:#fef9ed;border:1.5px solid #a97c3f;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;text-align:center}.footer{font-size:10px;color:#8a7f6e;text-align:center;margin-top:14px;border-top:1px solid #ede8d8;padding-top:10px;line-height:1.8}@media print{body{padding:8px}@page{margin:6mm}}</style></head><body><div class="warn">📸 Prezentați codul QR la îmbarcare. Valabil o singură dată.</div>${cards}<div class="footer">${firma.name||'LSD Group SRL'} ${firma.cui?'· CUI: '+firma.cui:''} ${firma.addr?'· '+firma.addr:''}<br>Emis: ${new Date().toLocaleDateString('ro')} · Bilete electronice, netransferabile</div><script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
   w.document.close();
@@ -4098,7 +4135,7 @@ window.cautaBilet = async () => {
       </div>
       <div style="padding:20px 24px">
         <div style="text-align:center;margin-bottom:20px"><img src="${qrUrl}" width="160" height="160" style="border-radius:8px;border:1px solid var(--border)"/></div>
-        ${[['🚌 Rută',r.ruta||r.traseu||'-'],['📍 Urcare',locs[0]?.statieUrcare||'-'],['📍 Coborâre',locs[0]?.statieCoborare||'-'],['🪑 Locuri',locs.map(l=>'Loc '+l.locNr).join(', ')||'-'],['📅 Data',r.data||'-'],['🕐 Ora',r.ora||'-'],['👤 Pasager',r.numeClient||'-'],['💰 Total',r.pretTotal?(r.pretTotal+' RON'):'-']].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
+        ${[['🚌 Rută',r.ruta||r.traseu||'-'],['📍 Urcare',locs[0]?.statieUrcare||'-'],['📍 Coborâre',locs[0]?.statieCoborare||'-'],['🪑 Locuri',locs.map(l=>'Loc '+l.locNr).join(', ')||'-'],['📅 Data',r.data||'-'],['🕐 Ora',r.ora||'-'],...(r.vehiculNume?[['🚐 Autobuz',r.vehiculNume]]:[]),...(numeSoferPtRezervare(r)?[['👨‍✈️ Șofer',numeSoferPtRezervare(r)]]:[]),['👤 Pasager',r.numeClient||'-'],['💰 Total',r.pretTotal?(r.pretTotal+' RON'):'-']].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
         <div style="margin-top:16px;background:var(--cream);border-radius:var(--r);padding:12px;font-size:12px;color:var(--stone);text-align:center">${isValid?'✅ Bilet valid — prezentați codul QR la îmbarcare':'⚠️ Bilet '+r.status.replace('_',' ')+' — contactați echipa LSD Group'}</div>
         <button class="btn btn-primary btn-full" style="margin-top:14px" onclick="printBiletById('${r.id}')">⬇️ Printează biletul</button>
       </div>
@@ -5182,6 +5219,7 @@ window.loadContPage = async () => {
       <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--stone);margin-bottom:8px">
         <span>📅 ${r.data||'-'}</span><span>🕐 ${r.ora||'-'}</span>
         ${r.vehiculNume?`<span>🚌 ${r.vehiculNume}</span>`:''}
+        ${numeSoferPtRezervare(r)?`<span>👨‍✈️ ${numeSoferPtRezervare(r)}</span>`:''}
         ${r.descriereCursa?`<span>📋 ${r.descriereCursa}</span>`:''}
         ${r.pretTotal?`<span style="color:var(--amber-d);font-weight:600">💰 ${r.pretTotal} RON</span>`:''}
         ${r.pretFinal&&!r.pretTotal?`<span style="color:var(--amber-d);font-weight:700">💰 Ofertă: ${r.pretFinal} RON</span>`:''}
@@ -5344,7 +5382,7 @@ window.openGuestOrgDetail = (r) => {
   }
   const sl={in_asteptare:'⏳ În așteptare',oferta_trimisa:'📩 Ofertă trimisă',confirmata:'✅ Confirmată',anulata:'❌ Anulată'};
   const msgs=r.mesaje||[];
-  const rows=[['Traseu',r.traseu||r.descriereCursa||'-'],['Data',r.data||'-'],['Status',sl[r.status]||r.status||'-'],...(r.pretFinal?[['Preț ofertă',r.pretFinal+' RON']]:[])];
+  const rows=[['Traseu',r.traseu||r.descriereCursa||'-'],['Data',r.data||'-'],['Status',sl[r.status]||r.status||'-'],...(r.vehiculNume?[['Autobuz',r.vehiculNume]]:[]),...(numeSoferPtRezervare(r)?[['Șofer',numeSoferPtRezervare(r)]]:[]),...(r.pretFinal?[['Preț ofertă',r.pretFinal+' RON']]:[])];
   const body=document.getElementById('guest-org-detail-body');
   body.innerHTML = rows.map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600;text-align:right;max-width:60%">${v}</span></div>`).join('') +
     (msgs.length ? `<div style="margin-top:14px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">💬 Conversație</div><div class="msg-thread">${msgs.map(m=>`<div class="msg-bubble ${m.from==='admin'?'msg-admin':'msg-client'}"><div class="msg-meta">${m.from==='admin'?'👑 Echipa LSD Group':'👤 Tu'}</div>${m.text}</div>`).join('')}</div></div>` : '<div style="margin-top:12px;font-size:12px;color:var(--stone)">Nicio conversație încă. Veți primi și un email cu detaliile.</div>');
@@ -5361,12 +5399,13 @@ window.loadAdmin = async () => {
 };
 window.refreshAdmin=async()=>{await loadAdmin();toast('Date actualizate!','ok');};
 window.adminTab=tab=>{
-  ['vehicles','routes','bookings','drivers','harta','ticker','continut','settings'].forEach(t=>{
+  ['vehicles','routes','bookings','drivers','program','harta','ticker','continut','settings'].forEach(t=>{
     document.getElementById('admin-tab-'+t)?.classList.toggle('active',t===tab);
   });
   document.querySelectorAll('#pg-admin .tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['vehicles','routes','bookings','drivers','harta','ticker','continut','settings'][i]===tab);
+    b.classList.toggle('active',['vehicles','routes','bookings','drivers','program','harta','ticker','continut','settings'][i]===tab);
   });
+  if(tab==='program'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];loadProgram();}
   if(tab==='harta'){loadHartaAdmin();}
   if(tab==='continut'){loadContentPanel();}
 };
@@ -6561,6 +6600,107 @@ window.saveDriver=async()=>{
   const data={prenume:fn,nume:ln,email:document.getElementById('dm-email').value.trim()||'',telefon:tel,adresa:document.getElementById('dm-addr')?.value?.trim()||'',expPermis:document.getElementById('dm-exp').value||null,dataAngajarii:document.getElementById('dm-hired').value||null,activ:document.getElementById('dm-active').checked};
   if(pin)data.parolaPortal=btoa(unescape(encodeURIComponent(pin)));
   try{if(id)await setDoc(doc(db,'soferi',id),data,{merge:true});else{data.createdAt=serverTimestamp();await addDoc(collection(db,'soferi'),data);}closeModal('driver');await loadDriversTbl();toast('Șofer salvat!','ok');}catch(e){toast('Eroare: '+e.message,'er');}
+};
+
+// ── PROGRAM (listă zilnică minimalistă — curse regulate + organizate, editare instant) ──
+window.progToday = () => { document.getElementById('prog-date').value=new Date().toISOString().split('T')[0]; loadProgram(); };
+window.progPrevDay = () => { const el=document.getElementById('prog-date'); if(!el.value)el.value=new Date().toISOString().split('T')[0]; const d=new Date(el.value+'T12:00:00');d.setDate(d.getDate()-1);el.value=d.toISOString().split('T')[0];loadProgram(); };
+window.progNextDay = () => { const el=document.getElementById('prog-date'); if(!el.value)el.value=new Date().toISOString().split('T')[0]; const d=new Date(el.value+'T12:00:00');d.setDate(d.getDate()+1);el.value=d.toISOString().split('T')[0];loadProgram(); };
+
+window.loadProgram = async () => {
+  const dateEl=document.getElementById('prog-date');
+  if(!dateEl.value) dateEl.value=new Date().toISOString().split('T')[0];
+  const date=dateEl.value;
+  const listEl=document.getElementById('program-list');
+  listEl.innerHTML='<div class="loading-state"><div class="spin"></div></div>';
+  try{
+    await loadFleet().catch(()=>{});
+    const sfSnap=await getDocs(collection(db,'soferi')); buildDriversCache(sfSnap);
+    const regSnap=await getDocs(collection(db,'curse_regulate'));
+    window._R=regSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const dow=new Date(date+'T12:00:00').getDay();
+
+    // Curse regulate active în ziua selectată
+    const rows=[];
+    window._R.filter(c=>{
+      if(!c.activa)return false;
+      if(!(c.zile||[]).includes(dow))return false;
+      if(c.dataStart&&date<c.dataStart)return false;
+      if(c.dataEnd&&date>c.dataEnd)return false;
+      if(c.dateBlocate?.includes(date))return false;
+      return true;
+    }).forEach(c=>{
+      const pl=c.plecari?.length?c.plecari:[{ora:c.ora,driverId:c.driverId}];
+      pl.forEach((p,pi)=>{
+        const oraInfo=getOraForDate(p,date);
+        rows.push({
+          tip:'regulata', ora:oraInfo.ora||p.ora||'-', ruta:c.ruta,
+          vehiculId:c.vehiculId, driverId:oraInfo.driverId||p.driverId||'',
+          cursaId:c.id, pi
+        });
+      });
+    });
+
+    // Curse organizate confirmate/programate în ziua selectată
+    try{
+      const orgSnap=await getDocs(query(collection(db,'rezervari'),where('data','==',date)));
+      orgSnap.docs.forEach(d=>{
+        const r=d.data();
+        if(r.tipRezervare!=='organizata'||r.status==='anulata')return;
+        rows.push({
+          tip:'organizata', ora:r.ora||'flexibil', ruta:r.descriereCursa||r.traseu||'Cursă organizată',
+          vehiculId:r.vehiculId||'', driverId:r.driverId||'', rezId:d.id
+        });
+      });
+    }catch(e){}
+
+    rows.sort((a,b)=>(a.ora||'').localeCompare(b.ora||''));
+
+    if(!rows.length){listEl.innerHTML='<div class="empty-state"><div class="empty-icon">😴</div><h3>Nicio cursă în această zi</h3></div>';return;}
+
+    listEl.innerHTML=`<div class="tbl-wrap"><table class="tbl"><thead><tr><th style="width:70px">Ora</th><th>Traseu</th><th>Tip</th><th style="width:220px">Vehicul</th><th style="width:200px">Șofer</th></tr></thead><tbody>${rows.map((r,i)=>{
+      const vehOpts=window._F.map(v=>`<option value="${v.id}" ${r.vehiculId===v.id?'selected':''}>${v.icon||''} ${v.nome||v.name||v.nume||''}</option>`).join('');
+      const sfOpts=window._DRIVERS_LIST.map(sf=>`<option value="${sf.id}" ${r.driverId===sf.id?'selected':''}>${sf.numeFull}</option>`).join('');
+      const tipBadge=r.tip==='regulata'?'<span class="chip chip-amber">🔄 Regulată</span>':'<span class="chip" style="background:var(--orange-g);border-color:rgba(196,101,32,.25);color:var(--orange)">🚌 Organizată</span>';
+      const dataAttrs=r.tip==='regulata'?`data-cursaid="${r.cursaId}" data-pi="${r.pi}"`:`data-rezid="${r.rezId}"`;
+      return `<tr>
+        <td><strong>${r.ora}</strong></td>
+        <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.ruta}</td>
+        <td>${tipBadge}</td>
+        <td><select ${dataAttrs} onchange="progUpdateField(this,'vehiculId')"><option value="">— fără vehicul —</option>${vehOpts}</select></td>
+        <td><select ${dataAttrs} onchange="progUpdateField(this,'driverId')"><option value="">— fără șofer —</option>${sfOpts}</select></td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+  }catch(e){ listEl.innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><p>'+e.message+'</p></div>'; }
+};
+
+window.progUpdateField = async (selectEl, field) => {
+  const val=selectEl.value;
+  try{
+    if(selectEl.dataset.rezid){
+      // Cursă organizată — se editează direct pe rezervare
+      const upd={};
+      if(field==='vehiculId'){ const v=window._F.find(x=>x.id===val); upd.vehiculId=val||null; upd.vehiculNume=v?(v.nome||v.name||v.nume||''):null; }
+      else { upd.driverId=val||null; }
+      await setDoc(doc(db,'rezervari',selectEl.dataset.rezid),upd,{merge:true});
+    } else if(selectEl.dataset.cursaid){
+      // Cursă regulată — se editează plecarea corespunzătoare
+      const cursaId=selectEl.dataset.cursaid, pi=parseInt(selectEl.dataset.pi)||0;
+      const c=window._R.find(x=>x.id===cursaId); if(!c)return;
+      if(field==='vehiculId'){
+        const v=window._F.find(x=>x.id===val);
+        await setDoc(doc(db,'curse_regulate',cursaId),{vehiculId:val||null,vehiculNume:v?(v.nome||v.name||v.nume||''):null,capacitate:v?capVeh(v):0,rows:v?.rows||[]},{merge:true});
+        const idx=window._R.findIndex(x=>x.id===cursaId); if(idx>-1){window._R[idx].vehiculId=val;window._R[idx].vehiculNume=v?(v.nome||v.name||v.nume||''):'';}
+      } else {
+        const plecari=JSON.parse(JSON.stringify(c.plecari||[{ora:c.ora}]));
+        if(!plecari[pi])plecari[pi]={ora:c.ora};
+        plecari[pi].driverId=val||null;
+        await setDoc(doc(db,'curse_regulate',cursaId),{plecari,...(pi===0?{driverId:val||null}:{})},{merge:true});
+        const idx=window._R.findIndex(x=>x.id===cursaId); if(idx>-1)window._R[idx].plecari=plecari;
+      }
+    }
+    toast('✅ Salvat','ok');
+  }catch(e){ toast('Eroare: '+e.message,'er'); }
 };
 
 // ── VEHICLE ASSIGNMENT ─────────────────────────────────────
