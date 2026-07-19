@@ -3324,9 +3324,8 @@ async function fetchNearbyAttractions(lat,lng){
         let category='';
         if(isChurch) category = tags.denomination==='orthodox' ? 'orthodox_church' : 'church';
         else category = tags.tourism||tags.historic||(tags.natural==='waterfall'?'waterfall':'');
-        let name = tags.name || tags['name:ro'];
-        if(!name && isChurch) name = category==='orthodox_church' ? 'Biserică ortodoxă' : 'Biserică';
-        if(!name) return null;
+        let name = tags.name || tags['name:ro'] || null;
+        if(!name && !isChurch) return null; // obiective non-biserica trebuie sa aiba nume propriu
         return {
           name, lat:eLat, lng:eLng,
           dist:haversineKm(lat,lng,eLat,eLng),
@@ -3334,7 +3333,7 @@ async function fetchNearbyAttractions(lat,lng){
         };
       })
       .filter(Boolean)
-      .filter(it=>{ const key=it.name+'|'+it.lat.toFixed(4)+'|'+it.lng.toFixed(4); if(seen.has(key)) return false; seen.add(key); return true; });
+      .filter(it=>{ const key=(it.name||'?')+'|'+it.lat.toFixed(4)+'|'+it.lng.toFixed(4); if(seen.has(key)) return false; seen.add(key); return true; });
   }catch(e){ console.warn('Overpass attractions failed:', e.message); return []; }
   if(!items.length) return [];
 
@@ -3347,6 +3346,14 @@ async function fetchNearbyAttractions(lat,lng){
   const catLabel={attraction:'Atracție turistică',museum:'Muzeu',viewpoint:'Punct de belvedere',gallery:'Galerie de artă',zoo:'Grădină zoologică',theme_park:'Parc de distracții',monument:'Monument istoric',castle:'Castel / Cetate',memorial:'Monument comemorativ',ruins:'Ruine istorice',archaeological_site:'Sit arheologic',fort:'Fortificație',waterfall:'Cascadă',orthodox_church:'⛪ Biserică ortodoxă',church:'⛪ Lăcaș de cult creștin'};
 
   await Promise.all(items.map(async it=>{
+    // Biserica fara nume propriu in OSM -> punem numele localitatii (sat/oras) unde se afla,
+    // nu un text generic identic pentru toate ("Biserică ortodoxă" x3 nu ajuta clientul).
+    if(!it.name && it.isChurch){
+      let locName=null;
+      try{ const rg = await reverseGeocodeName(it.lat, it.lng); locName = rg?.name || null; }catch(e){}
+      const prefix = it.category==='orthodox_church' ? 'Biserică ortodoxă' : 'Biserică';
+      it.name = locName ? `${prefix}, ${locName}` : prefix;
+    }
     it.desc = catLabel[it.category] || '';
     it.img = '';
     let title = null;
@@ -3361,9 +3368,10 @@ async function fetchNearbyAttractions(lat,lng){
         const gr = await fetchWithTimeout(`https://ro.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${it.lat}%7C${it.lng}&gsradius=400&gslimit=1&format=json&origin=*`, {}, 8000);
         if (gr.ok) { const gd = await gr.json(); title = gd?.query?.geosearch?.[0]?.title || null; }
       }
-      // 3) altfel cautam dupa numele exact al obiectivului (text search normal pe Wikipedia) —
-      // sarim peste acest pas pentru bisericile fara nume propriu (genereaza rezultate irelevante)
-      if (!title && it.name!=='Biserică' && it.name!=='Biserică ortodoxă') {
+      // 3) altfel cautam dupa numele exact (text search normal pe Wikipedia) — DAR NU pentru
+      // biserici, ale caror nume (ex: "Biserica Sfântul Nicolae") se repeta in zeci de sate,
+      // deci cautarea ar putea gasi poza/descrierea altei biserici, din alt oras cu totul.
+      if (!title && !it.isChurch) {
         const sr2 = await fetchWithTimeout(`https://ro.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(it.name)}&srlimit=1&format=json&origin=*`, {}, 8000);
         if (sr2.ok) { const sd2 = await sr2.json(); title = sd2?.query?.search?.[0]?.title || null; }
       }
@@ -4866,8 +4874,10 @@ let _orgPreviewMapLoaded = false;
 async function renderOrgRoutePreviewMap(){
   const mapEl = document.getElementById('org-route-preview-map');
   if (!mapEl) return;
-  const stops = window._ORG_STOPS.filter(Boolean);
-  if (stops.length<2) { mapEl.innerHTML='<div style="text-align:center;color:var(--stone);font-size:12px;padding:20px"><div style="font-size:28px;margin-bottom:6px">🗺</div>Completează plecarea și destinația</div>'; return; }
+  const stopsWithCoords = window._ORG_STOPS
+    .map((name,i)=>({name, coord:window._ORG_STOP_COORDS?.[i]}))
+    .filter(s=>s.name);
+  if (stopsWithCoords.length<2) { mapEl.innerHTML='<div style="text-align:center;color:var(--stone);font-size:12px;padding:20px"><div style="font-size:28px;margin-bottom:6px">🗺</div>Completează plecarea și destinația</div>'; return; }
   mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:6px"><div class="spin"></div><span style="font-size:11px">Se caută traseul...</span></div>';
 
   if (!_orgPreviewMapLoaded) {
@@ -4900,9 +4910,16 @@ async function renderOrgRoutePreviewMap(){
   }
 
   const coords = [];
-  for (const stopName of stops) {
-    const ll = await geocodeCached(stopName);
-    if (ll) coords.push({ll, nume:stopName});
+  for (const s of stopsWithCoords) {
+    // Prioritate: coordonatele exacte alese pe hartă (sigure). Geocodarea dupa nume e doar
+    // un fallback rar — un nume generic ("Biserica Adormirii Maicii Domnului") poate exista
+    // in zeci de localitati, si Nominatim ar putea nimeri alt oras cu totul.
+    if (s.coord && s.coord.lat!=null && s.coord.lng!=null) {
+      coords.push({ll:[s.coord.lat, s.coord.lng], nume:s.name});
+    } else {
+      const ll = await geocodeCached(s.name);
+      if (ll) coords.push({ll, nume:s.name});
+    }
   }
   if (coords.length>=2) {
     const roadRoute = await getRoadRoute(coords.map(c=>c.ll));
@@ -4922,16 +4939,19 @@ async function renderOrgRoutePreviewMap(){
 window.calcOrgPrice = async () => {
   const vehId=document.getElementById('org-veh')?.value;
   let km=parseInt(document.getElementById('org-km')?.value)||0;
-  const stops=window._ORG_STOPS.filter(Boolean);
-  if(stops.length>=2&&!km){
+  const stopsWithCoords = window._ORG_STOPS
+    .map((name,i)=>({name, coord:window._ORG_STOP_COORDS?.[i]}))
+    .filter(s=>s.name);
+  if(stopsWithCoords.length>=2&&!km){
     const infoEl=document.getElementById('org-route-info');
     if(infoEl)infoEl.textContent='Se calculează distanța...';
-    const dist=await calcDistORS(stops[0],stops[stops.length-1]);
+    const first=stopsWithCoords[0], last=stopsWithCoords[stopsWithCoords.length-1];
+    const dist=await calcDistORS(first,last);
     if(dist){
       km=dist.km;
       const kmEl=document.getElementById('org-km');
       if(kmEl&&!kmEl.value)kmEl.value=km;
-      if(infoEl)infoEl.innerHTML=`<span style="color:var(--green)">✅ ${stops[0]} → ${stops[stops.length-1]}: <strong>${dist.km} km</strong> · ~${dist.text} (estimare ORS)</span>`;
+      if(infoEl)infoEl.innerHTML=`<span style="color:var(--green)">✅ ${first.name} → ${last.name}: <strong>${dist.km} km</strong> · ~${dist.text} (estimare)</span>`;
     } else if(infoEl)infoEl.textContent='Nu s-a putut calcula automat. Introduceți km manual.';
   }
   const el=document.getElementById('org-price-box');
@@ -4949,12 +4969,15 @@ window.calcOrgPrice = async () => {
   } else { valEl.textContent='La cerere'; infoEl2.textContent=' — prețul se confirmă de echipă'; }
   el.style.display='block';
 };
-async function calcDistORS(from,to){
+async function calcDistORS(fromObj,toObj){
   try{
-    const [c1,c2]=await Promise.all([geocodeCached(from),geocodeCached(to)]); // [lat,lng]
+    // Prioritate: coordonatele exacte alese pe hartă. Geocodarea dupa nume e doar fallback
+    // (un nume generic gen "Biserica Adormirii Maicii Domnului" exista in zeci de localitati).
+    const c1 = (fromObj?.coord?.lat!=null) ? [fromObj.coord.lat, fromObj.coord.lng] : await geocodeCached(fromObj?.name||fromObj);
+    const c2 = (toObj?.coord?.lat!=null) ? [toObj.coord.lat, toObj.coord.lng] : await geocodeCached(toObj?.name||toObj);
     if(!c1||!c2)return null;
     const coordsStr = `${c1[1]},${c1[0]};${c2[1]},${c2[0]}`; // OSRM vrea lng,lat
-    const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=false`);
+    const r=await fetchWithTimeout(`https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=false`, {}, 10000);
     if(!r.ok) return null;
     const d=await r.json();
     const seg=d.routes?.[0];
@@ -4962,7 +4985,7 @@ async function calcDistORS(from,to){
     const km=Math.round(seg.distance/1000),min=Math.round(seg.duration/60);
     const h=Math.floor(min/60),m=min%60;
     return{km,min,text:h+'h'+(m?' '+m+'min':'')};
-  }catch(e){console.warn('calcDistORS (Nominatim/OSRM) failed:',e.message);return null;}
+  }catch(e){console.warn('calcDistORS failed:',e.message);return null;}
 }
 
 // ══════════════════════════════════════════════════════════
