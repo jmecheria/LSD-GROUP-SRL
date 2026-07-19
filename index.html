@@ -3297,31 +3297,54 @@ function haversineKm(lat1,lng1,lat2,lng2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 async function fetchNearbyAttractions(lat,lng){
-  // Overpass ramane sursa principala (acoperire buna pentru orase mici din Romania,
-  // spre deosebire de geosearch-ul Wikipedia care are foarte putine locatii cu coordonate).
-  // Adaugam poza + descriere scurta de pe Wikipedia doar acolo unde exista tag-ul "wikipedia" in OSM.
-  const q=`[out:json][timeout:15];(node["tourism"~"attraction|museum|viewpoint|gallery|zoo|theme_park"](around:20000,${lat},${lng});node["historic"~"monument|castle|memorial|ruins|archaeological_site|fort"](around:20000,${lat},${lng});node["natural"="waterfall"](around:20000,${lat},${lng}););out center 50;`;
+  // Overpass ramane sursa principala. Bisericile sunt PRIORITARE: le cautam pe o raza
+  // mai mare (25km) si le punem mereu inaintea celorlalte obiective. Multe biserici sunt
+  // mapate ca "way" (conturul cladirii), nu doar ca "node", asa ca interogam ambele.
+  const q=`[out:json][timeout:20];(
+    node["amenity"="place_of_worship"]["religion"="christian"](around:25000,${lat},${lng});
+    way["amenity"="place_of_worship"]["religion"="christian"](around:25000,${lat},${lng});
+    node["tourism"~"attraction|museum|viewpoint|gallery|zoo|theme_park"](around:20000,${lat},${lng});
+    node["historic"~"monument|castle|memorial|ruins|archaeological_site|fort"](around:20000,${lat},${lng});
+    way["historic"~"monument|castle|memorial|ruins|archaeological_site|fort"](around:20000,${lat},${lng});
+    node["natural"="waterfall"](around:20000,${lat},${lng});
+  );out center 80;`;
   let items=[];
   try{
-    const r=await fetchWithTimeout('https://overpass-api.de/api/interpreter',{method:'POST',body:q}, 12000);
+    const r=await fetchWithTimeout('https://overpass-api.de/api/interpreter',{method:'POST',body:q}, 15000);
     if(!r.ok) return [];
     const d=await r.json();
     const seen=new Set();
     items=(d.elements||[])
-      .filter(e=>e.tags?.name && e.lat!=null && e.lon!=null)
-      .map(e=>({
-        name:e.tags.name, lat:e.lat, lng:e.lon,
-        dist:haversineKm(lat,lng,e.lat,e.lon),
-        wikipedia:e.tags.wikipedia||'',
-        category:e.tags.tourism||e.tags.historic||(e.tags.natural==='waterfall'?'waterfall':'')
-      }))
-      .filter(it=>{ if(seen.has(it.name)) return false; seen.add(it.name); return true; });
-    items.sort((a,b)=>a.dist-b.dist);
-    items=items.slice(0,4);
+      .map(e=>{
+        const tags=e.tags||{};
+        const eLat = e.lat ?? e.center?.lat;
+        const eLng = e.lon ?? e.center?.lon;
+        if(eLat==null || eLng==null) return null;
+        const isChurch = tags.amenity==='place_of_worship' && tags.religion==='christian';
+        let category='';
+        if(isChurch) category = tags.denomination==='orthodox' ? 'orthodox_church' : 'church';
+        else category = tags.tourism||tags.historic||(tags.natural==='waterfall'?'waterfall':'');
+        let name = tags.name || tags['name:ro'];
+        if(!name && isChurch) name = category==='orthodox_church' ? 'Biserică ortodoxă' : 'Biserică';
+        if(!name) return null;
+        return {
+          name, lat:eLat, lng:eLng,
+          dist:haversineKm(lat,lng,eLat,eLng),
+          wikipedia:tags.wikipedia||'', category, isChurch
+        };
+      })
+      .filter(Boolean)
+      .filter(it=>{ const key=it.name+'|'+it.lat.toFixed(4)+'|'+it.lng.toFixed(4); if(seen.has(key)) return false; seen.add(key); return true; });
   }catch(e){ console.warn('Overpass attractions failed:', e.message); return []; }
   if(!items.length) return [];
 
-  const catLabel={attraction:'Atracție turistică',museum:'Muzeu',viewpoint:'Punct de belvedere',gallery:'Galerie de artă',zoo:'Grădină zoologică',theme_park:'Parc de distracții',monument:'Monument istoric',castle:'Castel / Cetate',memorial:'Monument comemorativ',ruins:'Ruine istorice',archaeological_site:'Sit arheologic',fort:'Fortificație',waterfall:'Cascadă'};
+  // Bisericile au prioritate: le luam pe cele mai apropiate 3, apoi completam cu
+  // maximum 2 alte obiective turistice, pastrand bisericile mereu in capul listei.
+  const churches = items.filter(it=>it.isChurch).sort((a,b)=>a.dist-b.dist).slice(0,3);
+  const others = items.filter(it=>!it.isChurch).sort((a,b)=>a.dist-b.dist).slice(0,2);
+  items = [...churches, ...others];
+
+  const catLabel={attraction:'Atracție turistică',museum:'Muzeu',viewpoint:'Punct de belvedere',gallery:'Galerie de artă',zoo:'Grădină zoologică',theme_park:'Parc de distracții',monument:'Monument istoric',castle:'Castel / Cetate',memorial:'Monument comemorativ',ruins:'Ruine istorice',archaeological_site:'Sit arheologic',fort:'Fortificație',waterfall:'Cascadă',orthodox_church:'⛪ Biserică ortodoxă',church:'⛪ Lăcaș de cult creștin'};
 
   await Promise.all(items.map(async it=>{
     it.desc = catLabel[it.category] || '';
@@ -3338,8 +3361,9 @@ async function fetchNearbyAttractions(lat,lng){
         const gr = await fetchWithTimeout(`https://ro.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${it.lat}%7C${it.lng}&gsradius=400&gslimit=1&format=json&origin=*`, {}, 8000);
         if (gr.ok) { const gd = await gr.json(); title = gd?.query?.geosearch?.[0]?.title || null; }
       }
-      // 3) altfel cautam dupa numele exact al obiectivului (text search normal pe Wikipedia)
-      if (!title) {
+      // 3) altfel cautam dupa numele exact al obiectivului (text search normal pe Wikipedia) —
+      // sarim peste acest pas pentru bisericile fara nume propriu (genereaza rezultate irelevante)
+      if (!title && it.name!=='Biserică' && it.name!=='Biserică ortodoxă') {
         const sr2 = await fetchWithTimeout(`https://ro.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(it.name)}&srlimit=1&format=json&origin=*`, {}, 8000);
         if (sr2.ok) { const sd2 = await sr2.json(); title = sd2?.query?.search?.[0]?.title || null; }
       }
@@ -3359,7 +3383,7 @@ function renderAttractionsBox(boxEl, dest, attractions, target){
       <div style="font-weight:700;font-size:12.5px;color:var(--amber-d);margin-bottom:10px">💡 Aproape de ${dest}, ați putea vizita:</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         ${attractions.map(a=>`<div style="display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--border-l);border-radius:8px;padding:8px;cursor:pointer" onclick="addAttractionStop('${target}','${a.name.replace(/'/g,"\\'")}',${a.lat},${a.lng})" title="Adaugă ca oprire">
-          ${a.img?`<img src="${a.img}" alt="${a.name}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;flex-shrink:0"/>`:`<div style="width:52px;height:52px;border-radius:6px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📍</div>`}
+          ${a.img?`<img src="${a.img}" alt="${a.name}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;flex-shrink:0"/>`:`<div style="width:52px;height:52px;border-radius:6px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${a.isChurch?'⛪':'📍'}</div>`}
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name} <span style="font-weight:400;color:var(--stone);font-size:10.5px">(~${a.dist.toFixed(1)} km)</span></div>
             ${a.desc?`<div style="font-size:11px;color:var(--stone);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${a.desc}</div>`:''}
