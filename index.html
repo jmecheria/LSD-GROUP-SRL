@@ -1784,6 +1784,7 @@ footer::before{
     <button class="tab-btn" onclick="adminTab('program')">📅 Program</button>
     <button class="tab-btn" onclick="adminTab('harta')">🗺 Hartă live</button>
     <button class="tab-btn" onclick="adminTab('ticker')">📢 Ticker</button>
+    <button class="tab-btn" onclick="adminTab('obiective')">🏛 Obiective</button>
     <button class="tab-btn" onclick="adminTab('conectari')">🔐 Conectări</button>
     <button class="tab-btn" onclick="adminTab('continut')">📝 Conținut</button>
     <button class="tab-btn" onclick="adminTab('settings')">⚙️ Setări</button>
@@ -1923,6 +1924,18 @@ footer::before{
     <div class="tbl-wrap">
       <table class="tbl"><thead><tr><th>Mesaj</th><th>Activ</th><th></th></tr></thead>
       <tbody id="ticker-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- OBIECTIVE TURISTICE RECOMANDATE (curate manual, prioritate fata de cautarea automata) -->
+  <div id="admin-tab-obiective" class="tab-panel">
+    <div class="info-box" style="margin-bottom:16px">💡 Aceste obiective (biserici, mănăstiri, muzee, cetăți etc.) apar cu <strong>prioritate</strong> — cu poza și descrierea puse de tine — când clientul alege o destinație din apropiere, la Cursă Organizată. Căutarea automată (OpenStreetMap + Wikipedia) rămâne activă pentru restul obiectivelor, necurate de tine.</div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <button class="btn btn-primary btn-sm" onclick="openObiectivModal()">+ Adaugă obiectiv</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl"><thead><tr><th>Poză</th><th>Nume</th><th>Categorie</th><th>Activ</th><th></th></tr></thead>
+      <tbody id="obiective-tbody"></tbody></table>
     </div>
   </div>
 
@@ -2394,6 +2407,51 @@ footer::before{
       <div class="fg" style="display:flex;align-items:center;gap:12px"><div class="fl" style="margin-bottom:0">Activ</div><label class="toggle"><input type="checkbox" id="ticker-active" checked/><div class="toggle-track"></div></label></div>
     </div>
     <div class="modal-foot"><button class="btn btn-secondary" onclick="closeModal('ticker')">Anulează</button><button class="btn btn-primary" onclick="saveTicker()">Salvează</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Obiectiv turistic recomandat -->
+<div class="modal-overlay" id="mo-obiectiv">
+  <div class="modal modal-lg">
+    <div class="modal-head"><div><div class="modal-title" id="obiectiv-modal-title">Obiectiv turistic</div></div><button class="modal-close" onclick="closeModal('obiectiv')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="obv-id"/>
+      <div class="f-row">
+        <div class="fg"><div class="fl">Nume *</div><input type="text" id="obv-nume" placeholder="Ex: Mănăstirea Voroneț"/></div>
+        <div class="fg"><div class="fl">Categorie</div>
+          <select id="obv-categorie">
+            <option value="biserica">⛪ Biserică</option>
+            <option value="manastire">⛪ Mănăstire</option>
+            <option value="muzeu">🏛 Muzeu</option>
+            <option value="cetate">🏰 Cetate / Castel</option>
+            <option value="altele">📍 Altele</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><div class="fl">Descriere scurtă *</div><textarea id="obv-desc" rows="3" placeholder="Poți copia descrierea de pe un site oficial (ex: mmb.ro, patriarhia.ro, situl muzeului)"></textarea></div>
+      <div class="fg">
+        <div class="fl">Locație pe hartă *</div>
+        <div id="obv-map-picker" style="height:280px;border-radius:var(--r);overflow:hidden;background:var(--cream)"></div>
+        <div id="obv-coord-info" style="font-size:12px;color:var(--stone);margin-top:6px">Dă click pe hartă pentru a alege locația exactă.</div>
+      </div>
+      <div class="fg">
+        <div class="fl">Imagine</div>
+        <div class="drop-zone" id="obv-dropzone" onclick="document.getElementById('obv-file').click()">
+          <div style="font-size:28px;margin-bottom:6px">📸</div>
+          <p style="color:var(--stone);font-size:13px">Click pentru a selecta o imagine</p>
+          <input type="file" id="obv-file" accept="image/*" style="display:none" onchange="handleObvImage(this.files)"/>
+        </div>
+        <div id="obv-img-preview" style="margin-top:10px"></div>
+      </div>
+      <div class="fg" style="display:flex;align-items:center;gap:12px">
+        <div class="fl" style="margin-bottom:0">Activ</div>
+        <label class="toggle"><input type="checkbox" id="obv-active" checked/><div class="toggle-track"></div></label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('obiectiv')">Anulează</button>
+      <button class="btn btn-primary" onclick="saveObiectiv()">💾 Salvează obiectivul</button>
+    </div>
   </div>
 </div>
 
@@ -3297,7 +3355,21 @@ function haversineKm(lat1,lng1,lat2,lng2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 async function fetchNearbyAttractions(lat,lng){
-  // Overpass ramane sursa principala. Bisericile sunt PRIORITARE: le cautam pe o raza
+  // 0) Obiective curate manual de admin (biserici/muzee/etc. cu poza si descriere puse de tine) —
+  // au PRIORITATE maxima: text si poza garantat corecte, nu depind de Overpass/Wikipedia.
+  const curatedAll = await loadCuratedAttractionsCached();
+  const curated = curatedAll
+    .map(o=>({
+      name:o.nume, lat:o.lat, lng:o.lng, dist:haversineKm(lat,lng,o.lat,o.lng),
+      img:o.imagine||'', desc:o.descriere||window._OBV_CAT_LABEL?.[o.categorie]||'',
+      isChurch:(o.categorie==='biserica'||o.categorie==='manastire'), isCurated:true,
+      icon: o.categorie==='muzeu'?'🏛':o.categorie==='cetate'?'🏰':(o.categorie==='biserica'||o.categorie==='manastire')?'⛪':'📍'
+    }))
+    .filter(o=>o.dist<=40)
+    .sort((a,b)=>a.dist-b.dist)
+    .slice(0,3);
+
+  // Overpass ramane sursa automata pentru restul. Bisericile sunt PRIORITARE: le cautam pe o raza
   // mai mare (25km) si le punem mereu inaintea celorlalte obiective. Multe biserici sunt
   // mapate ca "way" (conturul cladirii), nu doar ca "node", asa ca interogam ambele.
   const q=`[out:json][timeout:20];(
@@ -3308,44 +3380,52 @@ async function fetchNearbyAttractions(lat,lng){
     way["historic"~"monument|castle|memorial|ruins|archaeological_site|fort"](around:20000,${lat},${lng});
     node["natural"="waterfall"](around:20000,${lat},${lng});
   );out center 80;`;
-  let items=[];
+  let osmItems=[];
   try{
     const r=await fetchWithTimeout('https://overpass-api.de/api/interpreter',{method:'POST',body:q}, 15000);
-    if(!r.ok) return [];
-    const d=await r.json();
-    const seen=new Set();
-    items=(d.elements||[])
-      .map(e=>{
-        const tags=e.tags||{};
-        const eLat = e.lat ?? e.center?.lat;
-        const eLng = e.lon ?? e.center?.lon;
-        if(eLat==null || eLng==null) return null;
-        const isChurch = tags.amenity==='place_of_worship' && tags.religion==='christian';
-        let category='';
-        if(isChurch) category = tags.denomination==='orthodox' ? 'orthodox_church' : 'church';
-        else category = tags.tourism||tags.historic||(tags.natural==='waterfall'?'waterfall':'');
-        let name = tags.name || tags['name:ro'] || null;
-        if(!name && !isChurch) return null; // obiective non-biserica trebuie sa aiba nume propriu
-        return {
-          name, lat:eLat, lng:eLng,
-          dist:haversineKm(lat,lng,eLat,eLng),
-          wikipedia:tags.wikipedia||'', category, isChurch
-        };
-      })
-      .filter(Boolean)
-      .filter(it=>{ const key=(it.name||'?')+'|'+it.lat.toFixed(4)+'|'+it.lng.toFixed(4); if(seen.has(key)) return false; seen.add(key); return true; });
-  }catch(e){ console.warn('Overpass attractions failed:', e.message); return []; }
-  if(!items.length) return [];
+    if(r.ok){
+      const d=await r.json();
+      const seen=new Set();
+      osmItems=(d.elements||[])
+        .map(e=>{
+          const tags=e.tags||{};
+          const eLat = e.lat ?? e.center?.lat;
+          const eLng = e.lon ?? e.center?.lon;
+          if(eLat==null || eLng==null) return null;
+          const isChurch = tags.amenity==='place_of_worship' && tags.religion==='christian';
+          let category='';
+          if(isChurch) category = tags.denomination==='orthodox' ? 'orthodox_church' : 'church';
+          else category = tags.tourism||tags.historic||(tags.natural==='waterfall'?'waterfall':'');
+          let name = tags.name || tags['name:ro'] || null;
+          if(!name && !isChurch) return null; // obiective non-biserica trebuie sa aiba nume propriu
+          return {
+            name, lat:eLat, lng:eLng,
+            dist:haversineKm(lat,lng,eLat,eLng),
+            wikipedia:tags.wikipedia||'', category, isChurch
+          };
+        })
+        .filter(Boolean)
+        .filter(it=>{ const key=(it.name||'?')+'|'+it.lat.toFixed(4)+'|'+it.lng.toFixed(4); if(seen.has(key)) return false; seen.add(key); return true; })
+        // Nu includem un rezultat OSM daca e foarte aproape (sub 300m) de un obiectiv curat —
+        // pastram varianta curata (poza si text garantat corecte), ca sa nu apara de 2 ori acelasi loc.
+        .filter(it=>!curated.some(c=>haversineKm(c.lat,c.lng,it.lat,it.lng)<0.3));
+    }
+  }catch(e){ console.warn('Overpass attractions failed:', e.message); }
 
-  // Bisericile au prioritate: le luam pe cele mai apropiate 3, apoi completam cu
-  // maximum 2 alte obiective turistice, pastrand bisericile mereu in capul listei.
-  const churches = items.filter(it=>it.isChurch).sort((a,b)=>a.dist-b.dist).slice(0,3);
-  const others = items.filter(it=>!it.isChurch).sort((a,b)=>a.dist-b.dist).slice(0,2);
-  items = [...churches, ...others];
+  // Bisericile OSM au prioritate dupa cele curate: completam sloturile ramase (maxim 5 in total),
+  // intai cu biserici, apoi cu alte obiective turistice.
+  const remainingSlots = Math.max(0, 5 - curated.length);
+  const churchSlots = Math.min(remainingSlots, 3);
+  const otherSlots = Math.max(0, remainingSlots - churchSlots);
+  const churches = osmItems.filter(it=>it.isChurch).sort((a,b)=>a.dist-b.dist).slice(0,churchSlots);
+  const others = osmItems.filter(it=>!it.isChurch).sort((a,b)=>a.dist-b.dist).slice(0,otherSlots);
+  let items = [...curated, ...churches, ...others];
+  if(!items.length) return [];
 
   const catLabel={attraction:'Atracție turistică',museum:'Muzeu',viewpoint:'Punct de belvedere',gallery:'Galerie de artă',zoo:'Grădină zoologică',theme_park:'Parc de distracții',monument:'Monument istoric',castle:'Castel / Cetate',memorial:'Monument comemorativ',ruins:'Ruine istorice',archaeological_site:'Sit arheologic',fort:'Fortificație',waterfall:'Cascadă',orthodox_church:'⛪ Biserică ortodoxă',church:'⛪ Lăcaș de cult creștin'};
 
   await Promise.all(items.map(async it=>{
+    if(it.isCurated) return; // are deja poza + descriere puse de admin, nu mai cautam nimic
     // Biserica fara nume propriu in OSM -> punem numele localitatii (sat/oras) unde se afla,
     // nu un text generic identic pentru toate ("Biserică ortodoxă" x3 nu ajuta clientul).
     if(!it.name && it.isChurch){
@@ -3391,9 +3471,9 @@ function renderAttractionsBox(boxEl, dest, attractions, target){
       <div style="font-weight:700;font-size:12.5px;color:var(--amber-d);margin-bottom:10px">💡 Aproape de ${dest}, ați putea vizita:</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         ${attractions.map(a=>`<div style="display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--border-l);border-radius:8px;padding:8px;cursor:pointer" onclick="addAttractionStop('${target}','${a.name.replace(/'/g,"\\'")}',${a.lat},${a.lng})" title="Adaugă ca oprire">
-          ${a.img?`<img src="${a.img}" alt="${a.name}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;flex-shrink:0"/>`:`<div style="width:52px;height:52px;border-radius:6px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${a.isChurch?'⛪':'📍'}</div>`}
+          ${a.img?`<img src="${a.img}" alt="${a.name}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;flex-shrink:0"/>`:`<div style="width:52px;height:52px;border-radius:6px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${a.icon||(a.isChurch?'⛪':'📍')}</div>`}
           <div style="flex:1;min-width:0">
-            <div style="font-weight:700;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name} <span style="font-weight:400;color:var(--stone);font-size:10.5px">(~${a.dist.toFixed(1)} km)</span></div>
+            <div style="font-weight:700;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name} <span style="font-weight:400;color:var(--stone);font-size:10.5px">(~${a.dist.toFixed(1)} km)</span>${a.isCurated?' <span style="background:var(--amber);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;vertical-align:middle">★ recomandat</span>':''}</div>
             ${a.desc?`<div style="font-size:11px;color:var(--stone);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${a.desc}</div>`:''}
           </div>
           <span style="color:var(--amber-d);font-weight:800;flex-shrink:0">+</span>
@@ -5748,14 +5828,15 @@ window.loadAdmin = async () => {
 };
 window.refreshAdmin=async()=>{await loadAdmin();toast('Date actualizate!','ok');};
 window.adminTab=tab=>{
-  ['vehicles','routes','bookings','drivers','program','harta','ticker','conectari','continut','settings'].forEach(t=>{
+  ['vehicles','routes','bookings','drivers','program','harta','ticker','obiective','conectari','continut','settings'].forEach(t=>{
     document.getElementById('admin-tab-'+t)?.classList.toggle('active',t===tab);
   });
   document.querySelectorAll('#pg-admin .tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['vehicles','routes','bookings','drivers','program','harta','ticker','conectari','continut','settings'][i]===tab);
+    b.classList.toggle('active',['vehicles','routes','bookings','drivers','program','harta','ticker','obiective','conectari','continut','settings'][i]===tab);
   });
   if(tab==='program'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];progSetMode(window._PROG_MODE||'day');}
   if(tab==='harta'){loadHartaAdmin();}
+  if(tab==='obiective'){loadObiectiveTbl();}
   if(tab==='conectari'){loadLoginLogs();}
   if(tab==='continut'){loadContentPanel();}
 };
@@ -5777,6 +5858,169 @@ window.loadLoginLogs = async () => {
     }).join('');
   }catch(e){ tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--red)">Eroare: ${e.message}${e.code==='permission-denied'?' — verificați regulile Firestore pentru colecția login_logs':''}</td></tr>`; }
 };
+
+// ── OBIECTIVE TURISTICE RECOMANDATE (admin) ────────────────
+window._OBV_CAT_LABEL = {biserica:'⛪ Biserică',manastire:'⛪ Mănăstire',muzeu:'🏛 Muzeu',cetate:'🏰 Cetate / Castel',altele:'📍 Altele'};
+window._OBV_IMG = '';
+window._OBV_COORD = null;
+
+async function loadObiectiveTbl(){
+  const tbody = document.getElementById('obiective-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px"><div class="spin"></div></td></tr>';
+  try{
+    const snap = await getDocs(collection(db,'obiective_turistice'));
+    const rows = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!rows.length){ tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--stone)">Niciun obiectiv adăugat încă</td></tr>'; return; }
+    tbody.innerHTML = rows.map(o=>`<tr>
+      <td>${o.imagine?`<img src="${o.imagine}" style="width:56px;height:44px;object-fit:cover;border-radius:6px;cursor:zoom-in" onclick="openLB('${o.imagine}')"/>`:'<div style="width:56px;height:44px;background:var(--cream);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px">📍</div>'}</td>
+      <td><strong>${o.nume||'-'}</strong><br><span style="font-size:11px;color:var(--stone)">${(o.descriere||'').slice(0,70)}${(o.descriere||'').length>70?'…':''}</span></td>
+      <td>${window._OBV_CAT_LABEL[o.categorie]||o.categorie||'-'}</td>
+      <td><label class="toggle"><input type="checkbox" ${o.activ!==false?'checked':''} onchange="toggleObiectiv('${o.id}',this.checked)"/><div class="toggle-track"></div></label></td>
+      <td style="display:flex;gap:5px;padding:10px 12px">
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="openObiectivModal('${o.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteObiectiv('${o.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+  }catch(e){ tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--red)">Eroare: ${e.message}</td></tr>`; }
+}
+window.loadObiectiveTbl = loadObiectiveTbl;
+
+window.toggleObiectiv = async (id,val) => {
+  try{ await setDoc(doc(db,'obiective_turistice',id),{activ:val},{merge:true}); window._CURATED_ATTRACTIONS=null; }
+  catch(e){ toast('Eroare: '+e.message,'er'); }
+};
+window.deleteObiectiv = async (id) => {
+  if(!confirm('Ștergeți definitiv acest obiectiv?')) return;
+  try{ await deleteDoc(doc(db,'obiective_turistice',id)); window._CURATED_ATTRACTIONS=null; await loadObiectiveTbl(); toast('Obiectiv șters','ok'); }
+  catch(e){ toast('Eroare: '+e.message,'er'); }
+};
+
+window.openObiectivModal = async (id=null) => {
+  document.getElementById('obiectiv-modal-title').textContent = id ? 'Editează obiectiv' : 'Adaugă obiectiv nou';
+  document.getElementById('obv-id').value = id||'';
+  document.getElementById('obv-nume').value = '';
+  document.getElementById('obv-desc').value = '';
+  document.getElementById('obv-categorie').value = 'biserica';
+  document.getElementById('obv-active').checked = true;
+  window._OBV_IMG=''; window._OBV_COORD=null;
+  document.getElementById('obv-img-preview').innerHTML='';
+  document.getElementById('obv-coord-info').textContent='Dă click pe hartă pentru a alege locația exactă.';
+  if(id){
+    try{
+      const ref = await getDoc(doc(db,'obiective_turistice',id));
+      if(ref.exists()){
+        const o = ref.data();
+        document.getElementById('obv-nume').value = o.nume||'';
+        document.getElementById('obv-desc').value = o.descriere||'';
+        document.getElementById('obv-categorie').value = o.categorie||'altele';
+        document.getElementById('obv-active').checked = o.activ!==false;
+        window._OBV_IMG = o.imagine||'';
+        window._OBV_COORD = (o.lat!=null && o.lng!=null) ? {lat:o.lat, lng:o.lng} : null;
+        if(window._OBV_IMG) document.getElementById('obv-img-preview').innerHTML = `<img src="${window._OBV_IMG}" style="max-width:220px;border-radius:8px;border:1px solid var(--border-l)"/>`;
+        if(window._OBV_COORD) document.getElementById('obv-coord-info').innerHTML = `📍 <strong>${window._OBV_COORD.lat.toFixed(5)}, ${window._OBV_COORD.lng.toFixed(5)}</strong>`;
+      }
+    }catch(e){ toast('Eroare la încărcare: '+e.message,'er'); }
+  }
+  openModal('obiectiv');
+  setTimeout(initObvMapPicker, 60);
+};
+
+let _obvPickerLeafletLoaded = false;
+async function initObvMapPicker(){
+  const mapEl = document.getElementById('obv-map-picker');
+  if(!mapEl) return;
+  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)"><div class="spin"></div></div>';
+  if(!_obvPickerLeafletLoaded){
+    try{
+      await new Promise((res,rej)=>{
+        if(window.L){res();return;}
+        const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
+        const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+        s.onload=res; s.onerror=()=>rej(new Error('Hartă indisponibilă'));
+        document.head.appendChild(s);
+        setTimeout(()=>rej(new Error('Timeout hartă')), 10000);
+      });
+      _obvPickerLeafletLoaded = true;
+    }catch(e){ mapEl.innerHTML = `<div style="text-align:center;color:var(--stone);padding:20px">⚠️ ${e.message}</div>`; return; }
+  }
+  if(window._obvPickerMap){ try{window._obvPickerMap.remove();}catch(e){} window._obvPickerMap=null; }
+  mapEl.innerHTML='';
+  const startLL = window._OBV_COORD ? [window._OBV_COORD.lat, window._OBV_COORD.lng] : [45.9,24.9];
+  const map = L.map(mapEl,{center:startLL, zoom: window._OBV_COORD?13:7, maxBounds:window.ROMANIA_BOUNDS, maxBoundsViscosity:0.85, minZoom:6});
+  window._obvPickerMap = map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+  let marker = window._OBV_COORD ? L.marker(startLL).addTo(map) : null;
+  map.on('click', async (e)=>{
+    const {lat,lng} = e.latlng;
+    if(marker) map.removeLayer(marker);
+    marker = L.marker([lat,lng]).addTo(map);
+    window._OBV_COORD = {lat,lng};
+    const infoEl = document.getElementById('obv-coord-info');
+    infoEl.innerHTML = '<span class="spin" style="width:12px;height:12px;border-width:2px;margin-right:6px;vertical-align:middle"></span>Se identifică locația...';
+    try{
+      const r = await reverseGeocodeName(lat,lng);
+      if(r?.outsideRomania){
+        infoEl.innerHTML = '⚠️ Acest punct este în afara României — alegeți un loc din interiorul țării.';
+        return;
+      }
+      infoEl.innerHTML = `📍 <strong>${lat.toFixed(5)}, ${lng.toFixed(5)}</strong>${r?.name?' — '+r.name:''}`;
+    }catch(e2){
+      infoEl.innerHTML = `📍 <strong>${lat.toFixed(5)}, ${lng.toFixed(5)}</strong>`;
+    }
+  });
+  setTimeout(()=>map.invalidateSize(), 60);
+}
+
+window.handleObvImage = files => {
+  const f = files[0]; if(!f || !f.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = e2 => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'); let w=img.width,h=img.height;
+      const mx=700; if(w>mx||h>mx){const r=Math.min(mx/w,mx/h);w=Math.round(w*r);h=Math.round(h*r);}
+      c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+      window._OBV_IMG = c.toDataURL('image/jpeg',.78);
+      document.getElementById('obv-img-preview').innerHTML = `<img src="${window._OBV_IMG}" style="max-width:220px;border-radius:8px;border:1px solid var(--border-l)"/>`;
+    };
+    img.src = e2.target.result;
+  };
+  reader.readAsDataURL(f);
+};
+
+window.saveObiectiv = async () => {
+  const id = document.getElementById('obv-id').value;
+  const nume = document.getElementById('obv-nume').value.trim();
+  const descriere = document.getElementById('obv-desc').value.trim();
+  const categorie = document.getElementById('obv-categorie').value;
+  const activ = document.getElementById('obv-active').checked;
+  if(!nume){ toast('Introduceți numele obiectivului','wr'); return; }
+  if(!descriere){ toast('Introduceți o descriere scurtă','wr'); return; }
+  if(!window._OBV_COORD){ toast('Alegeți locația pe hartă','wr'); return; }
+  const data = { nume, descriere, categorie, activ, lat:window._OBV_COORD.lat, lng:window._OBV_COORD.lng, imagine:window._OBV_IMG||'' };
+  try{
+    if(id) await setDoc(doc(db,'obiective_turistice',id), data, {merge:true});
+    else { data.createdAt = serverTimestamp(); await addDoc(collection(db,'obiective_turistice'), data); }
+    closeModal('obiectiv');
+    window._CURATED_ATTRACTIONS = null; // invalidam cache-ul, se reincarca la urmatoarea cautare de obiective
+    await loadObiectiveTbl();
+    toast('✅ Obiectiv salvat!','ok');
+  }catch(e){ toast('Eroare: '+e.message,'er'); }
+};
+
+// Cache in memorie: obiectivele curate se incarca o singura data pe sesiune (se invalideaza
+// automat cand adminul salveaza/sterge/dezactiveaza ceva), ca sa nu recitim Firestore la fiecare cautare.
+window._CURATED_ATTRACTIONS = null;
+async function loadCuratedAttractionsCached(){
+  if(window._CURATED_ATTRACTIONS) return window._CURATED_ATTRACTIONS;
+  try{
+    const snap = await getDocs(collection(db,'obiective_turistice'));
+    window._CURATED_ATTRACTIONS = snap.docs.map(d=>({id:d.id,...d.data()})).filter(o=>o.activ!==false && o.lat!=null && o.lng!=null && o.nume);
+  }catch(e){ console.warn('Curated attractions load failed:', e.message); window._CURATED_ATTRACTIONS = []; }
+  return window._CURATED_ATTRACTIONS;
+}
+
 window.adminViewAs=role=>{
   window._ROLE=role==='driver'?'driver':'client';
   buildNav(role==='driver'?'driver':'client');
