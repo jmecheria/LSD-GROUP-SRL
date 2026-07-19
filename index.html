@@ -3262,6 +3262,9 @@ async function reverseGeocodeName(lat, lng){
     });
     const addr = props?.address;
     if (!addr) return { name: null, level: 0 };
+    if (addr.country_code && addr.country_code.toLowerCase() !== 'ro') {
+      return { name: null, level: 0, outsideRomania: true };
+    }
     if (addr.city) return { name: addr.city, level: 3 };
     if (addr.town) return { name: addr.town, level: 2 };
     if (addr.municipality) return { name: addr.municipality, level: 2 };
@@ -3282,34 +3285,48 @@ function haversineKm(lat1,lng1,lat2,lng2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 async function fetchNearbyAttractions(lat,lng){
-  // Cautam obiective turistice folosind Wikipedia (geosearch) — gratuit, fara cheie, si
-  // ne ofera in acelasi timp o poza + un scurt rezumat pentru fiecare loc, spre deosebire
-  // de Overpass/OSM care intoarce doar nume brute.
+  // Overpass ramane sursa principala (acoperire buna pentru orase mici din Romania,
+  // spre deosebire de geosearch-ul Wikipedia care are foarte putine locatii cu coordonate).
+  // Adaugam poza + descriere scurta de pe Wikipedia doar acolo unde exista tag-ul "wikipedia" in OSM.
+  const q=`[out:json][timeout:15];(node["tourism"~"attraction|museum|viewpoint|gallery|zoo|theme_park"](around:20000,${lat},${lng});node["historic"~"monument|castle|memorial|ruins|archaeological_site|fort"](around:20000,${lat},${lng});node["natural"="waterfall"](around:20000,${lat},${lng}););out center 50;`;
+  let items=[];
   try{
-    const geoUrl=`https://ro.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}%7C${lng}&gsradius=15000&gslimit=6&format=json&origin=*`;
-    const gr=await fetch(geoUrl);
-    if(!gr.ok) return [];
-    const gd=await gr.json();
-    const pages=(gd?.query?.geosearch||[]).filter(p=>p.pageid);
-    if(!pages.length) return [];
-    const ids=pages.map(p=>p.pageid).join('|');
-    const detUrl=`https://ro.wikipedia.org/w/api.php?action=query&pageids=${ids}&prop=pageimages%7Cextracts&exintro=1&explaintext=1&exsentences=2&piprop=thumbnail&pithumbsize=300&format=json&origin=*`;
-    const dr=await fetch(detUrl);
-    const dd=dr.ok?await dr.json():null;
-    const detPages=dd?.query?.pages||{};
-    const items=pages.map(p=>{
-      const det=detPages[String(p.pageid)]||{};
-      return {
-        name:p.title,
-        lat:p.lat, lng:p.lon,
-        dist:(p.dist!=null?p.dist/1000:haversineKm(lat,lng,p.lat,p.lon)),
-        img:det.thumbnail?.source||'',
-        desc:(det.extract||'').trim()
-      };
-    });
+    const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:q});
+    if(!r.ok) return [];
+    const d=await r.json();
+    const seen=new Set();
+    items=(d.elements||[])
+      .filter(e=>e.tags?.name && e.lat!=null && e.lon!=null)
+      .map(e=>({
+        name:e.tags.name, lat:e.lat, lng:e.lon,
+        dist:haversineKm(lat,lng,e.lat,e.lon),
+        wikipedia:e.tags.wikipedia||'',
+        category:e.tags.tourism||e.tags.historic||(e.tags.natural==='waterfall'?'waterfall':'')
+      }))
+      .filter(it=>{ if(seen.has(it.name)) return false; seen.add(it.name); return true; });
     items.sort((a,b)=>a.dist-b.dist);
-    return items.slice(0,4);
-  }catch(e){ console.warn('Wikipedia geosearch attractions failed:', e.message); return []; }
+    items=items.slice(0,4);
+  }catch(e){ console.warn('Overpass attractions failed:', e.message); return []; }
+  if(!items.length) return [];
+
+  const catLabel={attraction:'Atracție turistică',museum:'Muzeu',viewpoint:'Punct de belvedere',gallery:'Galerie de artă',zoo:'Grădină zoologică',theme_park:'Parc de distracții',monument:'Monument istoric',castle:'Castel / Cetate',memorial:'Monument comemorativ',ruins:'Ruine istorice',archaeological_site:'Sit arheologic',fort:'Fortificație',waterfall:'Cascadă'};
+
+  await Promise.all(items.map(async it=>{
+    it.desc = catLabel[it.category] || '';
+    it.img = '';
+    if(!it.wikipedia) return;
+    const parts = it.wikipedia.split(':');
+    if(parts.length<2) return;
+    const lang=parts[0], title=parts.slice(1).join(':');
+    try{
+      const sr=await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+      if(!sr.ok) return;
+      const sd=await sr.json();
+      if(sd.thumbnail?.source) it.img=sd.thumbnail.source;
+      if(sd.extract) it.desc=sd.extract.slice(0,140);
+    }catch(e2){ /* pastram descrierea din categorie ca fallback */ }
+  }));
+  return items;
 }
 let _orgAttractionsTimer=null;
 window.checkDestinationAttractions = (target) => {
@@ -4550,8 +4567,16 @@ window.openOrgStopMapPicker = async (idx, target) => {
     marker = L.marker([lat,lng]).addTo(map);
     document.getElementById('org-stop-map-selected').innerHTML = '<span class="spin" style="width:12px;height:12px;border-width:2px;margin-right:6px;vertical-align:middle"></span>Se identifică locația...';
     document.getElementById('btn-org-stop-map-confirm').disabled = true;
-    let name = null;
-    try { const r = await reverseGeocodeName(lat,lng); name = r?.name; } catch(e2){}
+    let result = null;
+    try { result = await reverseGeocodeName(lat,lng); } catch(e2){}
+    if (result?.outsideRomania) {
+      if (marker) { map.removeLayer(marker); marker = null; }
+      document.getElementById('org-stop-map-selected').innerHTML = '⚠️ Acest punct este în afara României. Alegeți o locație din interiorul țării.';
+      document.getElementById('btn-org-stop-map-confirm').disabled = true;
+      toast('⚠️ Punctul ales este în afara României','wr');
+      return;
+    }
+    const name = result?.name;
     window._orgStopMapPick = name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     window._orgStopMapPickLL = {lat,lng};
     document.getElementById('org-stop-map-selected').innerHTML = `📍 <strong>${window._orgStopMapPick}</strong>`;
@@ -4661,9 +4686,15 @@ async function orgMultiPickerAddPoint(lat, lng) {
   window._orgMultiPickerPoints.push({ll:[lat,lng], nume:`${lat.toFixed(3)}, ${lng.toFixed(3)}`});
   await orgMultiPickerRender();
   try {
-    const { name } = await reverseGeocodeName(lat, lng);
+    const result = await reverseGeocodeName(lat, lng);
+    if (result?.outsideRomania) {
+      window._orgMultiPickerPoints.splice(idx,1);
+      await orgMultiPickerRender();
+      toast('⚠️ Acel punct este în afara României — a fost eliminat','wr');
+      return;
+    }
     const p = window._orgMultiPickerPoints[idx];
-    if (name && p && p.ll[0]===lat && p.ll[1]===lng) { p.nume = name; await orgMultiPickerRender(); }
+    if (result?.name && p && p.ll[0]===lat && p.ll[1]===lng) { p.nume = result.name; await orgMultiPickerRender(); }
   } catch(e) {}
 }
 
@@ -5203,8 +5234,8 @@ function renderWizStops(){
     const label = i===0 ? 'A' : i===stops.length-1 ? 'B' : (i+1);
     const placeholder = i===0?'Punct de plecare *':(i===stops.length-1?'Destinație finală *':'Oprire intermediară');
     const delBtn = (i>0 && i<stops.length-1) ? `<button class="btn btn-ghost btn-sm" onclick="wizRemoveStop(${i})">✕</button>` : '';
-    const destChange = i===stops.length-1 ? ` oninput="checkDestinationAttractions('wiz')"` : '';
-    return `<div class="wiz-stop-row"><div class="wiz-stop-badge">${label}</div><input type="text" value="${s}" placeholder="${placeholder}" oninput="window._WIZ_DATA.stops[${i}]=this.value;window._WIZ_DATA.stopCoords[${i}]=null"${destChange} style="flex:1"/><button type="button" class="btn btn-secondary btn-sm btn-icon" title="Alege pe hartă" onclick="openOrgStopMapPicker(${i},'wiz')">📍</button>${delBtn}</div>`;
+    const destExtra = i===stops.length-1 ? `;checkDestinationAttractions('wiz')` : '';
+    return `<div class="wiz-stop-row"><div class="wiz-stop-badge">${label}</div><input type="text" value="${s}" placeholder="${placeholder}" oninput="window._WIZ_DATA.stops[${i}]=this.value;window._WIZ_DATA.stopCoords[${i}]=null${destExtra}" style="flex:1"/><button type="button" class="btn btn-secondary btn-sm btn-icon" title="Alege pe hartă" onclick="openOrgStopMapPicker(${i},'wiz')">📍</button>${delBtn}</div>`;
   }).join('') + '<div id="wiz-attractions-box" style="margin-top:10px"></div>';
 }
 window.wizAddStop = () => {
@@ -6175,7 +6206,13 @@ async function rmMapPickerAddPoint(lat, lng){
 // Rezolva numele localitatii in fundal, fara sa blocheze desenarea hartii/traseului
 async function rmMapPickerResolveName(idx, lat, lng){
   try {
-    const { name: nume } = await reverseGeocodeName(lat, lng);
+    const result = await reverseGeocodeName(lat, lng);
+    if (result?.outsideRomania) {
+      await rmMapPickerRemovePoint(idx);
+      toast('⚠️ Acel punct este în afara României — a fost eliminat','wr');
+      return;
+    }
+    const nume = result?.name;
     const p = window._rmPickerPoints[idx];
     if (nume && p && p.ll[0]===lat && p.ll[1]===lng) {
       p.nume = nume;
