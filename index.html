@@ -3314,17 +3314,30 @@ async function fetchNearbyAttractions(lat,lng){
   await Promise.all(items.map(async it=>{
     it.desc = catLabel[it.category] || '';
     it.img = '';
-    if(!it.wikipedia) return;
-    const parts = it.wikipedia.split(':');
-    if(parts.length<2) return;
-    const lang=parts[0], title=parts.slice(1).join(':');
-    try{
-      const sr=await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
-      if(!sr.ok) return;
-      const sd=await sr.json();
-      if(sd.thumbnail?.source) it.img=sd.thumbnail.source;
-      if(sd.extract) it.desc=sd.extract.slice(0,140);
-    }catch(e2){ /* pastram descrierea din categorie ca fallback */ }
+    let title = null;
+    // 1) daca OSM are tag-ul wikipedia pe punctul respectiv, il folosim direct (rapid, exact)
+    if (it.wikipedia) {
+      const parts = it.wikipedia.split(':');
+      if (parts.length >= 2) title = parts.slice(1).join(':');
+    }
+    try {
+      // 2) altfel cautam cea mai apropiata pagina Wikipedia de coordonatele exacte ale obiectivului
+      if (!title) {
+        const gr = await fetch(`https://ro.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${it.lat}%7C${it.lng}&gsradius=400&gslimit=1&format=json&origin=*`);
+        if (gr.ok) { const gd = await gr.json(); title = gd?.query?.geosearch?.[0]?.title || null; }
+      }
+      // 3) altfel cautam dupa numele exact al obiectivului (text search normal pe Wikipedia)
+      if (!title) {
+        const sr2 = await fetch(`https://ro.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(it.name)}&srlimit=1&format=json&origin=*`);
+        if (sr2.ok) { const sd2 = await sr2.json(); title = sd2?.query?.search?.[0]?.title || null; }
+      }
+      if (!title) return;
+      const sr = await fetch(`https://ro.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+      if (!sr.ok) return;
+      const sd = await sr.json();
+      if (sd.thumbnail?.source) it.img = sd.thumbnail.source;
+      if (sd.extract) it.desc = sd.extract.slice(0,140);
+    } catch(e2) { /* pastram descrierea din categorie ca fallback */ }
   }));
   return items;
 }
@@ -4364,13 +4377,12 @@ window.loadOrgPage = async function() {
   window._ORG_TIP = '';
   renderOrgStops();
   updateOrgProgress();
-  fillModeBg('org-mode-bg-1',3);
-  fillModeBg('org-mode-bg-2',0);
-  // Reset afisare: arata alegerea (wizard/formular) din nou
+  // Simplificat, la cererea clientului: mergem direct pe formularul complet,
+  // fara ecranul de alegere si fara asistentul ghidat pas-cu-pas.
   const modeChoice = document.getElementById('org-mode-choice');
   const formWrap = document.getElementById('org-form-wrap');
-  if (modeChoice) modeChoice.style.display = 'grid';
-  if (formWrap) formWrap.style.display = 'none';
+  if (modeChoice) modeChoice.style.display = 'none';
+  if (formWrap) formWrap.style.display = 'block';
   const u=window._U;
   await loadFleet().catch(()=>{});
   try{
@@ -4392,9 +4404,8 @@ window.loadOrgPage = async function() {
   const aw=document.getElementById('org-avail-wrap');
   if(aw)aw.style.display='none';
 
-  // Deschide automat wizard-ul ghidat la intrarea pe pagină (fluxul implicit, nu ecranul de alegere).
-  // Formularul complet rămâne accesibil din butonul "📝 Trec pe formular" din footer-ul wizard-ului.
-  openOrgWizard();
+  // Wizard-ul ghidat a fost dezactivat (era redundant cu formularul complet).
+  // Formularul complet e deja afișat direct, mai sus.
 };
 
 // ── Disponibilitate simplă, pe zi (nu pe oră) — doar ca informare pentru client,
