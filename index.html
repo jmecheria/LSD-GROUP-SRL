@@ -1968,6 +1968,12 @@ footer::before{
 
   <!-- SETĂRI -->
   <div id="admin-tab-settings" class="tab-panel">
+    <!-- Mentenanta -->
+    <div style="background:var(--card);border:1.5px solid rgba(196,101,32,.3);border-radius:var(--r-lg);padding:22px;margin-bottom:16px;box-shadow:var(--sh)">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--orange)">🔄 Mentenanță — Refresh total site</h3>
+      <p style="font-size:12.5px;color:var(--stone);margin-bottom:14px">Reîmprospătează site-ul pentru <strong>toți utilizatorii conectați acum</strong> (admin, șoferi, clienți) — vor primi un avertisment, apoi vor fi deconectați automat și pagina li se va reîncărca, exact ca la reset-ul automat de la miezul nopții (ora României). Util pentru a testa că mecanismul funcționează, sau pentru a forța toată lumea să vadă o versiune actualizată a site-ului.</p>
+      <button class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--orange),#a04a10)" onclick="triggerManualSiteRefresh()">🔄 Refresh total acum (toți utilizatorii)</button>
+    </div>
     <!-- EmailJS -->
     <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:16px;box-shadow:var(--sh)">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;font-family:'Plus Jakarta Sans',sans-serif">⚡ EmailJS <span id="ejs-status" class="badge badge-anulata">● Neconfigurat</span></h3>
@@ -2818,6 +2824,33 @@ function scheduleMidnightReset(){
   window._midnightTimers.push(setTimeout(window.showMidnightCountdown, countdownDelay));
 }
 window.scheduleMidnightReset = scheduleMidnightReset;
+
+// ── RESET MANUAL DECLANȘAT DE ADMIN (același mecanism, dar pornit la cerere) ──
+// Admin scrie un semnal in Firestore cu momentul exact al reset-ului (acum + 61s).
+// Toti clientii conectati (inclusiv vizitatorii fara cont) asculta live acest semnal
+// si programeaza acelasi avertisment + numaratoare 3-2-1 + deconectare/reincarcare.
+window._lastManualResetTarget = null;
+function scheduleResetAtEpoch(targetEpoch){
+  if (!targetEpoch) return;
+  if (window._lastManualResetTarget === targetEpoch) return; // deja programat pentru acest semnal
+  const msUntil = targetEpoch - Date.now();
+  if (msUntil <= 0) return; // semnal vechi (din trecut) — il ignoram, nu redeclansam la fiecare incarcare
+  window._lastManualResetTarget = targetEpoch;
+  clearMidnightTimers();
+  window.showMidnightWarning();
+  const countdownDelay = Math.max(0, msUntil - 3000);
+  window._midnightTimers.push(setTimeout(window.showMidnightCountdown, countdownDelay));
+}
+window.triggerManualSiteRefresh = async () => {
+  if (!confirm('Sigur vrei să reîmprospătezi TOT site-ul, pentru toți utilizatorii conectați acum?\n\nVor primi un avertisment, apoi vor fi deconectați automat în ~1 minut.')) return;
+  try {
+    const targetEpoch = Date.now() + 61000;
+    await setDoc(doc(db,'setari','reset_signal'), {
+      targetEpoch, triggeredBy: window._U?.email||'admin', triggeredAt: serverTimestamp()
+    });
+    toast('✅ Semnal trimis! Toți utilizatorii vor fi anunțați și site-ul se va reîmprospăta în ~1 minut.','ok');
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
+};
 
 // ── HELPERS ────────────────────────────────────────────────
 window.toast = (msg, type = 'in') => {
@@ -3958,10 +3991,26 @@ window.loadRegulate = async () => {
         const key=c.id+'|'+ora;
         occByRoute[key]=docsData.filter(r=>(r.ora||'')===ora).reduce((s,r)=>s+(r.locuriRezervate||[]).length,0);
       });
+      // Adaugam si orele de RETUR (daca e cursa dus-întors), altfel ocuparea returului
+      // ramanea mereu necalculata (nu aparea niciodata in occByRoute).
+      if (c.tipCursa==='roundtrip' && c.intorsPlecari) {
+        c.intorsPlecari.forEach(rp=>{
+          const oraR = rp?.ora;
+          if(!oraR) return;
+          const keyR = c.id+'|'+oraR;
+          if(occByRoute[keyR]==null) occByRoute[keyR] = docsData.filter(r=>(r.ora||'')===oraR).reduce((s,r)=>s+(r.locuriRezervate||[]).length,0);
+        });
+      }
     }catch(e){ }
   }));
 
   const cards=[];
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isTodayDate = date === todayStr;
+  // Ora curenta, ora Romaniei (orele de plecare sunt fixate in ora Romaniei, indiferent
+  // de fusul orar al vizitatorului) — folosita ca sa ascundem plecarile deja trecute azi.
+  const nowRoMin = isTodayDate ? (()=>{ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Bucharest'})); return d.getHours()*60+d.getMinutes(); })() : null;
+
   curse.forEach(c=>{
     const pl=c.plecari?.length?c.plecari:[{ora:c.ora,driverId:c.driverId}];
     const dayDots=window.DAYS_RO.map((d,i)=>`<div class="day-dot${(c.zile||[]).includes(i)?' active':''}">${d}</div>`).join('');
@@ -3970,16 +4019,41 @@ window.loadRegulate = async () => {
     pl.forEach((p,pi)=>{
       const oraInfo=getOraForDate(p,date);
       const oraP=oraInfo.ora||'-';
+      const dusMin = oraP!=='-' ? timeToMin(oraP) : null;
+      const dusPassed = isTodayDate && dusMin!=null && nowRoMin>dusMin;
+
+      // Info retur (daca e cursa dus-întors)
+      let oraR=null, returMin=null, returPassed=false, hasRetur=false;
+      if(c.tipCursa==='roundtrip'&&c.intorsPlecari){
+        const rp=c.intorsPlecari[pi]||c.intorsPlecari[0];
+        oraR = rp?.ora || null;
+        hasRetur = !!oraR;
+        returMin = oraR ? timeToMin(oraR) : null;
+        returPassed = isTodayDate && returMin!=null && nowRoMin>returMin;
+      }
+
+      // Cursa dus a plecat deja azi SI (nu are retur SAU a plecat si returul) -> nu mai are rost
+      // sa apara deloc, pentru ca nu mai exista nimic de rezervat pe ea azi.
+      if (dusPassed && (!hasRetur || returPassed)) return;
+
+      // Dus-ul a plecat, dar returul inca nu -> aratam returul ca actiune principala,
+      // cu traseul lui propriu (statii inversate) si ocuparea lui reala.
+      const showReturnAsPrimary = dusPassed && hasRetur && !returPassed;
+
+      const activeOra = showReturnAsPrimary ? oraR : oraP;
+      const activeStatii = showReturnAsPrimary ? (c.statiiIntors||[...c.statii].reverse()) : (c.statii||[]);
+      const activeRuta = showReturnAsPrimary ? (c.rutaIntors || c.ruta) : c.ruta;
+
       // Ocuparea se calculează per PLECARE (cursaId + ora exactă), nu per cursă întreagă —
       // altfel o cursă cu 2 plecări/zi arată aceeași ocupare pe amândouă.
-      const ocupate = occByRoute[c.id+'|'+oraP]||0;
+      const ocupate = occByRoute[c.id+'|'+activeOra]||0;
       const liber = Math.max(0, capacit-ocupate);
       const pctOcup = capacit>0 ? Math.min(100,Math.round(ocupate/capacit*100)) : 0;
       const urgent = capacit>0 && liber<=3 && liber>0;
       const plin = capacit>0 && liber===0;
-      const statii = c.statii||[];
+      const statii = activeStatii;
       const lastMin = statii.length ? (statii[statii.length-1].minuteDeLaStart||60) : 60;
-      const oraSosire = oraP!=='-' ? calcArrival(oraP,lastMin) : '';
+      const oraSosire = activeOra && activeOra!=='-' ? calcArrival(activeOra,lastMin) : '';
 
       // Mini route line vizual (semnatura aplicata si la nivel de card) — cu numele stațiilor reale
       const totalMinRuta = statii.length ? (statii[statii.length-1].minuteDeLaStart||60) : 60;
@@ -4007,20 +4081,23 @@ window.loadRegulate = async () => {
       }).join('');
 
       // ── Poziția reală a autobuzului pe traseu, calculată din ora curentă (fără cereri de rețea) ──
-      const busPct = calcBusProgressPct(oraP, statii);
+      const busPct = calcBusProgressPct(activeOra, statii);
       const busStyle = busPct!==null ? `left:${busPct}%;animation:none` : '';
 
-      const stopsHtml=(c.statii||[]).map((s,i)=>{
-        const arr=i>0&&oraP!=='-'&&s.minuteDeLaStart?calcArrival(oraP,s.minuteDeLaStart):'';
-        return`<span class="stop-badge">📍 ${s.nume}${i>0?` <span class="stop-price">${s.pretDeLaStart} RON</span>${arr?` <span style="color:var(--stone);font-size:10px">≈${arr}</span>`:''}`:' <span class="stop-price">START</span>'}</span>`;
+      const stopsHtml=statii.map((s,i)=>{
+        const nume = s.nome||s.name||s.nume||'';
+        const arr=i>0&&activeOra&&activeOra!=='-'&&s.minuteDeLaStart?calcArrival(activeOra,s.minuteDeLaStart):'';
+        return`<span class="stop-badge">📍 ${nume}${i>0?` <span class="stop-price">${s.pretDeLaStart} RON</span>${arr?` <span style="color:var(--stone);font-size:10px">≈${arr}</span>`:''}`:' <span class="stop-price">START</span>'}</span>`;
       }).join('');
+
+      // Sectiunea de retur din detalii — o aratam doar cand dus-ul e cel principal (altfel
+      // returul e deja actiunea principala mai sus, ar fi dublura sa aparaa si aici).
       let returnSection='';
-      if(c.tipCursa==='roundtrip'&&c.intorsPlecari){
-        const rp=c.intorsPlecari[pi]||c.intorsPlecari[0];
-        const oraR=rp?.ora||'-';
+      if(hasRetur && !showReturnAsPrimary){
         const stopsR=(c.statiiIntors||[...c.statii].reverse()).map((s,i)=>{
-          const arr=i>0&&oraR!=='-'&&s.minuteDeLaStart?calcArrival(oraR,s.minuteDeLaStart):'';
-          return`<span class="stop-badge" style="background:var(--cream)">📍 ${s.nume}${i>0?` <span class="stop-price">${s.pretDeLaStart} RON</span>${arr?` <span style="color:var(--stone);font-size:10px">≈${arr}</span>`:''}`:'<span class="stop-price">START</span>'}</span>`;
+          const nume = s.nome||s.name||s.nume||'';
+          const arr=i>0&&oraR&&oraR!=='-'&&s.minuteDeLaStart?calcArrival(oraR,s.minuteDeLaStart):'';
+          return`<span class="stop-badge" style="background:var(--cream)">📍 ${nume}${i>0?` <span class="stop-price">${s.pretDeLaStart} RON</span>${arr?` <span style="color:var(--stone);font-size:10px">≈${arr}</span>`:''}`:'<span class="stop-price">START</span>'}</span>`;
         }).join('');
         returnSection=`<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)"><div style="font-size:11px;font-weight:700;color:var(--amber-d);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">↩ RETUR — ora ${oraR}</div><div style="margin-bottom:8px">${stopsR}</div><button class="btn btn-secondary btn-sm" onclick="openCinema('${c.id}','${date}','return',${pi})">↩ Rezervă loc RETUR ${oraR}</button></div>`;
       }
@@ -4038,19 +4115,24 @@ window.loadRegulate = async () => {
         ? `<img src="${vehImg}" class="sch-veh-thumb" alt="${c.vehiculNume||'Autobuz'}" onclick="event.stopPropagation();openLB('${vehImg}')" loading="lazy"/>`
         : `<div class="sch-veh-thumb sch-veh-thumb-icon">${vehObj?.icon||'🚌'}</div>`;
 
+      const primaryBtnLabel = showReturnAsPrimary ? '↩ Rezervă RETUR — '+activeOra : '🎟 Rezervă — '+activeOra;
+      const primaryBtnDir = showReturnAsPrimary ? 'return' : 'one-way';
+      const passedNote = showReturnAsPrimary ? `<div style="font-size:11px;color:var(--stone);margin-top:4px">🔵 Cursa dus (${oraP}) a plecat deja azi — disponibil doar <strong>RETURUL</strong></div>` : '';
+
       cards.push(`<div class="sch-card route-card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:10px">
           <div style="display:flex;gap:12px;align-items:flex-start;flex:1;min-width:0">
             ${vehThumb}
             <div style="min-width:0">
-              <div class="sch-route">${c.ruta}</div>
-              <div style="font-size:12.5px;color:var(--stone);margin-top:3px">🕐 <strong style="color:var(--ink)">${oraP}</strong>${oraSosire?' → ≈'+oraSosire:''}</div>
+              <div class="sch-route">${activeRuta}</div>
+              <div style="font-size:12.5px;color:var(--stone);margin-top:3px">${showReturnAsPrimary?'↩':'🕐'} <strong style="color:var(--ink)">${activeOra}</strong>${oraSosire?' → ≈'+oraSosire:''}</div>
+              ${passedNote}
             </div>
           </div>
           ${c.tipCursa==='roundtrip'?'<span class="chip chip-amber">↔️ Dus-Întors</span>':''}
         </div>
         ${occBarHtml}
-        <button class="btn btn-primary btn-sm btn-full" style="margin-top:12px" onclick="openCinema('${c.id}','${date}','one-way',${pi})" ${plin?'disabled':''}>${plin?'🔴 Indisponibil':'🎟 Rezervă — '+oraP}</button>
+        <button class="btn btn-primary btn-sm btn-full" style="margin-top:12px" onclick="openCinema('${c.id}','${date}','${primaryBtnDir}',${pi})" ${plin?'disabled':''}>${plin?'🔴 Indisponibil':primaryBtnLabel}</button>
 
         <div class="route-stops-collapsible">
           <button class="route-stops-toggle" onclick="this.parentElement.classList.toggle('open')">📋 Detalii traseu, stații și program <span class="toggle-arrow">▾</span></button>
@@ -4061,7 +4143,7 @@ window.loadRegulate = async () => {
               ${miniDots}
               <img class="mini-route-bus" data-bus="1" src="" alt="" style="${busStyle}" title="${busPct!==null?'Autobuzul este pe traseu acum (poziție estimată)':''}"/>
               ${busPct!==null?'<div style="position:absolute;top:-16px;left:'+busPct+'%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--green);white-space:nowrap;background:var(--green-g);padding:1px 6px;border-radius:8px;border:1px solid rgba(26,107,60,.25)">🚌 în cursă</div>':''}
-              <div class="mini-route-time-start">${oraP}</div>
+              <div class="mini-route-time-start">${activeOra}</div>
               <div class="mini-route-time-end">${oraSosire}</div>
             </div>
             <div class="sch-meta" style="margin-top:8px">
@@ -4077,7 +4159,7 @@ window.loadRegulate = async () => {
               }
               <span style="position:absolute;bottom:8px;right:8px;background:rgba(15,13,10,.6);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;pointer-events:none">🔍 Mărește</span>
             </div>
-            <div style="font-size:11px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">📍 Toate stațiile și prețurile</div>
+            <div style="font-size:11px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">📍 Toate stațiile și prețurile${showReturnAsPrimary?' (retur)':''}</div>
             <div>${stopsHtml}</div>
             ${returnSection}
           </div>
@@ -4086,6 +4168,12 @@ window.loadRegulate = async () => {
     });
   });
   window._REG_CARDS=cards;
+  if (!cards.length) {
+    list.innerHTML = isTodayDate
+      ? `<div class="empty-state"><div class="empty-icon">🕐</div><h3>Toate cursele de azi au plecat deja</h3><p>Revino mâine sau <a onclick="setRegDate(1)">verifică pentru mâine</a>.</p></div>`
+      : `<div class="empty-state"><div class="empty-icon">🔍</div><h3>Nicio cursă ${['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'][dow]}</h3><p>Încearcă altă dată sau <a onclick="nav('organizate')">solicită o cursă organizată</a>.</p></div>`;
+    return;
+  }
   list.innerHTML=cards.join('');
   applyMiniBusImgs();
   const q=document.getElementById('reg-search')?.value||'';
@@ -8406,6 +8494,15 @@ window.markScanned = async (rezId, locNr) => {
   // Programam reset-ul automat de la miezul noptii (ora Romaniei) — avertisment cu 1 minut
   // inainte, apoi numaratoare 3-2-1, apoi deconectare + reincarcare pagina
   try{ scheduleMidnightReset(); }catch(e){ console.warn('scheduleMidnightReset failed:', e.message); }
+  // Ascultam semnalul de reset manual (declansat de admin) — activ pentru orice vizitator,
+  // logat sau nu, ca sa functioneze exact ca la reset-ul automat de la miezul noptii.
+  try{
+    onSnapshot(doc(db,'setari','reset_signal'), snap => {
+      if (!snap.exists()) return;
+      const d = snap.data();
+      if (d?.targetEpoch) scheduleResetAtEpoch(d.targetEpoch);
+    }, err => console.warn('reset_signal listener:', err.message));
+  }catch(e){ console.warn('reset_signal listener setup failed:', e.message); }
   // Ascunde loader-ul de incarcare
   hideAppLoader();
 })();
