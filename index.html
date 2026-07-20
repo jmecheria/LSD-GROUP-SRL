@@ -1945,12 +1945,13 @@ footer::before{
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
       <div>
         <h3 style="font-size:16px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif">🔐 Conectări conturi</h3>
-        <p style="font-size:12px;color:var(--stone)">Ultima conectare (dată/oră România) și adresa IP, pentru fiecare cont — admin, șoferi, clienți.</p>
+        <p style="font-size:12px;color:var(--stone)">Istoric complet de conectări (dată/oră România) și adresă IP — admin, șoferi, clienți.</p>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="loadLoginLogs()">🔄 Refresh</button>
     </div>
+    <div id="conectari-count" style="font-size:12px;color:var(--stone);margin-bottom:8px"></div>
     <div class="tbl-wrap">
-      <table class="tbl"><thead><tr><th>Cont</th><th>Rol</th><th>Ultima conectare (RO)</th><th>Adresă IP</th></tr></thead>
+      <table class="tbl"><thead><tr><th>Cont</th><th>Rol</th><th>Conectare (RO)</th><th>Adresă IP</th></tr></thead>
       <tbody id="conectari-tbody"></tbody></table>
     </div>
   </div>
@@ -2560,6 +2561,17 @@ footer::before{
 <!-- COOKIE BANNER -->
 <div id="cookie-banner"><span>🍪 Folosim cookie-uri necesare funcționării. <a onclick="nav('gdpr')">Politică GDPR</a></span><button class="btn btn-primary btn-sm" onclick="acceptCookies()">Acceptă</button></div>
 
+<!-- BANNER AVERTIZARE RESET AUTOMAT (cu 1 minut inainte de miezul noptii, ora Romaniei) -->
+<div id="midnight-warning-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(135deg,var(--orange),#a04a10);color:#fff;padding:12px 20px;text-align:center;font-weight:700;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.3)">
+  ⚠️ Site-ul se reîmprospătează automat la miezul nopții — orice necompletat se poate pierde.
+</div>
+
+<!-- OVERLAY NUMARATOARE 3-2-1 CHIAR INAINTE DE RESET -->
+<div id="midnight-countdown-overlay" style="display:none;position:fixed;inset:0;z-index:100001;background:rgba(15,13,10,.94);color:#fff;align-items:center;justify-content:center;flex-direction:column;gap:14px">
+  <div id="midnight-countdown-number" style="font-size:96px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;color:var(--amber-l)">3</div>
+  <div style="font-size:14px;color:rgba(255,255,255,.82)">Se reîmprospătează site-ul...</div>
+</div>
+
 <!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
 
@@ -2712,7 +2724,7 @@ footer::before{
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,updateProfile,updatePassword} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import {getFirestore,collection,doc,addDoc,getDocs,getDoc,setDoc,deleteDoc,query,where,onSnapshot,Timestamp,serverTimestamp,orderBy} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import {getFirestore,collection,doc,addDoc,getDocs,getDoc,setDoc,deleteDoc,query,where,onSnapshot,Timestamp,serverTimestamp,orderBy,limit} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const FB_CFG = {
   apiKey:"AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",
@@ -2743,14 +2755,69 @@ async function logUserLogin(idKey, email, role, nume){
   if(!idKey) return;
   try{
     const ip = await getPublicIP();
-    await setDoc(doc(db,'login_logs',idKey), {
-      email: email||'', role: role||'', nume: nume||'',
+    // Adaugam o inregistrare noua de fiecare data (istoric complet de conectari),
+    // nu suprascriem — inainte tineam doar ultima conectare per cont.
+    await addDoc(collection(db,'login_logs'), {
+      accountId: idKey, email: email||'', role: role||'', nume: nume||'',
       ip: ip||'necunoscut',
-      lastLoginAt: serverTimestamp()
-    }, {merge:true});
+      loginAt: serverTimestamp()
+    });
   }catch(e){ console.warn('logUserLogin failed:', e.message); }
 }
 window.logUserLogin = logUserLogin;
+
+// ── RESET AUTOMAT LA MIEZUL NOPȚII (ora României) ───────────
+// Fiecare tab deschis își calculează singur momentul exact al urmatoarei miezuri de noapte
+// din Romania (indiferent de fusul orar al vizitatorului), programeaza un avertisment cu
+// 1 minut inainte, apoi o numaratoare 3-2-1 chiar inainte de reset, dupa care deconecteaza
+// contul curent (daca era logat) si reincarca pagina — echivalentul unui "refresh total".
+function getNextRomaniaMidnightEpoch(){
+  const now = new Date();
+  // Truc standard: parsam ora curenta AFISATA pentru fusul Romaniei ca si cum ar fi ora locala
+  // a browserului — diferenta dintre doua astfel de date ramane corecta (eroarea se anuleaza).
+  const roNow = new Date(now.toLocaleString('en-US', {timeZone:'Europe/Bucharest'}));
+  const roMidnight = new Date(roNow);
+  roMidnight.setHours(24,0,0,0);
+  const msUntil = roMidnight.getTime() - roNow.getTime();
+  return now.getTime() + msUntil;
+}
+window._midnightTimers = window._midnightTimers || [];
+function clearMidnightTimers(){
+  window._midnightTimers.forEach(t=>clearTimeout(t));
+  window._midnightTimers = [];
+}
+window.showMidnightWarning = () => {
+  const el = document.getElementById('midnight-warning-banner');
+  if (el) el.style.display = 'block';
+  toast('⚠️ Site-ul se reîmprospătează automat la miezul nopții (în mai puțin de un minut)', 'wr');
+};
+window.showMidnightCountdown = () => {
+  const overlay = document.getElementById('midnight-countdown-overlay');
+  const numEl = document.getElementById('midnight-countdown-number');
+  if (!overlay || !numEl) { doMidnightReset(); return; }
+  overlay.style.display = 'flex';
+  let n = 3;
+  numEl.textContent = n;
+  const iv = setInterval(()=>{
+    n--;
+    if (n <= 0) { clearInterval(iv); doMidnightReset(); return; }
+    numEl.textContent = n;
+  }, 1000);
+};
+async function doMidnightReset(){
+  try{ if(window._U) await signOut(auth); }catch(e){}
+  window.location.reload();
+}
+function scheduleMidnightReset(){
+  clearMidnightTimers();
+  const targetEpoch = getNextRomaniaMidnightEpoch();
+  const msUntil = Math.max(0, targetEpoch - Date.now());
+  const warnDelay = Math.max(0, msUntil - 60000);
+  window._midnightTimers.push(setTimeout(window.showMidnightWarning, warnDelay));
+  const countdownDelay = Math.max(0, msUntil - 3000);
+  window._midnightTimers.push(setTimeout(window.showMidnightCountdown, countdownDelay));
+}
+window.scheduleMidnightReset = scheduleMidnightReset;
 
 // ── HELPERS ────────────────────────────────────────────────
 window.toast = (msg, type = 'in') => {
@@ -5847,13 +5914,24 @@ window.loadLoginLogs = async () => {
   if(!tbody) return;
   tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px"><div class="spin"></div></td></tr>';
   try{
-    const snap = await getDocs(collection(db,'login_logs'));
-    const rows = snap.docs.map(d=>({id:d.id,...d.data()}));
-    rows.sort((a,b)=>(b.lastLoginAt?.seconds||0)-(a.lastLoginAt?.seconds||0));
+    // Istoric complet — cele mai recente 500 de conectari (suficient practic; interogarea
+    // e facuta deja sortata si limitata direct in Firestore, nu descarcam toata colectia).
+    const snap = await getDocs(query(collection(db,'login_logs'), orderBy('loginAt','desc'), limit(500)));
+    let rows = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!rows.length){
+      // Fallback pentru instalari vechi care nu aveau inca campul 'loginAt' (index nou) —
+      // incarcam fara sortare server-side si sortam local.
+      const snap2 = await getDocs(collection(db,'login_logs'));
+      rows = snap2.docs.map(d=>({id:d.id,...d.data()}));
+      rows.sort((a,b)=>((b.loginAt||b.lastLoginAt)?.seconds||0)-((a.loginAt||a.lastLoginAt)?.seconds||0));
+    }
     if(!rows.length){ tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--stone)">Nicio conectare înregistrată încă</td></tr>'; return; }
+    const countEl = document.getElementById('conectari-count');
+    if(countEl) countEl.textContent = rows.length+' conectări afișate (cele mai recente)';
     const roleLabel={admin:'👑 Admin',driver:'🚌 Șofer',client:'👤 Client'};
     tbody.innerHTML = rows.map(r=>{
-      const dt = r.lastLoginAt ? new Date(r.lastLoginAt.seconds*1000).toLocaleString('ro-RO',{timeZone:'Europe/Bucharest',dateStyle:'medium',timeStyle:'medium'}) : '—';
+      const ts = r.loginAt || r.lastLoginAt;
+      const dt = ts ? new Date(ts.seconds*1000).toLocaleString('ro-RO',{timeZone:'Europe/Bucharest',dateStyle:'medium',timeStyle:'medium'}) : '—';
       return `<tr><td><strong>${r.nume||'-'}</strong><br><span style="font-size:11px;color:var(--stone)">${r.email||'-'}</span></td><td>${roleLabel[r.role]||r.role||'-'}</td><td>${dt}</td><td style="font-family:monospace;font-size:12px">${r.ip||'—'}</td></tr>`;
     }).join('');
   }catch(e){ tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--red)">Eroare: ${e.message}${e.code==='permission-denied'?' — verificați regulile Firestore pentru colecția login_logs':''}</td></tr>`; }
@@ -8325,6 +8403,9 @@ window.markScanned = async (rezId, locNr) => {
   // Re-randeaza galeria homepage la schimbarea dimensiunii ferestrei (mobil/desktop)
   let _galResizeTimer=null;
   window.addEventListener('resize',()=>{clearTimeout(_galResizeTimer);_galResizeTimer=setTimeout(()=>{if(document.getElementById('pg-home')?.classList.contains('active'))renderHomeGallery();},250);});
+  // Programam reset-ul automat de la miezul noptii (ora Romaniei) — avertisment cu 1 minut
+  // inainte, apoi numaratoare 3-2-1, apoi deconectare + reincarcare pagina
+  try{ scheduleMidnightReset(); }catch(e){ console.warn('scheduleMidnightReset failed:', e.message); }
   // Ascunde loader-ul de incarcare
   hideAppLoader();
 })();
