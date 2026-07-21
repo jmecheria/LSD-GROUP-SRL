@@ -2824,7 +2824,17 @@ window.showMidnightCountdown = (resetIdToMark) => {
 async function doMidnightReset(resetIdToMark){
   setLastSeenResetId(resetIdToMark);
   try{ await signOut(auth); }catch(e){}
-  window.location.reload();
+  await hardReloadBypassingCache();
+}
+// Reincarcare "dura": foloseste un parametru unic in URL, ca sa ocolim garantat cache-ul HTTP
+// al browserului pentru index.html — un window.location.reload() normal poate inca servi
+// varianta veche din cache in unele cazuri. Curatarea propriu-zisa a cache-ului (Cache Storage
+// API) se face acum in clearAppCaches(), apelata din checkPendingResetOnLoad() pentru TOATA
+// lumea, nu doar pentru cei prezenti live la momentul reset-ului.
+async function hardReloadBypassingCache(){
+  await clearAppCaches();
+  const url = window.location.origin + window.location.pathname + '?_r=' + Date.now();
+  window.location.replace(url);
 }
 function scheduleMidnightReset(){
   clearMidnightTimers();
@@ -2874,6 +2884,14 @@ window.triggerManualSiteRefresh = async () => {
 // 14:00 (mult după miezul nopții sau după un reset manual), la această verificare browserul
 // observă că n-a "văzut" încă reset-ul de azi și se deconectează silențios, fără numărătoare
 // (evenimentul oricum a trecut deja, doar acest vizitator nu era prezent atunci).
+async function clearAppCaches(){
+  try{
+    if (window.caches && caches.keys) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+  }catch(e){ console.warn('Cache Storage clear failed:', e.message); }
+}
 async function checkPendingResetOnLoad(){
   const seen = getLastSeenResetId();
   const todayId = 'day-'+getRomaniaDateStrFromEpoch(Date.now());
@@ -2881,8 +2899,9 @@ async function checkPendingResetOnLoad(){
     setLastSeenResetId(todayId); // prima vizita vreodata pe acest browser — nimic de recuperat
   } else if (seen !== todayId) {
     try{ await signOut(auth); }catch(e){}
+    await clearAppCaches();
     setLastSeenResetId(todayId);
-    toast('🔄 Sesiunea a fost reîmprospătată automat (mentenanță zilnică)', 'in');
+    toast('🔄 Sesiunea și memoria cache au fost reîmprospătate automat (mentenanță zilnică)', 'in');
   }
   try{
     const ref = await getDoc(doc(db,'setari','reset_signal'));
@@ -2890,8 +2909,9 @@ async function checkPendingResetOnLoad(){
       const manualId = ref.data()?.resetId;
       if (manualId && manualId !== getLastSeenResetId()) {
         try{ await signOut(auth); }catch(e){}
+        await clearAppCaches();
         setLastSeenResetId(manualId);
-        toast('🔄 Sesiunea a fost reîmprospătată automat (mentenanță)', 'in');
+        toast('🔄 Sesiunea și memoria cache au fost reîmprospătate automat (mentenanță)', 'in');
       }
     }
   }catch(e){ console.warn('checkPendingResetOnLoad manual check failed:', e.message); }
