@@ -1,111 +1,97 @@
-// ── LSD Group SRL — Service Worker ──
-// Strategie: cache doar shell-ul static (fonturi, librării CDN, iconițe).
-// Firebase/Firestore, Nominatim, OSRM, EmailJS — NICIODATĂ din cache (date live).
-const CACHE_VERSION = 'lsd-v1';
-const STATIC_CACHE = `lsd-static-${CACHE_VERSION}`;
+// ══════════════════════════════════════════════════════════
+// Service Worker — LSD Group SRL
+// Rol: transformă site-ul într-o aplicație instalabilă (PWA),
+// cu pornire rapidă și o funcționare minimă offline pentru
+// pagina principală. Datele live (Firebase, EmailJS, hărți)
+// NU sunt cache-uite — merg mereu direct la rețea, ca prețurile,
+// locurile disponibile și rezervările să fie mereu la zi.
+// ══════════════════════════════════════════════════════════
 
-// Domenii ale căror răspunsuri pot fi cache-uite (biblioteci, fonturi, tile-uri hartă)
-const CACHEABLE_HOSTS = [
-  'fonts.googleapis.com',
-  'fonts.gstatic.com',
-  'cdnjs.cloudflare.com',
-  'unpkg.com',
-  'tile.openstreetmap.org',
-  'api.qrserver.com'
+// Crește acest număr de fiecare dată când modifici index.html/manifest/iconițe,
+// ca browserul să știe că trebuie să descarce din nou și să activeze versiunea nouă.
+const CACHE_VERSION = 'v1';
+const CACHE_NAME = 'lsd-group-' + CACHE_VERSION;
+
+// Fișierele esențiale ("app shell") — cele care fac site-ul să pornească instant
+// și să afișeze măcar interfața de bază chiar și fără conexiune.
+const APP_SHELL = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './apple-touch-icon.png'
 ];
 
-// Domenii care NU trebuie NICIODATĂ servite din cache (date live / tranzacționale)
-const NEVER_CACHE_HOSTS = [
-  'firestore.googleapis.com',
-  'firebaseapp.com',
-  'identitytoolkit.googleapis.com',
-  'googleapis.com/identitytoolkit',
-  'nominatim.openstreetmap.org',
-  'router.project-osrm.org',
-  'overpass-api.de',
-  'api.emailjs.com',
-  'emailjs.com'
-];
-
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
+// ── INSTALL: pre-încarcă app shell-ul ──
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      // Pre-cache doar shell-ul de bază (pagina principală, ca fallback offline)
-      return cache.addAll(['/', '/index.html']).catch(() => {
-        // Dacă precache-ul eșuează (ex. cale diferită pe GitHub Pages), nu blocăm instalarea
-      });
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(APP_SHELL))
+      .catch(err => console.warn('[SW] Precache eșuat (unele fișiere pot lipsi):', err))
   );
 });
 
-self.addEventListener('message', (event) => {
-  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
+// ── ACTIVATE: curăță cache-urile vechi, preia controlul imediat ──
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((k) => k.startsWith('lsd-') && k !== STATIC_CACHE)
-          .map((k) => caches.delete(k))
-      )
-    )
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-function isNeverCache(url) {
-  return NEVER_CACHE_HOSTS.some((h) => url.hostname.includes(h));
-}
-function isCacheableHost(url) {
-  return CACHEABLE_HOSTS.some((h) => url.hostname.includes(h));
-}
+// ── MESSAGE: permite paginii să forțeze activarea versiunii noi instant ──
+// index.html deja trimite acest mesaj când detectează un SW nou instalat.
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 
-self.addEventListener('fetch', (event) => {
+// ── FETCH ──
+self.addEventListener('fetch', event => {
   const req = event.request;
-  if (req.method !== 'GET') return; // nu interceptăm POST/PUT (scrieri Firestore etc.)
+
+  // Doar cereri GET pot fi cache-uite/interceptate; restul (POST către Firestore etc.) trec direct.
+  if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
 
-  // 1. Date live — mereu din rețea, niciodată din cache
-  if (isNeverCache(url)) {
-    return; // lăsăm browserul să facă fetch normal, necontrolat de SW
-  }
+  // Nu interceptăm NIMIC cross-origin: Firebase/Firestore, EmailJS, hărți (OSM/OSRM/Nominatim),
+  // fonturi Google, imagini Unsplash, QR API etc. Acestea trebuie să fie mereu live/actuale,
+  // iar unele (Firestore streaming, WebSocket-uri) nici nu se pot cache-ui corect.
+  if (url.origin !== self.location.origin) return;
 
-  // 2. Navigare (index.html) — network-first, fallback pe cache/offline dacă nu există net
+  // Navigare (utilizatorul deschide/reîncarcă site-ul): încearcă rețeaua întâi,
+  // ca să vadă mereu ultima versiune; dacă e offline, cade pe copia din cache.
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req)
-        .then((res) => {
-          const resClone = res.clone();
-          caches.open(STATIC_CACHE).then((c) => c.put(req, resClone));
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy)).catch(()=>{});
           return res;
         })
-        .catch(() =>
-          caches.match(req).then((cached) => cached || caches.match('/index.html'))
-        )
+        .catch(() => caches.match('./index.html'))
     );
     return;
   }
 
-  // 3. Resurse statice cache-uibile (fonturi, Leaflet, tile-uri hartă) — cache-first
-  if (isCacheableHost(url) || req.destination === 'style' || req.destination === 'script' || req.destination === 'font') {
-    event.respondWith(
-      caches.match(req).then((cached) => {
-        if (cached) return cached;
-        return fetch(req).then((res) => {
-          if (res.ok) {
-            const resClone = res.clone();
-            caches.open(STATIC_CACHE).then((c) => c.put(req, resClone));
-          }
-          return res;
-        }).catch(() => cached);
-      })
-    );
-    return;
-  }
-
-  // 4. Orice altceva — trece direct prin rețea (comportament normal)
+  // Restul fișierelor statice proprii (manifest, iconițe): cache-first cu
+  // reîmprospătare în fundal, pentru pornire instant + actualizare automată.
+  event.respondWith(
+    caches.match(req).then(cached => {
+      const network = fetch(req).then(res => {
+        if (res && res.status === 200) {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(req, copy)).catch(()=>{});
+        }
+        return res;
+      }).catch(() => cached);
+      return cached || network;
+    })
+  );
 });
