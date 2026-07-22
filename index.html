@@ -2541,6 +2541,7 @@ footer::before{
   </div>
 </footer>
 <button id="fab-scroll" style="display:none;position:fixed;bottom:80px;right:24px;z-index:990;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--amber-d));color:#fff;border:none;font-size:20px;cursor:pointer;box-shadow:var(--sh-amber);align-items:center;justify-content:center" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Sus">⬆</button>
+<button id="fab-install" style="display:none;position:fixed;bottom:24px;left:24px;z-index:990;align-items:center;gap:8px;padding:11px 18px 11px 14px;border-radius:30px;background:linear-gradient(135deg,var(--amber),var(--amber-d));color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;box-shadow:var(--sh-amber);font-family:'Plus Jakarta Sans',sans-serif" onclick="installApp()">⬇️ Instalează aplicația</button>
 <script>
 // ══════════════════════════════════════════════════════════
 // NAV (available immediately, no Firebase needed)
@@ -2643,6 +2644,41 @@ footer::before{
 
   window.openModal = function(id) { document.getElementById('mo-' + id)?.classList.add('open'); };
 })();
+
+// ── INSTALARE PWA — buton vizibil "Instalează aplicația" ──
+// Browserul decide singur dacă site-ul e "instalabil" (manifest.json valid + sw.js
+// înregistrat + servit pe https). Când e gata, ne trimite evenimentul de mai jos;
+// îl reținem și afișăm butonul propriu în loc să așteptăm ca userul să găsească
+// opțiunea ascunsă în meniul browserului.
+window._deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  window._deferredInstallPrompt = e;
+  const btn = document.getElementById('fab-install');
+  if (btn) btn.style.display = 'flex';
+});
+window.installApp = async () => {
+  const promptEvent = window._deferredInstallPrompt;
+  const btn = document.getElementById('fab-install');
+  if (!promptEvent) {
+    // Fallback: Safari iOS și alte browsere nu emit beforeinstallprompt — arătăm instrucțiuni manuale.
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    alert(isIOS
+      ? 'Pentru a instala aplicația pe iPhone/iPad:\n\n1. Apasă butonul de Distribuire (pătrat cu săgeată) din bara Safari\n2. Alege "Adaugă pe ecranul principal"'
+      : 'Aplicația poate fi instalată din meniul browserului (de obicei ⋮ sau ☰) → "Instalează aplicația" / "Adaugă pe ecranul principal".');
+    return;
+  }
+  promptEvent.prompt();
+  const choice = await promptEvent.userChoice.catch(()=>null);
+  window._deferredInstallPrompt = null;
+  if (btn) btn.style.display = 'none';
+  if (choice?.outcome === 'accepted' && window.toast) window.toast('✅ Aplicația se instalează!','ok');
+};
+window.addEventListener('appinstalled', () => {
+  const btn = document.getElementById('fab-install');
+  if (btn) btn.style.display = 'none';
+  window._deferredInstallPrompt = null;
+});
 </script>
 
 <script type="module">
@@ -2667,18 +2703,18 @@ const db = getFirestore(fbApp);
 // un refresh/ștergere de cache al service worker-ului — acestea sunt spații de stocare diferite,
 // deci golirea cache-ului aplicației (sw.js) NU atinge niciodată această persistență Firestore.
 // Se dezactivează doar dacă utilizatorul o șterge explicit (vezi clearOfflineData()).
-try{
-  await enableIndexedDbPersistence(db);
-}catch(e){
+// IMPORTANT: nu se folosește "await" aici — pornește în fundal, ca să nu blocheze restul
+// aplicației (login, butoane, ticker) în medii unde IndexedDB e restricționat sau lent.
+enableIndexedDbPersistence(db).catch(e=>{
   if(e.code==='failed-precondition'){
-    // Mai multe tab-uri deschise simultan — persistența e activă doar în unul; normal, nu e eroare.
     console.warn('[Offline] Persistență activă în alt tab.');
   } else if(e.code==='unimplemented'){
     console.warn('[Offline] Browserul nu suportă persistența IndexedDB pentru Firestore.');
   } else {
     console.warn('[Offline] Persistență indisponibilă:', e.message);
   }
-}
+});
+
 
 // ── HELPERS ────────────────────────────────────────────────
 window.toast = (msg, type = 'in') => {
