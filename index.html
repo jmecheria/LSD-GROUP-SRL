@@ -1497,6 +1497,9 @@ footer::before{
         <button class="btn btn-primary btn-full btn-lg" onclick="cautaBilet()">🔍 Verifică biletul</button>
       </div>
       <div id="bilet-result" style="text-align:left"></div>
+      <div style="text-align:center;margin-top:18px">
+        <button class="btn btn-ghost btn-sm" style="color:var(--stone);font-size:11.5px" onclick="clearOfflineData()">🗑 Șterge datele salvate offline pe acest dispozitiv</button>
+      </div>
     </div>
   </div>
 </div>
@@ -5419,18 +5422,38 @@ window.loadContPage = async () => {
     <div style="flex:1">
       <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:20px">${u.displayName||'Utilizator'}</div>
       <div style="color:var(--stone);font-size:14px;margin-top:4px">${u.email}${tel?' · 📞 '+tel:''}</div>
-      <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="openEditProfile()">✏️ Editează profilul</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn btn-secondary btn-sm" onclick="openEditProfile()">✏️ Editează profilul</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--stone)" onclick="clearOfflineData()">🗑 Șterge datele salvate offline</button>
+      </div>
     </div>
   </div>
   <h3 style="font-size:18px;font-weight:700;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif">Rezervările mele</h3>
+  <div id="cont-offline-banner"></div>
   <div id="my-bookings"><div class="loading-state"><div class="spin"></div></div></div>`;
-  const snap=await getDocs(query(collection(db,'rezervari'),where('uid','==',u.uid)));
-  const docs=[...snap.docs].sort((a,b)=>(b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
+  let items=null, isOffline=false;
+  try{
+    const snap=await getDocs(query(collection(db,'rezervari'),where('uid','==',u.uid)));
+    items=snap.docs.map(d=>({id:d.id,r:d.data()}));
+    cacheMyBookingsLocal(items.map(x=>({id:x.id,...x.r})));
+  }catch(e){
+    const cached=getCachedMyBookingsLocal();
+    if(cached?.list?.length){
+      items=cached.list.map(x=>({id:x.id,r:x}));
+      isOffline=true;
+      const savedAgo=cached.savedAt?Math.round((Date.now()-cached.savedAt)/60000):null;
+      document.getElementById('cont-offline-banner').innerHTML=`<div style="background:var(--orange-g);border:1px solid rgba(196,101,32,.25);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--orange);margin-bottom:14px">📴 Fără internet — afișăm rezervările salvate pe acest dispozitiv${savedAgo!=null?' (actualizate acum '+(savedAgo<1?'câteva secunde':savedAgo+' min'):''}).</div>`;
+    } else {
+      document.getElementById('my-bookings').innerHTML=`<div class="empty-state"><div class="empty-icon">📴</div><h3>Fără internet</h3><p>Nu există încă nicio copie locală a rezervărilor tale pe acest dispozitiv. Conectează-te la internet o dată pentru a le putea vedea și offline data viitoare.</p></div>`;
+      return;
+    }
+  }
+  const docs=items.sort((a,b)=>(b.r.createdAt?.seconds||0)-(a.r.createdAt?.seconds||0));
   const lista=document.getElementById('my-bookings');
   if(!docs.length){lista.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><h3>Nicio rezervare</h3><p>Rezervați un loc pe o cursă regulată sau solicitați o cursă organizată.</p><div style="display:flex;gap:10px;justify-content:center;margin-top:16px"><button class="btn btn-primary btn-sm" onclick="nav('regulate')">🔄 Curse regulate</button><button class="btn btn-secondary btn-sm" onclick="nav('organizate')">🚌 Organizate</button></div></div>`;return;}
   const sl={in_asteptare:'⏳ În așteptare',oferta_trimisa:'📩 Ofertă trimisă',confirmata:'✅ Confirmată',anulata:'❌ Anulată'};
   lista.innerHTML=docs.map(d=>{
-    const r=d.data(); const sc=r.status||'in_asteptare';
+    const r=d.r; const sc=r.status||'in_asteptare';
     const locs=(r.locuriRezervate||[]);
     const locBadges=locs.map(l=>`<span class="chip chip-amber">Loc ${l.locNr}: ${l.statieUrcare}→${l.statieCoborare} (${l.pretLoc} RON)</span>`).join('');
     const biletBtn=r.biletId?`<button class="btn btn-primary btn-sm" onclick="showTicketById('${d.id}')">🎟 Vezi biletul</button>`:'';
