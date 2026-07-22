@@ -2645,7 +2645,7 @@ footer::before{
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,updateProfile,updatePassword} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import {getFirestore,collection,doc,addDoc,getDocs,getDoc,setDoc,deleteDoc,query,where,onSnapshot,Timestamp,serverTimestamp,orderBy} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import {getFirestore,collection,doc,addDoc,getDocs,getDoc,setDoc,deleteDoc,query,where,onSnapshot,Timestamp,serverTimestamp,orderBy,enableIndexedDbPersistence} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const FB_CFG = {
   apiKey:"AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",
@@ -2659,6 +2659,23 @@ window.SPRINTER_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAACDCAM
 
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
+// Persistență offline (IndexedDB): tot ce a fost deja citit din Firestore (bilete, rezervări,
+// curse) rămâne salvat local pe dispozitiv și se vede instant chiar fără internet sau după
+// un refresh/ștergere de cache al service worker-ului — acestea sunt spații de stocare diferite,
+// deci golirea cache-ului aplicației (sw.js) NU atinge niciodată această persistență Firestore.
+// Se dezactivează doar dacă utilizatorul o șterge explicit (vezi clearOfflineData()).
+try{
+  await enableIndexedDbPersistence(db);
+}catch(e){
+  if(e.code==='failed-precondition'){
+    // Mai multe tab-uri deschise simultan — persistența e activă doar în unul; normal, nu e eroare.
+    console.warn('[Offline] Persistență activă în alt tab.');
+  } else if(e.code==='unimplemented'){
+    console.warn('[Offline] Browserul nu suportă persistența IndexedDB pentru Firestore.');
+  } else {
+    console.warn('[Offline] Persistență indisponibilă:', e.message);
+  }
+}
 
 // ── HELPERS ────────────────────────────────────────────────
 window.toast = (msg, type = 'in') => {
@@ -4139,9 +4156,45 @@ window.confirmSeats = async () => {
   }catch(e){toast('Eroare la salvare: '+e.message,'er');}
 };
 
+// ── CACHE OFFLINE PENTRU BILETE ȘI REZERVĂRI (localStorage) ──
+// Independent de service worker / Cache Storage API (acelea țin doar fișierele
+// site-ului, nu datele clientului). Acest cache ține copii ale biletelor și
+// rezervărilor pe care clientul le-a văzut deja, ca să le poată vedea din nou
+// oricând, chiar offline sau după un refresh — și se șterge NUMAI dacă
+// clientul apasă explicit butonul "Șterge datele salvate offline".
+const LSD_OFFLINE_TICKETS_KEY = 'lsd_offline_tickets';
+const LSD_OFFLINE_BOOKINGS_KEY = 'lsd_offline_bookings';
+
+function cacheTicketsLocal(tickets){
+  try{
+    const store = JSON.parse(localStorage.getItem(LSD_OFFLINE_TICKETS_KEY)||'{}');
+    (tickets||[]).forEach(t=>{ if(t.biletId) store[t.biletId] = t; });
+    localStorage.setItem(LSD_OFFLINE_TICKETS_KEY, JSON.stringify(store));
+  }catch(e){ /* localStorage poate fi plin/indisponibil — nu blocăm fluxul principal */ }
+}
+function getCachedTicketLocal(biletId){
+  try{
+    const store = JSON.parse(localStorage.getItem(LSD_OFFLINE_TICKETS_KEY)||'{}');
+    return store[biletId] || null;
+  }catch(e){ return null; }
+}
+function cacheMyBookingsLocal(list){
+  try{ localStorage.setItem(LSD_OFFLINE_BOOKINGS_KEY, JSON.stringify({list, savedAt:Date.now()})); }catch(e){}
+}
+function getCachedMyBookingsLocal(){
+  try{ return JSON.parse(localStorage.getItem(LSD_OFFLINE_BOOKINGS_KEY)||'null'); }catch(e){ return null; }
+}
+window.clearOfflineData = () => {
+  if(!confirm('Ștergi biletele și rezervările salvate offline pe acest dispozitiv?\n\nAcestea rămân în continuare în contul tău (nimic nu se pierde din baza de date) — doar copia locală de pe acest telefon/computer se șterge, și nu vei mai putea vedea biletele fără internet până le deschizi din nou o dată online.'))return;
+  try{ localStorage.removeItem(LSD_OFFLINE_TICKETS_KEY); localStorage.removeItem(LSD_OFFLINE_BOOKINGS_KEY); }catch(e){}
+  toast('🗑 Datele offline au fost șterse de pe acest dispozitiv','ok');
+  if(document.getElementById('pg-cont')?.classList.contains('active')) loadContPage();
+};
+
 // ── TICKET DISPLAY ─────────────────────────────────────────
 function showTickets(tickets){
   window._TICKET_DATA=tickets;
+  cacheTicketsLocal(tickets);
   const r0=tickets[0];
   const cards=tickets.map((r,idx)=>{
     const loc=r.locuriRezervate[0];
@@ -4203,10 +4256,25 @@ window.cautaBilet = async () => {
   if(!cod){toast('Introdu codul biletului','wr');return;}
   const el=document.getElementById('bilet-result');
   el.innerHTML='<div class="loading-state"><div class="spin"></div><p>Se verifică...</p></div>';
+  let r=null, offlineHit=false;
   try{
     const snap=await getDocs(query(collection(db,'rezervari'),where('biletId','==',cod)));
-    if(snap.empty){el.innerHTML=`<div style="background:var(--card);border:1.5px solid var(--red);border-radius:var(--r-lg);padding:24px;text-align:center;box-shadow:var(--sh)"><div style="font-size:40px;margin-bottom:12px">❌</div><div style="font-weight:700;font-size:16px;margin-bottom:6px">Bilet negăsit</div><div style="color:var(--stone)">Codul <strong>${cod}</strong> nu există. Verificați că l-ați introdus corect.</div></div>`;return;}
-    const r={id:snap.docs[0].id,...snap.docs[0].data()};
+    if(snap.empty){
+      // Poate exista totuși în cache-ul local (ex: căutat cu succes altă dată), verificăm înainte să declarăm "negăsit"
+      const cached=getCachedTicketLocal(cod);
+      if(cached){ r=cached; offlineHit=true; }
+      else { el.innerHTML=`<div style="background:var(--card);border:1.5px solid var(--red);border-radius:var(--r-lg);padding:24px;text-align:center;box-shadow:var(--sh)"><div style="font-size:40px;margin-bottom:12px">❌</div><div style="font-weight:700;font-size:16px;margin-bottom:6px">Bilet negăsit</div><div style="color:var(--stone)">Codul <strong>${cod}</strong> nu există. Verificați că l-ați introdus corect.</div></div>`; return; }
+    } else {
+      r={id:snap.docs[0].id,...snap.docs[0].data()};
+      cacheTicketsLocal([r]);
+    }
+  }catch(e){
+    // Fără internet sau eroare de rețea — încercăm copia locală salvată anterior
+    const cached=getCachedTicketLocal(cod);
+    if(cached){ r=cached; offlineHit=true; }
+    else { el.innerHTML=`<div style="background:var(--card);border:1.5px solid var(--red);border-radius:var(--r-lg);padding:24px;text-align:center"><div style="font-size:36px;margin-bottom:12px">⚠️</div><div style="font-weight:700;margin-bottom:6px">Eroare</div><div style="color:var(--stone);font-size:13px">${e.code==='permission-denied'?'Actualizați regulile Firestore. Contactați administratorul.':'Nu s-a putut verifica online, iar acest bilet nu este salvat local pe acest dispozitiv. Eroare: '+e.message}</div></div>`; return; }
+  }
+  {
     const locs=r.locuriRezervate||[];
     const isValid=r.status==='confirmata'&&r.data>=new Date().toISOString().split('T')[0];
     const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent('LSD:'+r.biletId+'|'+(r.cursaId||'')+'|'+r.data+'|'+(locs[0]?.locNr||''))}&bgcolor=ffffff&color=0f0d0a`;
@@ -4220,17 +4288,25 @@ window.cautaBilet = async () => {
       <div style="padding:20px 24px">
         <div style="text-align:center;margin-bottom:20px"><img src="${qrUrl}" width="160" height="160" style="border-radius:8px;border:1px solid var(--border)"/></div>
         ${[['🚌 Rută',r.ruta||r.traseu||'-'],['📍 Urcare',locs[0]?.statieUrcare||'-'],['📍 Coborâre',locs[0]?.statieCoborare||'-'],['🪑 Locuri',locs.map(l=>'Loc '+l.locNr).join(', ')||'-'],['📅 Data',r.data||'-'],['🕐 Ora',r.ora||'-'],...(r.vehiculNume?[['🚐 Autobuz',r.vehiculNume]]:[]),...(numeSoferPtRezervare(r)?[['👨‍✈️ Șofer',numeSoferPtRezervare(r)]]:[]),['👤 Pasager',r.numeClient||'-'],['💰 Total',r.pretTotal?(r.pretTotal+' RON'):'-']].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
+        ${offlineHit?'<div style="margin-top:10px;background:var(--orange-g);border:1px solid rgba(196,101,32,.25);border-radius:var(--r);padding:10px 12px;font-size:11.5px;color:var(--orange)">📴 Afișat din copia salvată pe acest dispozitiv (fără internet) — poate să nu reflecte cele mai recente modificări.</div>':''}
         <div style="margin-top:16px;background:var(--cream);border-radius:var(--r);padding:12px;font-size:12px;color:var(--stone);text-align:center">${isValid?'✅ Bilet valid — prezentați codul QR la îmbarcare':'⚠️ Bilet '+r.status.replace('_',' ')+' — contactați echipa LSD Group'}</div>
         <button class="btn btn-primary btn-full" style="margin-top:14px" onclick="printBiletById('${r.id}')">⬇️ Printează biletul</button>
       </div>
     </div>`;
-  }catch(e){el.innerHTML=`<div style="background:var(--card);border:1.5px solid var(--red);border-radius:var(--r-lg);padding:24px;text-align:center"><div style="font-size:36px;margin-bottom:12px">⚠️</div><div style="font-weight:700;margin-bottom:6px">Eroare</div><div style="color:var(--stone);font-size:13px">${e.code==='permission-denied'?'Actualizați regulile Firestore. Contactați administratorul.':'Eroare: '+e.message}</div></div>`;}
+  }
 };
 window.printBiletById = async rezId => {
-  const ref=await getDoc(doc(db,'rezervari',rezId));
-  if(!ref.exists())return;
-  showTickets([{id:rezId,...ref.data()}]);
-  setTimeout(()=>printTicket(),200);
+  try{
+    const ref=await getDoc(doc(db,'rezervari',rezId));
+    if(!ref.exists()){toast('Rezervarea nu a fost găsită','er');return;}
+    showTickets([{id:rezId,...ref.data()}]);
+    setTimeout(()=>printTicket(),200);
+  }catch(e){
+    // Offline și fără cache Firestore pentru acest document — încercăm copia locală (după biletId, dacă o avem în _TICKET_DATA curent)
+    const local=(window._TICKET_DATA||[]).find(t=>t.id===rezId);
+    if(local){showTickets([local]);setTimeout(()=>printTicket(),200);}
+    else toast('Fără internet și fără copie locală pentru acest bilet','er');
+  }
 };
 
 
