@@ -903,6 +903,13 @@ input.ok{border-color:var(--green)}
 /* ── QR SCANNER ── */
 #html5-qrcode-reader{border-radius:10px;overflow:hidden;border:1.5px solid var(--border-l);min-height:200px;background:var(--cream)}
 
+/* ── MOD OFFLINE — estompează tab-urile care necesită internet, lăsând active doar
+   Biletul meu și Contul meu (rezervările salvate). Se aplică doar rolurilor client/vizitator —
+   admin și șofer nu sunt afectați de această restricție. ── */
+body.offline-mode [data-page]:not([data-page="bilet"]):not([data-page="cont"]){
+  opacity:.35;pointer-events:none;
+}
+
 /* ── COOKIE BANNER ── */
 #cookie-banner{
   position:fixed;bottom:0;left:0;right:0;background:var(--card);
@@ -1115,6 +1122,9 @@ footer::before{
 
 <!-- ── TICKER ── -->
 <div id="ticker"><div class="tick-inner" id="tick-inner"></div></div>
+<div id="offline-banner" style="display:none;position:fixed;top:calc(var(--tick-h) + var(--nav-h));left:0;width:100%;z-index:997;background:linear-gradient(135deg,var(--orange),#a3540f);color:#fff;text-align:center;padding:8px 14px;font-size:12.5px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.15)">
+  📴 Sunteți în modul offline — se văd doar Biletul meu și Rezervările salvate anterior
+</div>
 
 <!-- ── NAV ── -->
 <nav id="nav">
@@ -1144,11 +1154,11 @@ footer::before{
 
 <!-- ── MOB MENU ── -->
 <div id="mob-menu">
-  <button class="nl" onclick="nav('home')">🏠 Acasă</button>
-  <button class="nl" onclick="nav('regulate')">🔄 Regulate</button>
-  <button class="nl" onclick="nav('organizate')">🚌 Organizate</button>
-  <button class="nl" onclick="nav('bilet')">🎟 Biletul meu</button>
-  <button class="nl" onclick="nav('gdpr')">📄 GDPR</button>
+  <button class="nl" data-page="home" onclick="nav('home')">🏠 Acasă</button>
+  <button class="nl" data-page="regulate" onclick="nav('regulate')">🔄 Regulate</button>
+  <button class="nl" data-page="organizate" onclick="nav('organizate')">🚌 Organizate</button>
+  <button class="nl" data-page="bilet" onclick="nav('bilet')">🎟 Biletul meu</button>
+  <button class="nl" data-page="gdpr" onclick="nav('gdpr')">📄 GDPR</button>
   <button class="nl" id="mob-auth-btn" onclick="nav('auth')">🔐 Conectare</button>
 </div>
 
@@ -1794,6 +1804,7 @@ footer::before{
     <button class="tab-btn" onclick="adminTab('program')">📅 Program</button>
     <button class="tab-btn" onclick="adminTab('harta')">🗺 Hartă live</button>
     <button class="tab-btn" onclick="adminTab('ticker')">📢 Ticker</button>
+    <button class="tab-btn" onclick="adminTab('conexiuni')">🔌 Conexiuni</button>
     <button class="tab-btn" onclick="adminTab('continut')">📝 Conținut</button>
     <button class="tab-btn" onclick="adminTab('settings')">⚙️ Setări</button>
   </div>
@@ -1935,6 +1946,20 @@ footer::before{
     </div>
   </div>
 
+  <!-- CONEXIUNI (ultimele accesări ale site-ului) -->
+  <div id="admin-tab-conexiuni" class="tab-panel">
+    <div class="info-box" style="margin-bottom:16px">
+      🔌 Ultimele 10 accesări ale site-ului (nume/email pentru cei logați, IP și browser pentru toți). Înregistrările mai vechi de 7 zile se șterg automat de fiecare dată când deschideți acest tab — nu există un cron real în fundal (site-ul e găzduit static), deci curățarea se întâmplă la vizitele admin-ului, nu exact la fiecare 7 zile fixe.
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
+      <button class="btn btn-secondary btn-sm" onclick="loadConexiuniTbl()">🔄 Refresh</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl"><thead><tr><th>Nume</th><th>Email</th><th>IP</th><th>Browser / Dispozitiv</th><th>Pagină</th><th>Data</th></tr></thead>
+      <tbody id="conexiuni-tbody"></tbody></table>
+    </div>
+  </div>
+
 
   <!-- CONȚINUT SITE (texte editabile) -->
   <div id="admin-tab-continut" class="tab-panel">
@@ -1988,6 +2013,15 @@ footer::before{
         </div>
       </div>
       <button class="btn btn-primary btn-sm" onclick="saveFirmSettings()">💾 Salvează date firmă</button>
+    </div>
+    <!-- Securitate -->
+    <div style="background:var(--card);border:1.5px solid var(--red);border-radius:var(--r-lg);padding:22px;margin-top:16px;box-shadow:var(--sh)">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--red);font-family:'Plus Jakarta Sans',sans-serif">🔒 Securitate — Delogare globală</h3>
+      <p style="font-size:12.5px;color:var(--stone);margin-bottom:16px;line-height:1.6">
+        Deconectează instant toți utilizatorii care sunt <strong>în acest moment</strong> pe site (clienți, șoferi, inclusiv tu ca admin) și blochează automat orice sesiune salvată anterior — oricine deschide site-ul cu un login mai vechi decât momentul apăsării va fi delogat automat la accesare, chiar dacă asta se întâmplă peste zile. Nu afectează conturile în sine (nimeni nu-și pierde contul), doar sesiunile active — toată lumea trebuie doar să se autentifice din nou.
+      </p>
+      <div class="info-box" style="font-size:12px;margin-bottom:14px">⚠️ Vei fi delogat și tu, ca admin. Folosește doar în caz de suspiciune reală (parolă compromisă, acces neautorizat etc.).</div>
+      <button class="btn btn-danger btn-sm" onclick="forceLogoutAll()">🔒 Delogare globală — toți utilizatorii</button>
     </div>
   </div>
 </div>
@@ -2599,6 +2633,11 @@ footer::before{
   window.MONTHS_RO = ['Ianuarie','Februarie','Martie','Aprilie','Mai','Iunie','Iulie','August','Septembrie','Octombrie','Noiembrie','Decembrie'];
 
   window.nav = function(page, ctx) {
+    if (window._OFFLINE_MODE && (window._ROLE === 'client' || window._ROLE === 'guest') && !['bilet','cont'].includes(page)) {
+      const msg = '📴 Modul offline — doar Biletul meu și Contul meu (rezervările salvate) sunt disponibile fără internet.';
+      if (window.toast) window.toast(msg,'wr'); else alert(msg);
+      page = window._U ? 'cont' : 'bilet';
+    }
     if ((window._ROLE === 'driver') && !['sofer','gdpr','auth'].includes(page)) { nav('sofer'); return; }
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nl[data-page]').forEach(n => n.classList.remove('active'));
@@ -2679,6 +2718,36 @@ window.addEventListener('appinstalled', () => {
   if (btn) btn.style.display = 'none';
   window._deferredInstallPrompt = null;
 });
+
+// ── MOD OFFLINE ──
+// Nu depinde de Firebase — funcționează instant, chiar înainte ca modulul de mai jos
+// să se încarce. Cât timp browserul n-are conexiune: arată banner-ul, estompează
+// tab-urile care au nevoie de internet (vezi regula CSS body.offline-mode) și,
+// dacă utilizatorul încearcă să navigheze acolo, îl trimite automat spre
+// Biletul meu (dacă nu e logat) sau Contul meu (dacă e logat) — singurele pagini
+// garantat funcționale offline (bilete/rezervări deja salvate local).
+window._OFFLINE_MODE = !navigator.onLine;
+window.updateOnlineStatus = function updateOnlineStatus() {
+  const offline = !navigator.onLine;
+  window._OFFLINE_MODE = offline;
+  document.body.classList.toggle('offline-mode', offline);
+  const banner = document.getElementById('offline-banner');
+  const appEl = document.getElementById('app');
+  if (banner) banner.style.display = offline ? 'block' : 'none';
+  if (appEl) appEl.style.paddingTop = offline ? 'calc(var(--tick-h) + var(--nav-h) + 34px)' : '';
+  if (offline && (window._ROLE === 'client' || window._ROLE === 'guest' || !window._ROLE)) {
+    const active = document.querySelector('.page.active');
+    const activePage = active ? active.id.replace('pg-','') : '';
+    if (activePage && !['bilet','cont'].includes(activePage)) {
+      nav(window._U ? 'cont' : 'bilet');
+    }
+  }
+  if (!offline && window.toast) window.toast('✅ Conexiunea a revenit','ok');
+};
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+document.addEventListener('DOMContentLoaded', updateOnlineStatus);
+if (document.readyState !== 'loading') updateOnlineStatus();
 </script>
 
 <script type="module">
@@ -2714,6 +2783,66 @@ enableIndexedDbPersistence(db).catch(e=>{
     console.warn('[Offline] Persistență indisponibilă:', e.message);
   }
 });
+
+// ── JURNAL CONEXIUNI (pentru tab-ul Admin → 🔌 Conexiuni) ──
+// Scrie o singură dată per vizită un document cu nume/email (dacă e logat),
+// IP (via serviciu public gratuit, fără cheie) și browser/dispozitiv.
+window._connLogged = false;
+function parseUserAgent(){
+  const ua = navigator.userAgent;
+  let browser = 'Necunoscut';
+  if (/Edg\//.test(ua)) browser = 'Edge';
+  else if (/OPR\//.test(ua)) browser = 'Opera';
+  else if (/Chrome\//.test(ua) && !/Chromium/.test(ua)) browser = 'Chrome';
+  else if (/Firefox\//.test(ua)) browser = 'Firefox';
+  else if (/Safari\//.test(ua) && !/Chrome/.test(ua)) browser = 'Safari';
+  const dispozitiv = /Mobi|Android|iPhone|iPad/.test(ua) ? 'Mobil' : 'Desktop';
+  return { browser, dispozitiv };
+}
+async function logConnection(u){
+  if (window._connLogged) return;
+  window._connLogged = true;
+  try{
+    let ip = null;
+    try{
+      const r = await fetch('https://api.ipify.org?format=json');
+      if (r.ok) { const d = await r.json(); ip = d.ip || null; }
+    }catch(e){ /* serviciul de IP poate fi blocat pe unele rețele — nu blocăm restul */ }
+    const { browser, dispozitiv } = parseUserAgent();
+    await addDoc(collection(db,'conexiuni'), {
+      uid: u ? u.uid : null,
+      nume: u ? (u.displayName || u.email || 'Utilizator') : 'Vizitator',
+      email: u ? (u.email || null) : null,
+      ip, browser, dispozitiv,
+      pagina: document.title || location.pathname || '/',
+      createdAt: serverTimestamp()
+    });
+  }catch(e){ console.warn('[Conexiuni] Nu s-a putut înregistra:', e.message); }
+}
+
+// ── SECURITATE — ascultător global pentru delogare forțată ──
+// Activ mereu, indiferent dacă utilizatorul e logat sau nu. Verifică live (onSnapshot
+// se declanșează și instant la încărcare, și la orice schimbare ulterioară a
+// documentului) dacă a fost declanșată o delogare globală din Admin → Setări,
+// după ce sesiunea curentă a fost creată — dacă da, delogare automată + reload.
+onSnapshot(doc(db,'setari','global'), snap => {
+  if (!snap.exists()) return;
+  const flAt = snap.data().forceLogoutAt;
+  if (!flAt || !auth.currentUser) return;
+  const flMs = flAt.toMillis ? flAt.toMillis() : flAt.seconds*1000;
+  const lastSignInMs = new Date(auth.currentUser.metadata.lastSignInTime).getTime();
+  if (flMs > lastSignInMs) {
+    signOut(auth).then(async ()=>{
+      // Golește și cache-ul service worker-ului (Cache Storage API) — reload-ul de securitate
+      // aduce astfel garantat ultima versiune a site-ului, nu doar delogarea.
+      try{
+        if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
+      }catch(e){}
+      alert('Din motive de securitate ai fost deconectat automat. Te rugăm să te autentifici din nou.');
+      window.location.reload();
+    }).catch(()=>{ window.location.reload(); });
+  }
+}, err => console.warn('[Securitate] Listener delogare globală:', err.message));
 
 
 // ── HELPERS ────────────────────────────────────────────────
@@ -2916,6 +3045,7 @@ function renderFooter() {
 // ── AUTH ───────────────────────────────────────────────────
 onAuthStateChanged(auth, async u => {
   window._U = u;
+  logConnection(u); // înregistrează vizita (fire-and-forget, nu blochează restul)
   // Load settings first
   try {
     const sr = await getDoc(doc(db,'setari','global'));
@@ -3010,7 +3140,7 @@ function buildNav(role) {
   }
   if (role === 'client' && u) {
     if (authBtn) { authBtn.textContent = (u.displayName||'Cont') + ' ↗'; authBtn.onclick = () => { if (confirm('Ieși din cont?')) doSignOut(); }; }
-    const contBtn = document.createElement('button'); contBtn.className = 'nb nb-outline'; contBtn.textContent = '👤 Contul meu'; contBtn.onclick = ()=>nav('cont');
+    const contBtn = document.createElement('button'); contBtn.className = 'nb nb-outline'; contBtn.dataset.page = 'cont'; contBtn.textContent = '👤 Contul meu'; contBtn.onclick = ()=>nav('cont');
     const navActions = document.getElementById('nav-actions');
     if (navActions && !navActions.querySelector('.nb-outline')) navActions.insertBefore(contBtn, authBtn);
     if (bell) bell.style.display = 'flex';
@@ -3018,7 +3148,7 @@ function buildNav(role) {
     if (mobAuthBtn) {
       mobAuthBtn.textContent = '↗ Deconectare'; mobAuthBtn.onclick = () => { if (confirm('Ieși din cont?')) doSignOut(); };
       const contMobBtn = document.createElement('button');
-      contMobBtn.className = 'nl'; contMobBtn.id = 'mob-cont-btn'; contMobBtn.textContent = '👤 ' + (u.displayName || 'Contul meu');
+      contMobBtn.className = 'nl'; contMobBtn.id = 'mob-cont-btn'; contMobBtn.dataset.page = 'cont'; contMobBtn.textContent = '👤 ' + (u.displayName || 'Contul meu');
       contMobBtn.onclick = () => nav('cont');
       mobAuthBtn.parentNode.insertBefore(contMobBtn, mobAuthBtn);
     }
@@ -4236,6 +4366,28 @@ function showTickets(tickets){
   cacheTicketsLocal(tickets);
   const r0=tickets[0];
   const cards=tickets.map((r,idx)=>{
+    const isOrg = !r.locuriRezervate || !r.locuriRezervate.length;
+    if(isOrg){
+      // Rezervare Cursă Organizată — nu are locuri/scaune, QR-ul codifică doar biletId
+      const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent('LSD:'+r.biletId)}&bgcolor=ffffff&color=0f0d0a`;
+      const pret = r.pretFinal!=null ? (r.pretFinal+' RON') : (r.pretTotal!=null ? r.pretTotal+' RON' : 'La cerere');
+      return `<div style="background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);overflow:hidden;margin-bottom:14px;box-shadow:var(--sh)">
+        <div style="background:linear-gradient(135deg,var(--orange),#a3540f);padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+          <div><div style="color:#fff;font-weight:800;font-size:15px;letter-spacing:1px">${r.biletId}</div><div style="color:rgba(255,255,255,.85);font-size:11px;margin-top:2px">🚌 Cursă Organizată</div></div>
+          <div style="background:rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;color:#fff">Confirmată ✅</div>
+        </div>
+        <div style="display:flex;gap:16px;padding:16px;align-items:flex-start;flex-wrap:wrap">
+          <div style="text-align:center;flex-shrink:0">
+            <img src="${qrUrl}" width="140" height="140" style="border-radius:8px;border:1px solid var(--border);display:block"/>
+            <div style="font-size:10px;font-weight:700;color:var(--orange);letter-spacing:.5px;margin-top:6px">${r.biletId}</div>
+            <div style="font-size:10px;color:var(--stone);margin-top:2px">Scanat de șofer la îmbarcare</div>
+          </div>
+          <div style="flex:1;min-width:160px">
+            ${[['📋 Traseu',r.traseu||r.descriereCursa||'-'],['📅 Data',r.data||'-'],['🕐 Ora',r.ora||'flexibil'],['🚌 Vehicul',r.vehiculNume||'De confirmat'],...(numeSoferPtRezervare(r)?[['👨‍✈️ Șofer',numeSoferPtRezervare(r)]]:[]),['👤 Client',r.numeClient||'-'],...(r.persoane?[['👥 Persoane',''+r.persoane]]:[]),['💰 Preț',pret]].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-l);font-size:12px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600;text-align:right;max-width:60%">${v}</span></div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    }
     const loc=r.locuriRezervate[0];
     const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent('LSD:'+r.biletId+'|'+(r.cursaId||'')+'|'+r.data+'|'+loc.locNr)}&bgcolor=ffffff&color=0f0d0a`;
     return `<div style="background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);overflow:hidden;margin-bottom:14px;box-shadow:var(--sh)">
@@ -4255,7 +4407,7 @@ function showTickets(tickets){
       </div>
     </div>`;
   }).join('');
-  const total=tickets.reduce((s,r)=>s+r.pretTotal,0);
+  const total=tickets.reduce((s,r)=>s+(r.pretTotal!=null?r.pretTotal:(r.pretFinal!=null?r.pretFinal:0)),0);
   document.getElementById('ticket-body').innerHTML=
     `<div style="background:var(--orange-g);border:1.5px solid var(--orange);border-radius:var(--r);padding:14px 16px;margin-bottom:16px;display:flex;gap:12px">
       <div style="font-size:26px;flex-shrink:0">📸</div>
@@ -5533,7 +5685,7 @@ window.loadContPage = async () => {
 };
 window.showTicketById=async rezId=>{const ref=await getDoc(doc(db,'rezervari',rezId));if(ref.exists())showTickets([{id:rezId,...ref.data()}]);else toast('Rezervarea nu a fost găsită','er');};
 window.anuleazaRez=async rezId=>{if(!confirm('Sigur doriți să anulați această rezervare?'))return;try{await setDoc(doc(db,'rezervari',rezId),{status:'anulata'},{merge:true});toast('Rezervare anulată','ok');loadContPage();}catch(e){toast('Eroare: '+e.message,'er');}};
-window.acceptOffer=async rezId=>{await setDoc(doc(db,'rezervari',rezId),{status:'confirmata'},{merge:true});toast('✅ Ofertă acceptată! Cursa este confirmată.','ok');loadContPage();};
+window.acceptOffer=async rezId=>{await setDoc(doc(db,'rezervari',rezId),{status:'confirmata'},{merge:true});await ensureOrgBiletId(rezId);toast('✅ Ofertă acceptată! Cursa este confirmată.','ok');loadContPage();};
 window.rejectOffer=async rezId=>{if(!confirm('Sigur refuzați oferta?'))return;await setDoc(doc(db,'rezervari',rezId),{status:'anulata'},{merge:true});toast('Ofertă refuzată','in');loadContPage();};
 window.openMyInvoice=async(rezId,pct)=>{const ref=await getDoc(doc(db,'rezervari',rezId));if(!ref.exists())return;const r={id:rezId,...ref.data()};if(!r.pretFinal){toast('Prețul final nu a fost setat','wr');return;}window._INVOICE_REZ=r;window._INVOICE_PCT=pct;renderInvoice(r,pct,0);openModal('invoice');};
 window.openEditProfile=async()=>{const u=window._U;if(!u)return;document.getElementById('prof-name').value=u.displayName||'';try{const ud=await getDoc(doc(db,'users',u.uid));if(ud.exists())document.getElementById('prof-phone').value=ud.data().tel||'';}catch(e){}document.getElementById('prof-pass').value='';openModal('profile');};
@@ -5700,15 +5852,16 @@ window.loadAdmin = async () => {
 };
 window.refreshAdmin=async()=>{await loadAdmin();toast('Date actualizate!','ok');};
 window.adminTab=tab=>{
-  ['vehicles','routes','bookings','drivers','program','harta','ticker','continut','settings'].forEach(t=>{
+  ['vehicles','routes','bookings','drivers','program','harta','ticker','conexiuni','continut','settings'].forEach(t=>{
     document.getElementById('admin-tab-'+t)?.classList.toggle('active',t===tab);
   });
   document.querySelectorAll('#pg-admin .tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['vehicles','routes','bookings','drivers','program','harta','ticker','continut','settings'][i]===tab);
+    b.classList.toggle('active',['vehicles','routes','bookings','drivers','program','harta','ticker','conexiuni','continut','settings'][i]===tab);
   });
   if(tab==='program'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];progSetMode(window._PROG_MODE||'day');}
   if(tab==='harta'){loadHartaAdmin();}
   if(tab==='continut'){loadContentPanel();}
+  if(tab==='conexiuni'){loadConexiuniTbl();}
 };
 window.adminViewAs=role=>{
   window._ROLE=role==='driver'?'driver':'client';
@@ -6507,12 +6660,26 @@ window.filterBookings=()=>{
       </div></td></tr>`;
   }).join(''):`<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--stone)"><div style="font-size:32px;margin-bottom:8px">📋</div>Nicio rezervare${q?' pentru "'+q+'"':''}</td></tr>`;
 };
+// Generează un bilet/cod QR pentru o rezervare de tip "organizată" în momentul confirmării
+// (cursele regulate au deja biletId de la rezervare — aici acoperim doar Cursă Organizată,
+// care altfel nu avea niciodată bilet/QR). Odată generat, șoferul îl poate scana ca pe orice
+// bilet normal și vede toate detaliile cursei organizate.
+async function ensureOrgBiletId(rezId, rData){
+  const r = rData || (await getDoc(doc(db,'rezervari',rezId))).data();
+  if(!r) return null;
+  if(r.biletId) return r.biletId;
+  if(r.tipRezervare!=='organizata') return null;
+  const biletId = 'LSD-'+Math.random().toString(36).slice(2,8).toUpperCase();
+  try{ await setDoc(doc(db,'rezervari',rezId), {biletId}, {merge:true}); }catch(e){ console.warn('[Bilet organizată] Nu s-a putut genera:', e.message); return null; }
+  return biletId;
+}
 // Trimite email + notificare (clopoțel) + salvează un mesaj în conversație, ori de câte
 // ori adminul schimbă statusul unei rezervări din tabel (butoanele rapide ✅/❌), nu doar
 // din modalul de detalii. Așa clientul e mereu anunțat, indiferent pe unde acționează adminul.
 async function notifyBookingStatus(rezId, status, customText){
   const ref=await getDoc(doc(db,'rezervari',rezId)); if(!ref.exists()) return;
   const r=ref.data();
+  if(status==='confirmata'){ const bid=await ensureOrgBiletId(rezId,r); if(bid) r.biletId=bid; }
   const defaultStatusMsg={
     confirmata:'Rezervarea ta a fost confirmată de echipa LSD Group! Te așteptăm la data stabilită.',
     oferta_trimisa:'Ai primit o ofertă nouă din partea echipei LSD Group pentru cererea ta.',
@@ -6701,6 +6868,7 @@ window.sendBookingReply=async()=>{
   if(sfId){upd.driverId=sfId;const sfObj=window._DRIVERS[sfId];upd.soferEmail=sfObj?.email||sfId;}
   upd.driverId2=sfId2||null;
   await setDoc(doc(db,'rezervari',rezId),upd,{merge:true});
+  if(status==='confirmata'){ const bid=await ensureOrgBiletId(rezId,{...r,...upd}); if(bid) r.biletId=bid; }
   if(shouldNotify){
     const replyVeh=(window._F||[]).find(v=>v.id===(upd.vehiculId||r.vehiculId));
     const mesajComplet=mesajFinal + (r.observatii?`\n\n📋 Observațiile tale trimise cu cererea: "${r.observatii}"`:'');
@@ -7140,6 +7308,58 @@ window.saveTicker=async()=>{
   const data={mesaj:msg,activ:document.getElementById('ticker-active').checked};
   if(id)await setDoc(doc(db,'ticker',id),data,{merge:true});else await addDoc(collection(db,'ticker'),data);
   closeModal('ticker');await loadTickerTbl();toast('Salvat!','ok');
+};
+
+// ── CONEXIUNI (jurnal accesări site) ────────────────────────
+// Fiecare vizită scrie un document în colecția 'conexiuni' (vezi logConnection(),
+// apelat o singură dată la încărcarea aplicației). Aici afișăm ultimele 10 și
+// ștergem tot ce e mai vechi de 7 zile — curățarea rulează când admin-ul
+// deschide acest tab (site-ul e găzduit static, fără un job/cron real în fundal,
+// deci nu se întâmplă exact "o dată pe săptămână", ci la fiecare vizită a tab-ului).
+async function loadConexiuniTbl(){
+  const tbody=document.getElementById('conexiuni-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px"><div class="spin"></div></td></tr>';
+  try{
+    // Curățare: șterge tot ce e mai vechi de 7 zile
+    const sapteZileMs=7*24*60*60*1000;
+    const pragMs=Date.now()-sapteZileMs;
+    const allSnap=await getDocs(collection(db,'conexiuni'));
+    const vechi=allSnap.docs.filter(d=>{const ts=d.data().createdAt?.seconds;return ts&&ts*1000<pragMs;});
+    if(vechi.length) await Promise.all(vechi.map(d=>deleteDoc(doc(db,'conexiuni',d.id))));
+
+    // Ultimele 10, cele mai recente primele
+    const ramase=allSnap.docs.filter(d=>!vechi.includes(d)).map(d=>({id:d.id,...d.data()}));
+    const ultimele=ramase.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,10);
+    if(!ultimele.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--stone)">Nicio conexiune înregistrată încă</td></tr>';return;}
+    tbody.innerHTML=ultimele.map(c=>{
+      const dt=c.createdAt?.seconds?new Date(c.createdAt.seconds*1000).toLocaleString('ro'):'-';
+      return`<tr>
+        <td>${c.nume||'Vizitator'}</td>
+        <td style="font-size:12px">${c.email||'—'}</td>
+        <td style="font-family:monospace;font-size:12px">${c.ip||'—'}</td>
+        <td style="font-size:12px">${c.browser||'—'}${c.dispozitiv?' · '+c.dispozitiv:''}</td>
+        <td style="font-size:12px">${c.pagina||'-'}</td>
+        <td style="font-size:12px;white-space:nowrap">${dt}</td>
+      </tr>`;
+    }).join('');
+    if(vechi.length) toast(`🧹 ${vechi.length} conexiuni mai vechi de 7 zile au fost șterse`,'in');
+  }catch(e){ tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--red)">Eroare: ${e.message}</td></tr>`; }
+}
+window.loadConexiuniTbl=loadConexiuniTbl;
+
+// ── SECURITATE — DELOGARE GLOBALĂ ───────────────────────────
+// Scrie un timestamp în setari/global.forceLogoutAt. Toți utilizatorii (inclusiv
+// admin-ul) au un listener live pe acest document (vezi mai jos, lângă inițializarea
+// Firestore) — cine e pe site în acel moment e delogat instant, iar cine are o sesiune
+// mai veche salvată pe dispozitiv e delogat automat data viitoare când deschide site-ul,
+// oricând ar fi asta. Nu afectează conturile, doar sesiunile active.
+window.forceLogoutAll=async()=>{
+  if(!confirm('⚠️ Sigur vrei să deloghezi TOȚI utilizatorii (clienți, șoferi și pe tine ca admin)?\n\nToată lumea, inclusiv tu, va trebui să se autentifice din nou — imediat cei prezenți acum pe site, și automat oricine deschide site-ul cu o sesiune mai veche, oricând s-ar întâmpla asta.\n\nAceastă acțiune nu poate fi anulată.'))return;
+  try{
+    await setDoc(doc(db,'setari','global'),{forceLogoutAt:serverTimestamp()},{merge:true});
+    toast('🔒 Delogare globală declanșată — toți utilizatorii vor fi deconectați','ok');
+  }catch(e){ toast('Eroare: '+e.message,'er'); }
 };
 
 // ── CONȚINUT SITE (texte editabile — homepage / regulate / organizate) ────
@@ -7939,21 +8159,27 @@ window.verifyScanCode = async codBrut => {
     if (snap.empty) { el.innerHTML=`<div style="background:var(--card);border:2px solid var(--red);border-radius:var(--r-lg);padding:20px;text-align:center;box-shadow:var(--sh)"><div style="font-size:40px;margin-bottom:10px">❌</div><div style="font-weight:700;font-size:16px;margin-bottom:4px">Bilet negăsit</div><div style="color:var(--stone);font-size:13px">Codul <strong>${biletId}</strong> nu există.</div><button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="startQRScan()">📷 Scanează alt bilet</button></div>`; return; }
     const rezDoc = snap.docs[0];
     const r = {id:rezDoc.id,...rezDoc.data()};
+    const isOrg = r.tipRezervare==='organizata';
     const locs = r.locuriRezervate || [];
     const locTarget = locNrTarget ? locs.find(l=>l.locNr===locNrTarget) : locs[0];
-    if (locNrTarget && !locTarget) { el.innerHTML=`<div style="background:var(--card);border:2px solid var(--orange);border-radius:var(--r-lg);padding:20px;text-align:center"><div style="font-size:36px;margin-bottom:10px">⚠️</div><div style="font-weight:700">Loc ${locNrTarget} nu există în bilet</div><button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="startQRScan()">📷 Alt bilet</button></div>`; return; }
-    if (locTarget?.scanat) { el.innerHTML=`<div style="background:var(--card);border:2px solid var(--red);border-radius:var(--r-lg);padding:20px;text-align:center;box-shadow:var(--sh)"><div style="font-size:40px;margin-bottom:10px">🚫</div><div style="font-weight:700;font-size:16px;color:var(--red);margin-bottom:4px">Bilet deja scanat!</div><div style="color:var(--stone);font-size:13px">Locul ${locNrTarget||''} a fost deja scanat${locTarget.scanatLa?' la '+new Date(locTarget.scanatLa.seconds*1000).toLocaleString('ro'):''}.</div><div style="background:var(--red-g);border:1px solid rgba(181,45,45,.2);border-radius:8px;padding:10px;margin-top:10px;font-size:12px">⚠️ Nu permiteți îmbarcarea cu acest cod.</div><button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="startQRScan()">📷 Scanează alt bilet</button></div>`; return; }
+    if (!isOrg && locNrTarget && !locTarget) { el.innerHTML=`<div style="background:var(--card);border:2px solid var(--orange);border-radius:var(--r-lg);padding:20px;text-align:center"><div style="font-size:36px;margin-bottom:10px">⚠️</div><div style="font-weight:700">Loc ${locNrTarget} nu există în bilet</div><button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="startQRScan()">📷 Alt bilet</button></div>`; return; }
+    // Curse organizate n-au locuri individuale — folosim statusScanare la nivel de rezervare întreagă pentru a preveni scanarea dublă.
+    const dejaScanat = isOrg ? r.statusScanare==='scanat' : locTarget?.scanat;
+    if (dejaScanat) { el.innerHTML=`<div style="background:var(--card);border:2px solid var(--red);border-radius:var(--r-lg);padding:20px;text-align:center;box-shadow:var(--sh)"><div style="font-size:40px;margin-bottom:10px">🚫</div><div style="font-weight:700;font-size:16px;color:var(--red);margin-bottom:4px">Bilet deja scanat!</div><div style="color:var(--stone);font-size:13px">${isOrg?'Această rezervare a fost deja scanată.':'Locul '+(locNrTarget||'')+' a fost deja scanat'+(locTarget?.scanatLa?' la '+new Date(locTarget.scanatLa.seconds*1000).toLocaleString('ro'):'')+'.'}</div><div style="background:var(--red-g);border:1px solid rgba(181,45,45,.2);border-radius:8px;padding:10px;margin-top:10px;font-size:12px">⚠️ Nu permiteți îmbarcarea cu acest cod.</div><button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="startQRScan()">📷 Scanează alt bilet</button></div>`; return; }
     const isValid = r.status==='confirmata' && r.data >= new Date().toISOString().split('T')[0];
     if (!isValid) { el.innerHTML=`<div style="background:var(--card);border:2px solid var(--orange);border-radius:var(--r-lg);padding:20px;text-align:center;box-shadow:var(--sh)"><div style="font-size:40px;margin-bottom:10px">⚠️</div><div style="font-weight:700;font-size:16px;color:var(--orange)">Bilet ${r.status==='confirmata'?'expirat':'neconfirmat'}</div><div style="color:var(--stone);font-size:13px;margin-top:6px">Status: <strong>${r.status}</strong> · Data: <strong>${r.data}</strong></div><button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="startQRScan()">📷 Scanează alt bilet</button></div>`; return; }
+    const infoRows = isOrg
+      ? [['👤 Client',r.numeClient||'-'],['📞 Telefon',r.telefon||'-'],['📋 Traseu',r.traseu||r.descriereCursa||'-'],...(r.persoane?[['👥 Persoane',''+r.persoane]]:[]),['📅 Data',r.data||'-'],['🕐 Ora',r.ora||'flexibil'],['🚌 Vehicul',r.vehiculNume||'-']]
+      : [['👤 Pasager',r.numeClient||'-'],['🚌 Rută',r.ruta||r.traseu||'-'],['📍 Urcare',locTarget?.statieUrcare||'-'],['📍 Coborâre',locTarget?.statieCoborare||'-'],['🪑 Loc',String(locNrTarget||locs.map(l=>l.locNr).join(', '))],['📅 Data',r.data||'-'],['🕐 Ora',r.ora||'-']];
     el.innerHTML = `<div style="background:var(--card);border:2px solid var(--green);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-lg)">
       <div style="background:linear-gradient(135deg,var(--green),#16a34a);padding:16px 20px;text-align:center">
         <div style="font-size:40px;margin-bottom:6px">✅</div>
-        <div style="font-weight:800;font-size:18px;color:#fff">Bilet VALID</div>
+        <div style="font-weight:800;font-size:18px;color:#fff">Bilet VALID${isOrg?' — Cursă Organizată':''}</div>
         <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:4px">${r.biletId}${locNrTarget?' · Loc '+locNrTarget:''}</div>
       </div>
       <div style="padding:16px">
         <div style="display:flex;flex-direction:column;gap:0;margin-bottom:14px">
-          ${[['👤 Pasager',r.numeClient||'-'],['🚌 Rută',r.ruta||r.traseu||'-'],['📍 Urcare',locTarget?.statieUrcare||'-'],['📍 Coborâre',locTarget?.statieCoborare||'-'],['🪑 Loc',String(locNrTarget||locs.map(l=>l.locNr).join(', '))],['📅 Data',r.data||'-'],['🕐 Ora',r.ora||'-']].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
+          ${infoRows.map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600;text-align:right;max-width:60%">${v}</span></div>`).join('')}
         </div>
         <button class="btn btn-primary btn-full" onclick="markScanned('${rezDoc.id}',${locNrTarget||'null'})">✅ Confirmă îmbarcarea</button>
         <button class="btn btn-secondary btn-full" style="margin-top:8px" onclick="startQRScan()">📷 Scanează alt bilet</button>
