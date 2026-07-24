@@ -2016,12 +2016,13 @@ footer::before{
     </div>
     <!-- Securitate -->
     <div style="background:var(--card);border:1.5px solid var(--red);border-radius:var(--r-lg);padding:22px;margin-top:16px;box-shadow:var(--sh)">
-      <h3 style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--red);font-family:'Plus Jakarta Sans',sans-serif">🔒 Securitate — Delogare globală</h3>
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--red);font-family:'Plus Jakarta Sans',sans-serif">🧹 Curățare globală & Delogare</h3>
       <p style="font-size:12.5px;color:var(--stone);margin-bottom:16px;line-height:1.6">
-        Deconectează instant toți utilizatorii care sunt <strong>în acest moment</strong> pe site (clienți, șoferi, inclusiv tu ca admin) și blochează automat orice sesiune salvată anterior — oricine deschide site-ul cu un login mai vechi decât momentul apăsării va fi delogat automat la accesare, chiar dacă asta se întâmplă peste zile. Nu afectează conturile în sine (nimeni nu-și pierde contul), doar sesiunile active — toată lumea trebuie doar să se autentifice din nou.
+        Toți utilizatorii aflați <strong>în acest moment</strong> pe site (clienți, șoferi, inclusiv tu ca admin) primesc un avertisment cu numărătoare inversă de ~1 minut, apoi un countdown 3-2-1 pe ecran, după care sunt delogați automat și li se golește cache-ul tehnic al site-ului (fișiere, cache Firestore) — ca site-ul să pornească din nou "curat" și să meargă mai fluid. Oricine deschide site-ul mai târziu, cu o sesiune mai veche, primește aceeași curățare instant, la accesare.
       </p>
-      <div class="info-box" style="font-size:12px;margin-bottom:14px">⚠️ Vei fi delogat și tu, ca admin. Folosește doar în caz de suspiciune reală (parolă compromisă, acces neautorizat etc.).</div>
-      <button class="btn btn-danger btn-sm" onclick="forceLogoutAll()">🔒 Delogare globală — toți utilizatorii</button>
+      <div class="info-box" style="font-size:12px;margin-bottom:8px;background:var(--green-g);border-color:rgba(26,107,60,.25);color:var(--green)">✅ Biletele și rezervările din cont NU se șterg niciodată prin această acțiune — rămân salvate normal, atât în Firestore cât și local pe dispozitiv.</div>
+      <div class="info-box" style="font-size:12px;margin-bottom:14px">⚠️ Vei fi delogat și tu, ca admin. Folosește pentru mentenanță/curățare periodică sau în caz de suspiciune reală (parolă compromisă, acces neautorizat etc.).</div>
+      <button class="btn btn-danger btn-sm" onclick="forceLogoutAll()">🧹 Curățare globală — toți utilizatorii</button>
     </div>
   </div>
 </div>
@@ -2753,7 +2754,7 @@ if (document.readyState !== 'loading') updateOnlineStatus();
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,updateProfile,updatePassword} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import {getFirestore,collection,doc,addDoc,getDocs,getDoc,setDoc,deleteDoc,query,where,onSnapshot,Timestamp,serverTimestamp,orderBy,enableIndexedDbPersistence} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import {getFirestore,collection,doc,addDoc,getDocs,getDoc,setDoc,deleteDoc,query,where,onSnapshot,Timestamp,serverTimestamp,orderBy,enableIndexedDbPersistence,terminate,clearIndexedDbPersistence} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const FB_CFG = {
   apiKey:"AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",
@@ -2820,29 +2821,104 @@ async function logConnection(u){
   }catch(e){ console.warn('[Conexiuni] Nu s-a putut înregistra:', e.message); }
 }
 
-// ── SECURITATE — ascultător global pentru delogare forțată ──
-// Activ mereu, indiferent dacă utilizatorul e logat sau nu. Verifică live (onSnapshot
-// se declanșează și instant la încărcare, și la orice schimbare ulterioară a
-// documentului) dacă a fost declanșată o delogare globală din Admin → Setări,
-// după ce sesiunea curentă a fost creată — dacă da, delogare automată + reload.
+// ── CURĂȚARE GLOBALĂ ANUNȚATĂ (declanșată din Admin → Setări) ──
+// Nu mai e o delogare instant/silențioasă. Fluxul e: admin apasă butonul → toți cei
+// prezenți pe site primesc un avertisment cu numărătoare inversă (~1 minut) → cu 3
+// secunde înainte apare un countdown mare 3-2-1 pe ecran → la final se golește cache-ul
+// TEHNIC de pe acel dispozitiv (cache service worker, cache Firestore/IndexedDB) și se
+// face delogarea + reload. IMPORTANT: biletele și rezervările NU se șterg niciodată prin
+// acest flux — rămân intacte atât în Firestore cât și în cache-ul local dedicat lor
+// (vezi cacheTicketsLocal/cacheMyBookingsLocal), care se șterge doar la cererea explicită
+// a clientului (clearOfflineData()). Cine deschide site-ul mai târziu, cu o sesiune veche,
+// primește aceeași curățare instant, fără countdown (evenimentul a trecut deja pentru el).
+// Se aplică tuturor — logați sau nu — pentru că scopul e curățarea cache-ului tehnic, nu
+// doar deconectarea conturilor.
+const LSD_CLEANUP_MARKER_KEY = 'lsd_last_cleanup_at';
+window._cleanupScheduledFor = null;
+
+function ensureCleanupUI(){
+  if (document.getElementById('cleanup-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'cleanup-banner';
+  banner.style.cssText = 'display:none;position:fixed;top:0;left:0;width:100%;z-index:100001;background:linear-gradient(135deg,var(--red),#7a1f1f);color:#fff;text-align:center;padding:10px 14px;font-size:13px;font-weight:700;font-family:\'Plus Jakarta Sans\',sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.25)';
+  document.body.appendChild(banner);
+  const overlay = document.createElement('div');
+  overlay.id = 'cleanup-overlay';
+  overlay.style.cssText = 'display:none;position:fixed;inset:0;z-index:100002;background:rgba(15,13,10,.88);align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#fff;text-align:center;padding:24px';
+  overlay.innerHTML = `<div id="cleanup-overlay-num" style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:96px;line-height:1;color:var(--amber-l)"></div><div style="font-size:15px;max-width:320px">🧹 Se curăță datele stocate local și se deconectează toți utilizatorii...</div>`;
+  document.body.appendChild(overlay);
+}
+function fmtMMSS(ms){
+  const s = Math.max(0, Math.ceil(ms/1000));
+  const m = Math.floor(s/60), r = s%60;
+  return m+':'+String(r).padStart(2,'0');
+}
+function scheduleCleanupCountdown(remainingMs, flMs){
+  ensureCleanupUI();
+  const banner = document.getElementById('cleanup-banner');
+  const overlay = document.getElementById('cleanup-overlay');
+  const overlayNum = document.getElementById('cleanup-overlay-num');
+  const targetTime = Date.now() + remainingMs;
+  banner.style.display = 'block';
+  if (window._cleanupCountdownInterval) clearInterval(window._cleanupCountdownInterval);
+  window._cleanupCountdownInterval = setInterval(()=>{
+    const left = targetTime - Date.now();
+    if (left <= 0) { clearInterval(window._cleanupCountdownInterval); return; }
+    if (left > 3000) {
+      banner.textContent = `🧹 Curățare programată a datelor site-ului peste ${fmtMMSS(left)} — salvați ce aveți deschis.`;
+    } else {
+      banner.style.display = 'none';
+      overlay.style.display = 'flex';
+      overlayNum.textContent = String(Math.max(1, Math.ceil(left/1000)));
+    }
+  }, 200);
+  if (window._cleanupTimer) clearTimeout(window._cleanupTimer);
+  window._cleanupTimer = setTimeout(()=>{
+    clearInterval(window._cleanupCountdownInterval);
+    runGlobalCleanup(flMs);
+  }, remainingMs);
+}
+async function runGlobalCleanup(flMs){
+  ensureCleanupUI();
+  const banner = document.getElementById('cleanup-banner');
+  const overlay = document.getElementById('cleanup-overlay');
+  const overlayNum = document.getElementById('cleanup-overlay-num');
+  if (banner) banner.style.display = 'none';
+  if (overlay) { overlay.style.display = 'flex'; if (overlayNum) overlayNum.textContent = '🧹'; }
+  // 1. Golește cache-ul service worker-ului (fișierele site-ului)
+  try{ if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); } }catch(e){}
+  // 2. Închide conexiunea Firestore și șterge cache-ul tehnic local (IndexedDB) — acesta e doar
+  // o copie locală de citire rapidă; datele reale (bilete, rezervări) rămân neatinse în Firestore
+  // și se re-încarcă normal din cloud la următoarea afișare a "Contul meu" / "Biletul meu".
+  try{ await terminate(db); await clearIndexedDbPersistence(db); }catch(e){ console.warn('[Curățare] IndexedDB Firestore:', e.message); }
+  // 3. Delogare din Firebase Auth
+  try{ if(auth.currentUser) await signOut(auth); }catch(e){}
+  // 4. IMPORTANT: NU ștergem bilete/rezervări salvate local (lsd_offline_tickets, lsd_offline_bookings,
+  // lsd_guest_rez, lsd_guest_seen) — acestea rămân intacte, exact ca datele din cont să nu dispară
+  // niciodată în urma unei curățări globale. Se șterg DOAR dacă clientul apasă explicit butonul
+  // "Șterge datele salvate offline". Aici curățăm doar consimțământul cookie (reapare banner-ul)
+  // și salvăm marcajul de curățare, ca acest dispozitiv să nu fie curățat din nou la infinit.
+  try{
+    localStorage.removeItem('cookies_ok');
+    if (flMs) localStorage.setItem(LSD_CLEANUP_MARKER_KEY, String(flMs));
+  }catch(e){}
+  alert('S-a efectuat o curățare tehnică a site-ului (cache, sesiune). Biletele și rezervările din cont rămân salvate — pagina se va reîncărca acum și, dacă aveai un cont conectat, te rugăm să te autentifici din nou.');
+  window.location.reload();
+}
 onSnapshot(doc(db,'setari','global'), snap => {
   if (!snap.exists()) return;
   const flAt = snap.data().forceLogoutAt;
-  if (!flAt || !auth.currentUser) return;
+  if (!flAt) return;
   const flMs = flAt.toMillis ? flAt.toMillis() : flAt.seconds*1000;
-  const lastSignInMs = new Date(auth.currentUser.metadata.lastSignInTime).getTime();
-  if (flMs > lastSignInMs) {
-    signOut(auth).then(async ()=>{
-      // Golește și cache-ul service worker-ului (Cache Storage API) — reload-ul de securitate
-      // aduce astfel garantat ultima versiune a site-ului, nu doar delogarea.
-      try{
-        if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
-      }catch(e){}
-      alert('Din motive de securitate ai fost deconectat automat. Te rugăm să te autentifici din nou.');
-      window.location.reload();
-    }).catch(()=>{ window.location.reload(); });
-  }
-}, err => console.warn('[Securitate] Listener delogare globală:', err.message));
+  let localMarker = 0;
+  try{ localMarker = parseInt(localStorage.getItem(LSD_CLEANUP_MARKER_KEY)||'0'); }catch(e){}
+  if (flMs <= localMarker) return; // deja curățat pe acest dispozitiv pentru acest eveniment
+  if (window._cleanupScheduledFor === flMs) return; // deja programat în sesiunea curentă (evită re-declanșare la orice altă modificare a documentului)
+  window._cleanupScheduledFor = flMs;
+  const remaining = flMs - Date.now();
+  if (remaining <= 500) runGlobalCleanup(flMs); // evenimentul a trecut deja — curățare imediată, fără avertisment
+  else scheduleCleanupCountdown(remaining, flMs);
+}, err => console.warn('[Curățare globală] Listener:', err.message));
 
 
 // ── HELPERS ────────────────────────────────────────────────
@@ -7355,10 +7431,10 @@ window.loadConexiuniTbl=loadConexiuniTbl;
 // mai veche salvată pe dispozitiv e delogat automat data viitoare când deschide site-ul,
 // oricând ar fi asta. Nu afectează conturile, doar sesiunile active.
 window.forceLogoutAll=async()=>{
-  if(!confirm('⚠️ Sigur vrei să deloghezi TOȚI utilizatorii (clienți, șoferi și pe tine ca admin)?\n\nToată lumea, inclusiv tu, va trebui să se autentifice din nou — imediat cei prezenți acum pe site, și automat oricine deschide site-ul cu o sesiune mai veche, oricând s-ar întâmpla asta.\n\nAceastă acțiune nu poate fi anulată.'))return;
+  if(!confirm('🧹 Sigur vrei să pornești o curățare globală?\n\nToți utilizatorii (clienți, șoferi și tu ca admin) vor primi un avertisment cu numărătoare inversă de ~1 minut, apoi vor fi delogați automat și li se va goli cache-ul tehnic al site-ului — inclusiv oricine deschide site-ul mai târziu, cu o sesiune mai veche.\n\n✅ Biletele și rezervările rămân intacte în cont — nu se șterg niciodată de aici, doar cache-ul tehnic și sesiunea de login.\n\nAceastă acțiune nu poate fi anulată.'))return;
   try{
-    await setDoc(doc(db,'setari','global'),{forceLogoutAt:serverTimestamp()},{merge:true});
-    toast('🔒 Delogare globală declanșată — toți utilizatorii vor fi deconectați','ok');
+    await setDoc(doc(db,'setari','global'),{forceLogoutAt:Timestamp.fromMillis(Date.now()+60000)},{merge:true});
+    toast('🧹 Curățare globală programată — toți utilizatorii vor fi avertizați și deconectați în ~1 minut','ok');
   }catch(e){ toast('Eroare: '+e.message,'er'); }
 };
 
