@@ -2505,6 +2505,28 @@ footer::before{
   </div>
 </div>
 
+<!-- MODAL: Informativ generic (înlocuiește alert() nativ) -->
+<div class="modal-overlay" id="mo-info">
+  <div class="modal modal-sm">
+    <div class="modal-head"><div><div class="modal-title" id="info-modal-title">Informație</div></div><button class="modal-close" onclick="closeModal('info')">✕</button></div>
+    <div class="modal-body" id="info-modal-body" style="font-size:13.5px;line-height:1.7;color:var(--ink-soft)"></div>
+    <div class="modal-foot"><button class="btn btn-primary btn-full" id="info-modal-ok-btn" onclick="closeModal('info')">OK, am înțeles</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Consimțământ cookie-uri (tip wizard, în locul barei de jos) -->
+<div class="modal-overlay" id="mo-cookie-consent">
+  <div class="modal modal-sm">
+    <div class="modal-body" style="text-align:center;padding-top:30px">
+      <div style="font-size:40px;margin-bottom:12px">🍪</div>
+      <div class="modal-title" style="margin-bottom:10px">Folosim cookie-uri</div>
+      <p style="font-size:13.5px;color:var(--ink-soft);line-height:1.7;margin-bottom:6px">Folosim un singur modul strict necesar funcționării site-ului — reține doar faptul că ai acceptat această informare, ca să nu ți-o mai arătăm din nou. Nu folosim module de urmărire publicitară.</p>
+      <a onclick="closeModal('cookie-consent');nav('gdpr')" style="font-size:12.5px">Vezi Politica GDPR completă</a>
+    </div>
+    <div class="modal-foot" style="justify-content:center"><button class="btn btn-primary btn-full" onclick="acceptCookies()">OK, am înțeles</button></div>
+  </div>
+</div>
+
 <!-- MODAL: Atribuire Șoferi Vehicul -->
 <div class="modal-overlay" id="mo-assign-drivers">
   <div class="modal modal-lg">
@@ -2527,9 +2549,6 @@ footer::before{
   </div>
   <div id="notif-list" style="padding:8px"></div>
 </div>
-
-<!-- COOKIE BANNER -->
-<div id="cookie-banner"><span>🍪 Folosim cookie-uri necesare funcționării. <a onclick="nav('gdpr')">Politică GDPR</a></span><button class="btn btn-primary btn-sm" onclick="acceptCookies()">Acceptă</button></div>
 
 <!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
@@ -2703,9 +2722,11 @@ window.installApp = async () => {
   if (!promptEvent) {
     // Fallback: Safari iOS și alte browsere nu emit beforeinstallprompt — arătăm instrucțiuni manuale.
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    alert(isIOS
-      ? 'Pentru a instala aplicația pe iPhone/iPad:\n\n1. Apasă butonul de Distribuire (pătrat cu săgeată) din bara Safari\n2. Alege "Adaugă pe ecranul principal"'
-      : 'Aplicația poate fi instalată din meniul browserului (de obicei ⋮ sau ☰) → "Instalează aplicația" / "Adaugă pe ecranul principal".');
+    const msg = isIOS
+      ? 'Pentru a instala aplicația pe iPhone/iPad:<br><br>1. Apasă butonul de Distribuire (pătrat cu săgeată) din bara Safari<br>2. Alege „Adaugă pe ecranul principal"'
+      : 'Aplicația poate fi instalată din meniul browserului (de obicei ⋮ sau ☰) → „Instalează aplicația" / „Adaugă pe ecranul principal".';
+    if (window.showInfoModal) window.showInfoModal('⬇️ Instalează aplicația', msg);
+    else alert(msg.replace(/<br>/g,'\n'));
     return;
   }
   promptEvent.prompt();
@@ -2902,8 +2923,11 @@ async function runGlobalCleanup(flMs){
     localStorage.removeItem('cookies_ok');
     if (flMs) localStorage.setItem(LSD_CLEANUP_MARKER_KEY, String(flMs));
   }catch(e){}
-  alert('S-a efectuat o curățare tehnică a site-ului (cache, sesiune). Biletele și rezervările din cont rămân salvate — pagina se va reîncărca acum și, dacă aveai un cont conectat, te rugăm să te autentifici din nou.');
-  window.location.reload();
+  // Mesaj pur informativ, fără buton — dispare singur și reîncarcă automat, nu necesită nicio apăsare.
+  const overlayMsg = overlay?.querySelector('div:last-child');
+  if (overlayNum) overlayNum.textContent = '✅';
+  if (overlayMsg) overlayMsg.textContent = 'Curățare finalizată — biletele și rezervările din cont rămân salvate. Se reîncarcă pagina...';
+  setTimeout(()=> window.location.reload(), 2200);
 }
 onSnapshot(doc(db,'setari','global'), snap => {
   if (!snap.exists()) return;
@@ -3051,11 +3075,34 @@ function getSeatLayout(type, seats) {
   const spacer = kind => `<span class="seat-mini" style="opacity:.5;font-size:9px">${kind==='intrare'?'🚪':'·'}</span>`;
   return buildRowSlotsHtml(type, seats, s, spacer, ()=>sep);
 }
-window.showTermeni = () => {
-  alert('Termeni și Condiții LSD Group SRL\n\n1. Anulare curse regulate: >24h = rambursare integrală; <24h = fără rambursare\n2. Anulare curse organizate: >72h = integral; 24-72h = 50%; <24h = fără rambursare\n3. Prezentare la îmbarcare cu min 10 min înainte\n4. Biletele sunt nominale și netransferabile\n5. Prețuri includ TVA 21%\n\nContact: lsd.group.srl@gmail.com');
+// ── MODAL INFORMATIV GENERIC (înlocuiește alert() nativ cu un dialog stilizat, non-blocant) ──
+window.showInfoModal = (title, bodyHtml, opts = {}) => {
+  const titleEl = document.getElementById('info-modal-title');
+  const bodyEl = document.getElementById('info-modal-body');
+  const okBtn = document.getElementById('info-modal-ok-btn');
+  if (titleEl) titleEl.textContent = title || 'Informație';
+  if (bodyEl) bodyEl.innerHTML = bodyHtml || '';
+  if (okBtn) {
+    okBtn.textContent = opts.okLabel || 'OK, am înțeles';
+    okBtn.onclick = () => { closeModal('info'); if (opts.onOk) opts.onOk(); };
+  }
+  openModal('info');
 };
-window.acceptCookies = () => { localStorage.setItem('cookies_ok','1'); document.getElementById('cookie-banner').classList.add('hidden'); };
-if (localStorage.getItem('cookies_ok')) document.getElementById('cookie-banner').classList.add('hidden');
+window.showTermeni = () => {
+  showInfoModal('📄 Termeni și Condiții LSD Group SRL', `
+    <ul style="margin-left:18px;display:flex;flex-direction:column;gap:8px">
+      <li>Anulare curse regulate: &gt;24h = rambursare integrală; &lt;24h = fără rambursare</li>
+      <li>Anulare curse organizate: &gt;72h = integral; 24-72h = 50%; &lt;24h = fără rambursare</li>
+      <li>Prezentare la îmbarcare cu minim 10 minute înainte</li>
+      <li>Biletele sunt nominale și netransferabile</li>
+      <li>Prețurile includ TVA 21%</li>
+    </ul>
+    <p style="margin-top:14px">Contact: <a href="mailto:lsd.group.srl@gmail.com">lsd.group.srl@gmail.com</a></p>
+  `);
+};
+// ── CONSIMȚĂMÂNT COOKIE-URI (modal, nu bară jos) ──
+window.acceptCookies = () => { localStorage.setItem('cookies_ok','1'); closeModal('cookie-consent'); };
+if (!localStorage.getItem('cookies_ok')) setTimeout(()=>openModal('cookie-consent'), 400);
 
 // ── TICKER ─────────────────────────────────────────────────
 // Asculta mesajele manuale din ticker
@@ -4628,13 +4675,12 @@ window.loadOrgPage = async function() {
   window._ORG_TIP = '';
   renderOrgStops();
   updateOrgProgress();
-  fillModeBg('org-mode-bg-1',3);
-  fillModeBg('org-mode-bg-2',0);
-  // Reset afisare: arata alegerea (wizard/formular) din nou
+  // La Cursă Organizată rămâne DOAR formularul complet — nu se mai arată alegerea
+  // wizard/formular și nici wizard-ul ghidat pas-cu-pas nu se mai deschide automat.
   const modeChoice = document.getElementById('org-mode-choice');
   const formWrap = document.getElementById('org-form-wrap');
-  if (modeChoice) modeChoice.style.display = 'grid';
-  if (formWrap) formWrap.style.display = 'none';
+  if (modeChoice) modeChoice.style.display = 'none';
+  if (formWrap) formWrap.style.display = 'block';
   const u=window._U;
   await loadFleet().catch(()=>{});
   try{
@@ -4655,10 +4701,6 @@ window.loadOrgPage = async function() {
   // Hide avail wrap until date+dur selected
   const aw=document.getElementById('org-avail-wrap');
   if(aw)aw.style.display='none';
-
-  // Deschide automat wizard-ul ghidat la intrarea pe pagină (fluxul implicit, nu ecranul de alegere).
-  // Formularul complet rămâne accesibil din butonul "📝 Trec pe formular" din footer-ul wizard-ului.
-  openOrgWizard();
 };
 
 // ── Disponibilitate simplă, pe zi (nu pe oră) — doar ca informare pentru client,
@@ -8364,3 +8406,4 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
+                                                                                              
