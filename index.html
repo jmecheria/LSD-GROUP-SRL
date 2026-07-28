@@ -1385,11 +1385,11 @@ footer::before{
           <div class="fl">Traseu (de unde → până unde) *</div>
           <div class="f-hint" style="margin-bottom:8px">📍 Fiecare punct trebuie plasat exact pe hartă (nu e suficient să scrieți doar adresa) — autobuzul nu poate opri oriunde, iar echipa trebuie să știe exact unde vă așteaptă.</div>
           <div id="org-stops-container"></div>
+          <div id="org-attractions-box" style="margin-top:8px"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
             <button class="btn btn-secondary btn-sm" onclick="addOrgStop()">+ Adaugă oprire intermediară</button>
             <button class="btn btn-primary btn-sm" onclick="openOrgMultiMapPicker('form')">🗺️ Plasează tot traseul pe hartă</button>
           </div>
-          <div id="org-attractions-box" style="margin-top:10px"></div>
         </div>
         <div class="fg"><div class="fl">Nr. persoane aproximativ</div>
           <input type="number" id="org-persons" min="1" max="100" placeholder="Ex: 20" style="max-width:120px"/>
@@ -2038,7 +2038,8 @@ footer::before{
         Toți utilizatorii aflați <strong>în acest moment</strong> pe site (clienți, șoferi, inclusiv tu ca admin) primesc un avertisment cu numărătoare inversă de ~1 minut, apoi un countdown 3-2-1 pe ecran, după care sunt delogați automat și li se golește cache-ul tehnic al site-ului (fișiere, cache Firestore) — ca site-ul să pornească din nou "curat" și să meargă mai fluid. Oricine deschide site-ul mai târziu, cu o sesiune mai veche, primește aceeași curățare instant, la accesare.
       </p>
       <div class="info-box" style="font-size:12px;margin-bottom:8px;background:var(--green-g);border-color:rgba(26,107,60,.25);color:var(--green)">✅ Biletele și rezervările din cont NU se șterg niciodată prin această acțiune — rămân salvate normal, atât în Firestore cât și local pe dispozitiv.</div>
-      <div class="info-box" style="font-size:12px;margin-bottom:14px">⚠️ Vei fi delogat și tu, ca admin. Folosește pentru mentenanță/curățare periodică sau în caz de suspiciune reală (parolă compromisă, acces neautorizat etc.).</div>
+      <div class="info-box info-box-blue" style="font-size:12px;margin-bottom:8px">🌙 Această curățare rulează și <strong>automat, o dată pe zi</strong>, fără să apeși tu butonul — declanșată de primul vizitator care intră pe site după miezul nopții. Fiind un site găzduit static (fără server propriu), nu se întâmplă la exact ora 00:00, ci de obicei la câteva minute-ore după, în funcție de când apare primul vizitator din ziua respectivă.</div>
+      <div class="info-box" style="font-size:12px;margin-bottom:14px">⚠️ Vei fi delogat și tu, ca admin. Folosește butonul manual pentru mentenanță imediată sau în caz de suspiciune reală (parolă compromisă, acces neautorizat etc.).</div>
       <button class="btn btn-danger btn-sm" onclick="forceLogoutAll()">🧹 Curățare globală — toți utilizatorii</button>
     </div>
   </div>
@@ -2997,7 +2998,10 @@ async function runGlobalCleanup(flMs){
   if (overlayMsg) overlayMsg.textContent = 'Curățare finalizată — biletele și rezervările din cont rămân salvate. Se reîncarcă pagina...';
   setTimeout(()=> window.location.reload(), 2200);
 }
-onSnapshot(doc(db,'setari','global'), snap => {
+// Logica de reacție la un "moment de curățare" (forceLogoutAt) e comună pentru:
+// (a) curățarea declanșată manual de admin din Setări (document setari/global)
+// (b) curățarea automată zilnică (document separat setari/auto_cleanup, vezi mai jos)
+function handleForceLogoutSnapshot(snap){
   if (!snap.exists()) return;
   const flAt = snap.data().forceLogoutAt;
   if (!flAt) return;
@@ -3010,7 +3014,38 @@ onSnapshot(doc(db,'setari','global'), snap => {
   const remaining = flMs - Date.now();
   if (remaining <= 500) runGlobalCleanup(flMs); // evenimentul a trecut deja — curățare imediată, fără avertisment
   else scheduleCleanupCountdown(remaining, flMs);
-}, err => console.warn('[Curățare globală] Listener:', err.message));
+}
+onSnapshot(doc(db,'setari','global'), handleForceLogoutSnapshot, err => console.warn('[Curățare globală] Listener:', err.message));
+
+// ── CURĂȚARE GLOBALĂ AUTOMATĂ, O DATĂ PE ZI ──
+// ⚠️ Important de știut: site-ul e găzduit static (fără server/cron propriu-zis), deci
+// nu există o "alarmă" reală care sună exact la 00:00 chiar dacă nu e nimeni pe site.
+// Momentul-țintă e ANCORAT la miezul nopții real (00:00 + 60 secunde, ora locală a
+// dispozitivului care declanșează) — NU la momentul primei vizite. Diferența contează:
+// • Cine e pe site chiar în jurul orei 00:00–00:01 vede avertismentul cu temporizator,
+//   exact ca la curățarea manuală declanșată de admin.
+// • Cine intră pe site mai târziu (ex: la ora 7 dimineața, dacă acela e primul vizitator
+//   al zilei) primește curățarea INSTANT, silențios, fără temporizator — pentru că
+//   "fereastra" de 00:00–00:01 a trecut deja de mult până ajunge el pe site.
+// Scrierea se face într-un document Firestore separat (setari/auto_cleanup), NU în
+// setari/global (care conține date sensibile de admin), tocmai ca să poată scrie orice
+// vizitator în siguranță, fără să aibă acces la restul setărilor. E nevoie de o regulă
+// Firestore suplimentară — vezi mesajul care urmează după acest cod.
+async function checkAutoDailyCleanup(){
+  try{
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('sv-SE'); // format YYYY-MM-DD, ora locală a browserului
+    const ref = doc(db,'setari','auto_cleanup');
+    const snap = await getDoc(ref);
+    const already = snap.exists() ? snap.data().lastRunDate : null;
+    if (already === todayStr) return; // curățarea zilei de azi a fost deja programată de altcineva
+    const miezulNoptii = new Date(now); miezulNoptii.setHours(0,0,0,0);
+    const target = new Date(miezulNoptii.getTime() + 60000); // 00:01:00 — fix momentul-țintă, indiferent cine scrie sau la ce oră
+    await setDoc(ref, { lastRunDate: todayStr, forceLogoutAt: Timestamp.fromMillis(target.getTime()) });
+  }catch(e){ console.warn('[Curățare automată zilnică]', e.message); }
+}
+onSnapshot(doc(db,'setari','auto_cleanup'), handleForceLogoutSnapshot, err => console.warn('[Curățare automată] Listener:', err.message));
+checkAutoDailyCleanup();
 
 
 // ── HELPERS ────────────────────────────────────────────────
