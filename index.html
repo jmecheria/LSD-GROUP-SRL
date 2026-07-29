@@ -1972,7 +1972,7 @@ footer::before{
       <button class="btn btn-primary btn-sm" onclick="openObiectivModal()">+ Adaugă obiectiv</button>
     </div>
     <div class="tbl-wrap">
-      <table class="tbl"><thead><tr><th>Nume</th><th>Tip</th><th>Coordonate</th><th>Activ</th><th></th></tr></thead>
+      <table class="tbl"><thead><tr><th>Poză</th><th>Nume</th><th>Tip</th><th>Coordonate</th><th>Activ</th><th></th></tr></thead>
       <tbody id="obiective-tbody"></tbody></table>
     </div>
   </div>
@@ -2569,6 +2569,16 @@ footer::before{
           <button type="button" class="btn btn-primary btn-sm" onclick="openObiectivMapPicker()">🗺️ Alege pe hartă</button>
         </div>
       </div>
+      <div class="fg"><div class="fl">Descriere scurtă (opțional)</div><textarea id="ob-descriere" rows="2" placeholder="1-2 propoziții despre obiectiv, apar în recomandare"></textarea></div>
+      <div class="fg">
+        <div class="fl">Poză (opțional)</div>
+        <div class="drop-zone" id="ob-dropzone" ondragover="dzOver(event,'ob-dropzone')" ondragleave="dzLeave('ob-dropzone')" ondrop="obDzDrop(event)" onclick="document.getElementById('ob-file').click()">
+          <div style="font-size:24px;margin-bottom:4px">📸</div>
+          <p style="color:var(--stone);font-size:12.5px">Trage o poză aici sau click pentru selectare</p>
+          <input type="file" id="ob-file" accept="image/*" style="display:none" onchange="handleObiectivImage(this.files)"/>
+        </div>
+        <div id="ob-img-preview" style="margin-top:10px"></div>
+      </div>
       <div class="fg" style="display:flex;align-items:center;gap:12px">
         <div class="fl" style="margin-bottom:0">Activ (apare în recomandări)</div>
         <label class="toggle"><input type="checkbox" id="ob-activ" checked/><div class="toggle-track"></div></label>
@@ -2992,11 +3002,7 @@ async function runGlobalCleanup(flMs){
     localStorage.removeItem('cookies_ok');
     if (flMs) localStorage.setItem(LSD_CLEANUP_MARKER_KEY, String(flMs));
   }catch(e){}
-  // Mesaj pur informativ, fără buton — dispare singur și reîncarcă automat, nu necesită nicio apăsare.
-  const overlayMsg = overlay?.querySelector('div:last-child');
-  if (overlayNum) overlayNum.textContent = '✅';
-  if (overlayMsg) overlayMsg.textContent = 'Curățare finalizată — biletele și rezervările din cont rămân salvate. Se reîncarcă pagina...';
-  setTimeout(()=> window.location.reload(), 2200);
+  window.location.reload();
 }
 // Logica de reacție la un "moment de curățare" (forceLogoutAt) e comună pentru:
 // (a) curățarea declanșată manual de admin din Setări (document setari/global)
@@ -3679,7 +3685,7 @@ async function fetchNearbyAttractions(lat, lng, opts={}){
     if (dist > RADIUS_KM) return;
     const isChurch = o.tip==='biserica' || o.tip==='manastire';
     if (isPelerinaj && !isChurch) return; // în modul Pelerinaj arătăm doar biserici/mănăstiri
-    results.push({name:o.nume, lat:o.lat, lng:o.lng, dist, isChurch, curated:true});
+    results.push({name:o.nume, lat:o.lat, lng:o.lng, dist, isChurch, curated:true, poza:o.poza||null, descriere:o.descriere||null});
   });
   // 2. Overpass (OpenStreetMap) live
   const tagQuery = isPelerinaj
@@ -3692,7 +3698,7 @@ async function fetchNearbyAttractions(lat, lng, opts={}){
       (d.elements||[]).forEach(e=>{
         if (!e.tags?.name || e.lat==null || e.lon==null) return;
         const isChurch = e.tags.amenity==='place_of_worship' || e.tags.historic==='monastery';
-        results.push({name:e.tags.name, lat:e.lat, lng:e.lon, dist:haversineKm(lat,lng,e.lat,e.lon), isChurch, curated:false});
+        results.push({name:e.tags.name, lat:e.lat, lng:e.lon, dist:haversineKm(lat,lng,e.lat,e.lon), isChurch, curated:false, poza:null, descriere:null});
       });
     }
   }catch(e){ console.warn('Overpass attractions failed:', e.message); }
@@ -3701,6 +3707,23 @@ async function fetchNearbyAttractions(lat, lng, opts={}){
   const deduped = results.filter(it=>{ const k=it.name.toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; });
   deduped.sort((a,b)=> (b.curated-a.curated) || (b.isChurch-a.isChurch) || (a.dist-b.dist));
   return deduped.slice(0, isPelerinaj?6:5);
+}
+// Poză + descriere scurtă pentru obiectivele care nu au fost curate manual de admin —
+// completăm automat din Wikipedia în română (API public, gratuit, fără cheie). Rezultatele
+// se rețin în memorie cât timp e deschisă pagina, ca să nu interogăm de mai multe ori același nume.
+window._wikiSummaryCache = window._wikiSummaryCache || {};
+async function fetchWikiSummary(name){
+  const key = name.toLowerCase();
+  if (window._wikiSummaryCache[key] !== undefined) return window._wikiSummaryCache[key];
+  try{
+    const r = await fetch(`https://ro.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`);
+    if (!r.ok) { window._wikiSummaryCache[key]=null; return null; }
+    const d = await r.json();
+    if (d.type === 'disambiguation') { window._wikiSummaryCache[key]=null; return null; }
+    const result = { extract: (d.extract||'').trim(), poza: d.thumbnail?.source || d.originalimage?.source || null };
+    window._wikiSummaryCache[key] = result;
+    return result;
+  }catch(e){ window._wikiSummaryCache[key]=null; return null; }
 }
 let _orgAttractionsTimer=null;
 window.checkDestinationAttractions = (target) => {
@@ -3721,13 +3744,30 @@ window.checkDestinationAttractions = (target) => {
       attrs.forEach(a=>{ const k=a.name.toLowerCase(); if(!seenNames.has(k)){ seenNames.add(k); allResults.push(a); } });
     }
     allResults.sort((a,b)=> (b.curated-a.curated) || (b.isChurch-a.isChurch) || (a.dist-b.dist));
-    const finalList = allResults.slice(0, isPelerinaj?8:6);
+    const finalList = allResults.slice(0, isPelerinaj?6:4);
     if(!finalList.length){ boxEl.innerHTML=''; return; }
-    const label = isPelerinaj ? '🙏 Biserici și mănăstiri pe traseu:' : '💡 Obiective turistice pe traseu, ați putea vizita:';
+    // Completăm poză + descriere din Wikipedia pentru cele fără date curate de admin
+    await Promise.all(finalList.map(async a=>{
+      if (a.poza || a.descriere) return; // deja are date de la admin, nu mai căutăm
+      const wiki = await fetchWikiSummary(a.name);
+      if (wiki) { a.poza = wiki.poza; a.descriere = wiki.extract; }
+    }));
+    const label = isPelerinaj ? '🙏 Biserici și mănăstiri pe traseu' : '💡 Obiective turistice pe traseu, ați putea vizita';
     boxEl.innerHTML=`<div style="background:var(--amber-g);border:1px solid var(--amber-b);border-radius:var(--r);padding:12px 14px">
-      <div style="font-weight:700;font-size:12.5px;color:var(--amber-d);margin-bottom:8px">${label}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${finalList.map(a=>`<span class="chip" style="cursor:pointer;background:var(--card)" onclick="addAttractionStop('${target}','${a.name.replace(/'/g,"\\'")}',${a.lat},${a.lng})" title="Adaugă ca oprire">${a.isChurch?'⛪':'📍'} ${a.name} <strong style="color:var(--amber-d)">+</strong></span>`).join('')}
+      <div style="font-weight:700;font-size:12.5px;color:var(--amber-d);margin-bottom:10px">${label}</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${finalList.map(a=>{
+          const desc = a.descriere ? (a.descriere.length>140 ? a.descriere.slice(0,140).trim()+'…' : a.descriere) : '';
+          const imgHtml = a.poza ? `<img src="${a.poza}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0" loading="lazy"/>` : `<div style="width:56px;height:56px;border-radius:8px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${a.isChurch?'⛪':'📍'}</div>`;
+          return `<div style="display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);padding:9px">
+            ${imgHtml}
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:12.5px;margin-bottom:2px">${a.isChurch?'⛪ ':''}${a.name}</div>
+              ${desc?`<div style="font-size:11px;color:var(--stone);line-height:1.4">${desc}</div>`:''}
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" style="flex-shrink:0;padding:5px 10px" onclick="addAttractionStop('${target}','${a.name.replace(/'/g,"\\'")}',${a.lat},${a.lng})" title="Adaugă ca oprire">+ Adaugă</button>
+          </div>`;
+        }).join('')}
       </div>
     </div>`;
   }, 600);
@@ -6405,8 +6445,8 @@ function renderSeatPreview(){
   preview.innerHTML=html;
 }
 // Image upload
-window.dzOver=e=>{e.preventDefault();document.getElementById('vm-dropzone').classList.add('drag-over');};
-window.dzLeave=()=>document.getElementById('vm-dropzone').classList.remove('drag-over');
+window.dzOver=(e,id)=>{e.preventDefault();document.getElementById(id||'vm-dropzone')?.classList.add('drag-over');};
+window.dzLeave=(id)=>document.getElementById(id||'vm-dropzone')?.classList.remove('drag-over');
 window.dzDrop=e=>{e.preventDefault();document.getElementById('vm-dropzone').classList.remove('drag-over');handleImages(e.dataTransfer.files);};
 window.handleImages=files=>{
   [...files].forEach(f=>{
@@ -7641,9 +7681,10 @@ async function loadObiectiveTbl(){
   try{
     await loadObiectiveTuristiceCache(true); // reîmprospătăm cache-ul folosit și de motorul de recomandări
     const list = window._OBIECTIVE_CACHE_ALL = (await getDocs(collection(db,'obiective_turistice'))).docs.map(d=>({id:d.id,...d.data()}));
-    if(!list.length){ tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--stone)">Niciun obiectiv adăugat încă</td></tr>'; return; }
+    if(!list.length){ tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--stone)">Niciun obiectiv adăugat încă</td></tr>'; return; }
     tbody.innerHTML=list.map(o=>`<tr>
-      <td><strong>${o.nume||'-'}</strong></td>
+      <td>${o.poza?`<img src="${o.poza}" style="width:44px;height:34px;object-fit:cover;border-radius:6px;cursor:zoom-in" onclick="openLB('${o.poza}')"/>`:`<div style="width:44px;height:34px;background:var(--cream);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">${OB_TIP_LABEL[o.tip]?.slice(0,2)||'📍'}</div>`}</td>
+      <td><strong>${o.nume||'-'}</strong>${o.descriere?`<div style="font-size:11px;color:var(--stone);margin-top:2px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.descriere}</div>`:''}</td>
       <td>${OB_TIP_LABEL[o.tip]||o.tip||'-'}</td>
       <td style="font-family:monospace;font-size:11px">${o.lat!=null?o.lat.toFixed(4)+', '+o.lng.toFixed(4):'-'}</td>
       <td><label class="toggle"><input type="checkbox" ${o.activ!==false?'checked':''} onchange="toggleObiectiv('${o.id}',this.checked)"/><div class="toggle-track"></div></label></td>
@@ -7651,7 +7692,7 @@ async function loadObiectiveTbl(){
         <button class="btn btn-secondary btn-sm btn-icon" onclick="openObiectivModal('${o.id}')">✏️</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteObiectiv('${o.id}')">🗑</button>
       </td></tr>`).join('');
-  }catch(e){ tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--red)">Eroare: ${e.message}</td></tr>`; }
+  }catch(e){ tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--red)">Eroare: ${e.message}</td></tr>`; }
 }
 window.toggleObiectiv=async(id,val)=>{ try{ await setDoc(doc(db,'obiective_turistice',id),{activ:val},{merge:true}); await loadObiectiveTuristiceCache(true); }catch(e){ toast('Eroare: '+e.message,'er'); } };
 window.deleteObiectiv=async(id)=>{ if(!confirm('Ștergeți acest obiectiv?'))return; try{ await deleteDoc(doc(db,'obiective_turistice',id)); await loadObiectiveTuristiceCache(true); toast('Obiectiv șters','ok'); await loadObiectiveTbl(); }catch(e){ toast('Eroare: '+e.message,'er'); } };
@@ -7661,16 +7702,21 @@ window.openObiectivModal = async (id=null) => {
   document.getElementById('ob-id').value = id||'';
   document.getElementById('ob-nume').value='';
   document.getElementById('ob-tip').value='biserica';
+  document.getElementById('ob-descriere').value='';
   document.getElementById('ob-activ').checked=true;
   document.getElementById('ob-coords-display').value='';
   window._OB_PICK_LL = null;
+  window._OB_IMG = null;
+  renderObImgPreview();
   if(id){
     const o = (window._OBIECTIVE_CACHE_ALL||[]).find(x=>x.id===id);
     if(o){
       document.getElementById('ob-nume').value=o.nume||'';
       document.getElementById('ob-tip').value=o.tip||'biserica';
+      document.getElementById('ob-descriere').value=o.descriere||'';
       document.getElementById('ob-activ').checked=o.activ!==false;
       if(o.lat!=null){ window._OB_PICK_LL={lat:o.lat,lng:o.lng}; document.getElementById('ob-coords-display').value=o.lat.toFixed(5)+', '+o.lng.toFixed(5); }
+      if(o.poza){ window._OB_IMG=o.poza; renderObImgPreview(); }
     }
   }
   openModal('obiectiv');
@@ -7679,10 +7725,11 @@ window.saveObiectiv = async () => {
   const id = document.getElementById('ob-id').value;
   const nume = document.getElementById('ob-nume').value.trim();
   const tip = document.getElementById('ob-tip').value;
+  const descriere = document.getElementById('ob-descriere').value.trim();
   const activ = document.getElementById('ob-activ').checked;
   if(!nume){ toast('Introduceți denumirea obiectivului','wr'); return; }
   if(!window._OB_PICK_LL){ toast('Alegeți locația pe hartă','wr'); return; }
-  const data = { nume, tip, lat:window._OB_PICK_LL.lat, lng:window._OB_PICK_LL.lng, activ };
+  const data = { nume, tip, lat:window._OB_PICK_LL.lat, lng:window._OB_PICK_LL.lng, activ, descriere: descriere||null, poza: window._OB_IMG||null };
   try{
     if(id) await setDoc(doc(db,'obiective_turistice',id), data, {merge:true});
     else { data.createdAt=serverTimestamp(); await addDoc(collection(db,'obiective_turistice'), data); }
@@ -7737,6 +7784,31 @@ window.confirmObiectivMapPick = () => {
   if (!window._OB_PICK_LL) return;
   document.getElementById('ob-coords-display').value = window._OB_PICK_LL.lat.toFixed(5)+', '+window._OB_PICK_LL.lng.toFixed(5);
   closeModal('obiectiv-map');
+};
+// Poză obiectiv turistic — un singur fișier, redimensionat client-side (la fel ca la vehicule)
+window._OB_IMG = null;
+window.obDzDrop = (e) => { e.preventDefault(); document.getElementById('ob-dropzone')?.classList.remove('drag-over'); handleObiectivImage(e.dataTransfer.files); };
+window.handleObiectivImage = (files) => {
+  const f = files?.[0]; if(!f || !f.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = e2 => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'); let w=img.width, h=img.height;
+      const mx=700; if(w>mx||h>mx){ const r=Math.min(mx/w,mx/h); w=Math.round(w*r); h=Math.round(h*r); }
+      c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
+      window._OB_IMG = c.toDataURL('image/jpeg',.72);
+      renderObImgPreview();
+    };
+    img.src = e2.target.result;
+  };
+  reader.readAsDataURL(f);
+};
+window.renderObImgPreview = () => {
+  const el = document.getElementById('ob-img-preview'); if(!el) return;
+  el.innerHTML = window._OB_IMG
+    ? `<div class="img-preview-item"><img src="${window._OB_IMG}" onclick="openLB('${window._OB_IMG}')"/><button class="img-preview-del" onclick="window._OB_IMG=null;renderObImgPreview()">✕</button></div>`
+    : '';
 };
 
 // ── SECURITATE — DELOGARE GLOBALĂ ───────────────────────────
