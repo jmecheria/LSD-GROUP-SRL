@@ -1,7 +1,7 @@
 // ── LSD Group SRL — Service Worker ──
 // Strategie: cache doar shell-ul static (fonturi, librării CDN, iconițe).
 // Firebase/Firestore, Nominatim, OSRM, EmailJS — NICIODATĂ din cache (date live).
-const CACHE_VERSION = 'lsd-v1';
+const CACHE_VERSION = 'lsd-v2';
 const STATIC_CACHE = `lsd-static-${CACHE_VERSION}`;
 
 // Domenii ale căror răspunsuri pot fi cache-uite (biblioteci, fonturi, tile-uri hartă)
@@ -32,7 +32,12 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
       // Pre-cache doar shell-ul de bază (pagina principală, ca fallback offline)
-      return cache.addAll(['/', '/index.html']).catch(() => {
+      return cache.addAll([
+        '/', '/index.html',
+        './manifest.json', './icon-192.png', './icon-512.png',
+        './icon-maskable-192.png', './icon-maskable-512.png',
+        './apple-touch-icon.png', './favicon-32.png'
+      ]).catch(() => {
         // Dacă precache-ul eșuează (ex. cale diferită pe GitHub Pages), nu blocăm instalarea
       });
     })
