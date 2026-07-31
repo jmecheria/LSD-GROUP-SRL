@@ -1974,6 +1974,20 @@ footer::before{
       <p style="font-size:12.5px;color:var(--stone);margin-bottom:14px">Reîmprospătează site-ul pentru <strong>toți utilizatorii conectați acum</strong> (admin, șoferi, clienți) — vor primi un avertisment, apoi vor fi deconectați automat și pagina li se va reîncărca, exact ca la reset-ul automat de la miezul nopții (ora României). Util pentru a testa că mecanismul funcționează, sau pentru a forța toată lumea să vadă o versiune actualizată a site-ului.</p>
       <button class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--orange),#a04a10)" onclick="triggerManualSiteRefresh()">🔄 Refresh total acum (toți utilizatorii)</button>
     </div>
+    <!-- Curatare date vechi -->
+    <div style="background:var(--card);border:1.5px solid rgba(30,95,168,.3);border-radius:var(--r-lg);padding:22px;margin-bottom:16px;box-shadow:var(--sh)">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--blue)">🧹 Curățare date vechi (GDPR)</h3>
+      <p style="font-size:12.5px;color:var(--stone);margin-bottom:14px">Conform Politicii GDPR de pe site, rezervările/biletele se păstrează maxim <strong>2 ani</strong> de la data cursei, iar istoricul de conectări (loguri, IP) maxim <strong>12 luni</strong>. Aici poți verifica ce e eligibil pentru ștergere și îl poți curăța definitiv, manual, oricând. Această acțiune nu se declanșează niciodată automat — durează doar câteva secunde, dar e ireversibilă.</p>
+      <div class="g2" style="margin-bottom:14px">
+        <div class="fg" style="margin-bottom:0"><div class="fl">Șterge rezervări/bilete mai vechi de (zile de la data cursei)</div><input type="number" id="cleanup-days-rez" value="730" min="30" style="max-width:160px"/></div>
+        <div class="fg" style="margin-bottom:0"><div class="fl">Șterge loguri de conectare mai vechi de (zile)</div><input type="number" id="cleanup-days-logs" value="365" min="30" style="max-width:160px"/></div>
+      </div>
+      <div id="cleanup-preview" style="font-size:13px;color:var(--stone);margin-bottom:14px">Apasă „Verifică" pentru a vedea câte înregistrări sunt eligibile.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="previewOldDataCleanup()">🔍 Verifică ce e eligibil</button>
+        <button class="btn btn-danger btn-sm" id="btn-run-cleanup" style="display:none" onclick="runOldDataCleanup()">🗑 Șterge definitiv datele eligibile</button>
+      </div>
+    </div>
     <!-- EmailJS -->
     <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:16px;box-shadow:var(--sh)">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;font-family:'Plus Jakarta Sans',sans-serif">⚡ EmailJS <span id="ejs-status" class="badge badge-anulata">● Neconfigurat</span></h3>
@@ -2731,7 +2745,7 @@ footer::before{
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,updateProfile,updatePassword} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import {getFirestore,initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,addDoc,getDocs,getDoc,setDoc,deleteDoc,query,where,onSnapshot,Timestamp,serverTimestamp,orderBy,limit} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import {getFirestore,initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,addDoc,getDocs,getDoc,setDoc,deleteDoc,query,where,onSnapshot,Timestamp,serverTimestamp,orderBy,limit,writeBatch} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const FB_CFG = {
   apiKey:"AIzaSyDx9ulvKXa0Rnnnr1T_1jFsUmOAHQ0011c",
@@ -2889,6 +2903,65 @@ window.triggerManualSiteRefresh = async () => {
   } catch(e) { toast('Eroare: '+e.message,'er'); }
 };
 
+// ── CURĂȚARE DATE VECHI (GDPR) ──────────────────────────────
+// Nu se declanșează niciodată automat (nici la reset-ul de la miezul nopții, nici la login) —
+// e mereu o acțiune manuală, explicită, a adminului, cu previzualizare înainte de ștergerea
+// definitivă. Rezervările/biletele sunt identificate după câmpul "data" (data cursei), nu
+// după data creării, ca să respecte corect perioada de păstrare descrisă în Politica GDPR.
+window._CLEANUP_REZ_IDS = [];
+window._CLEANUP_LOG_IDS = [];
+window.previewOldDataCleanup = async () => {
+  const daysRez = parseInt(document.getElementById('cleanup-days-rez')?.value) || 730;
+  const daysLogs = parseInt(document.getElementById('cleanup-days-logs')?.value) || 365;
+  const previewEl = document.getElementById('cleanup-preview');
+  previewEl.innerHTML = '<span class="spin" style="width:12px;height:12px;border-width:2px;margin-right:6px;vertical-align:middle"></span>Se verifică...';
+  try {
+    const cutoffRezDate = new Date(Date.now() - daysRez*86400000).toISOString().split('T')[0];
+    const rezSnap = await getDocs(collection(db,'rezervari'));
+    const eligibleRez = rezSnap.docs.filter(d => { const r=d.data(); return r.data && r.data < cutoffRezDate; });
+
+    const cutoffLogsEpoch = Date.now() - daysLogs*86400000;
+    let eligibleLogs = [];
+    try {
+      const logsSnap = await getDocs(collection(db,'login_logs'));
+      eligibleLogs = logsSnap.docs.filter(d => { const ts=(d.data().loginAt||d.data().lastLoginAt); return ts?.seconds && ts.seconds*1000 < cutoffLogsEpoch; });
+    } catch(e) {}
+
+    window._CLEANUP_REZ_IDS = eligibleRez.map(d=>d.id);
+    window._CLEANUP_LOG_IDS = eligibleLogs.map(d=>d.id);
+
+    previewEl.innerHTML = `📋 <strong>${eligibleRez.length}</strong> rezervări/bilete mai vechi de ${daysRez} zile de la data cursei (înainte de ${cutoffRezDate})<br>🔐 <strong>${eligibleLogs.length}</strong> loguri de conectare mai vechi de ${daysLogs} zile`;
+    const btn = document.getElementById('btn-run-cleanup');
+    if (eligibleRez.length || eligibleLogs.length) { btn.style.display='inline-flex'; btn.textContent = `🗑 Șterge definitiv (${eligibleRez.length + eligibleLogs.length} înregistrări)`; }
+    else if (btn) btn.style.display='none';
+  } catch(e) { previewEl.textContent = 'Eroare: '+e.message; }
+};
+window.runOldDataCleanup = async () => {
+  const rezIds = window._CLEANUP_REZ_IDS||[];
+  const logIds = window._CLEANUP_LOG_IDS||[];
+  const total = rezIds.length + logIds.length;
+  if (!total) { toast('Nimic de șters — apasă întâi „Verifică"','wr'); return; }
+  if (!confirm(`⚠️ Ștergi definitiv ${rezIds.length} rezervări/bilete și ${logIds.length} loguri de conectare?\n\nAceastă acțiune este IREVERSIBILĂ.`)) return;
+  const btn = document.getElementById('btn-run-cleanup');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Se șterge...'; }
+  try {
+    const allIds = [...rezIds.map(id=>({col:'rezervari',id})), ...logIds.map(id=>({col:'login_logs',id}))];
+    // Firestore limitează un batch la 500 operații — grupăm câte 450, cu marjă de siguranță.
+    for (let i=0; i<allIds.length; i+=450) {
+      const chunk = allIds.slice(i, i+450);
+      const batch = writeBatch(db);
+      chunk.forEach(item => batch.delete(doc(db, item.col, item.id)));
+      await batch.commit();
+    }
+    toast(`✅ Șterse definitiv: ${rezIds.length} rezervări/bilete + ${logIds.length} loguri`,'ok');
+    window._CLEANUP_REZ_IDS = []; window._CLEANUP_LOG_IDS = [];
+    document.getElementById('cleanup-preview').textContent = 'Apasă „Verifică" pentru a vedea câte înregistrări sunt eligibile.';
+    if (btn) btn.style.display='none';
+    try{ await loadBookingsTbl(); await loadAdminStats(); }catch(e){}
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
+  finally { if (btn) { btn.disabled=false; btn.innerHTML='🗑 Șterge definitiv datele eligibile'; } }
+};
+
 // ── VERIFICARE LA FIECARE ÎNCĂRCARE: reset "netrecut" încă de acest browser ──
 // Aici e garanția că reset-ul se aplică TUTUROR: chiar dacă cineva redeschide site-ul la ora
 // 14:00 (mult după miezul nopții sau după un reset manual), la această verificare browserul
@@ -2998,7 +3071,10 @@ function numeSofer(val) {
   const byEmail = window._DRIVERS_BY_EMAIL[val];
   if (byEmail) return byEmail.numeFull || val;
   if (val.includes('@')) return val.split('@')[0];
-  return val;
+  // Dacă ajungem aici, "val" e aproape sigur un ID intern Firestore (șir lung de litere/cifre),
+  // nu un nume — nu-l afișăm niciodată ca atare (ar arăta ca un cod ciudat pentru client/șofer).
+  // Se întâmplă doar tranzitoriu, cât timp cache-ul de șoferi nu s-a încărcat încă.
+  return 'Șofer alocat';
 }
 function resSf(val) {
   if (!val) return null;
@@ -3670,10 +3746,72 @@ async function fetchNearbyAttractions(lat,lng){
   }));
   return items;
 }
-function renderAttractionsBox(boxEl, dest, attractions, target){
+// O stație al cărei "nume" e de fapt un placeholder de coordonate brute (ex: "45.123, 26.456")
+// — apare quando reverse-geocodarea (Nominatim) nu a apucat să răspundă înainte ca punctul
+// să fie folosit/salvat. Detectăm acest tipar ca să putem reîncerca identificarea numelui.
+function looksLikeRawCoords(str){
+  return /^-?\d{1,3}\.\d{2,6},\s*-?\d{1,3}\.\d{2,6}$/.test((str||'').trim());
+}
+window.looksLikeRawCoords = looksLikeRawCoords;
+
+// Eșantionează puncte de-a lungul unui traseu real (coordonate [lat,lng] în ordine),
+// la un interval aproximativ dat (km), excluzând extremitățile (plecarea/destinația
+// se caută oricum separat). Limitează numărul de eșantioane ca să nu multiplicăm
+// inutil apelurile către Overpass/Wikipedia pe trasee foarte lungi.
+function sampleRoutePoints(routeCoords, intervalKm=25, maxSamples=5){
+  if (!routeCoords || routeCoords.length<2) return [];
+  const cum=[0];
+  for(let i=1;i<routeCoords.length;i++){
+    cum.push(cum[i-1]+haversineKm(routeCoords[i-1][0],routeCoords[i-1][1],routeCoords[i][0],routeCoords[i][1]));
+  }
+  const total = cum[cum.length-1];
+  if (total<=intervalKm) return []; // traseu scurt — destinația/plecarea deja acoperă zona
+  const nSamples = Math.min(maxSamples, Math.max(1, Math.floor(total/intervalKm)));
+  const samples=[];
+  for(let s=1;s<=nSamples;s++){
+    const targetDist = (total*s)/(nSamples+1);
+    let idx = cum.findIndex(c=>c>=targetDist);
+    if (idx<=0) idx=1;
+    samples.push(routeCoords[idx]);
+  }
+  return samples;
+}
+
+// Caută obiective turistice nu doar lângă destinația finală, ci de-a lungul întregului
+// traseu (ex: Iași → Ceahlău trece la câțiva km de Mănăstirea Neamț / Petru Vodă).
+// stopsWithCoords: [{name, lat, lng}, ...] în ordinea traseului (plecare → ... → destinație).
+async function fetchAttractionsAlongRoute(stopsWithCoords){
+  const coords = stopsWithCoords.filter(s=>s.lat!=null&&s.lng!=null).map(s=>[s.lat,s.lng]);
+  if (coords.length<2) return [];
+  let routeCoords=null;
+  try { routeCoords = await getRoadRoute(coords); } catch(e){ routeCoords=null; }
+  if (!routeCoords || routeCoords.length<2) routeCoords = coords; // fallback: linie dreaptă prin punctele date
+  const samplePts = sampleRoutePoints(routeCoords, 25, 5);
+  const destPt = coords[coords.length-1];
+  const allPts = [...samplePts, destPt];
+  const merged = [];
+  const seen = new Set();
+  for (const pt of allPts) {
+    let items = [];
+    try { items = await fetchNearbyAttractions(pt[0], pt[1]); } catch(e){ continue; }
+    for (const it of items) {
+      const key = (it.name||'?') + '|' + it.lat.toFixed(3) + '|' + it.lng.toFixed(3);
+      if (seen.has(key)) continue;
+      if (merged.some(m=>haversineKm(m.lat,m.lng,it.lat,it.lng)<1.5)) continue; // dedupe pe proximitate
+      seen.add(key);
+      merged.push(it);
+    }
+  }
+  return merged.slice(0,8);
+}
+
+function renderAttractionsBox(boxEl, dest, attractions, target, alongRoute){
   if(!attractions.length){ boxEl.innerHTML=''; return; }
+  const titleText = alongRoute
+    ? `💡 Pe traseul spre ${dest}, ați putea face o abatere la:`
+    : `💡 Aproape de ${dest}, ați putea vizita:`;
   boxEl.innerHTML=`<div style="background:var(--amber-g);border:1px solid var(--amber-b);border-radius:var(--r);padding:12px 14px">
-      <div style="font-weight:700;font-size:12.5px;color:var(--amber-d);margin-bottom:10px">💡 Aproape de ${dest}, ați putea vizita:</div>
+      <div style="font-weight:700;font-size:12.5px;color:var(--amber-d);margin-bottom:10px">${titleText}</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         ${attractions.map(a=>`<div style="display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--border-l);border-radius:8px;padding:8px;cursor:pointer" onclick="addAttractionStop('${target}','${a.name.replace(/'/g,"\\'")}',${a.lat},${a.lng})" title="Adaugă ca oprire">
           ${a.img?`<img src="${a.img}" alt="${a.name}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;flex-shrink:0"/>`:`<div style="width:52px;height:52px;border-radius:6px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${a.icon||(a.isChurch?'⛪':'📍')}</div>`}
@@ -3702,17 +3840,36 @@ window.checkDestinationAttractions = (target) => {
   clearTimeout(_orgAttractionsTimer);
   _orgAttractionsTimer=setTimeout(async () => {
     const stopsArr = target==='wiz' ? (window._WIZ_DATA?.stops||[]) : window._ORG_STOPS;
+    const coordsArr = target==='wiz' ? (window._WIZ_DATA?.stopCoords||[]) : window._ORG_STOP_COORDS;
     const dest = stopsArr.filter(Boolean).slice(-1)[0];
     const boxEl = document.getElementById(target==='wiz'?'wiz-attractions-box':'org-attractions-box');
     if(!boxEl) return;
     if(!dest || dest.trim().length<3){ boxEl.innerHTML=''; return; }
-    boxEl.innerHTML=`<div style="font-size:12px;color:var(--stone)"><span class="spin" style="width:12px;height:12px;border-width:2px;margin-right:6px;vertical-align:middle"></span>Căutăm "${dest}" în România...</div>`;
-    // geocodeCached e restricționat la countrycodes=ro (Nominatim), deci dacă nu găsește
-    // nimic înseamnă că acel loc nu există în România — informăm clar clientul, nu ascundem eroarea.
-    const ll = await geocodeCached(dest);
-    if(!ll){ boxEl.innerHTML=`<div style="background:var(--red-g);border:1px solid rgba(181,45,45,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--red)">⚠️ Nu am găsit "${dest}" în România. Verificați ortografia — lucrăm doar cu destinații din România.</div>`; return; }
-    const attractions = await fetchNearbyAttractions(ll[0], ll[1]);
-    renderAttractionsBox(boxEl, dest, attractions, target);
+    boxEl.innerHTML=`<div style="font-size:12px;color:var(--stone)"><span class="spin" style="width:12px;height:12px;border-width:2px;margin-right:6px;vertical-align:middle"></span>Căutăm obiective pe traseul spre "${dest}"...</div>`;
+
+    // Adunăm toate stațiile completate, cu coordonatele lor — dacă o stație nu are
+    // coordonate salvate (a fost scrisă/pusă altfel), o geocodăm acum. geocodeCached e
+    // restricționat la countrycodes=ro (Nominatim), deci dacă nu găsește nimic pentru
+    // destinație înseamnă că acel loc nu există în România.
+    const stopsWithCoords=[];
+    for(let i=0;i<stopsArr.length;i++){
+      const nume=stopsArr[i]; if(!nume) continue;
+      let c=coordsArr?.[i];
+      if(!c||c.lat==null){ const ll=await geocodeCached(nume); if(!ll) continue; c={lat:ll[0],lng:ll[1]}; }
+      stopsWithCoords.push({name:nume, lat:c.lat, lng:c.lng});
+    }
+    if(!stopsWithCoords.length || stopsWithCoords[stopsWithCoords.length-1].name!==dest){
+      boxEl.innerHTML=`<div style="background:var(--red-g);border:1px solid rgba(181,45,45,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--red)">⚠️ Nu am găsit "${dest}" în România. Verificați ortografia — lucrăm doar cu destinații din România.</div>`;
+      return;
+    }
+    if(stopsWithCoords.length===1){
+      // Doar destinația e cunoscută (fără plecare/opriri încă) — căutare simplă în jurul ei
+      const attractions = await fetchNearbyAttractions(stopsWithCoords[0].lat, stopsWithCoords[0].lng);
+      renderAttractionsBox(boxEl, dest, attractions, target, false);
+      return;
+    }
+    const attractions = await fetchAttractionsAlongRoute(stopsWithCoords);
+    renderAttractionsBox(boxEl, dest, attractions, target, true);
   }, 500);
 };
 window.addAttractionStop = (target, name, lat, lng) => {
@@ -4070,6 +4227,7 @@ window.loadRegulate = async () => {
   const list=document.getElementById('reg-list');
   list.innerHTML=`<div class="loading-state"><div class="spin"></div><p>Se încarcă cursele...</p></div>`;
   try { await loadFleet(); } catch(e){}
+  if (!window._DRIVERS_LIST?.length) { try { const sfSnap=await getDocs(collection(db,'soferi')); buildDriversCache(sfSnap); } catch(e){} }
   try { const s=await getDocs(collection(db,'curse_regulate')); window._R=s.docs.map(d=>({id:d.id,...d.data()})); } catch(e) { list.innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><p>Eroare la încărcarea curselor: '+e.message+'</p></div>'; return; }
   const curse=window._R.filter(c=>{
     if(!c.activa)return false;
@@ -4731,6 +4889,8 @@ window.cautaBilet = async () => {
   if(!cod){toast('Introdu codul biletului','wr');return;}
   const el=document.getElementById('bilet-result');
   el.innerHTML='<div class="loading-state"><div class="spin"></div><p>Se verifică...</p></div>';
+  if (!window._DRIVERS_LIST?.length) { try { const sfSnap=await getDocs(collection(db,'soferi')); buildDriversCache(sfSnap); } catch(e){} }
+  if (!window._R?.length) { try { const rsnap=await getDocs(collection(db,'curse_regulate')); window._R=rsnap.docs.map(d=>({id:d.id,...d.data()})); } catch(e){} }
   try{
     const snap=await getDocs(query(collection(db,'rezervari'),where('biletId','==',cod)));
     if(snap.empty){el.innerHTML=`<div style="background:var(--card);border:1.5px solid var(--red);border-radius:var(--r-lg);padding:24px;text-align:center;box-shadow:var(--sh)"><div style="font-size:40px;margin-bottom:12px">❌</div><div style="font-weight:700;font-size:16px;margin-bottom:6px">Bilet negăsit</div><div style="color:var(--stone)">Codul <strong>${cod}</strong> nu există. Verificați că l-ați introdus corect.</div></div>`;return;}
@@ -4750,6 +4910,7 @@ window.cautaBilet = async () => {
           <div style="text-align:center;margin-bottom:20px"><img src="${qrUrlOrg}" width="160" height="160" style="border-radius:8px;border:1px solid var(--border)"/></div>
           ${[['📋 Descriere',r.descriereCursa||r.tipCursa||'-'],['🚌 Traseu',r.traseu||'-'],['📅 Data',r.data||'-'],['🕐 Ora',r.ora||'flexibil'],...(r.vehiculNume?[['🚐 Autobuz',r.vehiculNume]]:[]),['👤 Pasager',r.numeClient||'-']].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
           <div style="margin-top:16px;background:var(--cream);border-radius:var(--r);padding:12px;font-size:12px;color:var(--stone);text-align:center">${isValid?'✅ Bilet valid — prezentați codul QR șoferului':'⚠️ Bilet '+r.status.replace('_',' ')+' — contactați echipa LSD Group'}</div>
+          <button class="btn btn-danger btn-full" style="margin-top:14px" onclick="deleteBiletPublic('${r.id}','${r.biletId}')">🗑 Șterge definitiv acest bilet</button>
         </div>
       </div>`;
       return;
@@ -4767,6 +4928,7 @@ window.cautaBilet = async () => {
         ${[['🚌 Rută',r.ruta||r.traseu||'-'],['📍 Urcare',locs[0]?.statieUrcare||'-'],['📍 Coborâre',locs[0]?.statieCoborare||'-'],['🪑 Locuri',locs.map(l=>'Loc '+l.locNr).join(', ')||'-'],['📅 Data',r.data||'-'],['🕐 Ora',r.ora||'-'],...(r.vehiculNume?[['🚐 Autobuz',r.vehiculNume]]:[]),...(numeSoferPtRezervare(r)?[['👨‍✈️ Șofer',numeSoferPtRezervare(r)]]:[]),['👤 Pasager',r.numeClient||'-'],['💰 Total',r.pretTotal?(r.pretTotal+' RON'):'-']].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
         <div style="margin-top:16px;background:var(--cream);border-radius:var(--r);padding:12px;font-size:12px;color:var(--stone);text-align:center">${isValid?'✅ Bilet valid — prezentați codul QR la îmbarcare':'⚠️ Bilet '+r.status.replace('_',' ')+' — contactați echipa LSD Group'}</div>
         <button class="btn btn-primary btn-full" style="margin-top:14px" onclick="printBiletById('${r.id}')">⬇️ Printează biletul</button>
+        <button class="btn btn-danger btn-full" style="margin-top:8px" onclick="deleteBiletPublic('${r.id}','${r.biletId}')">🗑 Șterge definitiv acest bilet</button>
       </div>
     </div>`;
   }catch(e){el.innerHTML=`<div style="background:var(--card);border:1.5px solid var(--red);border-radius:var(--r-lg);padding:24px;text-align:center"><div style="font-size:36px;margin-bottom:12px">⚠️</div><div style="font-weight:700;margin-bottom:6px">Eroare</div><div style="color:var(--stone);font-size:13px">${e.code==='permission-denied'?'Actualizați regulile Firestore. Contactați administratorul.':'Eroare: '+e.message}</div></div>`;}
@@ -4776,6 +4938,19 @@ window.printBiletById = async rezId => {
   if(!ref.exists())return;
   showTickets([{id:rezId,...ref.data()}]);
   setTimeout(()=>printTicket(),200);
+};
+// Ștergere GDPR ("dreptul de a fi uitat") accesibilă și fără cont — cunoașterea codului
+// exact al biletului (deja verificat prin căutare) e considerată suficientă dovadă că
+// persoana care șterge e cea care deține biletul, la fel cum codul funcționează deja ca
+// "cheie" pentru scanarea la îmbarcare.
+window.deleteBiletPublic = async (rezId, biletId) => {
+  if (!confirm(`⚠️ Ștergi definitiv biletul ${biletId}?\n\nAceastă acțiune este ireversibilă — biletul nu va mai putea fi găsit sau folosit ulterior.`)) return;
+  try {
+    await deleteDoc(doc(db,'rezervari',rezId));
+    toast('🗑 Bilet șters definitiv','ok');
+    document.getElementById('bilet-result').innerHTML = '';
+    document.getElementById('bilet-input').value = '';
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
 };
 
 
@@ -5072,7 +5247,7 @@ window.confirmOrgStopMapPick = () => {
     renderOrgStops();
     triggerOrgCalc();
   }
-  if (isDest) showAttractionsForPoint(target, window._orgStopMapPick, ll.lat, ll.lng);
+  checkDestinationAttractions(target);
   document.getElementById('mo-org-stop-map').classList.remove('open');
   toast('📍 Locație setată: ' + window._orgStopMapPick, 'ok');
 };
@@ -5215,9 +5390,19 @@ async function orgMultiPickerRender() {
   }
 }
 
-window.confirmOrgMultiMapPick = () => {
+window.confirmOrgMultiMapPick = async () => {
   const pts = window._orgMultiPickerPoints;
   if (pts.length < 2) { toast('Adaugă cel puțin 2 puncte (plecare și destinație)','wr'); return; }
+  // Dacă vreun punct a rămas cu numele nerezolvat (afișat ca "45.123, 26.456" pentru că
+  // reverse-geocodarea nu apucase să răspundă), îl reidentificăm acum, înainte de a salva
+  // traseul — altfel acel nume brut ar rămâne agățat în formular/rezervare.
+  const unresolved = pts.filter(p=>looksLikeRawCoords(p.nume));
+  if (unresolved.length) {
+    toast('📍 Se identifică ultimele nume de stații...','in');
+    for (const p of unresolved) {
+      try { const r = await reverseGeocodeName(p.ll[0], p.ll[1]); if (r?.name) p.nume = r.name; } catch(e){}
+    }
+  }
   const names = pts.map(p=>p.nume);
   const coords = pts.map(p=>({lat:p.ll[0], lng:p.ll[1]}));
   const target = window._orgMultiPickerTarget === 'wiz' ? 'wiz' : 'form';
@@ -5231,8 +5416,7 @@ window.confirmOrgMultiMapPick = () => {
     renderOrgStops();
     triggerOrgCalc();
   }
-  const lastPt = pts[pts.length-1];
-  showAttractionsForPoint(target, lastPt.nume, lastPt.ll[0], lastPt.ll[1]);
+  checkDestinationAttractions(target);
   document.getElementById('mo-org-multi-map').classList.remove('open');
   toast('✅ Traseu setat: '+pts.length+' puncte','ok');
 };
@@ -5937,6 +6121,7 @@ window.loadContPage = async () => {
     const locBadges=locs.map(l=>`<span class="chip chip-amber">Loc ${l.locNr}: ${l.statieUrcare}→${l.statieCoborare} (${l.pretLoc} RON)</span>`).join('');
     const biletBtn=r.biletId?(r.tipRezervare==='organizata'?`<button class="btn btn-primary btn-sm" onclick="showOrgTicket('${d.id}')">🎟 Vezi biletul (reutilizabil)</button>`:`<button class="btn btn-primary btn-sm" onclick="showTicketById('${d.id}')">🎟 Vezi biletul</button>`):'';
     const anulBtn=r.status==='in_asteptare'?`<button class="btn btn-secondary btn-sm" onclick="anuleazaRez('${d.id}')">❌ Anulează</button>`:'';
+    const stergeBtn=`<button class="btn btn-danger btn-sm" onclick="deleteMyBooking('${d.id}')">🗑 Șterge definitiv</button>`;
     const msgs=r.mesaje||[];
     const adminMsgs=msgs.filter(m=>m.from==='admin');
     let msgBlock='';
@@ -5970,9 +6155,17 @@ window.loadContPage = async () => {
       </div>
       ${locBadges?`<div style="margin-bottom:8px">${locBadges}</div>`:''}
       ${msgBlock}
-      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${biletBtn}${anulBtn}</div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${biletBtn}${anulBtn}${stergeBtn}</div>
     </div>`;
   }).join('');
+};
+window.deleteMyBooking = async (rezId) => {
+  if (!confirm('⚠️ Ștergi definitiv această rezervare din contul tău?\n\nBiletul, istoricul și mesajele asociate vor dispărea ireversibil. Nu poate fi recuperată.')) return;
+  try {
+    await deleteDoc(doc(db,'rezervari',rezId));
+    toast('🗑 Rezervare ștearsă definitiv','ok');
+    loadContPage();
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
 };
 window.showTicketById=async rezId=>{const ref=await getDoc(doc(db,'rezervari',rezId));if(ref.exists())showTickets([{id:rezId,...ref.data()}]);else toast('Rezervarea nu a fost găsită','er');};
 
@@ -6175,8 +6368,19 @@ window.openGuestOrgDetail = (r) => {
   const rows=[['Traseu',r.traseu||r.descriereCursa||'-'],['Data',r.data||'-'],['Status',sl[r.status]||r.status||'-'],...(r.status==='confirmata'&&r.vehiculNume?[['Autobuz',r.vehiculNume]]:[]),...(r.status==='confirmata'&&numeSoferPtRezervare(r)?[['Șofer',numeSoferPtRezervare(r)]]:[]),...(r.pretFinal?[['Preț ofertă',r.pretFinal+' RON']]:[])];
   const body=document.getElementById('guest-org-detail-body');
   body.innerHTML = rows.map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600;text-align:right;max-width:60%">${v}</span></div>`).join('') +
-    (msgs.length ? `<div style="margin-top:14px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">💬 Conversație</div><div class="msg-thread">${msgs.map(m=>`<div class="msg-bubble ${m.from==='admin'?'msg-admin':'msg-client'}"><div class="msg-meta">${m.from==='admin'?'👑 Echipa LSD Group':'👤 Tu'}</div>${m.text}</div>`).join('')}</div></div>` : '<div style="margin-top:12px;font-size:12px;color:var(--stone)">Nicio conversație încă. Veți primi și un email cu detaliile.</div>');
+    (msgs.length ? `<div style="margin-top:14px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">💬 Conversație</div><div class="msg-thread">${msgs.map(m=>`<div class="msg-bubble ${m.from==='admin'?'msg-admin':'msg-client'}"><div class="msg-meta">${m.from==='admin'?'👑 Echipa LSD Group':'👤 Tu'}</div>${m.text}</div>`).join('')}</div></div>` : '<div style="margin-top:12px;font-size:12px;color:var(--stone)">Nicio conversație încă. Veți primi și un email cu detaliile.</div>')
+    + `<button class="btn btn-danger btn-full" style="margin-top:16px" onclick="deleteGuestOrgBooking('${r.id}')">🗑 Șterge definitiv această cerere</button>`;
   modal.classList.add('open');
+};
+window.deleteGuestOrgBooking = async (rezId) => {
+  if (!confirm('⚠️ Ștergi definitiv această cerere?\n\nAcțiune ireversibilă — nu va mai putea fi recuperată.')) return;
+  try {
+    await deleteDoc(doc(db,'rezervari',rezId));
+    delete window._GUEST_NOTIFS[rezId];
+    document.getElementById('mo-guest-org-detail')?.classList.remove('open');
+    renderGuestNotifPanel();
+    toast('🗑 Cerere ștearsă definitiv','ok');
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
 };
 
 // ── ADMIN ──────────────────────────────────────────────────
@@ -6834,10 +7038,12 @@ window.renderRmStops = function renderRmStops(){
     `<input data-sp type="number" min="0" placeholder="RON" value="${s.p||''}" style="width:90px;flex-shrink:0" onchange="window._RM_STOPS[${i}].p=parseFloat(this.value)||0"/>
      <input data-sm type="number" min="0" placeholder="min" value="${s.m||''}" style="width:80px;flex-shrink:0" onchange="window._RM_STOPS[${i}].m=parseInt(this.value)||0"/>`}
     <div style="display:flex;gap:3px;flex-shrink:0">
+      ${looksLikeRawCoords(s.n)?`<button type="button" title="Reidentifică numele stației" style="background:var(--amber-g);border:1px solid var(--amber-b);color:var(--amber-d);cursor:pointer;font-size:12px;font-weight:700;width:24px;height:24px;border-radius:6px;line-height:1" onclick="rmRetryStopName(${i})">🔄</button>`:''}
       <button type="button" title="Adaugă o stație nouă chiar după aceasta" style="background:var(--green-g);border:1px solid rgba(26,107,60,.25);color:var(--green);cursor:pointer;font-size:14px;font-weight:700;width:24px;height:24px;border-radius:6px;line-height:1" onclick="rmInsertStopAfter(${i})">+</button>
       ${isMiddle?`<button type="button" title="Șterge stația" style="background:none;border:none;color:var(--stone);cursor:pointer;font-size:16px;width:24px" onclick="window._RM_STOPS.splice(${i},1);renderRmStops()">✕</button>`:`<div style="width:24px"></div>`}
     </div>
-  </div>`;
+  </div>
+  ${looksLikeRawCoords(s.n)?`<div style="font-size:10.5px;color:var(--amber-d);margin:-4px 0 8px 66px">⚠️ Nume neidentificat încă — apasă 🔄 din dreapta</div>`:''}`;
   }).join('')
   + (n>2 ? '<div style="font-size:11px;color:var(--stone);margin-top:2px">💡 Trage ⠿ pentru a reordona stațiile intermediare, ca la opririle unui tren. Butonul <strong>+</strong> adaugă o stație nouă chiar după cea curentă.</div>' : '');
 }
@@ -6929,6 +7135,16 @@ async function rmMapPickerResolveName(idx, lat, lng){
   } catch(e) { console.warn('Reverse geocode failed:', e.message); /* pastreaza numele placeholder cu coordonate */ }
 }
 
+window.rmRetryStopName = async (i) => {
+  const s = window._RM_STOPS[i];
+  if (!s || s.lat==null || s.lng==null) { toast('Acest punct nu are coordonate salvate — repune-l pe hartă','wr'); return; }
+  toast('🔄 Se identifică numele...', 'in');
+  try {
+    const r = await reverseGeocodeName(s.lat, s.lng);
+    if (r?.name) { s.n = r.name; renderRmStops(); toast('✅ Nume actualizat: '+r.name, 'ok'); }
+    else toast('Nu s-a putut identifica un nume pentru acest punct','wr');
+  } catch(e) { toast('Eroare: '+e.message, 'er'); }
+};
 window.rmMapPickerUndo = async () => {
   window._rmPickerPoints.pop();
   await rmMapPickerRender();
@@ -7117,6 +7333,18 @@ window.saveRoute=async()=>{
   const vehId=document.getElementById('rm-vehicle').value;
   const veh=window._F.find(v=>v.id===vehId);
   const zile=[...document.querySelectorAll('[data-day].active')].map(b=>parseInt(b.dataset.day));
+  // Plasă de siguranță: dacă vreo stație a rămas cu numele afișat ca "45.123, 26.456"
+  // (reverse-geocodarea nu apucase să răspundă la momentul plasării pe hartă), o reidentificăm
+  // acum, indiferent prin ce unealtă a fost plasat punctul — altfel un asemenea nume ar
+  // ajunge salvat definitiv pe cursă.
+  const coordNamedStops=window._RM_STOPS.filter(s=>s.n && looksLikeRawCoords(s.n) && s.lat!=null && s.lng!=null);
+  if(coordNamedStops.length){
+    toast('📍 Se reidentifică numele stațiilor rămase...','in');
+    for(const s of coordNamedStops){
+      try{ const r=await reverseGeocodeName(s.lat,s.lng); if(r?.name) s.n=r.name; }catch(e){}
+    }
+    renderRmStops();
+  }
   // Geocodăm o singură dată orice stație fără coordonate salvate — astfel harta din
   // homepage/modal citește direct lat/lng, fără să mai geocodeze nimic la runtime
   // (mai rapid) și fără riscul unui nume ambiguu geocodat greșit de fiecare dată (mai corect).
@@ -7127,6 +7355,11 @@ window.saveRoute=async()=>{
       const ll=await geocodeCached(s.n);
       if(ll){s.lat=ll[0];s.lng=ll[1];}
     }
+  }
+  const stillCoordNamed=window._RM_STOPS.filter(s=>s.n && looksLikeRawCoords(s.n));
+  if(stillCoordNamed.length){
+    toast('⚠️ '+stillCoordNamed.length+' stație(i) nu au putut fi identificate automat (nume rămas ca "lat, lng"). Apasă 🔄 lângă ele sau rescrie-le manual, apoi salvează din nou.','wr');
+    return;
   }
   const statii=window._RM_STOPS.map((s,i)=>({nome:s.n,name:s.n,nume:s.n,pretDeLaStart:i===0?0:(s.p||0),minuteDeLaStart:i===0?0:(s.m||0),...(s.lat!=null&&s.lng!=null?{lat:s.lat,lng:s.lng}:{})}));
   if(statii.length<2){toast('Minim 2 stații','wr');return;}
@@ -8740,6 +8973,7 @@ window.logOrgScan = async (rezId) => {
   renderFooter();
   try{await loadSavedContent();}catch(e){}
   try{await loadFleet();}catch(e){}
+  try{const sfSnap=await getDocs(collection(db,'soferi'));buildDriversCache(sfSnap);}catch(e){}
   renderHomeGallery();
   try{const rs=await getDocs(collection(db,'curse_regulate'));window._R=rs.docs.map(d=>({id:d.id,...d.data()}));}catch(e){}
   const today=new Date().toISOString().split('T')[0];
