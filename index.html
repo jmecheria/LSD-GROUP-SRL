@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>LSD Group SRL — Transport Persoane | Curse Regulate & Organizate</title>
 <meta name="description" content="Rezervă locuri online pentru curse regulate și organizate în România. Flotă modernă, șoferi autorizați. LSD Group SRL — transport persoane autorizat ARR."/>
+<!-- ── PWA: manifest, iconițe, culoare temă — permit instalarea site-ului ca aplicație ── -->
+<link rel="manifest" href="./manifest.json"/>
+<meta name="theme-color" content="#a97c3f"/>
+<link rel="icon" href="./favicon-32.png" sizes="32x32" type="image/png"/>
+<link rel="apple-touch-icon" href="./apple-touch-icon.png"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="LSD Group"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
@@ -1130,6 +1139,7 @@ footer::before{
     <button class="nl" data-page="gdpr" onclick="nav('gdpr')">GDPR</button>
   </div>
   <div id="nav-actions">
+    <button class="nb nb-outline" id="pwa-install-btn" style="display:none" onclick="triggerPwaInstall()">📲 Instalează</button>
     <button class="nb nb-solid" id="nav-auth-btn" onclick="nav('auth')">Conectare</button>
   </div>
   <button id="ham-btn" onclick="toggleMob()"><span></span><span></span><span></span></button>
@@ -1142,6 +1152,7 @@ footer::before{
   <button class="nl" onclick="nav('organizate')">🚌 Organizate</button>
   <button class="nl" onclick="nav('bilet')">🎟 Biletul meu</button>
   <button class="nl" onclick="nav('gdpr')">📄 GDPR</button>
+  <button class="nl" id="mob-pwa-install-btn" style="display:none" onclick="triggerPwaInstall()">📲 Instalează aplicația</button>
   <button class="nl" id="mob-auth-btn" onclick="nav('auth')">🔐 Conectare</button>
 </div>
 
@@ -2739,6 +2750,63 @@ footer::before{
   };
 
   window.openModal = function(id) { document.getElementById('mo-' + id)?.classList.add('open'); };
+
+  // ── PWA: instalare aplicație ──────────────────────────────
+  // Pe Android/Chrome/Edge/desktop browserul oferă evenimentul 'beforeinstallprompt' —
+  // îl prindem, îl păstrăm, și arătăm un buton propriu (mai vizibil și mai clar decât
+  // meniul ascuns al browserului). Pe iOS Safari acest eveniment nu există niciodată
+  // (limitare Apple), deci arătăm în schimb un banner cu instrucțiuni explicite.
+  window._pwaDeferredPrompt = null;
+  function isStandaloneMode() {
+    return window.matchMedia?.('(display-mode: standalone)')?.matches || window.navigator.standalone === true;
+  }
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window._pwaDeferredPrompt = e;
+    if (isStandaloneMode()) return; // deja instalată — nu mai arătăm butonul
+    document.getElementById('pwa-install-btn')?.style.setProperty('display','inline-flex');
+    document.getElementById('mob-pwa-install-btn')?.style.setProperty('display','flex');
+  });
+  window.triggerPwaInstall = async () => {
+    const promptEvt = window._pwaDeferredPrompt;
+    if (!promptEvt) { toast('Aplicația e deja instalată sau browserul nu suportă instalarea directă.', 'in'); return; }
+    promptEvt.prompt();
+    try {
+      const choice = await promptEvt.userChoice;
+      if (choice?.outcome === 'accepted') toast('✅ Aplicația se instalează!', 'ok');
+    } catch(e) {}
+    window._pwaDeferredPrompt = null;
+    document.getElementById('pwa-install-btn')?.style.setProperty('display','none');
+    document.getElementById('mob-pwa-install-btn')?.style.setProperty('display','none');
+  };
+  window.addEventListener('appinstalled', () => {
+    document.getElementById('pwa-install-btn')?.style.setProperty('display','none');
+    document.getElementById('mob-pwa-install-btn')?.style.setProperty('display','none');
+    document.getElementById('ios-install-banner')?.remove();
+    toast('🎉 LSD Group a fost instalată ca aplicație!', 'ok');
+  });
+  // iOS Safari: fără eveniment nativ — detectăm platforma și arătăm un banner discret,
+  // o singură dată (reținut în localStorage), doar dacă nu rulează deja ca aplicație instalată.
+  function maybeShowIosInstallBanner() {
+    if (isStandaloneMode()) return;
+    const ua = window.navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes('Macintosh') && 'ontouchend' in document);
+    const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+    if (!isIOS || !isSafari) return;
+    if (localStorage.getItem('lsd_ios_install_dismissed')) return;
+    const banner = document.createElement('div');
+    banner.id = 'ios-install-banner';
+    banner.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:4500;background:var(--card);border:1.5px solid var(--amber-b);border-radius:var(--r-lg);box-shadow:var(--sh-lg);padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:12.5px';
+    banner.innerHTML = '<div style="font-size:26px;flex-shrink:0">📲</div>'
+      + '<div style="flex:1;color:var(--ink-soft)">Instalează LSD Group ca aplicație: apasă <strong>Distribuie</strong> <span style="font-size:15px">⬆️</span> din bara Safari, apoi <strong>„Adaugă pe ecranul principal"</strong>.</div>'
+      + '<button style="background:none;border:none;color:var(--stone);font-size:18px;cursor:pointer;flex-shrink:0;padding:4px" onclick="dismissIosInstallBanner()">✕</button>';
+    document.body.appendChild(banner);
+  }
+  window.dismissIosInstallBanner = () => {
+    localStorage.setItem('lsd_ios_install_dismissed', '1');
+    document.getElementById('ios-install-banner')?.remove();
+  };
+  setTimeout(maybeShowIosInstallBanner, 2500);
 })();
 </script>
 
