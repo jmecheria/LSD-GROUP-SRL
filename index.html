@@ -562,33 +562,20 @@ input.ok{border-color:var(--green)}
 }
 @keyframes labelFade{to{opacity:1}}
 
-/* Autobuzul foto-realist, urmareste curba traseului (sus-jos-sus) prin keyframes top/left.
-   Traseul SVG (M 20 55 Q 250 15, 500 55 T 980 55) urcă spre vârf lângă 25% din drum,
-   apoi COBOARĂ spre o vale lângă 75% (comanda T reflectă punctul de control) — de aceea
-   keyframe-ul de la 75% trebuie să fie jos (top mare), nu sus; altfel autobuzul "sare"
-   de pe drum exact în a doua jumătate a animației. */
+/* Autobuzul foto-realist urmărește acum EXACT curba SVG a traseului, calculat în JS
+   (getPointAtLength + getScreenCTM), nu mai e o aproximare cu 5 puncte fixe — vezi
+   funcția animateBusOnRoad(). CSS-ul de aici doar setează starea inițială/aspectul. */
 .route-bus-wrap{
   position:absolute;top:0;left:0;width:62px;height:auto;
   margin:-31px 0 0 -31px;
   opacity:0;
-  animation:busFollowPath 2.6s cubic-bezier(.4,0,.2,1) forwards .2s,
-            busFadeIn .3s ease-out forwards .2s;
   filter:drop-shadow(0 3px 6px rgba(15,13,10,.25));
 }
 .route-bus-img{width:100%;height:auto;display:block}
-@keyframes busFollowPath{
-  0%{left:2%;top:50%}
-  25%{left:25%;top:14%}
-  50%{left:50%;top:50%}
-  75%{left:75%;top:86%}
-  100%{left:98%;top:50%}
-}
-@keyframes busFadeIn{to{opacity:1}}
 @media(max-width:700px){
   .route-line-wrap{height:80px}
   .route-line-svg{height:80px}
-  .route-stop-label{font-size:8.5px;top:50px;max-width:64px}
-  .route-stop-dot{top:38px}
+  .route-stop-label{font-size:8.5px;max-width:64px}
 }
 
 /* ── STATS STRIP ── */
@@ -1068,22 +1055,10 @@ footer::before{
   100%{stroke-dashoffset:-620}
 }
 .loader-bus-wrap{
-  position:absolute;width:78px;height:auto;top:50px;left:0;
-  animation:loaderBusMove 1.8s cubic-bezier(.4,0,.2,1) infinite;
+  position:absolute;width:78px;height:auto;top:0;left:0;opacity:0;
   filter:drop-shadow(0 4px 6px rgba(15,13,10,.3));
 }
 .loader-bus-img{width:100%;height:auto;display:block}
-@keyframes loaderBusMove{
-  0%{left:2%;opacity:0;transform:scaleX(1)}
-  8%{opacity:1}
-  48%{left:calc(100% - 80px);opacity:1;transform:scaleX(1)}
-  52%{transform:scaleX(-1)}
-  60%{opacity:0;left:calc(100% - 80px);transform:scaleX(-1)}
-  61%{left:2%;transform:scaleX(-1)}
-  65%{transform:scaleX(1)}
-  72%{opacity:1}
-  100%{left:2%;opacity:1;transform:scaleX(1)}
-}
 .loader-brand{
   font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:20px;
   color:var(--amber-d);letter-spacing:.5px;margin-bottom:4px;
@@ -2751,6 +2726,73 @@ footer::before{
 
   window.openModal = function(id) { document.getElementById('mo-' + id)?.classList.add('open'); };
 
+  // ── AUTOBUZ CARE URMĂREȘTE EXACT CURBA DESENATĂ ────────────
+  // Poziția se calculează live din geometria reală a path-ului SVG (getPointAtLength),
+  // convertită apoi în coordonate de pagină (getScreenCTM) — astfel autobuzul stă mereu
+  // EXACT pe drum, indiferent de dimensiunea ecranului, padding-uri sau proporția SVG-ului
+  // (spre deosebire de o animație CSS cu doar 4-5 puncte fixe, care doar aproxima curba
+  // cu segmente drepte între ele, motiv pentru care uneori părea că "merge drept").
+  function animateBusOnRoad(pathSel, busSel, opts) {
+    const pathEl = document.querySelector(pathSel);
+    const busEl = document.querySelector(busSel);
+    if (!pathEl || !busEl || !pathEl.getTotalLength || !pathEl.ownerSVGElement) return;
+    const offsetParent = busEl.offsetParent || busEl.parentElement;
+    const total = pathEl.getTotalLength();
+    const svg = pathEl.ownerSVGElement;
+    function placeAt(t) {
+      const ctm = svg.getScreenCTM();
+      if (!ctm || !offsetParent) return;
+      const pt = pathEl.getPointAtLength(total * Math.max(0, Math.min(1, t)));
+      const svgPt = svg.createSVGPoint();
+      svgPt.x = pt.x; svgPt.y = pt.y;
+      const screenPt = svgPt.matrixTransform(ctm);
+      const pr = offsetParent.getBoundingClientRect();
+      busEl.style.left = (screenPt.x - pr.left) + 'px';
+      busEl.style.top = (screenPt.y - pr.top) + 'px';
+    }
+    const o = Object.assign({ durationMs: 2600, loop: false }, opts || {});
+    let startTs = null, lastFlip = false;
+    function setFlip(flip) {
+      if (flip === lastFlip) return;
+      lastFlip = flip;
+      busEl.style.transform = flip ? 'scaleX(-1)' : 'scaleX(1)';
+    }
+    function frame(ts) {
+      if (startTs === null) startTs = ts;
+      const elapsed = ts - startTs;
+      if (!o.loop) {
+        // O singură trecere: pornește de la capătul traseului, avansează cu ease-out, rămâne la final
+        const raw = Math.min(1, elapsed / o.durationMs);
+        const eased = 1 - Math.pow(1 - raw, 3);
+        placeAt(eased);
+        busEl.style.opacity = String(Math.min(1, raw / 0.12));
+        if (raw < 1) requestAnimationFrame(frame);
+        return;
+      }
+      // Buclă continuă: parcurge drumul, dispare treptat la capăt, reapare instant (invizibil) la start
+      const cyc = (elapsed % o.loopDurationMs) / o.loopDurationMs;
+      if (cyc < o.travelEnd) {
+        const p = cyc / o.travelEnd;
+        placeAt(p);
+        busEl.style.opacity = String(Math.min(1, p / 0.15));
+        setFlip(false);
+      } else if (cyc < o.fadeOutEnd) {
+        placeAt(1);
+        const p = (cyc - o.travelEnd) / (o.fadeOutEnd - o.travelEnd);
+        busEl.style.opacity = String(Math.max(0, 1 - p));
+      } else {
+        placeAt(0);
+        busEl.style.opacity = '0';
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  window.animateBusOnRoad = animateBusOnRoad;
+  // Autobuzul din ecranul de încărcare pornește instant, fără să aștepte Firebase/modulul —
+  // e primul lucru vizibil la deschiderea site-ului.
+  animateBusOnRoad('.loader-road-fg', '.loader-bus-wrap', { loop: true, loopDurationMs: 2200, travelEnd: 0.62, fadeOutEnd: 0.82 });
+
   // ── PWA: instalare aplicație ──────────────────────────────
   // Pe Android/Chrome/Edge/desktop browserul oferă evenimentul 'beforeinstallprompt' —
   // îl prindem, îl păstrăm, și arătăm un buton propriu (mai vizibil și mai clar decât
@@ -3961,13 +4003,21 @@ window.addAttractionStop = (target, name, lat, lng) => {
 
 
 // Creeaza un marker autobuz SVG (nu emoji) care se misca pe un traseu real
-function createBusMarkerOnRoute(map, routeLatLngs, color){
+function createBusMarkerOnRoute(map, routeLatLngs, color, vehImgUrl){
   if (!routeLatLngs || routeLatLngs.length < 2) return null;
   const SPRINTER_B64 = window.SPRINTER_B64;
-  const busIcon = L.divIcon({
-    html: `<img class="leaflet-bus-img" src="${SPRINTER_B64}" style="width:46px;height:auto;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.35));transition:transform .25s ease" alt="Sprinter"/>`,
-    iconSize:[46,28], iconAnchor:[23,16], className:''
-  });
+  // Dacă știm care e vehiculul atribuit acestei curse și are o poză reală în flotă, o folosim
+  // pe hartă (mic medalion rotund cu poza lui), în loc de silueta generică Sprinter — astfel
+  // pe hartă chiar "merge" autobuzul atribuit, recognoscibil, nu un desen generic.
+  const busIcon = vehImgUrl
+    ? L.divIcon({
+        html: `<div class="leaflet-bus-img" style="width:38px;height:38px;border-radius:50%;overflow:hidden;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);transition:transform .25s ease;background:#fff"><img src="${vehImgUrl}" style="width:100%;height:100%;object-fit:cover;display:block" alt="Autobuz"/></div>`,
+        iconSize:[38,38], iconAnchor:[19,19], className:''
+      })
+    : L.divIcon({
+        html: `<img class="leaflet-bus-img" src="${SPRINTER_B64}" style="width:46px;height:auto;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.35));transition:transform .25s ease" alt="Sprinter"/>`,
+        iconSize:[46,28], iconAnchor:[23,16], className:''
+      });
   const marker = L.marker(routeLatLngs[0], {icon: busIcon, zIndexOffset: 1000}).addTo(map);
   // Anima de-a lungul punctelor reale ale traseului (urmeaza drumul, nu o linie dreapta)
   let idx = 0;
@@ -3978,7 +4028,7 @@ function createBusMarkerOnRoute(map, routeLatLngs, color){
     if (!marker._map) return; // marker a fost scos de pe harta
     const next = routeLatLngs[idx];
     const prev = routeLatLngs[Math.max(0,idx-1)];
-    if (next && prev) {
+    if (next && prev && !vehImgUrl) {
       const dLng = next[1]-prev[1];
       // Imaginea sprinterului e orientata spre dreapta (est) implicit; oglindim daca mergem spre vest
       if (Math.abs(dLng) > 0.00001) {
@@ -4004,6 +4054,10 @@ window.initHome = async function initHome() {
   if (el) el.innerHTML = window._F.length ? window._F.map(v=>window.vCard(v)).join('') : '<div class="empty-state"><div class="empty-icon">🚌</div><p>Nicio flotă configurată</p></div>';
   try { await getDocs(collection(db,'curse_regulate')).then(s=>{window._R=s.docs.map(d=>({id:d.id,...d.data()}));}); } catch(e) {}
   renderHeroRouteLine();
+  if (!window._heroBusAnimated) {
+    window._heroBusAnimated = true;
+    window.animateBusOnRoad?.('#hero-route-line .route-path-fg', '#hero-route-bus', { durationMs: 2600 });
+  }
   renderHomeStats();
   renderHomeSearchSuggestions();
   renderHomeGallery();
@@ -4086,12 +4140,23 @@ function renderHeroRouteLine(){
   }
   const n = Math.min(statii.length, 6);
   const usedStatii = statii.slice(0,n);
+  // Poziționăm punctele EXACT pe curba desenată (nu pe o linie orizontală fixă la mijloc) —
+  // citim geometria reală a path-ului SVG și calculăm coordonatele (x,y) la fiecare fracțiune
+  // de-a lungul lui, ca opririle să pară cu adevărat "pe drum".
+  const pathEl = document.querySelector('#hero-route-line .route-path-bg');
+  const total = pathEl?.getTotalLength ? pathEl.getTotalLength() : 0;
   let html = '';
   usedStatii.forEach((s,i)=>{
-    const pct = n===1 ? 0 : (i/(n-1))*96+2;
-    const delay = 0.25 + (i/(n-1||1))*2.2;
-    html += `<div class="route-stop-dot" style="left:${pct}%;animation-delay:${delay}s"></div>`;
-    html += `<div class="route-stop-label" style="left:${pct}%;animation-delay:${delay+0.1}s">${s}</div>`;
+    const frac = n===1 ? 0 : i/(n-1);
+    const delay = 0.25 + frac*2.2;
+    let xPct = frac*96+2, yPct = 50;
+    if (total) {
+      const clampedFrac = 0.02 + frac*0.96; // mica marja la capete, ca punctele extreme sa ramana in cadru
+      const pt = pathEl.getPointAtLength(total*clampedFrac);
+      xPct = (pt.x/1000)*100; yPct = (pt.y/110)*100;
+    }
+    html += `<div class="route-stop-dot" style="left:${xPct}%;top:${yPct}%;animation-delay:${delay}s"></div>`;
+    html += `<div class="route-stop-label" style="left:${xPct}%;top:calc(${yPct}% + 16px);animation-delay:${delay+0.1}s">${s}</div>`;
   });
   wrap.innerHTML = html;
 }
@@ -4232,8 +4297,10 @@ async function initHomeRoutesMap(){
         L.marker(ll,{icon:stopIcon}).addTo(map)
           .bindPopup(`<strong>${statii[i]?.nome||statii[i]?.name||statii[i]?.nume||''}</strong><br>${c.ruta}`);
       });
-      // Autobuz SVG animat care merge pe traseul real (sau pe linia dreapta daca nu avem traseu pe drum)
-      createBusMarkerOnRoute(map, drawCoords, col);
+      // Autobuz animat care merge pe traseul real — folosim poza vehiculului atribuit
+      // acestei curse, dacă are una încărcată în flotă, ca să "meargă" chiar el pe hartă.
+      const routeVeh = (window._F||[]).find(v=>v.id===c.vehiculId);
+      createBusMarkerOnRoute(map, drawCoords, col, routeVeh?.imagini?.[0]);
     }
   }
 
@@ -4478,21 +4545,22 @@ window.loadRegulate = async () => {
           </div>
           ${c.tipCursa==='roundtrip'?'<span class="chip chip-amber">↔️ Dus-Întors</span>':''}
         </div>
+        <!-- Mini traseu vizual — vizibil direct, nu ascuns în detalii -->
+        <div class="mini-route-line">
+          <div class="mini-route-track"></div>
+          ${miniDots}
+          <img class="mini-route-bus" data-bus="1" src="" alt="" style="${busStyle}" title="${busPct!==null?'Autobuzul este pe traseu acum (poziție estimată)':''}"/>
+          ${busPct!==null?'<div style="position:absolute;top:-16px;left:'+busPct+'%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--green);white-space:nowrap;background:var(--green-g);padding:1px 6px;border-radius:8px;border:1px solid rgba(26,107,60,.25)">🚌 în cursă</div>':''}
+          <div class="mini-route-time-start">${activeOra}</div>
+          <div class="mini-route-time-end">${oraSosire}</div>
+        </div>
         ${occBarHtml}
         <button class="btn btn-primary btn-sm btn-full" style="margin-top:12px" onclick="openCinema('${c.id}','${date}','${primaryBtnDir}',${pi})" ${plin?'disabled':''}>${plin?'🔴 Indisponibil':primaryBtnLabel}</button>
+        ${(hasRetur && !showReturnAsPrimary) ? `<button class="btn btn-secondary btn-sm btn-full" style="margin-top:8px" onclick="openCinema('${c.id}','${date}','return',${pi})">↩ Rezervă loc RETUR — ${oraR}</button>` : ''}
 
         <div class="route-stops-collapsible">
           <button class="route-stops-toggle" onclick="this.parentElement.classList.toggle('open')">📋 Detalii traseu, stații și program <span class="toggle-arrow">▾</span></button>
           <div class="route-stops-content">
-            <!-- Mini traseu vizual -->
-            <div class="mini-route-line">
-              <div class="mini-route-track"></div>
-              ${miniDots}
-              <img class="mini-route-bus" data-bus="1" src="" alt="" style="${busStyle}" title="${busPct!==null?'Autobuzul este pe traseu acum (poziție estimată)':''}"/>
-              ${busPct!==null?'<div style="position:absolute;top:-16px;left:'+busPct+'%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--green);white-space:nowrap;background:var(--green-g);padding:1px 6px;border-radius:8px;border:1px solid rgba(26,107,60,.25)">🚌 în cursă</div>':''}
-              <div class="mini-route-time-start">${activeOra}</div>
-              <div class="mini-route-time-end">${oraSosire}</div>
-            </div>
             <div class="sch-meta" style="margin-top:8px">
               <span>🚌 <strong>${c.vehiculNume||'-'}</strong></span>
               <span>👥 <strong>${capacit||'?'} locuri</strong></span>
@@ -4636,8 +4704,8 @@ window.showRouteMapModal = async (cursaId) => {
       </div>`,iconSize:[circleSize,circleSize+24],iconAnchor:[circleSize/2,circleSize/2],className:''});
       L.marker(c2.ll,{icon}).addTo(map).bindPopup(`<strong>${c2.nume}</strong>`);
     });
-    createBusMarkerOnRoute(map, drawCoords, '#a97c3f');
-    map.fitBounds(coords.map(c2=>c2.ll),{padding:[30,30]});
+    const modalVeh = (window._F||[]).find(v=>v.id===c.vehiculId);
+    createBusMarkerOnRoute(map, drawCoords, '#a97c3f', modalVeh?.imagini?.[0]);
   } else {
     mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:8px;padding:24px;text-align:center"><div style="font-size:32px">📍</div>Nu s-au putut localiza stațiile pe hartă.<br><span style="font-size:11px">Verifică denumirile stațiilor în Firestore.</span></div>';
   }
@@ -9054,6 +9122,10 @@ window.logOrgScan = async (rezId) => {
   // declanșează niciodată — fără aceste apeluri, bara de statistici și harta traseelor
   // rămâneau goale până la o navigare ulterioară care re-declanșa initHome().
   try{renderHeroRouteLine();}catch(e){}
+  if (!window._heroBusAnimated) {
+    window._heroBusAnimated = true;
+    try{window.animateBusOnRoad?.('#hero-route-line .route-path-fg', '#hero-route-bus', { durationMs: 2600 });}catch(e){}
+  }
   try{renderHomeStats();}catch(e){}
   try{renderHomeSearchSuggestions();}catch(e){}
   try{initHomeRoutesMap();}catch(e){}
