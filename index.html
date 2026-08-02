@@ -1888,6 +1888,7 @@ footer::before{
       <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:var(--green);display:inline-block"></span>La garaj</span>
       <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:var(--amber);display:inline-block"></span>În cursă</span>
       <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:var(--orange);display:inline-block"></span>La destinație (fără retur)</span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:#c46520;border:2px dashed #fff;display:inline-block"></span>Poziție estimată din orar (șofer neraportat)</span>
     </div>
     <!-- Carduri vehicule cu locatie -->
     <div id="harta-vehicule-grid" class="g-auto" style="margin-bottom:20px"></div>
@@ -4003,7 +4004,7 @@ window.addAttractionStop = (target, name, lat, lng) => {
 
 
 // Creeaza un marker autobuz SVG (nu emoji) care se misca pe un traseu real
-function createBusMarkerOnRoute(map, routeLatLngs, color, vehImgUrl){
+function createBusMarkerOnRoute(map, routeLatLngs, color, vehImgUrl, progressFrac){
   if (!routeLatLngs || routeLatLngs.length < 2) return null;
   const SPRINTER_B64 = window.SPRINTER_B64;
   // Dacă știm care e vehiculul atribuit acestei curse și are o poză reală în flotă, o folosim
@@ -4011,40 +4012,25 @@ function createBusMarkerOnRoute(map, routeLatLngs, color, vehImgUrl){
   // pe hartă chiar "merge" autobuzul atribuit, recognoscibil, nu un desen generic.
   const busIcon = vehImgUrl
     ? L.divIcon({
-        html: `<div class="leaflet-bus-img" style="width:38px;height:38px;border-radius:50%;overflow:hidden;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);transition:transform .25s ease;background:#fff"><img src="${vehImgUrl}" style="width:100%;height:100%;object-fit:cover;display:block" alt="Autobuz"/></div>`,
+        html: `<div class="leaflet-bus-img" style="width:38px;height:38px;border-radius:50%;overflow:hidden;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);background:#fff"><img src="${vehImgUrl}" style="width:100%;height:100%;object-fit:cover;display:block" alt="Autobuz"/></div>`,
         iconSize:[38,38], iconAnchor:[19,19], className:''
       })
     : L.divIcon({
-        html: `<img class="leaflet-bus-img" src="${SPRINTER_B64}" style="width:46px;height:auto;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.35));transition:transform .25s ease" alt="Sprinter"/>`,
+        html: `<img class="leaflet-bus-img" src="${SPRINTER_B64}" style="width:46px;height:auto;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.35))" alt="Sprinter"/>`,
         iconSize:[46,28], iconAnchor:[23,16], className:''
       });
-  const marker = L.marker(routeLatLngs[0], {icon: busIcon, zIndexOffset: 1000}).addTo(map);
-  // Anima de-a lungul punctelor reale ale traseului (urmeaza drumul, nu o linie dreapta)
-  let idx = 0;
-  let lastFlip = false;
-  const totalPoints = routeLatLngs.length;
-  const stepMs = Math.max(30, Math.min(120, Math.round(6000/totalPoints)));
-  function animateStep(){
-    if (!marker._map) return; // marker a fost scos de pe harta
-    const next = routeLatLngs[idx];
-    const prev = routeLatLngs[Math.max(0,idx-1)];
-    if (next && prev && !vehImgUrl) {
-      const dLng = next[1]-prev[1];
-      // Imaginea sprinterului e orientata spre dreapta (est) implicit; oglindim daca mergem spre vest
-      if (Math.abs(dLng) > 0.00001) {
-        const goingWest = dLng < 0;
-        if (goingWest !== lastFlip) {
-          lastFlip = goingWest;
-          const imgEl = marker.getElement()?.querySelector('.leaflet-bus-img');
-          if (imgEl) imgEl.style.transform = goingWest ? 'scaleX(-1)' : 'scaleX(1)';
-        }
-      }
-    }
-    marker.setLatLng(routeLatLngs[idx]);
-    idx = (idx+1) % totalPoints;
-    setTimeout(animateStep, stepMs);
-  }
-  animateStep();
+  // NU mai animăm autobuzul continuu, arbitrar, de-a lungul întregului traseu — asta dădea
+  // impresia că "merge cum vrea" pe hartă. În schimb: dacă știm ora de plecare și cursa e
+  // ACUM în desfășurare, îl plasăm static, o singură dată, la poziția reală estimată din orar
+  // (progressFrac, calculat cu calcRouteFractionNow). Dacă nicio cursă nu rulează acum,
+  // rămâne "parcat" la capătul de plecare — nu se plimbă degeaba pe hartă.
+  const hasEstimate = typeof progressFrac === 'number' && !isNaN(progressFrac);
+  const startPos = hasEstimate ? pointAtRouteFraction(routeLatLngs, progressFrac) : routeLatLngs[0];
+  const marker = L.marker(startPos || routeLatLngs[0], {icon: busIcon, zIndexOffset: 1000}).addTo(map);
+  marker.bindTooltip(
+    hasEstimate ? '📍 Poziție estimată din orar (neconfirmată de șofer)' : '🅿️ La punctul de plecare — nicio cursă activă acum',
+    {direction:'top', offset:[0,-14]}
+  );
   return marker;
 }
 
@@ -4297,10 +4283,12 @@ async function initHomeRoutesMap(){
         L.marker(ll,{icon:stopIcon}).addTo(map)
           .bindPopup(`<strong>${statii[i]?.nome||statii[i]?.name||statii[i]?.nume||''}</strong><br>${c.ruta}`);
       });
-      // Autobuz animat care merge pe traseul real — folosim poza vehiculului atribuit
-      // acestei curse, dacă are una încărcată în flotă, ca să "meargă" chiar el pe hartă.
+      // Autobuz — folosim poza vehiculului atribuit dacă există, și îl plasăm la poziția
+      // reală estimată din orar (dacă are o cursă chiar acum în desfășurare), nu într-o
+      // animație perpetuă care nu are legătură cu ora reală.
       const routeVeh = (window._F||[]).find(v=>v.id===c.vehiculId);
-      createBusMarkerOnRoute(map, drawCoords, col, routeVeh?.imagini?.[0]);
+      const routeNow = calcRouteFractionNow(c);
+      createBusMarkerOnRoute(map, drawCoords, col, routeVeh?.imagini?.[0], routeNow?.frac);
     }
   }
 
@@ -4620,6 +4608,64 @@ function calcBusProgressPct(oraPlecare, statii) {
 }
 window.calcBusProgressPct = calcBusProgressPct;
 
+// Verifică TOATE plecările de azi ale unei curse (dus + retur, dacă e cazul) și întoarce
+// fracțiunea (0-1) parcursă ACUM, dacă vreuna e chiar în desfășurare — altfel null.
+// Folosit ca estimare de poziție pe hartă atunci când șoferul nu a raportat manual unde e.
+function calcRouteFractionNow(c) {
+  if (!c || !c.activa) return null;
+  const today = new Date().toISOString().split('T')[0];
+  const dow = new Date().getDay();
+  if (!(c.zile||[]).includes(dow)) return null;
+  if (c.dataStart && today < c.dataStart) return null;
+  if (c.dataEnd && today > c.dataEnd) return null;
+  if (c.dateBlocate?.includes(today)) return null;
+  const pl = c.plecari?.length ? c.plecari : [{ora:c.ora}];
+  for (const p of pl) {
+    const oraInfo = getOraForDate(p, today);
+    const ora = oraInfo.ora || p.ora;
+    if (!ora) continue;
+    const pct = calcBusProgressPct(ora, c.statii||[]);
+    if (pct !== null) return { frac: pct/100, ora, isReturn:false };
+  }
+  if (c.tipCursa==='roundtrip' && c.intorsPlecari) {
+    const statiiRet = c.statiiIntors || [...(c.statii||[])].reverse();
+    for (const rp of c.intorsPlecari) {
+      const ora = rp?.ora;
+      if (!ora) continue;
+      const pct = calcBusProgressPct(ora, statiiRet);
+      if (pct !== null) return { frac: pct/100, ora, isReturn:true };
+    }
+  }
+  return null;
+}
+window.calcRouteFractionNow = calcRouteFractionNow;
+
+// Interpolează un punct [lat,lng] la o anumită fracțiune (0-1) de-a lungul unui traseu real
+// (listă de puncte pe drum), folosind lungimea cumulată reală (haversine), nu doar indexul.
+function pointAtRouteFraction(routeLatLngs, frac) {
+  if (!routeLatLngs || !routeLatLngs.length) return null;
+  if (routeLatLngs.length === 1) return routeLatLngs[0];
+  frac = Math.max(0, Math.min(1, frac));
+  const cum = [0];
+  let total = 0;
+  for (let i=1;i<routeLatLngs.length;i++) {
+    total += haversineKm(routeLatLngs[i-1][0],routeLatLngs[i-1][1],routeLatLngs[i][0],routeLatLngs[i][1]);
+    cum.push(total);
+  }
+  if (total === 0) return routeLatLngs[0];
+  const target = total*frac;
+  for (let i=1;i<cum.length;i++) {
+    if (cum[i] >= target) {
+      const segLen = cum[i]-cum[i-1];
+      const segT = segLen>0 ? (target-cum[i-1])/segLen : 0;
+      const [lat1,lng1] = routeLatLngs[i-1], [lat2,lng2] = routeLatLngs[i];
+      return [lat1+(lat2-lat1)*segT, lng1+(lng2-lng1)*segT];
+    }
+  }
+  return routeLatLngs[routeLatLngs.length-1];
+}
+window.pointAtRouteFraction = pointAtRouteFraction;
+
 function applyMiniBusImgs(){
   document.querySelectorAll('.mini-route-bus[data-bus]').forEach(img=>{ if(window.SPRINTER_B64) img.src = window.SPRINTER_B64; });
 }
@@ -4705,7 +4751,8 @@ window.showRouteMapModal = async (cursaId) => {
       L.marker(c2.ll,{icon}).addTo(map).bindPopup(`<strong>${c2.nume}</strong>`);
     });
     const modalVeh = (window._F||[]).find(v=>v.id===c.vehiculId);
-    createBusMarkerOnRoute(map, drawCoords, '#a97c3f', modalVeh?.imagini?.[0]);
+    const modalRouteNow = calcRouteFractionNow(c);
+    createBusMarkerOnRoute(map, drawCoords, '#a97c3f', modalVeh?.imagini?.[0], modalRouteNow?.frac);
   } else {
     mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:8px;padding:24px;text-align:center"><div style="font-size:32px">📍</div>Nu s-au putut localiza stațiile pe hartă.<br><span style="font-size:11px">Verifică denumirile stațiilor în Firestore.</span></div>';
   }
@@ -8898,7 +8945,42 @@ async function initLeafletHarta(){
   const bounds=[[garajLat,garajLng]];
   for(const v of window._F){
     const loc=v.locatieCurenta||'garaj';
-    if(loc==='garaj'||!loc) continue;
+    if(loc==='garaj'||!loc){
+      // Șoferul nu a raportat manual nicio locație — verificăm dacă vehiculul are chiar
+      // acum o cursă în desfășurare, conform orarului, și dacă da îl arătăm la poziția
+      // estimată pe traseu, marcat clar drept "estimare" (nu confirmare de la șofer).
+      const routesForVeh=(window._R||[]).filter(c=>c.activa&&c.vehiculId===v.id);
+      let estimate=null, estimateRoute=null;
+      for(const c of routesForVeh){ const now=calcRouteFractionNow(c); if(now){estimate=now;estimateRoute=c;break;} }
+      if(!estimate||!estimateRoute) continue;
+      try{
+        const statiiEst = estimate.isReturn ? (estimateRoute.statiiIntors||[...(estimateRoute.statii||[])].reverse()) : (estimateRoute.statii||[]);
+        const coordsEst=[];
+        for(const st of statiiEst){
+          if(st.lat!=null&&st.lng!=null){coordsEst.push([st.lat,st.lng]);continue;}
+          const nume=st.nome||st.name||st.nume; if(!nume)continue;
+          const ll=await geocodeCached(nume); if(ll)coordsEst.push(ll);
+        }
+        if(coordsEst.length<2) continue;
+        const roadRouteEst=await getRoadRoute(coordsEst);
+        const drawCoordsEst=roadRouteEst||coordsEst;
+        const estPt=pointAtRouteFraction(drawCoordsEst, estimate.frac);
+        if(!estPt) continue;
+        bounds.push(estPt);
+        const estIcon=L.divIcon({
+          html:`<div style="background:#c46520;color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2.5px dashed #fff">${v.icon||'🚌'}</div>`,
+          iconSize:[34,34],iconAnchor:[17,17],className:''
+        });
+        L.marker(estPt,{icon:estIcon}).addTo(map).bindPopup(
+          `<strong>${v.icon||'🚌'} ${v.nome||v.name||v.nume||''}</strong><br>`+
+          `📍 <em>Poziție estimată din orar</em> — ${estimateRoute.ruta} (ora ${estimate.ora})<br>`+
+          `⚠️ Șoferul nu a raportat manual locația<br>`+
+          `${v.nrInmatr?'🔖 '+v.nrInmatr+'<br>':''}`+
+          `<button onclick="adminMarkVehicleGaraj('${v.id}')" style="margin-top:6px;padding:4px 10px;background:#1a6b3c;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">🏠 Marchează la garaj</button>`
+        );
+      }catch(e){ console.warn('Estimare poziție eșuată pt', v.id, e.message); }
+      continue;
+    }
     // Geocodare cu Nominatim (OpenStreetMap) — gratuit, fără cheie, cu cache
     const dest=loc.startsWith('cursa_spre_')?loc.replace('cursa_spre_',''):loc;
     try{
