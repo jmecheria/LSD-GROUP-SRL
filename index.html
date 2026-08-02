@@ -2930,8 +2930,16 @@ function getNextRomaniaMidnightEpoch(){
   const msUntil = roMidnight.getTime() - roNow.getTime();
   return now.getTime() + msUntil;
 }
-function getLastSeenResetId(){ try{ return localStorage.getItem('lsd_last_reset_id')||''; }catch(e){ return ''; } }
-function setLastSeenResetId(id){ try{ if(id) localStorage.setItem('lsd_last_reset_id', id); }catch(e){} }
+// IMPORTANT: reset-ul ZILNIC (miezul nopții) și reset-ul MANUAL (declanșat de admin din
+// Setări) sunt evenimente complet separate și trebuie ținute minte separat. Dacă ar scrie
+// în aceeași cheie din localStorage, s-ar suprascrie reciproc: de exemplu, după UN SINGUR
+// reset manual vreodată, verificarea zilnică ar vedea mereu un ID "diferit" de cel așteptat
+// (fiindcă manual tocmai l-a suprascris) și ar declanșa deconectare la FIECARE refresh,
+// la nesfârșit — exact bug-ul „mă deconectează la refresh, nu doar la miezul nopții".
+function getLastSeenDailyResetId(){ try{ return localStorage.getItem('lsd_last_daily_reset_id')||''; }catch(e){ return ''; } }
+function setLastSeenDailyResetId(id){ try{ if(id) localStorage.setItem('lsd_last_daily_reset_id', id); }catch(e){} }
+function getLastSeenManualResetId(){ try{ return localStorage.getItem('lsd_last_manual_reset_id')||''; }catch(e){ return ''; } }
+function setLastSeenManualResetId(id){ try{ if(id) localStorage.setItem('lsd_last_manual_reset_id', id); }catch(e){} }
 
 window._midnightTimers = window._midnightTimers || [];
 function clearMidnightTimers(){
@@ -2957,7 +2965,10 @@ window.showMidnightCountdown = (resetIdToMark) => {
   }, 1000);
 };
 async function doMidnightReset(resetIdToMark){
-  setLastSeenResetId(resetIdToMark);
+  // resetIdToMark e fie "day-YYYY-MM-DD" (reset automat de la miezul nopții), fie
+  // "manual-<timestamp>" (declanșat de admin) — fiecare se reține în cheia lui proprie.
+  if (resetIdToMark && resetIdToMark.startsWith('manual-')) setLastSeenManualResetId(resetIdToMark);
+  else setLastSeenDailyResetId(resetIdToMark);
   try{ await signOut(auth); }catch(e){}
   await hardReloadBypassingCache();
 }
@@ -3087,24 +3098,30 @@ async function clearAppCaches(){
   }catch(e){ console.warn('Cache Storage clear failed:', e.message); }
 }
 async function checkPendingResetOnLoad(){
-  const seen = getLastSeenResetId();
+  const seen = getLastSeenDailyResetId();
   const todayId = 'day-'+getRomaniaDateStrFromEpoch(Date.now());
   if (!seen) {
-    setLastSeenResetId(todayId); // prima vizita vreodata pe acest browser — nimic de recuperat
+    setLastSeenDailyResetId(todayId); // prima vizita vreodata pe acest browser — nimic de recuperat
   } else if (seen !== todayId) {
     try{ await signOut(auth); }catch(e){}
     await clearAppCaches();
-    setLastSeenResetId(todayId);
+    setLastSeenDailyResetId(todayId);
     toast('🔄 Sesiunea și memoria cache au fost reîmprospătate automat (mentenanță zilnică)', 'in');
   }
   try{
     const ref = await getDoc(doc(db,'setari','reset_signal'));
     if (ref.exists()) {
       const manualId = ref.data()?.resetId;
-      if (manualId && manualId !== getLastSeenResetId()) {
+      const seenManual = getLastSeenManualResetId();
+      if (manualId && !seenManual) {
+        // Prima vizită vreodată pe acest browser — nu a existat nicio sesiune de "recuperat",
+        // deci doar reținem ID-ul curent, fără deconectare sau mesaj (ar fi confuz: cineva
+        // care intră prima oară nu trebuie anunțat că "sesiunea i-a fost reîmprospătată").
+        setLastSeenManualResetId(manualId);
+      } else if (manualId && manualId !== seenManual) {
         try{ await signOut(auth); }catch(e){}
         await clearAppCaches();
-        setLastSeenResetId(manualId);
+        setLastSeenManualResetId(manualId);
         toast('🔄 Sesiunea și memoria cache au fost reîmprospătate automat (mentenanță)', 'in');
       }
     }
