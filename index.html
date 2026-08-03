@@ -4429,8 +4429,14 @@ window.loadRegulate = async () => {
 
       // Info retur (daca e cursa dus-întors)
       let oraR=null, returMin=null, hasRetur=false, elapsedRetur=null, statiiRetur=[], returDone=false;
-      if(c.tipCursa==='roundtrip'&&c.intorsPlecari){
-        const rp=c.intorsPlecari[pi]||c.intorsPlecari[0];
+      if(c.tipCursa==='roundtrip'&&c.intorsPlecari?.length){
+        // Prioritate: plecarea retur de la ACELAȘI index (pi) ca plecarea dus curentă. Dar dacă
+        // acel rând există și totuși nu are oră completată (rând adăugat gol în admin), NU ne
+        // mai oprim acolo — căutăm orice altă plecare retur din listă care chiar are o oră,
+        // altfel a doua/a treia plecare a zilei rămânea fără buton de retur deși cursa clar
+        // avea Dus-Întors bifat și o oră de retur completată undeva în listă.
+        const rpExact = c.intorsPlecari[pi];
+        const rp = (rpExact && rpExact.ora) ? rpExact : (c.intorsPlecari.find(x=>x?.ora) || null);
         oraR = rp?.ora || null;
         hasRetur = !!oraR;
         returMin = oraR ? timeToMin(oraR) : null;
