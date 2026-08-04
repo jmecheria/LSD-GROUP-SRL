@@ -4500,7 +4500,7 @@ window.loadRegulate = async () => {
       }).join('');
 
       // ── Poziția reală a autobuzului pe traseu, calculată din ora curentă (fără cereri de rețea) ──
-      const busPct = calcBusProgressPct(activeOra, statii);
+      const busPct = calcBusProgressPct(activeOra, statii, date);
       const busStyle = busPct!==null ? `left:${busPct}%;animation:none` : '';
 
       const stopsHtml=statii.map((s,i)=>{
@@ -4609,8 +4609,14 @@ window.loadRegulate = async () => {
 // Calculează procentul (0-100) la care se află autobuzul pe mini-traseul unei curse,
 // interpolând între stațiile cu minuteDeLaStart cunoscute. Returnează null dacă cursa
 // nu e "azi, acum, în desfășurare" (nu a plecat încă / nu e ziua curentă / a ajuns deja).
-function calcBusProgressPct(oraPlecare, statii) {
+function calcBusProgressPct(oraPlecare, statii, dateStr) {
   if (!oraPlecare || oraPlecare==='-' || !statii?.length || statii.length<2) return null;
+  // Esențial: "e pe drum acum" are sens DOAR dacă ziua afișată e chiar AZI (ora Romaniei) —
+  // altfel, la Mâine/Poimâine/o dată aleasă, ora de plecare din câmpul "oraPlecare" (ex: "14:00")
+  // s-ar potrivi accidental cu ora curentă de ASTĂZI și ar arăta greșit autobuzul "în cursă"
+  // pentru o plecare care de fapt e într-o zi viitoare, nu s-a întâmplat încă.
+  const todayRo = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Bucharest'})).toISOString().split('T')[0];
+  if (dateStr && dateStr !== todayRo) return null;
   const now = new Date();
   const [h,m] = oraPlecare.split(':').map(Number);
   if (isNaN(h)||isNaN(m)) return null;
@@ -4647,7 +4653,7 @@ function calcRouteFractionNow(c) {
     const oraInfo = getOraForDate(p, today);
     const ora = oraInfo.ora || p.ora;
     if (!ora) continue;
-    const pct = calcBusProgressPct(ora, c.statii||[]);
+    const pct = calcBusProgressPct(ora, c.statii||[], today);
     if (pct !== null) return { frac: pct/100, ora, isReturn:false };
   }
   if (c.tipCursa==='roundtrip' && c.intorsPlecari) {
@@ -4655,7 +4661,7 @@ function calcRouteFractionNow(c) {
     for (const rp of c.intorsPlecari) {
       const ora = rp?.ora;
       if (!ora) continue;
-      const pct = calcBusProgressPct(ora, statiiRet);
+      const pct = calcBusProgressPct(ora, statiiRet, today);
       if (pct !== null) return { frac: pct/100, ora, isReturn:true };
     }
   }
