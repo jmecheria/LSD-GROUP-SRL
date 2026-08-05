@@ -4629,9 +4629,13 @@ function calcBusProgressPct(oraPlecare, statii, dateStr) {
   // altfel, la Mâine/Poimâine/o dată aleasă, ora de plecare din câmpul "oraPlecare" (ex: "14:00")
   // s-ar potrivi accidental cu ora curentă de ASTĂZI și ar arăta greșit autobuzul "în cursă"
   // pentru o plecare care de fapt e într-o zi viitoare, nu s-a întâmplat încă.
-  const todayRo = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Bucharest'})).toISOString().split('T')[0];
+  // IMPORTANT: folosim mereu ora ROMÂNIEI explicit (nu ora locală brută a dispozitivului) —
+  // altfel, pe un telefon/calculator setat pe alt fus orar, estimarea de aici nu mai coincide
+  // cu cea din modalul de rezervare loc (care deja calcula corect ora României), dând impresia
+  // că "nu se potrivesc" harta/mini-traseul cu disponibilitatea reală de îmbarcare.
+  const now = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Bucharest'}));
+  const todayRo = now.toISOString().split('T')[0];
   if (dateStr && dateStr !== todayRo) return null;
-  const now = new Date();
   const [h,m] = oraPlecare.split(':').map(Number);
   if (isNaN(h)||isNaN(m)) return null;
   const start = new Date(now); start.setHours(h,m,0,0);
@@ -4656,8 +4660,13 @@ window.calcBusProgressPct = calcBusProgressPct;
 // Folosit ca estimare de poziție pe hartă atunci când șoferul nu a raportat manual unde e.
 function calcRouteFractionNow(c) {
   if (!c || !c.activa) return null;
-  const today = new Date().toISOString().split('T')[0];
-  const dow = new Date().getDay();
+  // Ca și în restul codului (ex: bara de progres, disponibilitatea de îmbarcare), calculăm
+  // data și ziua săptămânii pentru ora ROMÂNIEI explicit — altfel, pe un dispozitiv setat pe
+  // alt fus orar, estimarea de aici (folosită pe hartă) ar putea ieși dintr-o zi diferită
+  // decât cea folosită la rezervarea locului, dând impresia că "nu se potrivesc" cele două.
+  const nowRo = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Bucharest'}));
+  const today = nowRo.toISOString().split('T')[0];
+  const dow = nowRo.getDay();
   if (!(c.zile||[]).includes(dow)) return null;
   if (c.dataStart && today < c.dataStart) return null;
   if (c.dataEnd && today > c.dataEnd) return null;
