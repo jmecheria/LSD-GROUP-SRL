@@ -8443,14 +8443,17 @@ window.loadSavedContent = loadSavedContent;
 
 // ── SETTINGS ADMIN ─────────────────────────────────────────
 async function loadAdminSettings(){
-  try{const ref=await getDoc(doc(db,'setari','global'));if(ref.exists()){const d=ref.data();const s=d.emailjs||{};const f=d.firma||{};document.getElementById('ejs-sid').value=s.serviceId||'';document.getElementById('ejs-key').value=s.publicKey||'';document.getElementById('ejs-admin').value=s.adminEmail||window.ADMIN_EMAIL;document.getElementById('ejs-tmpl-client').value=s.templateId||s.templateIdClient||'';document.getElementById('firm-name').value=f.name||'';document.getElementById('firm-cui').value=f.cui||'';document.getElementById('firm-reg').value=f.reg||'';document.getElementById('firm-tel').value=f.tel||'';document.getElementById('firm-addr').value=f.addr||f.adr||'';document.getElementById('firm-iban').value=f.iban||'';document.getElementById('firm-bank').value=f.banca||'';document.getElementById('firm-driver-email').value=d.soferContEmail||'';const ok=s.serviceId&&s.publicKey;const b=document.getElementById('ejs-status');if(b){b.className='badge '+(ok?'badge-confirmata':'badge-anulata');b.textContent='● '+(ok?'Configurat':'Neconfigurat');}}}catch(e){}
+  try{const ref=await getDoc(doc(db,'setari','global'));if(ref.exists()){const d=ref.data();const s=d.emailjs||{};const f=d.firma||{};document.getElementById('ejs-sid').value=s.serviceId||'';document.getElementById('ejs-key').value=s.publicKey||'';document.getElementById('ejs-admin').value=s.adminEmail||window.ADMIN_EMAIL;document.getElementById('ejs-tmpl-client').value=s.templateId||s.templateIdClient||'';document.getElementById('firm-name').value=f.name||'';document.getElementById('firm-cui').value=f.cui||'';document.getElementById('firm-reg').value=f.reg||'';document.getElementById('firm-tel').value=f.tel||'';document.getElementById('firm-addr').value=f.addr||f.adr||'';document.getElementById('firm-iban').value=f.iban||'';document.getElementById('firm-bank').value=f.banca||'';document.getElementById('firm-driver-email').value=d.soferContEmail||'';const ok=s.serviceId&&s.publicKey&&(s.templateId||s.templateIdClient);const b=document.getElementById('ejs-status');if(b){b.className='badge '+(ok?'badge-confirmata':'badge-anulata');b.textContent='● '+(ok?'Configurat':'Neconfigurat');}}}catch(e){}
 }
 window.saveSettings=async()=>{
   const ejs={serviceId:document.getElementById('ejs-sid').value.trim(),templateId:document.getElementById('ejs-tmpl-client').value.trim(),publicKey:document.getElementById('ejs-key').value.trim(),adminEmail:document.getElementById('ejs-admin').value.trim()||window.ADMIN_EMAIL};
-  const ref=await getDoc(doc(db,'setari','global'));const existing=ref.exists()?ref.data():{};
-  await setDoc(doc(db,'setari','global'),{...existing,emailjs:ejs},{merge:false});
+  // merge:true e suficient și mai sigur decât citirea manuală + suprascrierea completă a
+  // documentului — Firestore îmbină automat doar câmpul "emailjs", fără riscul de a pierde
+  // alte câmpuri (ex: firma, soferContEmail) dacă cineva citește o versiune veche între timp.
+  await setDoc(doc(db,'setari','global'),{emailjs:ejs},{merge:true});
   window._EJS=ejs;const ok=ejs.serviceId&&ejs.templateId&&ejs.publicKey;const b=document.getElementById('ejs-status');if(b){b.className='badge '+(ok?'badge-confirmata':'badge-anulata');b.textContent='● '+(ok?'Configurat':'Neconfigurat');}
-  toast('Setări EmailJS salvate!','ok');
+  if(!ok) toast('⚠️ Setări salvate, dar lipsește Service ID, Template ID sau Public Key — emailurile NU vor funcționa până nu completezi toate 3','wr');
+  else toast('Setări EmailJS salvate!','ok');
 };
 window.saveFirmSettings=async()=>{
   const firma={name:document.getElementById('firm-name').value.trim()||'LSD Group SRL',cui:document.getElementById('firm-cui').value.trim(),reg:document.getElementById('firm-reg').value.trim(),tel:document.getElementById('firm-tel').value.trim(),addr:document.getElementById('firm-addr').value.trim(),adr:document.getElementById('firm-addr').value.trim(),iban:document.getElementById('firm-iban').value.trim(),banca:document.getElementById('firm-bank').value.trim()};
@@ -8461,6 +8464,7 @@ window.saveFirmSettings=async()=>{
   toast('Date firmă salvate! Email cont șoferi: '+(soferEmail||'(nesetat)'),'ok');
 };
 window.testEmail=async()=>{
+  toast('📤 Se trimite emailul de test...','in');
   const testVeh=(window._F||[])[0];
   const ok=await sendUnifiedEmail({
     to_email:window._EJS.adminEmail||window.ADMIN_EMAIL, nume:'Test',
@@ -8472,13 +8476,23 @@ window.testEmail=async()=>{
     vehicul_nume:testVeh?.nome||testVeh?.name||testVeh?.nume||'Autobuz test',
     vehicul_img:testVeh?.imagini?.[0]||''
   });
-  toast(ok?'✅ Email trimis!':'❌ EmailJS neconfigurat sau eroare',ok?'ok':'er');
+  if(ok) toast('✅ Email trimis! Verifică inbox-ul (și folderul Spam).','ok');
+  else toast('❌ Eroare: '+(window._LAST_EMAIL_ERROR||'necunoscută — verifică consola (F12)'),'er');
 };
 
 // ── EMAILJS ────────────────────────────────────────────────
 async function initEJS(){
   const cfg=window._EJS;if(!cfg?.serviceId||!cfg?.publicKey)return false;
-  if(!window.emailjs){await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});window.emailjs.init({publicKey:cfg.publicKey});}
+  if(!window.emailjs){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+      s.onload=res;
+      s.onerror=()=>rej(new Error('Nu s-a putut încărca librăria EmailJS (verifică rețeaua/ad-blocker/firewall)'));
+      document.head.appendChild(s);
+    });
+    window.emailjs.init({publicKey:cfg.publicKey});
+  }
   return true;
 }
 // Construiește URL-ul public al codului QR pentru un bilet (folosește același
@@ -8494,9 +8508,18 @@ function buildQrUrl(qrData){
 // IMPORTANT: variabilele trimise sunt toate simple (text/URL), nu blocuri HTML
 // gata construite — imaginile se afișează direct în șablon cu <img src="{{qr_url}}">
 // și <img src="{{vehicul_img}}">, ca substituția să fie garantată în EmailJS.
+// Reține ultima eroare reală de la EmailJS (mesaj exact, nu doar "a mers / n-a mers") —
+// folosită de butonul de test din Setări, ca adminul să vadă EXACT de ce eșuează, nu doar
+// un mesaj generic. Altfel emailurile pot eșua silențios, vizibil doar în consola browserului.
+window._LAST_EMAIL_ERROR = '';
 async function sendUnifiedEmail(p){
   const cfg=window._EJS;
-  if(!cfg?.serviceId||!cfg?.templateId||!cfg?.publicKey)return false;
+  if(!cfg?.serviceId||!cfg?.templateId||!cfg?.publicKey){
+    window._LAST_EMAIL_ERROR = 'EmailJS neconfigurat complet (lipsește Service ID, Template ID sau Public Key din Admin → Setări)';
+    console.warn('[EMAIL] '+window._LAST_EMAIL_ERROR);
+    return false;
+  }
+  let clientOk = !p.to_email, adminOk = true; // daca nu exista to_email, nu blocam pe motivul asta
   try{
     await initEJS();
     const mesajHtml=(p.mesaj||'').replace(/\n/g,'<br/>');
@@ -8506,11 +8529,29 @@ async function sendUnifiedEmail(p){
       ...p, mesaj:mesajHtml
     };
     console.log('[EMAIL] Trimit către', base.to_email, '— bilet_id:', base.bilet_id, '· qr_url:', base.qr_url?'DA':'lipsă', '· vehicul_nume:', base.vehicul_nume, '· vehicul_img:', base.vehicul_img?'DA ('+base.vehicul_img.length+' caractere)':'lipsă');
-    if(p.to_email) await window.emailjs.send(cfg.serviceId,cfg.templateId,{...base,to_email:p.to_email});
+    // Trimiterile către client și admin sunt independente — dacă una eșuează (ex: emailul
+    // adminului e greșit configurat), cealaltă tot ajunge, nu se mai blochează reciproc.
+    if(p.to_email){
+      try{ await window.emailjs.send(cfg.serviceId,cfg.templateId,{...base,to_email:p.to_email}); clientOk=true; }
+      catch(e){ clientOk=false; window._LAST_EMAIL_ERROR = extractEmailJsError(e); console.error('[EMAIL] Eroare trimitere client:', e); }
+    }
     const adminEmail=cfg.adminEmail||window.ADMIN_EMAIL;
-    if(adminEmail && adminEmail!==p.to_email) await window.emailjs.send(cfg.serviceId,cfg.templateId,{...base,to_email:adminEmail});
-    return true;
-  }catch(e){console.error('EJS unified:',e);return false;}
+    if(adminEmail && adminEmail!==p.to_email){
+      try{ await window.emailjs.send(cfg.serviceId,cfg.templateId,{...base,to_email:adminEmail}); adminOk=true; }
+      catch(e){ adminOk=false; window._LAST_EMAIL_ERROR = extractEmailJsError(e); console.error('[EMAIL] Eroare trimitere admin:', e); }
+    }
+    return clientOk && adminOk;
+  }catch(e){
+    window._LAST_EMAIL_ERROR = extractEmailJsError(e);
+    console.error('EJS unified:',e);
+    return false;
+  }
+}
+// EmailJS aruncă adesea obiecte cu {status, text} (nu Error simplu) — extragem mesajul util
+function extractEmailJsError(e){
+  if (e?.text) return `EmailJS ${e.status||''}: ${e.text}`.trim();
+  if (e?.message) return e.message;
+  return String(e);
 }
 
 // ── EXPORT / REPORTS ───────────────────────────────────────
