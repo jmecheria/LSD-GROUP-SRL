@@ -8528,7 +8528,17 @@ async function sendUnifiedEmail(p){
       bilet_id:'', qr_url:'', vehicul_nume:'', vehicul_img:'',
       ...p, mesaj:mesajHtml
     };
-    console.log('[EMAIL] Trimit către', base.to_email, '— bilet_id:', base.bilet_id, '· qr_url:', base.qr_url?'DA':'lipsă', '· vehicul_nume:', base.vehicul_nume, '· vehicul_img:', base.vehicul_img?'DA ('+base.vehicul_img.length+' caractere)':'lipsă');
+    // IMPORTANT: pozele vehiculelor sunt stocate în Firestore ca text base64 (nu sunt
+    // găzduite undeva ca link real), ceea ce poate însemna zeci de mii de caractere.
+    // EmailJS respinge cererile prea mari cu eroare 413 (Payload Too Large) — exact asta
+    // bloca trimiterea oricărui email care includea o poză de vehicul. Nu le mai trimitem
+    // deloc prin email (oricum multe clienți de email — Gmail, Outlook — blochează sau
+    // afișează prost imaginile base64 inline); restul emailului se trimite normal.
+    if (base.vehicul_img && base.vehicul_img.startsWith('data:')) {
+      console.warn('[EMAIL] Poza vehiculului e base64 ('+base.vehicul_img.length+' caractere) — nu se trimite prin email (ar depăși limita EmailJS și ar da eroare 413).');
+      base.vehicul_img = '';
+    }
+    console.log('[EMAIL] Trimit către', base.to_email, '— bilet_id:', base.bilet_id, '· qr_url:', base.qr_url?'DA':'lipsă', '· vehicul_nume:', base.vehicul_nume, '· vehicul_img:', base.vehicul_img?'DA ('+base.vehicul_img.length+' caractere)':'lipsă (eliminată)');
     // Trimiterile către client și admin sunt independente — dacă una eșuează (ex: emailul
     // adminului e greșit configurat), cealaltă tot ajunge, nu se mai blochează reciproc.
     if(p.to_email){
