@@ -6513,11 +6513,30 @@ function startNotifListener(){
     const badge=document.getElementById('notif-badge');
     if(badge){badge.textContent=unread.length;badge.style.display=unread.length>0?'flex':'none';}
     const list=document.getElementById('notif-list');
-    if(list){list.innerHTML=all.length?[...all].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,20).map(n=>`<div style="padding:10px 12px;border-radius:var(--r);margin-bottom:5px;background:${n.citita?'var(--cream)':'var(--amber-g)'};border:1px solid ${n.citita?'var(--border-l)':'var(--amber-b)'};cursor:pointer" onclick="markNotifRead('${n.id}')"><div style="font-weight:${n.citita?400:700};font-size:13px;margin-bottom:2px">${n.title||'Notificare'}</div><div style="font-size:12px;color:var(--stone)">${n.body||''}</div><div style="font-size:10px;color:var(--stone);margin-top:3px">${n.createdAt?new Date(n.createdAt.seconds*1000).toLocaleString('ro'):''}</div></div>`).join(''):'<div style="text-align:center;padding:20px;color:var(--stone);font-size:13px">Nicio notificare</div>';}
+    if(list){list.innerHTML=all.length?[...all].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,20).map(n=>`<div style="padding:10px 12px;border-radius:var(--r);margin-bottom:5px;background:${n.citita?'var(--cream)':'var(--amber-g)'};border:1px solid ${n.citita?'var(--border-l)':'var(--amber-b)'};cursor:pointer" onclick="openNotifDetail('${n.id}','${n.rezId||''}')"><div style="font-weight:${n.citita?400:700};font-size:13px;margin-bottom:2px">${n.title||'Notificare'}</div><div style="font-size:12px;color:var(--stone)">${n.body||''}</div><div style="font-size:10px;color:var(--stone);margin-top:3px">${n.createdAt?new Date(n.createdAt.seconds*1000).toLocaleString('ro'):''}</div></div>`).join(''):'<div style="text-align:center;padding:20px;color:var(--stone);font-size:13px">Nicio notificare</div>';}
   },err=>console.warn('Notif:',err.message));
 }
 window.toggleNotifPanel=()=>{const p=document.getElementById('notif-panel');if(p)p.style.display=p.style.display==='none'?'block':'none';};
 window.markNotifRead=async id=>{await setDoc(doc(db,'notificari',id),{citita:true},{merge:true});};
+// Click pe o notificare din clopoțel (cont logat) — o marchează citită și deschide un modal
+// cu TOATE detaliile rezervării la care se referă (dată, oră, traseu, vehicul, șofer etc.),
+// nu doar textul scurt al notificării. Reutilizează exact modalele deja existente pentru
+// bilete (curse regulate / organizate), ca informația să fie mereu completă și la zi.
+window.openNotifDetail = async (notifId, rezId) => {
+  markNotifRead(notifId);
+  const panel=document.getElementById('notif-panel'); if(panel) panel.style.display='none';
+  if (!rezId) return;
+  try {
+    const ref = await getDoc(doc(db,'rezervari',rezId));
+    if (!ref.exists()) { toast('Rezervarea la care se referă această notificare nu mai există','wr'); return; }
+    const r = {id:rezId, ...ref.data()};
+    if (r.tipRezervare==='regulata') { showTicketById(rezId); return; }
+    if (r.tipRezervare==='organizata' && r.biletId) { showOrgTicket(rezId); return; }
+    // Cursă organizată fără bilet încă (în așteptare / ofertă) — arătăm un rezumat complet
+    // al cererii (traseu, dată, status, conversație), la fel ca la vizitatorii fără cont.
+    openGuestOrgDetail(r);
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
+};
 window.markAllRead=async()=>{const u=window._U;if(!u)return;const snap=await getDocs(query(collection(db,'notificari'),where('uid','==',u.uid),where('citita','==',false)));await Promise.all(snap.docs.map(d=>setDoc(doc(db,'notificari',d.id),{citita:true},{merge:true})));toast('Toate notificările marcate citite','ok');};
 async function sendAdminNotif(rezId,uid,title,body){if(!uid)return;try{await addDoc(collection(db,'notificari'),{uid,title,body,citita:false,createdAt:serverTimestamp(),rezId});}catch(e){}}
 
