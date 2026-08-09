@@ -3130,6 +3130,37 @@ async function checkPendingResetOnLoad(){
 }
 checkPendingResetOnLoad();
 
+// ── REVENIRE DIN FUNDAL (mobil / PWA instalată) ──────────────
+// Pe mobil, mai ales ca aplicație instalată pe ecranul principal, telefonul suspendă
+// execuția JS cât timp aplicația e în fundal (ecran blocat, altă aplicație activă) — inclusiv
+// timerul de reset de la miezul nopții și conexiunea live la Firestore pentru notificări.
+// La redeschidere, pagina de cele mai multe ori NU se reîncarcă de la zero (e doar "trezită"
+// din suspendare), deci codul care rulează o singură dată la încărcare (verificarea de reset,
+// programarea timerului, pornirea ascultătorului de notificări) nu se mai declanșează —
+// de aici bug-ul "nu deconectează la miezul nopții" și "nu apar notificări" pe telefon.
+// 'visibilitychange' este semnalul de încredere pentru "aplicația tocmai a revenit vizibilă",
+// inclusiv în PWA standalone (spre deosebire de eventul 'load', care nu se mai declanșează
+// dacă pagina nu s-a reîncărcat efectiv). La fiecare revenire reluăm tot ce ar fi trebuit
+// să ruleze o dată la încărcare.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  // 1. Verifică dacă a trecut un reset (zilnic sau manual) cât timp am fost în fundal —
+  // dacă da, deconectează silențios și curăță cache-ul, exact ca la reîncărcarea paginii.
+  checkPendingResetOnLoad().catch(e=>console.warn('checkPendingResetOnLoad (wake):',e.message));
+  // 2. Reprogramează timerul de miezul nopții pornind de la ora curentă — cel vechi, calculat
+  // cu ore înainte, poate fi complet nesincronizat după o suspendare lungă.
+  try{ scheduleMidnightReset(); }catch(e){ console.warn('scheduleMidnightReset (wake):', e.message); }
+  // 3. Reîmprospătează conexiunea live la notificări — dacă WebSocket-ul Firestore a fost
+  // întrerupt în fundal, ne asigurăm că pornim un ascultător proaspăt, nu unul blocat/mort.
+  if (window._U) {
+    if (_notifListener) { try{ _notifListener(); }catch(e){} _notifListener = null; }
+    startNotifListener();
+  } else {
+    stopGuestNotifListener();
+    startGuestNotifListener();
+  }
+});
+
 // ── ÎNREGISTRARE SERVICE WORKER ──────────────────────────────
 // Cache-uieste doar shell-ul static (fonturi, Leaflet, iconițe) — NICIODATĂ Firestore/date live
 // (vezi sw.js). Datele (bilete/rezervări) rămân disponibile offline separat, prin persistenta
