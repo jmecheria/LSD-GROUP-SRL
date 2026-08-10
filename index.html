@@ -6569,7 +6569,7 @@ window.openNotifDetail = async (notifId, rezId) => {
   } catch(e) { toast('Eroare: '+e.message,'er'); }
 };
 window.markAllRead=async()=>{const u=window._U;if(!u)return;const snap=await getDocs(query(collection(db,'notificari'),where('uid','==',u.uid),where('citita','==',false)));await Promise.all(snap.docs.map(d=>setDoc(doc(db,'notificari',d.id),{citita:true},{merge:true})));toast('Toate notificările marcate citite','ok');};
-async function sendAdminNotif(rezId,uid,title,body){if(!uid)return;try{await addDoc(collection(db,'notificari'),{uid,title,body,citita:false,createdAt:serverTimestamp(),rezId});}catch(e){}}
+async function sendAdminNotif(rezId,uid,title,body){if(!uid)return;try{await addDoc(collection(db,'notificari'),{uid,title,body,citita:false,createdAt:serverTimestamp(),rezId});}catch(e){console.error('[NOTIF] Scrierea notificării a eșuat — uid:',uid,'rezId:',rezId,'eroare:',e.code||'',e.message);}}
 
 // ── NOTIFICĂRI PENTRU VIZITATORI FĂRĂ CONT ──────────────────
 // Cei fără cont nu au uid, deci nu pot fi găsiți în colecția 'notificari'.
