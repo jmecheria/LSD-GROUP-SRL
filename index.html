@@ -1476,8 +1476,30 @@ footer::before{
         </div>
         <button class="btn btn-primary btn-full btn-lg" onclick="cautaBilet()">🔍 Verifică biletul</button>
       </div>
+      <div style="text-align:center;margin-top:14px">
+        <a onclick="toggleGuestNotifRecover()" style="font-size:12.5px">🔔 Ai rezervat deja fără cont, de pe alt dispozitiv? Recuperează notificările aici</a>
+        <div id="guest-notif-recover-box" style="display:none;margin-top:12px;text-align:left;background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);padding:16px;box-shadow:var(--sh)">
+          <div class="f-hint" style="margin-bottom:8px;margin-top:0">Introdu emailul folosit la rezervare — aducem pe acest dispozitiv toate notificările rezervărilor tale fără cont.</div>
+          <input type="email" id="guest-notif-email" placeholder="Emailul folosit la rezervare" onkeydown="if(event.key==='Enter')recoverGuestNotifs(document.getElementById('guest-notif-email').value)" style="margin-bottom:8px"/>
+          <button class="btn btn-secondary btn-full btn-sm" onclick="recoverGuestNotifs(document.getElementById('guest-notif-email').value)">🔔 Recuperează notificările</button>
+        </div>
+      </div>
       <div id="bilet-result" style="text-align:left"></div>
     </div>
+  </div>
+</div>
+
+<!-- ────────────────── ALEGERE LOC (link partajat, cursă organizată) ────────────────── -->
+<div id="pg-alege-loc" class="page">
+  <div style="max-width:480px;margin:0 auto">
+    <div class="fg">
+      <div class="fl">Cod cursă (din linkul primit)</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="alege-loc-code-input" placeholder="Ex: LOC-A1B2C3" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')loadSeatPickerByCode(this.value)"/>
+        <button class="btn btn-primary" onclick="loadSeatPickerByCode(document.getElementById('alege-loc-code-input').value)">🔍</button>
+      </div>
+    </div>
+    <div id="alege-loc-body"></div>
   </div>
 </div>
 
@@ -2355,6 +2377,10 @@ footer::before{
             <div class="fg"><div class="fl">Preț final ofertă (RON)</div><input type="number" id="alloc-price" min="0" placeholder="Ex: 1200"/></div>
             <div class="fg"><div class="fl">Discount (RON)</div><input type="number" id="alloc-discount" min="0" placeholder="0" oninput="updateInvoicePreview()"/></div>
           </div>
+          <div id="booking-seatlink-wrap" style="display:none;margin-top:16px;background:var(--card);border:1.5px solid var(--amber-b);border-radius:var(--r);padding:16px;box-shadow:var(--sh)">
+            <div style="font-weight:700;font-size:13px;margin-bottom:10px;font-family:'Plus Jakarta Sans',sans-serif">🎫 Alegere locuri de către participanți</div>
+            <div id="booking-seatlink-body" style="font-size:12.5px;color:var(--stone)"></div>
+          </div>
           <div id="booking-map-wrap" style="display:none;margin-top:16px;background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);padding:16px;box-shadow:var(--sh)">
             <div style="font-weight:700;font-size:13px;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">🗺️ Traseul exact ales de client pe hartă</div>
             <div style="font-size:11px;color:var(--stone);margin-bottom:10px">Trageți un punct dacă autobuzul nu poate ajunge exact acolo (stradă îngustă etc.), apoi salvați ajustarea.</div>
@@ -2683,7 +2709,7 @@ footer::before{
   window.MONTHS_RO = ['Ianuarie','Februarie','Martie','Aprilie','Mai','Iunie','Iulie','August','Septembrie','Octombrie','Noiembrie','Decembrie'];
 
   window.nav = function(page, ctx) {
-    if ((window._ROLE === 'driver') && !['sofer','gdpr','auth'].includes(page)) { nav('sofer'); return; }
+    if ((window._ROLE === 'driver') && !['sofer','gdpr','auth','alege-loc'].includes(page)) { nav('sofer'); return; }
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nl[data-page]').forEach(n => n.classList.remove('active'));
     const el = document.getElementById('pg-' + page);
@@ -3323,6 +3349,107 @@ function getSeatLayout(type, seats) {
   const spacer = kind => `<span class="seat-mini" style="opacity:.5;font-size:9px">${kind==='intrare'?'🚪':'·'}</span>`;
   return buildRowSlotsHtml(type, seats, s, spacer, ()=>sep);
 }
+
+// ── GRILĂ LOCURI — ALEGERE LOCURI CURSĂ ORGANIZATĂ ──────────────────────────
+// Reutilizează stilul vizual de la seat-picker-ul curselor regulate (.seat, .seat-grid etc.),
+// dar peste vehiculul alocat unei curse organizate + lista de nume asociate locurilor alese
+// (seatPicks). Un singur constructor de HTML, folosit din 4 locuri diferite (admin, contul
+// clientului, căutarea biletului pentru vizitatori, și pagina publică unde participanții
+// aleg efectiv locul) — ca vizualul și comportamentul să fie identice peste tot.
+// - deleteOnclickBuilder(locNr) -> string cu JS pentru butonul de eliberare, sau null (fără)
+// - pickable=true -> locurile libere devin clickabile (participantul își alege locul)
+function seatPicksGridHtml(veh, seatPicks, deleteOnclickBuilder, pickable, rezId, seatLinkCode) {
+  const rows = veh?.rows || [];
+  if (!rows.length) return '<p style="font-size:12px;color:var(--stone);text-align:center;padding:16px">Vehiculul nu are configurație de locuri salvată.</p>';
+  const pickedMap = {};
+  (seatPicks||[]).forEach(p => { pickedMap[p.locNr] = p.nume; });
+  let html = '<div class="seat-wrap"><div class="seat-front-bar">⬆ FAȚĂ AUTOBUZ ⬆</div><div class="seat-grid">';
+  html += '<div class="seat-row driver-row"><div class="seat driver">🚗</div></div>';
+  rows.forEach(row => {
+    if (row.blocat) { html += `<div style="text-align:center;padding:4px;font-size:10px;color:var(--red);background:var(--red-g);border-radius:5px;margin:2px 0">${row.label||'🚫 Blocat'}</div>`; return; }
+    const t = row.type || '2+2'; const seats = row.seats || [];
+    const mkS = s => {
+      if (!s) return '';
+      const nume = pickedMap[s.nr];
+      if (nume) return `<div class="seat occupied" title="${nume}">${s.nr}</div>`;
+      if (pickable) return `<div class="seat free" onclick="claimSeatPick('${rezId}','${seatLinkCode}',${s.nr})">${s.nr}</div>`;
+      return `<div class="seat free" style="cursor:default">${s.nr}</div>`;
+    };
+    const mkSpacer = kind => `<div class="seat" style="cursor:default;border-style:dashed;background:transparent;visibility:hidden"></div>`;
+    const aisle = () => '<div class="seat-aisle"></div>';
+    html += `<div class="seat-row${t.startsWith('spate')?' back':''}">` + buildRowSlotsHtml(t, seats, mkS, mkSpacer, aisle) + '</div>';
+  });
+  html += '</div></div>';
+  html += `<div class="seat-legend"><span><span class="seat-legend-dot" style="background:var(--green-g);border-color:rgba(26,107,60,.35)"></span>Liber</span><span><span class="seat-legend-dot" style="background:var(--red-g);border-color:rgba(181,45,45,.25)"></span>Ales</span></div>`;
+  const list = (seatPicks||[]).slice().sort((a,b)=>a.locNr-b.locNr).map(p => `<div style="display:flex;justify-content:space-between;align-items:center;background:var(--cream);border:1px solid var(--border-l);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:13px">
+    <span><strong>Loc ${p.locNr}</strong> — ${p.nume}</span>
+    ${deleteOnclickBuilder ? `<button class="btn btn-danger btn-sm" onclick="${deleteOnclickBuilder(p.locNr)}">🗑 Eliberează</button>` : ''}
+  </div>`).join('') || '<p style="font-size:12px;color:var(--stone);text-align:center">Niciun loc ales încă.</p>';
+  return html + '<div style="margin-top:14px">' + list + '</div>';
+}
+window.seatPicksGridHtml = seatPicksGridHtml;
+
+// Participantul alege un loc liber (fără cont, doar nume) — verifică din nou ocuparea chiar
+// înainte de scriere, ca doi oameni să nu poată "fura" din greșeală același loc simultan.
+window.claimSeatPick = async (rezId, seatLinkCode, locNr) => {
+  const nume = prompt('Numele tău (va fi vizibil organizatorului cursei):');
+  if (!nume || !nume.trim()) return;
+  try {
+    const ref = await getDoc(doc(db,'rezervari',rezId));
+    if (!ref.exists()) { toast('Cursa nu mai există','er'); return; }
+    const r = ref.data();
+    if ((r.seatPicks||[]).some(p=>p.locNr===locNr)) { toast('Cineva tocmai a ales acest loc — alege altul','wr'); loadSeatPickerByCode(seatLinkCode); return; }
+    const seatPicks = [...(r.seatPicks||[]), {locNr, nume: nume.trim(), pickedAt: Timestamp.now()}];
+    await setDoc(doc(db,'rezervari',rezId), {seatPicks}, {merge:true});
+    toast('✅ Loc '+locNr+' ales — bine ai venit!','ok');
+    loadSeatPickerByCode(seatLinkCode);
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
+};
+
+// Eliberează un loc ales abuziv — folosit din admin, din Contul meu (organizator) și din
+// căutarea biletului pentru vizitatori fără cont. refreshFn e apelat după succes, ca fiecare
+// context să-și reîmprospăteze propriul ecran (nu există un singur loc "canonic" de UI).
+window.releaseSeatPick = async (rezId, locNr, refreshFn) => {
+  if (!confirm('Eliberezi acest loc? Persoana va trebui să și-l aleagă din nou dacă mai vrea.')) return;
+  try {
+    const ref = await getDoc(doc(db,'rezervari',rezId));
+    if (!ref.exists()) return;
+    const seatPicks = (ref.data().seatPicks||[]).filter(p=>p.locNr!==locNr);
+    await setDoc(doc(db,'rezervari',rezId), {seatPicks}, {merge:true});
+    toast('🗑 Loc eliberat','ok');
+    if (typeof refreshFn === 'function') refreshFn();
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
+};
+window.copySeatLink = async (link) => {
+  try { await navigator.clipboard.writeText(link); toast('📋 Link copiat!','ok'); }
+  catch(e) { toast('Nu am putut copia automat — selectează textul și copiază manual (Ctrl+C)','wr'); }
+};
+
+// ── PAGINĂ PUBLICĂ: ALEGERE LOC (link partajat, fără cont) ─────────────────
+window.loadSeatPickerByCode = async (code) => {
+  code = (code||'').trim().toUpperCase();
+  const body = document.getElementById('alege-loc-body');
+  if (!body) return;
+  const inputEl = document.getElementById('alege-loc-code-input');
+  if (inputEl && inputEl.value !== code) inputEl.value = code;
+  if (!code) { body.innerHTML = ''; return; }
+  body.innerHTML = '<div class="loading-state"><div class="spin"></div><p>Se încarcă...</p></div>';
+  try {
+    const snap = await getDocs(query(collection(db,'rezervari'), where('seatLinkCode','==',code)));
+    if (snap.empty) { body.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><h3>Link invalid</h3><p>Nu am găsit nicio cursă pentru acest cod. Verifică-l cu organizatorul.</p></div>'; return; }
+    const r = {id: snap.docs[0].id, ...snap.docs[0].data()};
+    if (!(window._F||[]).length) { try { await loadFleet(); } catch(e){} }
+    const veh = (window._F||[]).find(v=>v.id===r.vehiculId);
+    const header = `<div style="text-align:center;margin:20px 0">
+      <div style="font-size:34px;margin-bottom:6px">🎫</div>
+      <div style="font-family:var(--font-display);font-weight:600;font-size:21px">${r.traseu||r.descriereCursa||'Cursă organizată'}</div>
+      <div style="color:var(--stone);font-size:13px;margin-top:4px">📅 ${r.data||'-'}${r.ora?' · 🕐 '+r.ora:''} · 🚌 ${r.vehiculNume||'-'}</div>
+      <div style="font-size:12px;color:var(--stone);margin-top:6px">Alege un loc liber și pune-ți numele — fără cont, fără plată aici.</div>
+    </div>`;
+    body.innerHTML = header + seatPicksGridHtml(veh, r.seatPicks||[], null, true, r.id, r.seatLinkCode);
+  } catch(e) { body.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p>${e.message}</p></div>`; }
+};
+
 window.showTermeni = () => {
   alert('Termeni și Condiții LSD Group SRL\n\n1. Anulare curse regulate: >24h = rambursare integrală; <24h = fără rambursare\n2. Anulare curse organizate: >72h = integral; 24-72h = 50%; <24h = fără rambursare\n3. Prezentare la îmbarcare cu min 10 min înainte\n4. Biletele sunt nominale și netransferabile\n5. Prețuri includ TVA 21%\n\nContact: lsd.group.srl@gmail.com');
 };
@@ -5176,6 +5303,15 @@ window.cautaBilet = async () => {
           <div style="text-align:center;margin-bottom:20px"><img src="${qrUrlOrg}" width="160" height="160" style="border-radius:8px;border:1px solid var(--border)"/></div>
           ${[['📋 Descriere',r.descriereCursa||r.tipCursa||'-'],['🚌 Traseu',r.traseu||'-'],['📅 Data',r.data||'-'],['🕐 Ora',r.ora||'flexibil'],...(r.vehiculNume?[['🚐 Autobuz',r.vehiculNume]]:[]),['👤 Pasager',r.numeClient||'-']].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-l);font-size:13px"><span style="color:var(--stone)">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
           <div style="margin-top:16px;background:var(--cream);border-radius:var(--r);padding:12px;font-size:12px;color:var(--stone);text-align:center">${isValid?'✅ Bilet valid — prezentați codul QR șoferului':'⚠️ Bilet '+r.status.replace('_',' ')+' — contactați echipa LSD Group'}</div>
+          ${r.seatLinkCode?`<div style="background:var(--card);border:1.5px solid var(--amber-b);border-radius:var(--r);padding:14px;margin-top:14px;text-align:left">
+            <div style="font-weight:700;font-size:13px;margin-bottom:8px">🎫 Alegere locuri — grupul tău</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input type="text" readonly value="${window.location.origin+window.location.pathname+'?loc='+r.seatLinkCode}" style="font-size:11px" onclick="this.select()"/>
+              <button class="btn btn-secondary btn-sm" onclick="copySeatLink('${window.location.origin+window.location.pathname+'?loc='+r.seatLinkCode}')">📋</button>
+            </div>
+            <div class="f-hint" style="margin-bottom:10px">Trimite acest link participanților ca să-și aleagă locul.</div>
+            ${seatPicksGridHtml((window._F||[]).find(v=>v.id===r.vehiculId), r.seatPicks||[], locNr=>`releaseSeatPick('${r.id}',${locNr},()=>cautaBilet())`, false, r.id, r.seatLinkCode)}
+          </div>`:''}
           <button class="btn btn-danger btn-full" style="margin-top:14px" onclick="deleteBiletPublic('${r.id}','${r.biletId}')">🗑 Șterge definitiv acest bilet</button>
         </div>
       </div>`;
@@ -6405,6 +6541,19 @@ window.loadContPage = async () => {
         msgBlock=`<div style="background:var(--cream);border:1px solid var(--border-l);border-radius:var(--r);padding:12px;margin-top:12px"><div style="font-size:13px;color:var(--stone)">⏳ Echipa LSD Group analizează cererea și vă va trimite o ofertă în curând.</div><button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="openClientMsgSafe('${d.id}')">✉️ Trimite un mesaj</button></div>`;
       }
       if(r.status==='confirmata'&&r.pretFinal) msgBlock+=`<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="openMyInvoice('${d.id}',30)">📄 Factură avans 30%</button><button class="btn btn-secondary btn-sm" onclick="openMyInvoice('${d.id}',70)">📄 Rest 70%</button></div>`;
+      if(r.seatLinkCode){
+        const link=window.location.origin+window.location.pathname+'?loc='+r.seatLinkCode;
+        const veh=(window._F||[]).find(v=>v.id===r.vehiculId);
+        msgBlock+=`<div style="background:var(--card);border:1.5px solid var(--amber-b);border-radius:var(--r);padding:14px;margin-top:12px">
+          <div style="font-weight:700;font-size:13px;margin-bottom:8px">🎫 Alegere locuri — grupul tău</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input type="text" readonly value="${link}" style="font-size:11px" onclick="this.select()"/>
+            <button class="btn btn-secondary btn-sm" onclick="copySeatLink('${link}')">📋</button>
+          </div>
+          <div class="f-hint" style="margin-bottom:10px">Trimite acest link participanților ca să-și aleagă locul.</div>
+          ${seatPicksGridHtml(veh, r.seatPicks||[], locNr=>`releaseSeatPick('${d.id}',${locNr},()=>loadContPage())`, false, d.id, r.seatLinkCode)}
+        </div>`;
+      }
     }
     return`<div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:20px;margin-bottom:14px;box-shadow:var(--sh)">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
@@ -6630,6 +6779,33 @@ function startGuestNotifListener(){
     window._guestUnsubs.push(unsub);
   });
 }
+window.toggleGuestNotifRecover = () => {
+  const box = document.getElementById('guest-notif-recover-box');
+  if (box) box.style.display = box.style.display==='none' ? 'block' : 'none';
+};
+// Recuperare notificări pe alt dispozitiv, pe bază de EMAIL (nu IP — un IP e adesea comun
+// mai multor persoane pe aceeași rețea, ceea ce ar însemna să vezi rezervările altcuiva; și
+// se schimbă des, mai ales pe mobil, deci "recunoașterea" ar pica fără motiv aparent).
+// Emailul e ceva ce doar clientul știe și e exact ce a introdus la rezervare — aducem pe acest
+// dispozitiv (în localStorage) toate rezervările lui fără cont, ca de-acum să apară normal la
+// clopoțel, la fel ca pe dispozitivul unde a rezervat inițial.
+window.recoverGuestNotifs = async (email) => {
+  email = (email||'').trim();
+  if (!validEmail(email)) { toast('Introdu un email valid','wr'); return; }
+  const box = document.getElementById('guest-notif-recover-box');
+  const btn = box?.querySelector('button');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Se caută...'; }
+  try {
+    const snap = await getDocs(query(collection(db,'rezervari'), where('email','==', email)));
+    const guestDocs = snap.docs.filter(d => !d.data().uid); // doar rezervările fără cont — cele cu cont au deja notificări proprii
+    if (!guestDocs.length) { toast('Nu am găsit nicio rezervare fără cont pentru acest email','wr'); return; }
+    guestDocs.forEach(d => guestBookingsAdd(d.id));
+    startGuestNotifListener();
+    toast(`✅ ${guestDocs.length} rezervare${guestDocs.length>1?'i':''} recuperată${guestDocs.length>1?'e':''} — apar acum la clopoțel`,'ok');
+    if (box) box.style.display = 'none';
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
+  finally { if (btn) { btn.disabled = false; btn.innerHTML = '🔔 Recuperează notificările'; } }
+};
 window.openGuestNotif = async (rezId) => {
   const r = window._GUEST_NOTIFS[rezId];
   if(!r){ toast('Rezervarea nu a fost găsită','er'); return; }
@@ -7789,6 +7965,7 @@ window.openBookingDetail=async rezId=>{
     if(r.driverId2)sf2S.value=r.driverId2;
     checkS2Need(r);
   } else allocEl.style.display='none';
+  renderAdminSeatLinkPanel(rezId, r);
   const invoiceBtns=document.getElementById('booking-invoice-btns');
   if(invoiceBtns)invoiceBtns.style.display=r.status==='confirmata'&&r.pretFinal?'block':'none';
   // Harta cu traseul exact ales de client (dacă a folosit unealta de plasare pe hartă)
@@ -7889,6 +8066,52 @@ function checkS2Need(r){
   const s2WrapEl=document.getElementById('alloc-s2-wrap');
   if(s2WrapEl) s2WrapEl.style.display='block';
 }
+
+// ── MINI-WIZARD: LINK ALEGERE LOCURI (curse organizate, din admin) ─────────
+// Pas 1: cursa are nevoie de un vehicul alocat (deja existent mai sus, în "Alocare resurse").
+// Pas 2: odată alocat, adminul poate genera un link unic pentru acea cursă — orice participant
+// cu linkul intră fără cont, își pune numele și alege un loc liber pe harta vehiculului.
+function renderAdminSeatLinkPanel(rezId, r){
+  const wrap=document.getElementById('booking-seatlink-wrap');
+  const body=document.getElementById('booking-seatlink-body');
+  if(!wrap||!body) return;
+  if(r.tipRezervare!=='organizata'){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  const organizatorLine=`<div style="margin-bottom:12px;padding:10px 12px;background:var(--cream);border-radius:8px">
+    <div style="font-size:10px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">👤 Organizator (a făcut cererea)</div>
+    <div style="font-weight:700;font-size:13px;color:var(--ink)">${r.numeClient||'-'}</div>
+    <div style="font-size:11px;color:var(--stone)">${r.email||''}${r.telefon?' · '+r.telefon:''}</div>
+  </div>`;
+  if(!r.vehiculId){
+    body.innerHTML=organizatorLine+`<div style="display:flex;align-items:center;gap:8px;opacity:.65"><span style="font-size:16px">1️⃣</span><span>Alocă întâi un vehicul mai sus — abia apoi poți genera linkul de alegere locuri.</span></div>`;
+    return;
+  }
+  if(!r.seatLinkCode){
+    body.innerHTML=organizatorLine+
+      `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;color:var(--green);font-weight:600"><span style="font-size:16px">✅</span><span>Vehicul alocat: ${r.vehiculNume||'-'}</span></div>
+      <button class="btn btn-primary btn-sm" onclick="generateSeatLink('${rezId}')">🔗 Generează link alegere locuri</button>`;
+    return;
+  }
+  const link=window.location.origin+window.location.pathname+'?loc='+r.seatLinkCode;
+  const veh=(window._F||[]).find(v=>v.id===r.vehiculId);
+  body.innerHTML=organizatorLine+
+    `<div class="fg"><div class="fl">Link de partajat cu grupul</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" readonly value="${link}" style="font-size:12px" onclick="this.select()"/>
+        <button class="btn btn-secondary btn-sm" onclick="copySeatLink('${link}')">📋 Copiază</button>
+      </div>
+      <div class="f-hint">Fiecare participant intră pe link, își pune numele și alege un loc liber — fără cont.</div>
+    </div>`
+    + seatPicksGridHtml(veh, r.seatPicks||[], locNr=>`releaseSeatPick('${rezId}',${locNr},()=>openBookingDetail('${rezId}'))`, false, rezId, r.seatLinkCode);
+}
+window.generateSeatLink=async(rezId)=>{
+  try{
+    const code='LOC-'+Math.random().toString(36).slice(2,8).toUpperCase();
+    await setDoc(doc(db,'rezervari',rezId),{seatLinkCode:code,seatPicks:[]},{merge:true});
+    toast('✅ Link generat!','ok');
+    openBookingDetail(rezId);
+  }catch(e){ toast('Eroare: '+e.message,'er'); }
+};
 window.sendBookingReply=async()=>{
   const rezId=window._ACTIVE_BOOKING_ID;if(!rezId)return;
   const text=document.getElementById('booking-reply-msg').value.trim();
@@ -9344,6 +9567,12 @@ window.logOrgScan = async (rezId) => {
   renderFooter();
   try{await loadSavedContent();}catch(e){}
   try{await loadFleet();}catch(e){}
+  // Cineva a deschis un link de alegere loc (partajat de organizatorul unei curse organizate) —
+  // sărim direct la acea pagină, fără să mai treacă prin homepage.
+  try{
+    const seatCode = new URLSearchParams(window.location.search).get('loc');
+    if (seatCode) { nav('alege-loc'); loadSeatPickerByCode(seatCode); }
+  }catch(e){}
   try{const sfSnap=await getDocs(collection(db,'soferi'));buildDriversCache(sfSnap);}catch(e){}
   renderHomeGallery();
   try{const rs=await getDocs(collection(db,'curse_regulate'));window._R=rs.docs.map(d=>({id:d.id,...d.data()}));}catch(e){}
