@@ -3234,6 +3234,16 @@ document.addEventListener('click', e => {
 
 function validEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim()); }
 function validPhone(p) { return /^(\+4|0)[0-9]{9}$/.test(p.replace(/\s/g,'')); }
+// Hash real (SHA-256, Web Crypto API — nativ în browser, gratuit, fără librării) pentru
+// PIN-urile de portal ale șoferilor. ÎNLOCUIEȘTE vechea "codificare" base64, care era
+// trivial de decodat de oricine (btoa/atob nu sunt criptare, doar o transformare de format).
+// Cu hash, chiar dacă cineva citește documentul din Firestore, nu poate reconstitui PIN-ul
+// original din valoarea stocată — poate doar verifica dacă o ghicire anume se potrivește.
+async function sha256Hex(text) {
+  const enc = new TextEncoder().encode(text);
+  const hashBuf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
 function minToTime(m) { const h = Math.floor(m/60)%24, mm = m%60; return (h<10?'0':'')+h+':'+(mm<10?'0':'')+mm; }
 function timeToMin(t) { if (!t) return 0; const [h,m] = t.split(':').map(Number); return h*60+m; }
 // O cursa (dus sau retur) nu mai poate lua pasageri cand nicio statie intermediara (in afara
@@ -3721,13 +3731,13 @@ window.onDriverSelectChange = () => {
   if (sf?.parolaPortal) { pinWrap.style.display='block'; document.getElementById('driver-pin-input').value=''; document.getElementById('driver-pin-input').focus(); btn.disabled=false; }
   else { pinWrap.style.display='none'; pinWrap.innerHTML='<div class="info-box" style="color:var(--red)">⚠️ Parola de portal nu a fost setată. Contactați administratorul.</div>'; pinWrap.style.display='block'; btn.disabled=true; }
 };
-window.verifyDriverPin = () => {
+window.verifyDriverPin = async () => {
   const sel = document.getElementById('driver-login-select');
   const pin = document.getElementById('driver-pin-input').value;
   const sf = (window._DRIVER_LOGIN_LIST||[]).find(s=>s.id===sel.value);
   if (!sf) { toast('Selectează-ți numele','wr'); return; }
   if (!sf.parolaPortal) { toast('Parola nu a fost setată','wr'); return; }
-  const encoded = btoa(unescape(encodeURIComponent(pin)));
+  const encoded = await sha256Hex(pin);
   const errEl = document.getElementById('driver-pin-error');
   if (encoded !== sf.parolaPortal) {
     errEl.style.display='block';
@@ -7280,12 +7290,23 @@ window.saveVehicle=async()=>{
   }catch(e){toast('Eroare: '+e.message,'er');}
 };
 // Seat builder
+// Renumerotează TOATE locurile secvențial, în ordinea reală a rândurilor (1, 2, 3...) —
+// apelată după orice adăugare/ștergere de rând. Fără asta, dacă ștergi un rând din mijloc
+// și adaugi altul nou, numărul următor se calcula din totalul curent de locuri, care nu mai
+// reflectă ordinea reală — rezultau numere duplicate/suprapuse între rânduri diferite.
+function renumberSeatRows(){
+  let n=1;
+  window._SEAT_ROWS.forEach(row=>{
+    if(row.blocat) return; // rândurile blocate nu au locuri de numerotat
+    (row.seats||[]).forEach(s=>{ s.nr=n; n++; });
+  });
+}
 window.addSeatRow=type=>{
   if(type==='blocked'){window._SEAT_ROWS.push({type:'blocked',blocat:true,seats:[],label:'Blocat / Toaletă / Bagaje'});renderSeatBuilder();return;}
-  const n=(window._SEAT_ROWS.reduce((s,r)=>s+(r.blocat?0:(r.seats||[]).length),0))+1;
   const cnt=seatCountForType(type);
-  const seats=[]; for(let i=0;i<cnt;i++)seats.push({nr:n+i});
+  const seats=[]; for(let i=0;i<cnt;i++)seats.push({nr:0}); // placeholder — renumberSeatRows le fixează imediat mai jos
   window._SEAT_ROWS.push({type,seats});
+  renumberSeatRows();
   renderSeatBuilder();
 };
 window.renderSeatBuilder = function renderSeatBuilder(){
@@ -7294,9 +7315,9 @@ window.renderSeatBuilder = function renderSeatBuilder(){
   document.getElementById('seat-total-count').textContent=total;
   if(!window._SEAT_ROWS.length){sb.innerHTML='<p style="color:var(--stone);font-size:13px;margin-bottom:10px">Niciun rând. Folosiți butoanele de mai jos.</p>';renderSeatPreview();return;}
   sb.innerHTML=window._SEAT_ROWS.map((row,ri)=>{
-    if(row.blocat)return`<div class="sb-row" style="background:var(--red-g);border:1px solid rgba(181,45,45,.2)"><div class="sb-label" style="color:var(--red);font-size:10px">Rând ${ri+1}<br>🚫 Blocat</div><div style="flex:1"><input type="text" value="${row.label||'Blocat'}" style="font-size:12px;padding:4px 8px;width:200px;border:1px solid var(--border);border-radius:6px" onchange="window._SEAT_ROWS[${ri}].label=this.value" placeholder="Descriere"/></div><button style="background:none;border:none;color:var(--stone);cursor:pointer;font-size:16px" onclick="window._SEAT_ROWS.splice(${ri},1);renderSeatBuilder()">✕</button></div>`;
+    if(row.blocat)return`<div class="sb-row" style="background:var(--red-g);border:1px solid rgba(181,45,45,.2)"><div class="sb-label" style="color:var(--red);font-size:10px">Rând ${ri+1}<br>🚫 Blocat</div><div style="flex:1"><input type="text" value="${row.label||'Blocat'}" style="font-size:12px;padding:4px 8px;width:200px;border:1px solid var(--border);border-radius:6px" onchange="window._SEAT_ROWS[${ri}].label=this.value" placeholder="Descriere"/></div><button style="background:none;border:none;color:var(--stone);cursor:pointer;font-size:16px" onclick="window._SEAT_ROWS.splice(${ri},1);renumberSeatRows();renderSeatBuilder()">✕</button></div>`;
     const type=row.type||'2+2'; const seats=row.seats||[];
-    return`<div class="sb-row"><div class="sb-label" style="font-size:10px;color:var(--stone)">Rând ${ri+1}<br><span style="color:var(--amber-d)">${type}</span></div><div class="sb-seats">${getSeatLayout(type,seats)}</div><button style="background:none;border:none;color:var(--stone);cursor:pointer;font-size:16px" onclick="window._SEAT_ROWS.splice(${ri},1);renderSeatBuilder()">✕</button></div>`;
+    return`<div class="sb-row"><div class="sb-label" style="font-size:10px;color:var(--stone)">Rând ${ri+1}<br><span style="color:var(--amber-d)">${type}</span></div><div class="sb-seats">${getSeatLayout(type,seats)}</div><button style="background:none;border:none;color:var(--stone);cursor:pointer;font-size:16px" onclick="window._SEAT_ROWS.splice(${ri},1);renumberSeatRows();renderSeatBuilder()">✕</button></div>`;
   }).join('');
   renderSeatPreview();
 }
@@ -8307,7 +8328,7 @@ async function loadDriversTbl(){
 }
 window.toggleDriver=async(id,val)=>{await setDoc(doc(db,'soferi',id),{activ:val},{merge:true});};
 window.deleteDriver=async id=>{if(!confirm('Ștergeți șoferul?'))return;await deleteDoc(doc(db,'soferi',id));await loadDriversTbl();toast('Șofer șters','ok');};
-window.resetDriverPin=async(id,name)=>{const pin=prompt(`Parolă nouă de portal pentru ${name}:\n(minim 4 caractere)`);if(!pin)return;if(pin.length<4){toast('Min 4 caractere','wr');return;}await setDoc(doc(db,'soferi',id),{parolaPortal:btoa(unescape(encodeURIComponent(pin)))},{merge:true});toast('✅ Parolă resetată pentru '+name,'ok');await loadDriversTbl();};
+window.resetDriverPin=async(id,name)=>{const pin=prompt(`Parolă nouă de portal pentru ${name}:\n(minim 4 caractere)`);if(!pin)return;if(pin.length<4){toast('Min 4 caractere','wr');return;}const hashed=await sha256Hex(pin);await setDoc(doc(db,'soferi',id),{parolaPortal:hashed},{merge:true});toast('✅ Parolă resetată pentru '+name,'ok');await loadDriversTbl();};
 window.openDriverModal=async(id=null)=>{
   document.getElementById('driver-modal-title').textContent=id?'Editează șofer':'Adaugă șofer nou';
   document.getElementById('dm-id').value=id||'';
@@ -8349,7 +8370,7 @@ window.saveDriver=async()=>{
   const pin=document.getElementById('dm-pin')?.value||'',pin2=document.getElementById('dm-pin2')?.value||'';
   if(pin){if(pin.length<4){toast('Parola min 4 caractere','wr');return;}if(pin!==pin2){toast('Parolele nu coincid','wr');return;}}
   const data={prenume:fn,nume:ln,email:document.getElementById('dm-email').value.trim()||'',telefon:tel,adresa:document.getElementById('dm-addr')?.value?.trim()||'',expPermis:document.getElementById('dm-exp').value||null,dataAngajarii:document.getElementById('dm-hired').value||null,activ:document.getElementById('dm-active').checked};
-  if(pin)data.parolaPortal=btoa(unescape(encodeURIComponent(pin)));
+  if(pin)data.parolaPortal=await sha256Hex(pin);
   try{if(id)await setDoc(doc(db,'soferi',id),data,{merge:true});else{data.createdAt=serverTimestamp();await addDoc(collection(db,'soferi'),data);}closeModal('driver');await loadDriversTbl();toast('Șofer salvat!','ok');}catch(e){toast('Eroare: '+e.message,'er');}
 };
 
