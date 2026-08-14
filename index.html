@@ -963,6 +963,53 @@ footer::before{
   width:20px;height:20px;border-radius:50%;font-size:11px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
 }
+/* ── FOCUS VISIBLE (accesibilitate — tastatură, desktop și mobil) ── */
+a:focus-visible,button:focus-visible,.nl:focus-visible,.tab-btn:focus-visible,
+input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visible,
+.day-dot:focus-visible,.wiz-opt-card:focus-visible,.org-mode-card:focus-visible{
+  outline:2.5px solid var(--amber);outline-offset:2px;border-radius:6px;
+}
+
+/* ── MOBILE BOTTOM TAB BAR — navigare cu degetul mare, ca la aplicațiile de transport ── */
+#mob-tabbar{
+  display:none;position:fixed;bottom:0;left:0;width:100%;z-index:997;
+  background:rgba(248,245,238,.97);backdrop-filter:blur(20px) saturate(180%);
+  border-top:1px solid var(--border-l);
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -4px 20px rgba(15,13,10,.08);
+}
+#mob-tabbar-inner{display:flex;justify-content:space-around;align-items:stretch;gap:2px}
+.mtb-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:none;border:none;padding:6px 2px 5px;border-radius:12px;cursor:pointer;
+  color:var(--stone);font-family:"Inter",sans-serif;transition:all .18s var(--ease);min-height:52px;
+  position:relative;
+}
+.mtb-btn:active{background:var(--cream);transform:scale(.94)}
+.mtb-icon{font-size:20px;line-height:1;transition:transform .2s var(--ease)}
+.mtb-label{font-size:9.5px;font-weight:600;letter-spacing:.1px}
+.mtb-btn.active{color:var(--amber-d)}
+.mtb-btn.active .mtb-icon{transform:translateY(-1px) scale(1.08)}
+.mtb-badge{
+  position:absolute;top:2px;right:calc(50% - 16px);background:var(--red);color:#fff;
+  font-size:8px;font-weight:800;min-width:14px;height:14px;border-radius:7px;
+  display:none;align-items:center;justify-content:center;padding:0 3px;
+}
+@media(max-width:700px){
+  #mob-tabbar{display:block}
+  #app{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+  #cookie-banner{padding-bottom:calc(14px + 64px + env(safe-area-inset-bottom,0px))}
+  #fab-scroll{bottom:calc(76px + env(safe-area-inset-bottom,0px)) !important}
+  footer{margin-bottom:64px}
+}
+
+/* ── SKELETON LOADING (înlocuiește spinner-ul gol cu forma reală a conținutului) ── */
+.skel{background:linear-gradient(90deg,var(--cream) 25%,var(--border-l) 37%,var(--cream) 63%);background-size:400% 100%;animation:skelShine 1.4s ease infinite;border-radius:8px}
+@keyframes skelShine{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.skel-card{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:20px;margin-bottom:14px}
+.skel-line{height:14px;margin-bottom:10px}
+.skel-line.w60{width:60%}.skel-line.w40{width:40%}.skel-line.w90{width:90%}
+
 /* ── RESPONSIVE ── */
 @media(max-width:900px){.footer-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){
@@ -1130,6 +1177,17 @@ footer::before{
   <button class="nl" onclick="nav('gdpr')">📄 GDPR</button>
   <button class="nl" id="mob-pwa-install-btn" style="display:none" onclick="triggerPwaInstall()">📲 Instalează aplicația</button>
   <button class="nl" id="mob-auth-btn" onclick="nav('auth')">🔐 Conectare</button>
+</div>
+
+<!-- ── BARĂ NAVIGARE JOS (mobil) — acces rapid cu degetul mare la funcțiile principale ── -->
+<div id="mob-tabbar">
+  <div id="mob-tabbar-inner">
+    <button class="mtb-btn" data-tb-page="home" onclick="nav('home')"><span class="mtb-icon">🏠</span><span class="mtb-label">Acasă</span></button>
+    <button class="mtb-btn" data-tb-page="regulate" onclick="nav('regulate')"><span class="mtb-icon">🔄</span><span class="mtb-label">Regulate</span></button>
+    <button class="mtb-btn" data-tb-page="organizate" onclick="nav('organizate')"><span class="mtb-icon">🚌</span><span class="mtb-label">Organizate</span></button>
+    <button class="mtb-btn" data-tb-page="bilet" onclick="nav('bilet')"><span class="mtb-icon">🎟</span><span class="mtb-label">Bilet</span></button>
+    <button class="mtb-btn" id="mtb-account-btn" data-tb-page="auth" onclick="nav('auth')"><span class="mtb-icon">👤</span><span class="mtb-label" id="mtb-account-label">Cont</span><span class="mtb-badge" id="mtb-notif-badge">0</span></button>
+  </div>
 </div>
 
 <!-- ── APP ── -->
@@ -2712,11 +2770,16 @@ footer::before{
     if ((window._ROLE === 'driver') && !['sofer','gdpr','auth','alege-loc'].includes(page)) { nav('sofer'); return; }
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nl[data-page]').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.mtb-btn').forEach(n => n.classList.remove('active'));
     const el = document.getElementById('pg-' + page);
     if (!el) { console.warn('Page not found: pg-' + page); return; }
     el.classList.add('active');
     const lnk = document.querySelector('.nl[data-page="' + page + '"]');
     if (lnk) lnk.classList.add('active');
+    // Bara de jos: paginile de cont/admin/șofer se mapează pe tab-ul "Cont", ca acesta
+    // să rămână evidențiat chiar și când ești pe o pagină fără tab propriu (ex. admin).
+    const tbPage = ['cont','admin','sofer','auth'].includes(page) ? 'auth' : page;
+    document.querySelector('.mtb-btn[data-tb-page="'+tbPage+'"]')?.classList.add('active');
     document.getElementById('mob-menu')?.classList.remove('open');
     window.scrollTo({top: 0, behavior: 'auto'});
     if (page === 'auth' && ctx) {
@@ -3588,6 +3651,17 @@ window._FB_READY = true;
 if (window._PENDING_PAGE) { const pp = window._PENDING_PAGE; window._PENDING_PAGE = null; setTimeout(()=>nav(pp),0); }
 
 // ── NAV BUILD ──────────────────────────────────────────────
+// Actualizează tab-ul "Cont" din bara de navigare de jos (mobil) — iconiță, etichetă și
+// destinația la click — ca să reflecte corect rolul curent (vizitator/client/șofer/admin).
+function setMobTabbarAccount(icon, label, onClick){
+  const btn = document.getElementById('mtb-account-btn');
+  if (!btn) return;
+  const iconEl = btn.querySelector('.mtb-icon'); if (iconEl) iconEl.textContent = icon;
+  const labelEl = document.getElementById('mtb-account-label'); if (labelEl) labelEl.textContent = label;
+  btn.onclick = onClick;
+}
+window.setMobTabbarAccount = setMobTabbarAccount;
+
 function buildNav(role) {
   const authBtn = document.getElementById('nav-auth-btn');
   const mobAuthBtn = document.getElementById('mob-auth-btn');
@@ -3602,6 +3676,7 @@ function buildNav(role) {
   if (role === 'driver') {
     if (authBtn) { authBtn.textContent = (window._DRIVER_DOC?.prenume||'Șofer') + ' ↗'; authBtn.onclick = doSignOut; }
     if (mobAuthBtn) { mobAuthBtn.textContent = '↗ Deconectare'; mobAuthBtn.onclick = doSignOut; }
+    setMobTabbarAccount('🚌', 'Portal', () => nav('sofer'));
     return;
   }
   if (role === 'admin') {
@@ -3623,6 +3698,7 @@ function buildNav(role) {
       adminMobBtn.onclick = () => nav('admin');
       mobAuthBtn.parentNode.insertBefore(adminMobBtn, mobAuthBtn);
     }
+    setMobTabbarAccount('👑', 'Admin', () => nav('admin'));
     return;
   }
   if (role === 'client' && u) {
@@ -3639,11 +3715,13 @@ function buildNav(role) {
       contMobBtn.onclick = () => nav('cont');
       mobAuthBtn.parentNode.insertBefore(contMobBtn, mobAuthBtn);
     }
+    setMobTabbarAccount('👤', 'Cont', () => nav('cont'));
     return;
   }
   // guest
   if (authBtn) { authBtn.textContent = 'Conectare'; authBtn.onclick = ()=>nav('auth'); }
   if (mobAuthBtn) { mobAuthBtn.textContent = '🔐 Conectare'; mobAuthBtn.onclick = ()=>nav('auth'); }
+  setMobTabbarAccount('👤', 'Cont', () => nav('auth'));
 }
 
 // ── AUTH ACTIONS ───────────────────────────────────────────
@@ -6693,6 +6771,16 @@ window.sendClientMessage=async()=>{
 };
 
 // ── NOTIFICATIONS ──────────────────────────────────────────
+// Sincronizează numărul de notificări necitite pe AMBELE badge-uri — clopoțelul din nav
+// (desktop/mobil sus) și bulina roșie de pe tab-ul "Cont" din bara de jos (mobil) — ca
+// utilizatorul să vadă mereu același număr, indiferent unde se uită.
+function syncNotifBadges(count){
+  const badge=document.getElementById('notif-badge');
+  if(badge){badge.textContent=count;badge.style.display=count>0?'flex':'none';}
+  const mtbBadge=document.getElementById('mtb-notif-badge');
+  if(mtbBadge){mtbBadge.textContent=count>9?'9+':count;mtbBadge.style.display=count>0?'flex':'none';}
+}
+window.syncNotifBadges=syncNotifBadges;
 let _notifListener=null;
 function startNotifListener(){
   const u=window._U; if(!u||_notifListener)return;
@@ -6700,8 +6788,7 @@ function startNotifListener(){
   _notifListener=onSnapshot(query(collection(db,'notificari'),where('uid','==',u.uid)),snap=>{
     const all=snap.docs.map(d=>({id:d.id,...d.data()}));
     const unread=all.filter(n=>!n.citita);
-    const badge=document.getElementById('notif-badge');
-    if(badge){badge.textContent=unread.length;badge.style.display=unread.length>0?'flex':'none';}
+    syncNotifBadges(unread.length);
     const list=document.getElementById('notif-list');
     if(list){list.innerHTML=all.length?[...all].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,20).map(n=>`<div style="padding:10px 12px;border-radius:var(--r);margin-bottom:5px;background:${n.citita?'var(--cream)':'var(--amber-g)'};border:1px solid ${n.citita?'var(--border-l)':'var(--amber-b)'};cursor:pointer" onclick="openNotifDetail('${n.id}','${n.rezId||''}')"><div style="font-weight:${n.citita?400:700};font-size:13px;margin-bottom:2px">${n.title||'Notificare'}</div><div style="font-size:12px;color:var(--stone)">${n.body||''}</div><div style="font-size:10px;color:var(--stone);margin-top:3px">${n.createdAt?new Date(n.createdAt.seconds*1000).toLocaleString('ro'):''}</div></div>`).join(''):'<div style="text-align:center;padding:20px;color:var(--stone);font-size:13px">Nicio notificare</div>';}
   },err=>console.warn('Notif:',err.message));
@@ -6764,7 +6851,7 @@ function renderGuestNotifPanel(){
   const sl={in_asteptare:'⏳ În așteptare',oferta_trimisa:'📩 Ofertă trimisă',confirmata:'✅ Confirmată',anulata:'❌ Anulată'};
   const withMeta=items.map(r=>{const sig=(r.status||'')+'|'+(r.mesaje||[]).length; return {...r,_sig:sig,_unread:seen[r.id]!==sig};});
   const unreadCount=withMeta.filter(x=>x._unread).length;
-  if(badge){badge.textContent=unreadCount;badge.style.display=unreadCount>0?'flex':'none';}
+  syncNotifBadges(unreadCount);
   if(list){
     list.innerHTML=withMeta.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(r=>{
       const title = r.tipRezervare==='regulata' ? ('🎟 '+(r.ruta||r.traseu||'Bilet')) : ('🚌 '+(r.descriereCursa||r.traseu||'Cursă organizată'));
