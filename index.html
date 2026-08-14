@@ -3960,7 +3960,7 @@ async function fetchNearbyAttractions(lat,lng){
   );out center 80;`;
   let osmItems=[];
   try{
-    const r=await fetchWithTimeout('https://overpass-api.de/api/interpreter',{method:'POST',body:q}, 15000);
+    const r=await fetchWithTimeout('https://overpass-api.de/api/interpreter',{method:'POST',body:q}, 25000);
     if(r.ok){
       const d=await r.json();
       const seen=new Set();
@@ -7294,7 +7294,7 @@ window.saveVehicle=async()=>{
 // apelată după orice adăugare/ștergere de rând. Fără asta, dacă ștergi un rând din mijloc
 // și adaugi altul nou, numărul următor se calcula din totalul curent de locuri, care nu mai
 // reflectă ordinea reală — rezultau numere duplicate/suprapuse între rânduri diferite.
-function renumberSeatRows(){
+window.renumberSeatRows = function renumberSeatRows(){
   let n=1;
   window._SEAT_ROWS.forEach(row=>{
     if(row.blocat) return; // rândurile blocate nu au locuri de numerotat
