@@ -703,6 +703,18 @@ input.ok{border-color:var(--green)}
 .org-progress-line{flex:1;height:2px;background:var(--border);margin:14px 4px 0;min-width:20px}
 @media(max-width:700px){.org-progress-label{display:none}.org-progress{max-width:100%}}
 
+/* ── ORG STEP CARDS — insignă numerotată în colț, ca să se vadă clar progresul formularului ── */
+.org-step-card{position:relative;transition:box-shadow .25s var(--ease),border-color .25s var(--ease)}
+.org-step-card:hover{box-shadow:var(--sh-lg);border-color:rgba(169,124,63,.28) !important}
+.org-step-card::before{
+  content:attr(data-step);position:absolute;top:-13px;left:22px;
+  width:27px;height:27px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--amber-d));color:#fff;
+  font-size:12.5px;font-weight:800;font-family:"Plus Jakarta Sans",sans-serif;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 9px -1px rgba(169,124,63,.42),0 0 0 3px var(--card);
+}
+
 /* ── ORG TIP CARDS ── */
 .org-tip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
 .org-tip-card{
@@ -893,14 +905,29 @@ input.ok{border-color:var(--green)}
 /* ── QR SCANNER ── */
 #html5-qrcode-reader{border-radius:10px;overflow:hidden;border:1.5px solid var(--border-l);min-height:200px;background:var(--cream)}
 
-/* ── COOKIE BANNER ── */
+/* ── COOKIE BANNER — card flotant, discret, cu iconiță și animație de intrare ── */
 #cookie-banner{
-  position:fixed;bottom:0;left:0;right:0;background:var(--card);
-  border-top:1px solid var(--border-l);box-shadow:0 -4px 20px rgba(15,13,10,.08);
-  padding:14px 24px;display:flex;align-items:center;justify-content:space-between;
-  gap:14px;z-index:5000;font-size:13px;
+  position:fixed;left:20px;bottom:20px;max-width:380px;z-index:5000;
+  background:var(--card);border:1.5px solid var(--amber-b);border-radius:var(--r-xl);
+  box-shadow:var(--sh-lg);padding:18px 20px;
+  display:flex;flex-direction:column;gap:13px;
+  animation:cookieSlideUp .55s var(--ease) .4s both;
 }
+@keyframes cookieSlideUp{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 #cookie-banner.hidden{display:none}
+.cookie-body{display:flex;gap:12px;align-items:flex-start;padding-right:18px}
+.cookie-icon{font-size:26px;flex-shrink:0;line-height:1}
+.cookie-title{font-weight:700;font-size:13.5px;margin-bottom:4px;color:var(--ink)}
+.cookie-text{font-size:12.5px;color:var(--stone);line-height:1.55}
+.cookie-close{
+  position:absolute;top:12px;right:12px;width:24px;height:24px;border-radius:7px;
+  background:var(--cream);border:none;color:var(--stone);font-size:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .18s var(--ease);
+}
+.cookie-close:hover{background:var(--border);color:var(--ink)}
+@media(max-width:700px){
+  #cookie-banner{left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));max-width:none}
+}
 
 /* ── FOOTER ── */
 footer{
@@ -998,7 +1025,6 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 @media(max-width:700px){
   #mob-tabbar{display:block}
   #app{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
-  #cookie-banner{padding-bottom:calc(14px + 64px + env(safe-area-inset-bottom,0px))}
   #fab-scroll{bottom:calc(76px + env(safe-area-inset-bottom,0px)) !important}
   footer{margin-bottom:64px}
 }
@@ -1009,6 +1035,30 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 .skel-card{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:20px;margin-bottom:14px}
 .skel-line{height:14px;margin-bottom:10px}
 .skel-line.w60{width:60%}.skel-line.w40{width:40%}.skel-line.w90{width:90%}
+
+/* Skeleton în forma unui card din Flota Noastră (imagine + titlu + meta) */
+.skel-bus-card{background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);overflow:hidden}
+.skel-bus-img{height:190px;border-radius:0}
+.skel-bus-body{padding:18px}
+
+/* Skeleton în forma unui card de cursă regulată (poză vehicul + rută + linie traseu) */
+.skel-route-card{background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);padding:20px;margin-bottom:14px}
+.skel-route-thumb{width:56px;height:56px;border-radius:12px;flex-shrink:0}
+
+/* ── LOADER MINI CU AUTOBUZ — variantă compactă a animației din ecranul de start,
+   folosită oriunde așteptăm date "pe traseu" (hărți, calcul distanță) în loc de un spinner generic ── */
+.inline-bus-loader{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0}
+.inline-bus-loader-track{position:relative;width:150px;height:24px}
+.inline-bus-loader-line{position:absolute;top:50%;left:0;right:0;height:2px;background:repeating-linear-gradient(90deg,var(--border) 0 6px,transparent 6px 12px);transform:translateY(-50%)}
+.inline-bus-loader-icon{position:absolute;top:0;width:24px;height:auto;animation:inlineBusDrive 1.7s ease-in-out infinite;filter:drop-shadow(0 2px 3px rgba(0,0,0,.22))}
+@keyframes inlineBusDrive{
+  0%{left:0%;transform:scaleX(1)}
+  46%{left:calc(100% - 24px);transform:scaleX(1)}
+  50%{left:calc(100% - 24px);transform:scaleX(-1)}
+  96%{left:0%;transform:scaleX(-1)}
+  100%{left:0%;transform:scaleX(1)}
+}
+.inline-bus-loader-label{font-size:11.5px;color:var(--stone);font-weight:600}
 
 /* ── RESPONSIVE ── */
 @media(max-width:900px){.footer-grid{grid-template-columns:1fr 1fr}}
@@ -1395,8 +1445,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
   <div class="g2 org-g2" style="align-items:start">
     <div>
       <!-- STEP 1: Detalii cursa -->
-      <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:14px;box-shadow:var(--sh)">
-        <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif">📋 1. Tipul și traseul cursei</h3>
+      <div class="org-step-card" data-step="1" style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:18px;box-shadow:var(--sh)">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif">📋 Tipul și traseul cursei</h3>
         <div class="fg">
           <div class="fl">Tip cursă *</div>
           <div class="org-tip-grid" id="org-tip-btns">
@@ -1426,8 +1476,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
       </div>
 
       <!-- STEP 2: Data, ora, durata -->
-      <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:14px;box-shadow:var(--sh)">
-        <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif">📅 2. Când și cât timp?</h3>
+      <div class="org-step-card" data-step="2" style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:18px;box-shadow:var(--sh)">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif">📅 Când și cât timp?</h3>
         <div class="f-row">
           <div class="fg"><div class="fl">Data dorită *</div>
             <input type="date" id="org-date" onchange="onOrgDateChange()"/>
@@ -1465,8 +1515,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
       </div>
 
       <!-- STEP 3: Disponibilitate -->
-      <div id="org-avail-wrap" style="display:none;background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:14px;box-shadow:var(--sh)">
-        <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">🚌 3. Alege vehiculul și șoferul</h3>
+      <div id="org-avail-wrap" class="org-step-card" data-step="3" style="display:none;background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:18px;box-shadow:var(--sh)">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">🚌 Alege vehiculul și șoferul</h3>
         <p style="font-size:12px;color:var(--stone);margin-bottom:14px">Bazat pe data și durata selectate — vehiculele și șoferii liberi în acel interval</p>
         <div id="org-avail-info" style="margin-bottom:12px"></div>
         <div class="fg">
@@ -1485,7 +1535,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 
     <!-- Coloana dreapta -->
     <div>
-      <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:14px;box-shadow:var(--sh)">
+      <div class="org-step-card" data-step="4" style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;margin-bottom:14px;box-shadow:var(--sh)">
         <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif">👤 Datele tale</h3>
         <div id="org-contact-wrap"></div>
         <div class="info-box" style="font-size:12px">
@@ -2652,7 +2702,17 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 </div>
 
 <!-- COOKIE BANNER -->
-<div id="cookie-banner"><span>🍪 Folosim cookie-uri necesare funcționării. <a onclick="nav('gdpr')">Politică GDPR</a></span><button class="btn btn-primary btn-sm" onclick="acceptCookies()">Acceptă</button></div>
+<div id="cookie-banner">
+  <button class="cookie-close" onclick="acceptCookies()" aria-label="Închide">✕</button>
+  <div class="cookie-body">
+    <div class="cookie-icon">🍪</div>
+    <div>
+      <div class="cookie-title">Respectăm confidențialitatea ta</div>
+      <div class="cookie-text">Folosim doar module strict necesare funcționării site-ului — niciunul pentru urmărire publicitară. <a onclick="nav('gdpr')">Detalii în Politica GDPR</a></div>
+    </div>
+  </div>
+  <button class="btn btn-primary btn-sm btn-full" onclick="acceptCookies()">Am înțeles, continuă</button>
+</div>
 
 <!-- BANNER AVERTIZARE RESET AUTOMAT (cu 1 minut inainte de miezul noptii, ora Romaniei) -->
 <div id="midnight-warning-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(135deg,var(--orange),#a04a10);color:#fff;padding:12px 20px;text-align:center;font-weight:700;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.3)">
@@ -4299,6 +4359,8 @@ function createBusMarkerOnRoute(map, routeLatLngs, color, vehImgUrl, progressFra
 }
 
 window.initHome = async function initHome() {
+  const elFleetSkel = document.getElementById('home-fleet');
+  if (elFleetSkel && !window._F.length) elFleetSkel.innerHTML = window.skeletonBusCards(4);
   try { await loadFleet(); } catch(e) {}
   const el = document.getElementById('home-fleet');
   if (el) el.innerHTML = window._F.length ? window._F.map(v=>window.vCard(v)).join('') : '<div class="empty-state"><div class="empty-icon">🚌</div><p>Nicio flotă configurată</p></div>';
@@ -4478,10 +4540,11 @@ async function initHomeRoutesMap(){
   mapEl.style.position = 'relative';
   mapEl.innerHTML = `
     <div id="home-map-container" style="position:absolute;inset:0"></div>
-    <div id="home-map-loading-overlay" style="position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center;padding:20px;${previewImg?`background:linear-gradient(rgba(15,13,10,.5),rgba(15,13,10,.5)),url('${previewImg}') center/cover`:'background:var(--cream)'}">
-      <div class="spin" style="${previewImg?'border-color:rgba(255,255,255,.3);border-top-color:#fff':''}"></div>
+    <div id="home-map-loading-overlay" style="position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;text-align:center;padding:20px;${previewImg?`background:linear-gradient(rgba(15,13,10,.5),rgba(15,13,10,.5)),url('${previewImg}') center/cover`:'background:var(--cream)'}">
+      ${window.busLoaderHtml()}
       <span style="font-size:12px;font-weight:600;color:${previewImg?'#fff':'var(--stone)'}" id="home-map-progress">Se pregătește harta interactivă...</span>
     </div>`;
+  window.applyMiniBusImgs?.();
 
   // Incarca Leaflet daca nu e deja
   if (!_homeMapLoaded) {
@@ -4612,7 +4675,7 @@ window.loadRegulate = async () => {
   if (!di.value) { di.value=new Date().toISOString().split('T')[0]; }
   const date=di.value, dow=new Date(date+'T12:00:00').getDay();
   const list=document.getElementById('reg-list');
-  list.innerHTML=`<div class="loading-state"><div class="spin"></div><p>Se încarcă cursele...</p></div>`;
+  list.innerHTML=`<div style="display:flex;flex-direction:column">${window.skeletonRouteCards(3)}</div>`;
   try { await loadFleet(); } catch(e){}
   if (!window._DRIVERS_LIST?.length) { try { const sfSnap=await getDocs(collection(db,'soferi')); buildDriversCache(sfSnap); } catch(e){} }
   try { const s=await getDocs(collection(db,'curse_regulate')); window._R=s.docs.map(d=>({id:d.id,...d.data()})); } catch(e) { list.innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><p>Eroare la încărcarea curselor: '+e.message+'</p></div>'; return; }
@@ -4965,9 +5028,41 @@ function pointAtRouteFraction(routeLatLngs, frac) {
 window.pointAtRouteFraction = pointAtRouteFraction;
 
 function applyMiniBusImgs(){
-  document.querySelectorAll('.mini-route-bus[data-bus]').forEach(img=>{ if(window.SPRINTER_B64) img.src = window.SPRINTER_B64; });
+  document.querySelectorAll('.mini-route-bus[data-bus],.inline-bus-loader-icon[data-bus]').forEach(img=>{ if(window.SPRINTER_B64) img.src = window.SPRINTER_B64; });
 }
 window.applyMiniBusImgs = applyMiniBusImgs;
+
+// ── SKELETON LOADING & LOADER MINI CU AUTOBUZ ───────────────
+// Placeholdere cu forma reală a conținutului (card de autobuz / card de cursă), afișate
+// instant cât timp datele se încarcă din Firestore — dau senzația de site mai rapid și
+// mai profesionist decât un spinner gol în mijlocul paginii.
+window.skeletonBusCards = (n=4) => Array.from({length:n}).map(()=>`
+  <div class="skel-bus-card">
+    <div class="skel skel-bus-img"></div>
+    <div class="skel-bus-body">
+      <div class="skel skel-line w60" style="height:17px"></div>
+      <div class="skel skel-line w40" style="height:11px;margin-top:2px"></div>
+      <div class="skel skel-line w90" style="height:22px;border-radius:20px;margin-top:10px"></div>
+    </div>
+  </div>`).join('');
+
+window.skeletonRouteCards = (n=3) => Array.from({length:n}).map(()=>`
+  <div class="skel-route-card">
+    <div style="display:flex;gap:12px;margin-bottom:16px">
+      <div class="skel skel-route-thumb"></div>
+      <div style="flex:1;padding-top:2px">
+        <div class="skel skel-line w60" style="height:19px"></div>
+        <div class="skel skel-line w40" style="height:12px;margin-top:9px"></div>
+      </div>
+    </div>
+    <div class="skel skel-line w90" style="height:60px;border-radius:12px;margin-bottom:0"></div>
+    <div class="skel skel-line" style="height:36px;border-radius:10px;margin-top:14px;margin-bottom:0"></div>
+  </div>`).join('');
+
+// Loader compact cu un autobuz care merge dus-întors pe o linie punctată — folosit în locul
+// spinner-ului generic oriunde așteptăm ceva "legat de drum" (hărți, calcul distanțe).
+// IMPORTANT: după inserarea în DOM trebuie apelat applyMiniBusImgs() ca imaginea să se seteze.
+window.busLoaderHtml = (label) => `<div class="inline-bus-loader"><div class="inline-bus-loader-track"><div class="inline-bus-loader-line"></div><img class="inline-bus-loader-icon" data-bus="1" src="" alt=""/></div>${label?`<div class="inline-bus-loader-label">${label}</div>`:''}</div>`;
 
 // ── Mini-harta traseu (modal rapid) ──────────────────────────
 window.showRouteMapModal = async (cursaId) => {
@@ -5947,7 +6042,8 @@ async function renderOrgRoutePreviewMap(){
     .map((name,i)=>({name, coord:window._ORG_STOP_COORDS?.[i]}))
     .filter(s=>s.name);
   if (stopsWithCoords.length<2) { mapEl.innerHTML='<div style="text-align:center;color:var(--stone);font-size:12px;padding:20px"><div style="font-size:28px;margin-bottom:6px">🗺</div>Completează plecarea și destinația</div>'; return; }
-  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:6px"><div class="spin"></div><span style="font-size:11px">Se caută traseul...</span></div>';
+  mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone);flex-direction:column;gap:2px">${window.busLoaderHtml('Se caută traseul...')}</div>`;
+  window.applyMiniBusImgs?.();
 
   if (!_orgPreviewMapLoaded) {
     try {
