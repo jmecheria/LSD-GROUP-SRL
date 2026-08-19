@@ -5025,7 +5025,8 @@ window.loadRegulate = async () => {
         </div>
         <div class="seat-occ-label" style="color:${plin?'var(--red)':urgent?'var(--orange)':'var(--green)'}">
           ${plin?'🔴 Loc complet':urgent?`🟠 Doar ${liber} locuri libere!`:`🟢 ${liber} locuri libere din ${capacit}`}
-        </div>` : '';
+        </div>
+        ${!plin?`<button class="btn btn-ghost btn-sm" style="margin-top:2px;padding:3px 6px;font-size:11px;color:var(--amber-d)" onclick="event.stopPropagation();openSeatWatchPrompt('${c.id}','${date}','${activeOra}')">🔔 Anunță-mă dacă rămân puține locuri</button>`:''}` : '';
 
       const vehObj = (window._F||[]).find(v=>v.id===c.vehiculId);
       const vehImg = vehObj?.imagini?.[0];
@@ -5545,6 +5546,64 @@ async function renderCinemaContact(){
     cf.innerHTML=`<div style="margin-top:14px"><div class="f-row"><div class="fg"><div class="fl">Nume complet *</div><input type="text" id="cin-name"/></div><div class="fg"><div class="fl">Telefon *</div><input type="tel" id="cin-phone"/></div></div><div class="fg"><div class="fl">Email * (aici primești biletul)</div><input type="email" id="cin-email"/></div></div>`;
   }
 }
+
+// ── "ANUNȚĂ-MĂ DACĂ RĂMÂN PUȚINE LOCURI" ────────────────────────────────
+// Clientul se "abonează" la o plecare anume (cursaId+data+ora) în colecția
+// 'alerte_locuri'. Nu există niciun server care rulează în fundal — notificarea se
+// declanșează în schimb chiar din browserul următorului client care rezervă pe acea
+// cursă (vezi checkAndNotifySeatWatchers, apelată din confirmSeats): dacă rezervarea
+// lui tocmai a împins numărul de locuri libere sub prag, browserul lui (care oricum
+// are deja EmailJS încărcat) trimite pe loc emailurile către toți abonații nenotificați.
+window.openSeatWatchPrompt = async (cursaId, date, ora) => {
+  let email = window._U?.email || '';
+  if (!email) {
+    email = prompt('Introdu emailul tău — te anunțăm imediat ce mai rămân puține locuri pe această cursă:');
+    if (!email) return;
+    email = email.trim();
+    if (!validEmail(email)) { toast('Email invalid','wr'); return; }
+  }
+  try {
+    const existSnap = await getDocs(query(collection(db,'alerte_locuri'),
+      where('cursaId','==',cursaId), where('data','==',date), where('ora','==',ora), where('email','==',email)));
+    if (!existSnap.empty) { toast('✅ Ești deja pe listă pentru această cursă!','ok'); return; }
+    await addDoc(collection(db,'alerte_locuri'), {
+      cursaId, data:date, ora, email, nume:window._U?.displayName||'',
+      notificat:false, createdAt:serverTimestamp()
+    });
+    toast('🔔 Perfect! Te anunțăm imediat ce mai rămân puține locuri.','ok');
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
+};
+
+async function checkAndNotifySeatWatchers(cursaId, date, ora, capacitate){
+  if (!cursaId || !date || !ora || !capacitate) return;
+  try {
+    const snap = await getDocs(query(collection(db,'rezervari'), where('cursaId','==',cursaId), where('data','==',date)));
+    const occupied = snap.docs.map(d=>d.data())
+      .filter(r=>r.status!=='anulata' && (r.ora||'')===ora)
+      .reduce((s,r)=>s+(r.locuriRezervate||[]).length,0);
+    const free = capacitate - occupied;
+    if (free > 3) return; // încă sunt destule locuri, nimic de anunțat
+    const wSnap = await getDocs(query(collection(db,'alerte_locuri'),
+      where('cursaId','==',cursaId), where('data','==',date), where('ora','==',ora), where('notificat','==',false)));
+    if (wSnap.empty) return;
+    const c = (window._R||[]).find(x=>x.id===cursaId);
+    const statusText = free<=0 ? 'S-a ocupat complet' : `Au mai rămas doar ${free} locuri`;
+    await Promise.all(wSnap.docs.map(async wd => {
+      const w = wd.data();
+      try {
+        await sendUnifiedEmail({
+          to_email:w.email, nume:w.nume||'',
+          subiect: free<=0 ? 'Cursa s-a ocupat — LSD Group' : 'Mai sunt puține locuri — LSD Group',
+          mesaj:`${statusText} pe cursa ${c?.ruta||''} din ${date}, ora ${ora}. ${free>0?'Grăbește-te dacă vrei să prinzi loc!':'Poți verifica alte plecări sau alte trasee disponibile.'}`,
+          traseu:c?.ruta||'', data:date, ora, status: free<=0?'Complet':'Puține locuri', pret:''
+        });
+      } catch(e2) { console.warn('checkAndNotifySeatWatchers email failed:', e2.message); }
+      try { await setDoc(doc(db,'alerte_locuri', wd.id), {notificat:true, notificatLa:Timestamp.now()}, {merge:true}); } catch(e3) {}
+    }));
+  } catch(e) { console.warn('checkAndNotifySeatWatchers:', e.message); }
+}
+window.checkAndNotifySeatWatchers = checkAndNotifySeatWatchers;
+
 window.confirmSeats = async () => {
   if(!window._CINEMA_SEL.length||window._CINEMA_FROM_IDX===null||window._CINEMA_TO_IDX===null){toast('Selectați stațiile și cel puțin un loc','wr');return;}
   const u=window._U;
@@ -5595,6 +5654,10 @@ window.confirmSeats = async () => {
       vehicul_img:cinemaVeh?.imagini?.[0]||''
     });
     if(u)sendAdminNotif(bilete[0].id,u.uid,'Bilet confirmat ✅',`${bilete.length} bilet(e) pentru ${window._CINEMA_ROUTE?.ruta||''} pe ${window._CINEMA_DATE}`);
+    // "Anunță-mă dacă rămân puține locuri" — verificăm ACUM, cât timp acest browser
+    // rulează deja codul site-ului (EmailJS e deja încărcat), dacă rezervarea tocmai
+    // făcută a împins cursa sub prag, și trimitem imediat notificările către cei abonați.
+    checkAndNotifySeatWatchers(window._CINEMA_ID, window._CINEMA_DATE, window._CINEMA_ROUTE?.ora, window._CINEMA_ROUTE?.capacitate);
   }catch(e){toast('Eroare la salvare: '+e.message,'er');}
 };
 
