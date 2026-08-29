@@ -5222,6 +5222,10 @@ function initScrollReveal(){
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
   targets.forEach(t => window._revealObserver.observe(t));
+  // Plasă de siguranță: dacă din orice motiv observer-ul nu (mai) rulează pe undeva
+  // (ex. funcția de inițializare nu se apelează pe o cale nouă adăugată ulterior),
+  // conținutul tot devine vizibil după câteva secunde — nu rămâne niciodată "dispărut".
+  setTimeout(()=>{ targets.forEach(t=>t.classList.add('in-view')); }, 4000);
 }
 window.initScrollReveal = initScrollReveal;
 
@@ -10124,6 +10128,15 @@ window.logOrgScan = async (rezId) => {
   try{renderHomeStats();}catch(e){}
   try{renderHomeSearchSuggestions();}catch(e){}
   try{initHomeRoutesMap();}catch(e){}
+  // La fel ca mai sus: aceste funcții rulează normal din initHome() la navigare, dar
+  // homepage-ul e deja activ din start, deci trebuie declanșate manual și aici — altfel
+  // secțiunile cu clasa .reveal-up rămân la opacity:0 pentru totdeauna la prima vizită
+  // (observer-ul care le face vizibile nu ar mai porni niciodată).
+  try{window.initScrollReveal?.();}catch(e){}
+  try{window.renderFleetAvailabilityBadges?.();}catch(e){}
+  try{window.renderLiveBusBanner?.();}catch(e){}
+  clearInterval(window._liveBannerInterval);
+  window._liveBannerInterval = setInterval(()=>{try{window.renderLiveBusBanner?.();}catch(e){}}, 60000);
   // Auto-populate footer year
   const fy=document.getElementById('footer-year');
   if(fy)fy.textContent=`© ${new Date().getFullYear()} ${window._FIRMA?.name||'LSD Group SRL'} · Toate drepturile rezervate · Autorizat ARR`;
