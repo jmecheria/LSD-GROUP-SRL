@@ -296,13 +296,27 @@ input.ok{border-color:var(--green)}
 .tbl tr{transition:background .16s var(--ease)}
 .tbl tr:hover td{background:var(--amber-g)}
 .tbl-wrap{overflow-x:auto;border-radius:var(--r-lg);border:1px solid var(--border-l);background:var(--card)}
+.tbl-avatar{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:800;color:#fff;letter-spacing:-.02em;
+  box-shadow:0 2px 6px rgba(20,18,14,.16);
+}
 
 /* ── STATS CARD ── */
 .stat-card{
+  position:relative;overflow:hidden;
   background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);
   padding:22px;text-align:center;box-shadow:var(--sh);transition:all .26s var(--ease);
 }
 .stat-card:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
+.stat-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card.sc-amber::before{background:linear-gradient(90deg,var(--amber),var(--amber-d))}
+.stat-card.sc-blue::before{background:var(--blue)}
+.stat-card.sc-green::before{background:var(--green)}
+.stat-card.sc-orange::before{background:var(--orange)}
+.stat-card.sc-red::before{background:var(--red)}
+.stat-card-icon{font-size:21px;margin-bottom:6px;opacity:.85}
 .stat-num{
   font-family:"Plus Jakarta Sans",sans-serif;font-size:29px;font-weight:800;
   color:var(--amber-d);line-height:1.1;margin-bottom:5px;letter-spacing:-.01em;
@@ -639,8 +653,9 @@ input.ok{border-color:var(--green)}
   background:var(--border-l);border:1px solid var(--border-l);border-radius:var(--r-lg);
   overflow:hidden;margin-bottom:44px;box-shadow:var(--sh);
 }
-.stat-pill{background:var(--card);padding:22px 12px;text-align:center;transition:background .2s var(--ease)}
-.stat-pill:hover{background:var(--amber-g)}
+.stat-pill{background:var(--card);padding:22px 12px;text-align:center;transition:all .22s var(--ease)}
+.stat-pill:hover{background:var(--amber-g);transform:translateY(-2px)}
+.stat-pill-icon{font-size:22px;margin-bottom:6px;opacity:.85}
 .stat-pill-num{font-family:"Plus Jakarta Sans",sans-serif;font-size:28px;font-weight:800;color:var(--amber-d);line-height:1.1;letter-spacing:-.01em}
 .stat-pill-label{font-size:11px;color:var(--stone);margin-top:5px;letter-spacing:.1px}
 @media(max-width:700px){.stats-strip{grid-template-columns:repeat(2,1fr)}}
@@ -1355,10 +1370,10 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 
   <!-- Statistici live -->
   <div class="stats-strip" id="home-stats">
-    <div class="stat-pill"><div class="stat-pill-num" id="hs-routes">—</div><div class="stat-pill-label">curse active</div></div>
-    <div class="stat-pill"><div class="stat-pill-num" id="hs-vehicles">—</div><div class="stat-pill-label">vehicule în flotă</div></div>
-    <div class="stat-pill"><div class="stat-pill-num" id="hs-seats">—</div><div class="stat-pill-label">locuri disponibile azi</div></div>
-    <div class="stat-pill"><div class="stat-pill-num" id="hs-drivers">—</div><div class="stat-pill-label">șoferi autorizați</div></div>
+    <div class="stat-pill"><div class="stat-pill-icon">🔄</div><div class="stat-pill-num" id="hs-routes">—</div><div class="stat-pill-label">curse active</div></div>
+    <div class="stat-pill"><div class="stat-pill-icon">🚌</div><div class="stat-pill-num" id="hs-vehicles">—</div><div class="stat-pill-label">vehicule în flotă</div></div>
+    <div class="stat-pill"><div class="stat-pill-icon">💺</div><div class="stat-pill-num" id="hs-seats">—</div><div class="stat-pill-label">locuri disponibile azi</div></div>
+    <div class="stat-pill"><div class="stat-pill-icon">👨‍✈️</div><div class="stat-pill-num" id="hs-drivers">—</div><div class="stat-pill-label">șoferi autorizați</div></div>
   </div>
 
   <!-- Chiar acum, pe traseu -->
@@ -1825,9 +1840,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 
 <!-- ────────────────── PORTAL ȘOFER ────────────────── -->
 <div id="pg-sofer" class="page">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+  <div style="background:linear-gradient(135deg,var(--blue-g),rgba(30,95,168,.03));border:1.5px solid rgba(30,95,168,.25);border-radius:var(--r-xl);padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;box-shadow:var(--sh)">
     <div>
-      <h2 style="font-size:22px;font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">🚌 Portal Șofer</h2>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--blue)">🚌 Portal Șofer</h2>
       <div id="sf-greet" style="color:var(--stone);font-size:14px"></div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1943,9 +1958,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 
 <!-- ────────────────── ADMIN ────────────────── -->
 <div id="pg-admin" class="page">
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+  <div style="background:linear-gradient(135deg,var(--amber-g),rgba(169,124,63,.03));border:1.5px solid var(--amber-b);border-radius:var(--r-xl);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;box-shadow:var(--sh)">
     <div>
-      <h2 style="font-size:22px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif">👑 Panou Administrator</h2>
+      <h2 style="font-size:22px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:var(--amber-d)">👑 Panou Administrator</h2>
       <div id="admin-refresh-time" style="font-size:11px;color:var(--stone);margin-top:2px"></div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1956,16 +1971,16 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
   </div>
   <!-- Stats -->
   <div class="g4" style="margin-bottom:16px">
-    <div class="stat-card"><div class="stat-num" id="st-vehicles">—</div><div class="stat-label">Vehicule</div></div>
-    <div class="stat-card"><div class="stat-num" id="st-total">—</div><div class="stat-label">Total rezervări</div></div>
-    <div class="stat-card"><div class="stat-num" id="st-confirmed">—</div><div class="stat-label">Confirmate</div></div>
-    <div class="stat-card"><div class="stat-num" id="st-pending">—</div><div class="stat-label">În așteptare</div></div>
+    <div class="stat-card sc-amber"><div class="stat-card-icon">🚌</div><div class="stat-num" id="st-vehicles">—</div><div class="stat-label">Vehicule</div></div>
+    <div class="stat-card sc-blue"><div class="stat-card-icon">📋</div><div class="stat-num" id="st-total">—</div><div class="stat-label">Total rezervări</div></div>
+    <div class="stat-card sc-green"><div class="stat-card-icon">✅</div><div class="stat-num" id="st-confirmed">—</div><div class="stat-label">Confirmate</div></div>
+    <div class="stat-card sc-orange"><div class="stat-card-icon">⏳</div><div class="stat-num" id="st-pending">—</div><div class="stat-label">În așteptare</div></div>
   </div>
   <div class="g4" style="margin-bottom:24px">
-    <div class="stat-card"><div class="stat-num" id="st-revenue" style="font-size:20px">—</div><div class="stat-label">Venituri totale (RON)</div></div>
-    <div class="stat-card"><div class="stat-num" id="st-rev-month" style="font-size:20px">—</div><div class="stat-label">Luna aceasta (RON)</div></div>
-    <div class="stat-card"><div class="stat-num" id="st-top-route" style="font-size:16px">—</div><div class="stat-label">Ruta populară</div></div>
-    <div class="stat-card"><div class="stat-num" id="st-occupancy">—</div><div class="stat-label">Grad ocupare mediu</div></div>
+    <div class="stat-card sc-green"><div class="stat-card-icon">💰</div><div class="stat-num" id="st-revenue" style="font-size:20px">—</div><div class="stat-label">Venituri totale (RON)</div></div>
+    <div class="stat-card sc-amber"><div class="stat-card-icon">📅</div><div class="stat-num" id="st-rev-month" style="font-size:20px">—</div><div class="stat-label">Luna aceasta (RON)</div></div>
+    <div class="stat-card sc-blue"><div class="stat-card-icon">🔥</div><div class="stat-num" id="st-top-route" style="font-size:16px">—</div><div class="stat-label">Ruta populară</div></div>
+    <div class="stat-card sc-orange"><div class="stat-card-icon">📊</div><div class="stat-num" id="st-occupancy">—</div><div class="stat-label">Grad ocupare mediu</div></div>
   </div>
   <!-- Chart -->
   <div style="background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);padding:20px;margin-bottom:24px;box-shadow:var(--sh)">
@@ -7642,9 +7657,14 @@ async function loadVehiclesTbl(){
     }
     return`<tr>
       <td>
-        <strong>${v.icon||''} ${v.nome||v.name||v.nume||''}</strong>
-        <br><span style="color:var(--stone);font-size:11px">${v.model||''} ${v.anFab||''}</span>
-        <br>${statusBadge}
+        <div style="display:flex;align-items:center;gap:11px">
+          <div class="tbl-avatar" style="background:linear-gradient(135deg,var(--amber),var(--amber-d))">${v.icon||'🚌'}</div>
+          <div>
+            <strong>${v.nome||v.name||v.nume||''}</strong>
+            <div style="color:var(--stone);font-size:11px">${v.model||''} ${v.anFab||''}</div>
+            <div style="margin-top:3px">${statusBadge}</div>
+          </div>
+        </div>
       </td>
       <td>${capVeh(v)} locuri${v.pretPerKm?' · '+v.pretPerKm+' RON/km':''}</td>
       <td style="font-size:12px">${v.nrInmatr||'-'}</td>
@@ -8411,8 +8431,13 @@ window.filterBookings=()=>{
   document.getElementById('bookings-tbody').innerHTML=filtered.length?filtered.map(({d,r})=>{
     const sc=r.status||'in_asteptare';
     const unread=(r.mesaje||[]).filter(m=>m.from==='client').length;
+    const initials=(r.numeClient||'?').trim().split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
+    const avatarBg=r.tipRezervare==='organizata'?'linear-gradient(135deg,var(--orange),#a04a10)':'linear-gradient(135deg,var(--amber),var(--amber-d))';
     return`<tr>
-      <td><div style="font-weight:600;font-size:13px">${r.numeClient||'-'}</div><div style="color:var(--stone);font-size:11px;margin-top:2px">${r.email||'-'}</div>${r.telefon?`<div style="color:var(--stone);font-size:11px">📞 ${r.telefon}</div>`:''}<div style="font-family:monospace;font-size:10px;color:var(--amber-d);margin-top:2px">${r.biletId||''}</div></td>
+      <td><div style="display:flex;align-items:flex-start;gap:10px">
+        <div class="tbl-avatar" style="background:${avatarBg}">${initials}</div>
+        <div><div style="font-weight:600;font-size:13px">${r.numeClient||'-'}</div><div style="color:var(--stone);font-size:11px;margin-top:2px">${r.email||'-'}</div>${r.telefon?`<div style="color:var(--stone);font-size:11px">📞 ${r.telefon}</div>`:''}<div style="font-family:monospace;font-size:10px;color:var(--amber-d);margin-top:2px">${r.biletId||''}</div></div>
+      </div></td>
       <td><span style="font-size:12px">${r.tipRezervare==='organizata'?'🚌 Org.':'🔄 Reg.'}</span></td>
       <td style="max-width:180px"><div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.traseu||r.ruta||r.descriereCursa||'-'}</div>${r.pretTotal?`<div style="font-size:11px;color:var(--amber-d);font-weight:700">${r.pretTotal} RON</div>`:r.pretFinal?`<div style="font-size:11px;color:var(--amber-d);font-weight:700">Ofertă: ${r.pretFinal} RON</div>`:''}</td>
       <td style="font-size:12px;white-space:nowrap"><div>${r.data||'-'}</div><div style="color:var(--stone)">${r.ora||''}</div></td>
@@ -8827,8 +8852,14 @@ async function loadDriversTbl(){
     const expCol=daysLeft==null?'var(--stone)':daysLeft<0?'var(--red)':daysLeft<=30?'var(--orange)':'var(--green)';
     const expTag=daysLeft==null?'':daysLeft<0?' ⚠️ EXPIRAT':daysLeft<=30?' ⚠️ '+daysLeft+'z':'';
     const angaj=s.dataAngajarii?new Date(s.dataAngajarii).toLocaleDateString('ro'):'—';
+    const initials=((s.prenume||'')[0]||'')+((s.nume||'')[0]||'');
     return`<tr>
-      <td><strong>${s.numeFull}</strong><br><span style="font-size:11px;color:var(--stone)">📧 ${s.email||'-'}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:11px">
+          <div class="tbl-avatar" style="background:linear-gradient(135deg,var(--blue),#123f70)">${initials.toUpperCase()||'👤'}</div>
+          <div><strong>${s.numeFull}</strong><div style="font-size:11px;color:var(--stone)">📧 ${s.email||'-'}</div></div>
+        </div>
+      </td>
       <td style="font-size:12px">${s.telefon||'-'}</td>
       <td style="font-size:12px">Permis expiră: <span style="color:${expCol};font-weight:600">${exp}${expTag}</span><br><span style="color:var(--stone)">Angajat: ${angaj}</span></td>
       <td><span style="font-size:11px;padding:3px 8px;border-radius:6px;font-weight:600;background:${s.parolaPortal?'var(--green-g)':'var(--red-g)'};color:${s.parolaPortal?'var(--green)':'var(--red)'};border:1px solid ${s.parolaPortal?'rgba(26,107,60,.2)':'rgba(181,45,45,.2)'}">${s.parolaPortal?'🔑 Setată':'⚠️ Lipsă'}</span></td>
@@ -9597,8 +9628,8 @@ window.loadDriverVehicle = async () => {
         <h3 style="font-size:20px;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">${v.icon||''} ${v.nome||v.name||v.nume||''}</h3>
         <div style="color:var(--stone);font-size:13px;margin-bottom:16px">${v.model||''} ${v.anFab?'('+v.anFab+')':''} · ${v.nrInmatr||''} · ${v.culoare||''}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
-          <div class="stat-card"><div class="stat-num">${capVeh(v)}</div><div class="stat-label">Locuri totale</div></div>
-          <div class="stat-card"><div class="stat-num">${curseMele.length}</div><div class="stat-label">Curse asignate</div></div>
+          <div class="stat-card sc-blue"><div class="stat-card-icon">💺</div><div class="stat-num">${capVeh(v)}</div><div class="stat-label">Locuri totale</div></div>
+          <div class="stat-card sc-amber"><div class="stat-card-icon">🔄</div><div class="stat-num">${curseMele.length}</div><div class="stat-label">Curse asignate</div></div>
         </div>
         <div style="margin-bottom:16px"><div style="font-size:12px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Dotări</div><div>${(v.dotari||[]).map(d=>`<span class="chip">${d}</span>`).join('')||'—'}</div></div>
         ${seatMap?`<div><div style="font-size:12px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Configurație locuri</div>${seatMap}</div>`:''}
