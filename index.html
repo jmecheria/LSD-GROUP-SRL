@@ -524,6 +524,15 @@ input.ok{border-color:var(--green)}
   .bp-route-city{font-size:15px}
   .bp-route-mid{width:38px}
 }
+@media(max-width:380px){
+  .bp-stub{flex-basis:90px;width:90px;padding:44px 6px 12px}
+  .bp-stub img{width:66px !important;height:66px !important}
+  .bp-route-city{font-size:13px}
+  .bp-route-mid{width:30px}
+  .bp-cell{padding:8px 8px 8px 0}
+  .bp-value{font-size:12px}
+  .bp-brand{font-size:9.5px}
+}
 
 /* ── TOAST ── */
 #toast-container{
@@ -898,11 +907,32 @@ input.ok{border-color:var(--green)}
 .bus-card-link{font-size:12px;color:var(--amber-d);font-weight:600}
 
 /* ── BANNER "CHIAR ACUM, PE TRASEU" (homepage) ── */
-.live-banner-head{display:flex;align-items:center;gap:9px;margin-bottom:14px;font-family:var(--font-display);font-weight:600;font-size:17px;color:var(--ink)}
-.live-banner-dot{width:9px;height:9px;border-radius:50%;background:var(--green);flex-shrink:0;animation:liveDotPulse 1.7s ease-in-out infinite}
-@keyframes liveDotPulse{0%,100%{box-shadow:0 0 0 0 rgba(26,107,60,.35)}50%{box-shadow:0 0 0 6px rgba(26,107,60,0)}}
-.live-route-row{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin}
-.live-route-card{flex:0 0 210px;background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--sh)}
+.live-banner-wrap{
+  background:linear-gradient(135deg,var(--green-g),rgba(26,107,60,.02));
+  border:1.5px solid rgba(26,107,60,.22);border-radius:var(--r-xl);
+  padding:22px 24px;box-shadow:var(--sh-xs);
+}
+.live-banner-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;font-family:var(--font-display);font-weight:600;font-size:18px;color:var(--ink)}
+.live-banner-dot{width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0;box-shadow:0 0 0 4px var(--green-g);animation:liveDotPulse 1.7s ease-in-out infinite}
+@keyframes liveDotPulse{0%,100%{box-shadow:0 0 0 4px var(--green-g)}50%{box-shadow:0 0 0 7px rgba(26,107,60,0)}}
+.live-route-row{display:flex;gap:14px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}
+.live-route-card{
+  flex:0 0 240px;background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);
+  padding:16px 18px;box-shadow:var(--sh);transition:box-shadow .22s var(--ease),transform .22s var(--ease);
+}
+.live-route-card:hover{box-shadow:var(--sh-lg);transform:translateY(-2px)}
+.live-route-top{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.live-route-icon{
+  width:34px;height:34px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--green),#16803d);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  box-shadow:0 2px 6px rgba(26,107,60,.28);
+}
+.live-route-name{font-weight:700;font-size:13.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3;min-width:0}
+.live-route-card .pbar{height:6px;background:var(--cream)}
+.live-route-card .pbar-fill{background:linear-gradient(90deg,var(--green),#16803d)}
+.live-route-meta{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;font-size:11px;color:var(--stone)}
+.live-route-pct{font-weight:800;color:var(--green);font-size:14px;font-family:"Plus Jakarta Sans",sans-serif}
 #home-live-banner:not(:empty){margin-bottom:36px}
 @media(prefers-reduced-motion:reduce){.live-banner-dot{animation:none}}
 
@@ -4555,13 +4585,16 @@ async function renderLiveBusBanner(){
     const pct = Math.max(2, Math.round(frac*100));
     const ruta = isReturn ? (c.rutaIntors || c.ruta) : c.ruta;
     return `<div class="live-route-card">
-      <div style="font-weight:700;font-size:13px;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🚌 ${ruta}</div>
+      <div class="live-route-top">
+        <div class="live-route-icon">🚌</div>
+        <div class="live-route-name">${ruta}</div>
+      </div>
       <div class="pbar"><div class="pbar-fill" style="width:${pct}%"></div></div>
-      <div style="font-size:11px;color:var(--stone);margin-top:6px">${pct}% parcurs · plecare ${ora}</div>
+      <div class="live-route-meta"><span class="live-route-pct">${pct}%</span><span>parcurs · plecare ${ora}</span></div>
     </div>`;
   }).join('');
   const wasEmpty = !el.innerHTML.trim();
-  el.innerHTML = `<div class="live-banner-head"><span class="live-banner-dot"></span>Chiar acum, pe traseu</div><div class="live-route-row">${cards}</div>`;
+  el.innerHTML = `<div class="live-banner-wrap"><div class="live-banner-head"><span class="live-banner-dot"></span>Chiar acum, pe traseu</div><div class="live-route-row">${cards}</div></div>`;
   if (wasEmpty) el.style.animation = 'stateFadeIn .5s var(--ease)';
 }
 window.renderLiveBusBanner = renderLiveBusBanner;
@@ -5677,6 +5710,12 @@ window.confirmSeats = async () => {
     // rulează deja codul site-ului (EmailJS e deja încărcat), dacă rezervarea tocmai
     // făcută a împins cursa sub prag, și trimitem imediat notificările către cei abonați.
     checkAndNotifySeatWatchers(window._CINEMA_ID, window._CINEMA_DATE, window._CINEMA_ROUTE?.ora, window._CINEMA_ROUTE?.capacitate);
+    // Reîmprospătăm lista de curse din spate (numărul de "locuri libere" afișat pe carduri
+    // era calculat o singură dată la deschiderea paginii — fără asta rămânea cu numărul
+    // vechi, dinainte de rezervare, până la un refresh manual al paginii).
+    if (document.getElementById('pg-regulate')?.classList.contains('active')) {
+      try { await loadRegulate(); } catch(e2) {}
+    }
   }catch(e){toast('Eroare la salvare: '+e.message,'er');}
 };
 
