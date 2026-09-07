@@ -936,6 +936,41 @@ input.ok{border-color:var(--green)}
 #home-live-banner:not(:empty){margin-bottom:36px}
 @media(prefers-reduced-motion:reduce){.live-banner-dot{animation:none}}
 
+/* ── RECENZII / TESTIMONIALE (homepage) ── */
+.testi-row{display:flex;gap:16px;overflow-x:auto;padding:4px 4px 10px;scrollbar-width:thin}
+.testi-card{
+  flex:0 0 300px;background:var(--card);border:1.5px solid var(--border-l);border-radius:var(--r-lg);
+  padding:20px;box-shadow:var(--sh);position:relative;transition:box-shadow .22s var(--ease),transform .22s var(--ease);
+}
+.testi-card:hover{box-shadow:var(--sh-lg);transform:translateY(-2px)}
+.testi-quote{font-size:30px;color:var(--amber-b);line-height:1;font-family:var(--font-display);margin-bottom:6px}
+.testi-stars{color:var(--amber);font-size:14px;letter-spacing:2px;margin-bottom:10px}
+.testi-text{font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;min-height:60px}
+.testi-name{font-weight:700;font-size:13px;color:var(--ink);display:flex;align-items:center;gap:8px}
+.testi-avatar{
+  width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--amber-d));
+  color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;
+}
+
+/* ── COUNTDOWN PLECARE (urgență pe cardurile de curse) ── */
+.route-countdown{
+  display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+  padding:3px 10px;border-radius:20px;margin-top:6px;
+}
+.route-countdown.rc-soon{background:var(--red-g);color:var(--red);border:1px solid rgba(181,45,45,.22);animation:rcPulse 1.6s ease-in-out infinite}
+.route-countdown.rc-normal{background:var(--orange-g);color:var(--orange);border:1px solid rgba(196,101,32,.22)}
+@keyframes rcPulse{0%,100%{opacity:1}50%{opacity:.6}}
+@media(prefers-reduced-motion:reduce){.route-countdown.rc-soon{animation:none}}
+
+/* ── FIDELITATE (Contul meu) ── */
+.loyalty-card{
+  background:linear-gradient(135deg,var(--amber-g),rgba(169,124,63,.02));
+  border:1.5px solid var(--amber-b);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:20px;
+}
+.loyalty-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-weight:700;font-size:14px}
+.loyalty-bar{height:8px;background:var(--cream);border-radius:4px;overflow:hidden;margin:8px 0}
+.loyalty-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--amber),var(--amber-d));transition:width .5s ease}
+
 /* ── PROFIL ── */
 .profile-avatar{
   width:64px;height:64px;border-radius:50%;
@@ -1505,6 +1540,17 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
       </div>
     </div>
   </div>
+
+  <!-- Recenzii clienți -->
+  <div id="home-testimonials-wrap" style="display:none;margin-bottom:36px" class="reveal-up">
+    <div class="sec-head">
+      <div>
+        <div class="sec-title">Ce spun clienții noștri</div>
+        <div class="sec-sub">Experiențe reale ale pasagerilor LSD Group</div>
+      </div>
+    </div>
+    <div class="testi-row" id="home-testimonials"></div>
+  </div>
 </div>
 
 <!-- ────────────────── REGULATE ────────────────── -->
@@ -2028,6 +2074,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
     <button class="tab-btn" onclick="adminTab('harta')">🗺 Hartă live</button>
     <button class="tab-btn" onclick="adminTab('ticker')">📢 Ticker</button>
     <button class="tab-btn" onclick="adminTab('obiective')">🏛 Obiective</button>
+    <button class="tab-btn" onclick="adminTab('recenzii')">⭐ Recenzii</button>
     <button class="tab-btn" onclick="adminTab('conectari')">🔐 Conectări</button>
     <button class="tab-btn" onclick="adminTab('continut')">📝 Conținut</button>
     <button class="tab-btn" onclick="adminTab('settings')">⚙️ Setări</button>
@@ -2183,6 +2230,17 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
     </div>
   </div>
 
+  <!-- RECENZII / TESTIMONIALE (afișate pe homepage, introduse manual de admin) -->
+  <div id="admin-tab-recenzii" class="tab-panel">
+    <div class="info-box" style="margin-bottom:16px">💡 Aceste recenzii apar într-un carusel pe homepage ("Ce spun clienții noștri"). Nu se generează nimic automat — introduci tu textul, numele și rating-ul, ideal după ce un client îți transmite un feedback real (mesaj, telefon, review).</div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <button class="btn btn-primary btn-sm" onclick="openRecenzieModal()">+ Adaugă recenzie</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl"><thead><tr><th>Client</th><th>Recenzie</th><th>Rating</th><th>Activ</th><th></th></tr></thead>
+      <tbody id="recenzii-tbody"></tbody></table>
+    </div>
+  </div>
 
   <!-- CONECTĂRI (login logs — IP + ultima conectare, ora României) -->
   <div id="admin-tab-conectari" class="tab-panel">
@@ -2721,6 +2779,33 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
     <div class="modal-foot">
       <button class="btn btn-secondary" onclick="closeModal('obiectiv')">Anulează</button>
       <button class="btn btn-primary" onclick="saveObiectiv()">💾 Salvează obiectivul</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Recenzie / Testimonial client -->
+<div class="modal-overlay" id="mo-recenzie">
+  <div class="modal modal-md">
+    <div class="modal-head"><div><div class="modal-title" id="recenzie-modal-title">Recenzie client</div></div><button class="modal-close" onclick="closeModal('recenzie')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="rec-id"/>
+      <div class="fg"><div class="fl">Nume client *</div><input type="text" id="rec-nume" placeholder="Ex: Ana Popescu"/></div>
+      <div class="fg"><div class="fl">Rating</div>
+        <select id="rec-rating">
+          <option value="5">⭐⭐⭐⭐⭐ Excelent</option>
+          <option value="4">⭐⭐⭐⭐ Foarte bine</option>
+          <option value="3">⭐⭐⭐ Bine</option>
+        </select>
+      </div>
+      <div class="fg"><div class="fl">Textul recenziei *</div><textarea id="rec-text" rows="4" placeholder="Ex: Cursă la timp, șofer amabil, autobuz curat. Recomand!"></textarea></div>
+      <div class="fg" style="display:flex;align-items:center;gap:12px">
+        <div class="fl" style="margin-bottom:0">Activ (vizibil pe homepage)</div>
+        <label class="toggle"><input type="checkbox" id="rec-active" checked/><div class="toggle-track"></div></label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('recenzie')">Anulează</button>
+      <button class="btn btn-primary" onclick="saveRecenzie()">💾 Salvează recenzia</button>
     </div>
   </div>
 </div>
@@ -4504,9 +4589,38 @@ window.initHome = async function initHome() {
   initScrollReveal();
   renderFleetAvailabilityBadges();
   renderLiveBusBanner();
+  renderHomeTestimonials();
   clearInterval(window._liveBannerInterval);
   window._liveBannerInterval = setInterval(renderLiveBusBanner, 60000);
 }
+
+// ── RECENZII / TESTIMONIALE (homepage) ──────────────────────────────────
+// Recenziile sunt introduse manual de admin (nume, text, rating) — nu se generează
+// automat nicio recenzie falsă. Secțiunea rămâne complet ascunsă dacă nu există
+// nicio recenzie activă, ca să nu apară un spațiu gol pe homepage.
+async function renderHomeTestimonials(){
+  const wrap = document.getElementById('home-testimonials-wrap');
+  const row = document.getElementById('home-testimonials');
+  if (!wrap || !row) return;
+  try {
+    const snap = await getDocs(collection(db,'testimoniale'));
+    const list = snap.docs.map(d=>({id:d.id,...d.data()})).filter(t=>t.activ!==false && t.text);
+    if (!list.length) { wrap.style.display='none'; row.innerHTML=''; return; }
+    list.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    wrap.style.display='block';
+    row.innerHTML = list.map(t=>{
+      const stars = '★'.repeat(Math.max(1,Math.min(5,t.rating||5))) + '☆'.repeat(5-Math.max(1,Math.min(5,t.rating||5)));
+      const initial = (t.nume||'?').trim().charAt(0).toUpperCase();
+      return `<div class="testi-card">
+        <div class="testi-quote">"</div>
+        <div class="testi-stars">${stars}</div>
+        <div class="testi-text">${t.text}</div>
+        <div class="testi-name"><span class="testi-avatar">${initial}</span>${t.nume||'Client LSD Group'}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.warn('Testimoniale:', e.message); wrap.style.display='none'; }
+}
+window.renderHomeTestimonials = renderHomeTestimonials;
 
 // ── DISPONIBILITATE LIVE PE CARDURILE DE AUTOBUZ (homepage) ──────────────
 // Pentru fiecare vehicul din flotă, caută cea mai apropiată plecare de azi (dacă are
@@ -4894,6 +5008,7 @@ window.updateDateBtns = () => {
   document.getElementById('btn-maine')?.classList.toggle('btn-secondary',val!==tomorrow);
 };
 window.loadRegulate = async () => {
+  clearInterval(window._routeCountdownInterval);
   const di=document.getElementById('rdate');
   if (!di.value) { di.value=new Date().toISOString().split('T')[0]; }
   const date=di.value, dow=new Date(date+'T12:00:00').getDay();
@@ -5091,6 +5206,16 @@ window.loadRegulate = async () => {
         passedNote = `<div style="font-size:11px;color:var(--stone);margin-top:4px">🔵 Autobuzul e deja pe traseu — unele stații de urcare au fost depășite (vezi mai jos)</div>`;
       }
 
+      // Countdown de urgență — doar azi, doar cât timp cursa activă (dus sau retur) încă
+      // nu a plecat, și doar dacă mai are cel mult 4 ore până la plecare. Se actualizează
+      // periodic din updateRouteCountdowns() (fără să reconstruiască tot cardul).
+      let countdownHtml = '';
+      if (isTodayDate && activeElapsed!=null && activeElapsed<0 && activeElapsed>=-240 && !plin) {
+        const minsLeft = -activeElapsed;
+        const soon = minsLeft<=45;
+        countdownHtml = `<div class="route-countdown ${soon?'rc-soon':'rc-normal'}" data-countdown-min="${activeOra&&activeOra!=='-'?timeToMin(activeOra):''}" data-countdown-date="${date}">⏰ Pleacă în ${minsLeft>=60?Math.floor(minsLeft/60)+'h '+(minsLeft%60)+'min':minsLeft+' min'}</div>`;
+      }
+
       cards.push(`<div class="sch-card route-card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:10px">
           <div style="display:flex;gap:12px;align-items:flex-start;flex:1;min-width:0">
@@ -5098,6 +5223,7 @@ window.loadRegulate = async () => {
             <div style="min-width:0">
               <div class="sch-route">${activeRuta}</div>
               <div style="font-size:12.5px;color:var(--stone);margin-top:3px">${showReturnAsPrimary?'↩':'🕐'} <strong style="color:var(--ink)">${activeOra}</strong>${oraSosire?' → ≈'+oraSosire:''}</div>
+              ${countdownHtml}
               ${passedNote}
             </div>
           </div>
@@ -5149,9 +5275,34 @@ window.loadRegulate = async () => {
   }
   list.innerHTML=cards.join('');
   applyMiniBusImgs();
+  updateRouteCountdowns();
+  clearInterval(window._routeCountdownInterval);
+  window._routeCountdownInterval = setInterval(updateRouteCountdowns, 60000);
   const q=document.getElementById('reg-search')?.value||'';
   if(q) filterRegulate();
 };
+
+// Actualizează textul badge-urilor de countdown ("Pleacă în Xh Ymin") fără să
+// reconstruiască tot cardul — citește ora deja stocată în atributul data-countdown-min
+// și recalculează diferența față de ora curentă a României, o dată pe minut.
+function updateRouteCountdowns(){
+  const nodes = document.querySelectorAll('.route-countdown[data-countdown-min]');
+  if (!nodes.length) return;
+  const nowD = new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Bucharest'}));
+  const nowMin = nowD.getHours()*60+nowD.getMinutes();
+  const todayStr = nowD.toISOString ? new Date().toISOString().split('T')[0] : '';
+  nodes.forEach(el => {
+    const depMin = parseInt(el.dataset.countdownMin);
+    const depDate = el.dataset.countdownDate;
+    if (isNaN(depMin) || !depDate) return;
+    const minsLeft = depMin - nowMin;
+    if (depDate !== new Date().toISOString().split('T')[0] || minsLeft <= 0) { el.remove(); return; }
+    el.classList.toggle('rc-soon', minsLeft<=45);
+    el.classList.toggle('rc-normal', minsLeft>45);
+    el.textContent = `⏰ Pleacă în ${minsLeft>=60?Math.floor(minsLeft/60)+'h '+(minsLeft%60)+'min':minsLeft+' min'}`;
+  });
+}
+window.updateRouteCountdowns = updateRouteCountdowns;
 
 // Calculează procentul (0-100) la care se află autobuzul pe mini-traseul unei curse,
 // interpolând între stațiile cu minuteDeLaStart cunoscute. Returnează null dacă cursa
@@ -5404,10 +5555,11 @@ window.filterRegulate = () => {
   const q=(document.getElementById('reg-search')?.value||'').toLowerCase().trim();
   const list=document.getElementById('reg-list');
   if(!window._REG_CARDS?.length){return;}
-  if(!q){list.innerHTML=window._REG_CARDS.join('');applyMiniBusImgs();return;}
+  if(!q){list.innerHTML=window._REG_CARDS.join('');applyMiniBusImgs();updateRouteCountdowns();return;}
   const filtered=window._REG_CARDS.filter(c=>c.toLowerCase().includes(q));
   list.innerHTML=filtered.length?filtered.join(''):`<div class="empty-state"><div class="empty-icon">🔍</div><h3>Nicio cursă pentru "${q}"</h3><p><a onclick="document.getElementById('reg-search').value='';filterRegulate()">Șterge filtrul</a></p></div>`;
   applyMiniBusImgs();
+  updateRouteCountdowns();
 };
 
 // ── CINEMA (seat selection) ────────────────────────────────
@@ -7017,11 +7169,13 @@ window.loadContPage = async () => {
       <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="openEditProfile()">✏️ Editează profilul</button>
     </div>
   </div>
+  <div id="cont-loyalty"></div>
   <div id="cont-suggestion"></div>
   <h3 style="font-size:18px;font-weight:700;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif">Rezervările mele</h3>
   <div id="my-bookings"><div class="loading-state"><div class="spin"></div></div></div>`;
   const snap=await getDocs(query(collection(db,'rezervari'),where('uid','==',u.uid)));
   const docs=[...snap.docs].sort((a,b)=>(b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
+  renderLoyaltyBadge(docs);
   renderContSuggestion(docs);
   const lista=document.getElementById('my-bookings');
   if(!docs.length){lista.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><h3>Nicio rezervare</h3><p>Rezervați un loc pe o cursă regulată sau solicitați o cursă organizată.</p><div style="display:flex;gap:10px;justify-content:center;margin-top:16px"><button class="btn btn-primary btn-sm" onclick="nav('regulate')">🔄 Curse regulate</button><button class="btn btn-secondary btn-sm" onclick="nav('organizate')">🚌 Organizate</button></div></div>`;return;}
@@ -7083,6 +7237,34 @@ window.loadContPage = async () => {
     </div>`;
   }).join('');
 };
+
+// ── BADGE DE FIDELITATE (Contul meu) ────────────────────────────────────
+// Numără câte curse CONFIRMATE (regulate + organizate) a avut clientul până acum
+// și arată un mic progres vizual către următorul prag de 5 călătorii. Nu acordă
+// niciun discount automat (nu există încă plată online) — e doar un gest de
+// recunoaștere, iar un eventual bonus rămâne la latitudinea echipei, oferit manual.
+function renderLoyaltyBadge(bookingsDocs){
+  const wrap = document.getElementById('cont-loyalty');
+  if (!wrap) return;
+  const confirmate = bookingsDocs.map(d=>d.data()).filter(r=>r.status==='confirmata');
+  const total = confirmate.length;
+  if (total < 1) { wrap.innerHTML=''; return; }
+  const prag = 5;
+  const inPragCurent = total % prag;
+  const laPrag = inPragCurent===0;
+  const ramase = laPrag ? 0 : prag - inPragCurent;
+  const pct = laPrag ? 100 : Math.round((inPragCurent/prag)*100);
+  const titlu = total===1 ? 'Prima ta călătorie cu noi! 🎉' : `Ai ${total} călătorii confirmate cu LSD Group`;
+  const mesaj = laPrag
+    ? '🎉 Ai ajuns la un prag frumos! Scrie-ne un mesaj la următoarea rezervare — te răsplătim cu un mic gest de mulțumire.'
+    : `Mai ai ${ramase} călătorie${ramase>1?'i':''} până la un nou prag de fidelitate.`;
+  wrap.innerHTML = `<div class="loyalty-card">
+    <div class="loyalty-head"><span style="font-size:20px">🎖️</span><span>${titlu}</span></div>
+    <div class="loyalty-bar"><div class="loyalty-bar-fill" style="width:${pct}%"></div></div>
+    <div style="font-size:12.5px;color:var(--stone)">${mesaj}</div>
+  </div>`;
+}
+window.renderLoyaltyBadge = renderLoyaltyBadge;
 
 // ── SUGESTIE PE BAZA ISTORICULUI (Contul meu) ──────────────────────────
 // Caută ultima rezervare de cursă regulată a clientului și, dacă acea cursă mai
@@ -7432,15 +7614,16 @@ window.loadAdmin = async () => {
 };
 window.refreshAdmin=async()=>{await loadAdmin();toast('Date actualizate!','ok');};
 window.adminTab=tab=>{
-  ['vehicles','routes','bookings','drivers','program','harta','ticker','obiective','conectari','continut','settings'].forEach(t=>{
+  ['vehicles','routes','bookings','drivers','program','harta','ticker','obiective','recenzii','conectari','continut','settings'].forEach(t=>{
     document.getElementById('admin-tab-'+t)?.classList.toggle('active',t===tab);
   });
   document.querySelectorAll('#pg-admin .tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['vehicles','routes','bookings','drivers','program','harta','ticker','obiective','conectari','continut','settings'][i]===tab);
+    b.classList.toggle('active',['vehicles','routes','bookings','drivers','program','harta','ticker','obiective','recenzii','conectari','continut','settings'][i]===tab);
   });
   if(tab==='program'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];progSetMode(window._PROG_MODE||'day');}
   if(tab==='harta'){loadHartaAdmin();}
   if(tab==='obiective'){loadObiectiveTbl();}
+  if(tab==='recenzii'){loadRecenziiTbl();}
   if(tab==='conectari'){loadLoginLogs();}
   if(tab==='continut'){loadContentPanel();}
 };
@@ -7621,6 +7804,81 @@ window.saveObiectiv = async () => {
     window._CURATED_ATTRACTIONS = null; // invalidam cache-ul, se reincarca la urmatoarea cautare de obiective
     await loadObiectiveTbl();
     toast('✅ Obiectiv salvat!','ok');
+  }catch(e){ toast('Eroare: '+e.message,'er'); }
+};
+
+// ── RECENZII / TESTIMONIALE (admin) ─────────────────────────
+async function loadRecenziiTbl(){
+  const tbody = document.getElementById('recenzii-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px"><div class="spin"></div></td></tr>';
+  try{
+    const snap = await getDocs(collection(db,'testimoniale'));
+    const rows = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!rows.length){ tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--stone)">Nicio recenzie adăugată încă</td></tr>'; return; }
+    rows.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    tbody.innerHTML = rows.map(t=>{
+      const stars='⭐'.repeat(Math.max(1,Math.min(5,t.rating||5)));
+      return`<tr>
+        <td><strong>${t.nume||'-'}</strong></td>
+        <td style="max-width:280px;font-size:12px;color:var(--stone)">${(t.text||'').slice(0,90)}${(t.text||'').length>90?'…':''}</td>
+        <td style="white-space:nowrap">${stars}</td>
+        <td><label class="toggle"><input type="checkbox" ${t.activ!==false?'checked':''} onchange="toggleRecenzie('${t.id}',this.checked)"/><div class="toggle-track"></div></label></td>
+        <td style="display:flex;gap:5px;padding:10px 12px">
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="openRecenzieModal('${t.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteRecenzie('${t.id}')">🗑</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }catch(e){ tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--red)">Eroare: ${e.message}</td></tr>`; }
+}
+window.loadRecenziiTbl = loadRecenziiTbl;
+
+window.toggleRecenzie = async (id,val) => {
+  try{ await setDoc(doc(db,'testimoniale',id),{activ:val},{merge:true}); }
+  catch(e){ toast('Eroare: '+e.message,'er'); }
+};
+window.deleteRecenzie = async (id) => {
+  if(!confirm('Ștergeți definitiv această recenzie?')) return;
+  try{ await deleteDoc(doc(db,'testimoniale',id)); await loadRecenziiTbl(); toast('Recenzie ștearsă','ok'); }
+  catch(e){ toast('Eroare: '+e.message,'er'); }
+};
+window.openRecenzieModal = async (id=null) => {
+  document.getElementById('recenzie-modal-title').textContent = id ? 'Editează recenzie' : 'Adaugă recenzie nouă';
+  document.getElementById('rec-id').value = id||'';
+  document.getElementById('rec-nume').value = '';
+  document.getElementById('rec-text').value = '';
+  document.getElementById('rec-rating').value = '5';
+  document.getElementById('rec-active').checked = true;
+  if(id){
+    try{
+      const ref = await getDoc(doc(db,'testimoniale',id));
+      if(ref.exists()){
+        const t = ref.data();
+        document.getElementById('rec-nume').value = t.nume||'';
+        document.getElementById('rec-text').value = t.text||'';
+        document.getElementById('rec-rating').value = String(t.rating||5);
+        document.getElementById('rec-active').checked = t.activ!==false;
+      }
+    }catch(e){ toast('Eroare la încărcare: '+e.message,'er'); }
+  }
+  openModal('recenzie');
+};
+window.saveRecenzie = async () => {
+  const id = document.getElementById('rec-id').value;
+  const nume = document.getElementById('rec-nume').value.trim();
+  const text = document.getElementById('rec-text').value.trim();
+  const rating = parseInt(document.getElementById('rec-rating').value)||5;
+  const activ = document.getElementById('rec-active').checked;
+  if(!nume){ toast('Introduceți numele clientului','wr'); return; }
+  if(!text){ toast('Introduceți textul recenziei','wr'); return; }
+  const data = { nume, text, rating, activ };
+  try{
+    if(id) await setDoc(doc(db,'testimoniale',id), data, {merge:true});
+    else { data.createdAt = serverTimestamp(); await addDoc(collection(db,'testimoniale'), data); }
+    closeModal('recenzie');
+    await loadRecenziiTbl();
+    toast('✅ Recenzie salvată!','ok');
   }catch(e){ toast('Eroare: '+e.message,'er'); }
 };
 
@@ -10205,6 +10463,7 @@ window.logOrgScan = async (rezId) => {
   try{window.initScrollReveal?.();}catch(e){}
   try{window.renderFleetAvailabilityBadges?.();}catch(e){}
   try{window.renderLiveBusBanner?.();}catch(e){}
+  try{window.renderHomeTestimonials?.();}catch(e){}
   clearInterval(window._liveBannerInterval);
   window._liveBannerInterval = setInterval(()=>{try{window.renderLiveBusBanner?.();}catch(e){}}, 60000);
   // Auto-populate footer year
