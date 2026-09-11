@@ -971,6 +971,30 @@ input.ok{border-color:var(--green)}
 .loyalty-bar{height:8px;background:var(--cream);border-radius:4px;overflow:hidden;margin:8px 0}
 .loyalty-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--amber),var(--amber-d));transition:width .5s ease}
 
+/* ── LOCALIZARE — "rute lângă mine" (Curse Regulate) — stil minimalist,
+   testat aici ca direcție posibilă pentru restul site-ului: fără gradient,
+   umbră minimă, border subțire, un singur accent de culoare. ── */
+.locate-card{
+  border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;margin-bottom:22px;background:var(--card);
+}
+.locate-icon{font-size:16px;flex-shrink:0}
+.locate-text{font-size:13px;color:var(--ink-soft)}
+.btn-locate{
+  background:var(--ink);color:#fff;border:1px solid var(--ink);
+  padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:600;
+  cursor:pointer;font-family:"Inter",sans-serif;transition:opacity .15s ease;
+}
+.btn-locate:hover{opacity:.82}
+.btn-locate:disabled{opacity:.5;cursor:not-allowed}
+.btn-locate-outline{background:transparent;color:var(--ink);border-color:var(--border)}
+.btn-locate-outline:hover{opacity:1;border-color:var(--ink)}
+.route-distance-badge{
+  display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;
+  color:var(--ink-soft);background:var(--cream);border:1px solid var(--border);
+  border-radius:6px;padding:2px 8px;margin-top:6px;
+}
+
 /* ── PROFIL ── */
 .profile-avatar{
   width:64px;height:64px;border-radius:50%;
@@ -1568,12 +1592,77 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
     <button class="btn btn-secondary btn-sm" onclick="setRegDate(2)">Poimâine</button>
     <button class="btn btn-secondary btn-sm" onclick="setRegDate(7)">+7 zile</button>
   </div>
-  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;align-items:center">
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
     <input type="date" id="rdate" onchange="loadRegulate();updateDateBtns()" style="max-width:200px"/>
     <input type="text" id="reg-search" placeholder="🔍 Caută destinație..." oninput="filterRegulate()" style="flex:1;max-width:300px"/>
     <button class="btn btn-ghost btn-sm" onclick="document.getElementById('reg-search').value='';filterRegulate()">✕ Șterge</button>
   </div>
+  <div class="locate-card" id="locate-card">
+    <div id="locate-card-default" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span class="locate-icon">📍</span>
+      <span class="locate-text">Vezi doar cursele care trec pe lângă tine</span>
+      <button class="btn-locate" style="margin-left:auto" onclick="openRegulateLocationWizard()">Caută după locație</button>
+    </div>
+    <div id="locate-card-active" style="display:none;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="locate-icon">📍</span>
+      <span class="locate-text" id="locate-active-text">Curse filtrate după locație</span>
+      <button class="btn-locate" onclick="openRegulateLocationWizard()">Schimbă locația</button>
+      <button class="btn-locate btn-locate-outline" onclick="clearLocationFilter()">✕ Șterge filtrul</button>
+    </div>
+  </div>
   <div id="reg-list"></div>
+</div>
+
+<!-- MODAL: Alege locația pe hartă (Curse Regulate — rute din apropiere) -->
+<div class="modal-overlay" id="mo-locate-map">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div><div class="modal-title">📍 Curse din apropierea ta</div><div class="modal-sub" id="wizloc-step-sub">Pasul 1 din 3</div></div>
+      <button class="modal-close" onclick="closeModal('locate-map')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Ecran A: cerem voie pentru locație -->
+      <div id="wizloc-screen-a" style="text-align:center;padding:16px 8px">
+        <div style="font-size:40px;margin-bottom:14px">📍</div>
+        <div style="font-family:var(--font-display);font-weight:600;font-size:19px;margin-bottom:8px">Ne dai voie să-ți folosim locația?</div>
+        <p style="color:var(--stone);font-size:13.5px;max-width:380px;margin:0 auto 22px;line-height:1.6">Așa îți arătăm direct cursele care trec pe lângă tine — poți ajusta oricând pinul pe hartă, chiar și după ce ne dai voie.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;max-width:280px;margin:0 auto">
+          <button class="btn-locate" onclick="wizlocAskGps()">📍 Da, folosește locația mea</button>
+          <button class="btn-locate btn-locate-outline" onclick="wizlocGoScreenB(null)">Nu, pun eu pinul pe hartă</button>
+        </div>
+        <div style="margin-top:18px"><a onclick="wizlocSkipAll()" style="font-size:12.5px">Arată-mi toate cursele, fără locație →</a></div>
+      </div>
+
+      <!-- Ecran B: harta cu pin (+ autobuze live / garaj) -->
+      <div id="wizloc-screen-b" style="display:none">
+        <div id="wizloc-map" style="height:360px;border-radius:var(--r);overflow:hidden;background:var(--cream)"></div>
+        <div id="wizloc-pin-info" style="font-size:12.5px;color:var(--stone);margin-top:10px;min-height:18px">Apasă pe hartă pentru a pune pinul cu locația ta — îl poți muta oricând, trăgându-l.</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--stone);margin-top:8px">
+          <span>🔵 Locația ta</span><span>🚌 Autobuz pe traseu</span><span>🏠 La garaj</span><span>📍 La destinație</span>
+        </div>
+      </div>
+
+      <!-- Ecran C: rezultate — curse din apropiere -->
+      <div id="wizloc-screen-c" style="display:none">
+        <div style="display:flex;gap:6px;margin-bottom:14px">
+          <button class="btn btn-secondary btn-sm" id="wizloc-date-azi" onclick="wizlocSetDate(0)">Azi</button>
+          <button class="btn btn-secondary btn-sm" id="wizloc-date-maine" onclick="wizlocSetDate(1)">Mâine</button>
+          <button class="btn btn-secondary btn-sm" id="wizloc-date-poimaine" onclick="wizlocSetDate(2)">Poimâine</button>
+        </div>
+        <div id="wizloc-results-list"><div class="loading-state"><div class="spin"></div></div></div>
+      </div>
+
+    </div>
+    <div class="modal-foot" id="wizloc-foot-b" style="display:none">
+      <button class="btn btn-secondary" onclick="wizlocBackToA()">← Înapoi</button>
+      <button class="btn btn-primary" id="btn-wizloc-confirm" disabled onclick="wizlocConfirmPin()">Caută curse din apropiere →</button>
+    </div>
+    <div class="modal-foot" id="wizloc-foot-c" style="display:none;justify-content:space-between">
+      <button class="btn btn-secondary" onclick="wizlocBackToB()">← Schimbă locația</button>
+      <button class="btn btn-ghost" onclick="wizlocSkipAll()">Arată toate cursele</button>
+    </div>
+  </div>
 </div>
 
 <!-- ────────────────── ORGANIZATE ────────────────── -->
@@ -2403,11 +2492,24 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
       <div id="cinema-contact"></div>
       <!-- Plată -->
       <div id="cinema-payment" style="display:none;margin-top:14px;background:var(--cream);border:1px solid var(--border-l);border-radius:var(--r);padding:14px">
-        <div class="fl" style="margin-bottom:8px">Modalitate plată</div>
+        <div id="cinema-group-transfer" style="display:none;margin-bottom:14px;background:var(--card);border:1.5px solid var(--amber-b);border-radius:var(--r);padding:14px">
+          <div style="font-weight:700;font-size:13px;color:var(--amber-d);margin-bottom:6px">🏦 Rezervare de grup (4+ locuri)</div>
+          <p style="font-size:12px;color:var(--stone);margin-bottom:10px">Pentru grupuri de 4 sau mai multe locuri, cel puțin <strong id="cgt-nr-locuri">2</strong> locuri trebuie achitate în avans prin transfer bancar. Restul locurilor le poți plăti la șofer.</p>
+          <div style="background:var(--cream);border-radius:8px;padding:10px 12px;font-size:12.5px;margin-bottom:10px">
+            <div>Sumă de transferat: <strong id="cgt-suma" style="color:var(--amber-d)">—</strong></div>
+            <div style="margin-top:4px">IBAN: <strong id="cgt-iban">—</strong> (<span id="cgt-banca">—</span>)</div>
+            <div style="margin-top:4px">Titular: <strong id="cgt-titular">—</strong></div>
+          </div>
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:12.5px">
+            <input type="checkbox" id="cgt-confirm" style="width:auto;margin-top:2px;flex-shrink:0" onchange="updateCinemaConfirmState()"/>
+            <span>Am efectuat transferul pentru locurile de avans. Înțeleg că echipa LSD Group verifică manual plata.</span>
+          </label>
+        </div>
+        <div class="fl" style="margin-bottom:8px" id="cinema-payment-label">Modalitate plată</div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1.5px solid var(--amber);border-radius:8px;background:var(--card)" id="pay-driver-lbl">
             <input type="radio" name="cin-pay" value="sofer" checked onchange="updatePayStyle()"/>
-            <div><div style="font-weight:600;font-size:13px">💵 Plătesc la șofer</div><div style="font-size:11px;color:var(--stone)">Cash sau card la îmbarcare</div></div>
+            <div><div style="font-weight:600;font-size:13px">💵 Plătesc la șofer</div><div style="font-size:11px;color:var(--stone)" id="pay-driver-sub">Cash sau card la îmbarcare</div></div>
           </label>
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1.5px solid var(--border-l);border-radius:8px;background:var(--card)" id="pay-online-lbl">
             <input type="radio" name="cin-pay" value="online" onchange="updatePayStyle()"/>
@@ -2810,6 +2912,24 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
   </div>
 </div>
 
+<!-- MODAL: Client lasă o recenzie după cursă (simplu — stele + text) -->
+<div class="modal-overlay" id="mo-lasa-recenzie">
+  <div class="modal modal-sm">
+    <div class="modal-head"><div><div class="modal-title">⭐ Cum a fost călătoria?</div><div class="modal-sub" id="lr-traseu"></div></div><button class="modal-close" onclick="closeModal('lasa-recenzie')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="lr-rez-id"/>
+      <input type="hidden" id="lr-rating" value="5"/>
+      <div style="text-align:center;margin-bottom:18px">
+        <div id="lr-stars" style="font-size:34px;letter-spacing:6px;cursor:pointer">★★★★★</div>
+      </div>
+      <div class="fg"><textarea id="lr-text" rows="4" placeholder="Câteva cuvinte despre cursă — șofer, punctualitate, confort..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('lasa-recenzie')">Renunță</button>
+      <button class="btn btn-primary" onclick="submitLasaRecenzie()">📤 Trimite recenzia</button>
+    </div>
+  </div>
+</div>
 <!-- MODAL: Rezervare manuală -->
 <div class="modal-overlay" id="mo-manual-booking">
   <div class="modal modal-lg">
@@ -3059,7 +3179,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
     }
     if (!window._FB_READY) { window._PENDING_PAGE = page; return; }
     if (page === 'home') initHome();
-    if (page === 'regulate') { fillPageBanner('reg-banner','Curse Regulate','Rezervă un loc pe traseele noastre zilnice',0); loadRegulate(); }
+    if (page === 'regulate') { fillPageBanner('reg-banner','Curse Regulate','Rezervă un loc pe traseele noastre zilnice',0); loadRegulate(); openRegulateLocationWizard(); }
     if (page === 'organizate') { fillPageBanner('org-banner','Cursă Organizată','Excursii, nunți, transferuri — la cerere',1); loadOrgPage(); }
     if (page === 'bilet') {
       const bi = document.getElementById('bilet-input');
@@ -4282,6 +4402,36 @@ function haversineKm(lat1,lng1,lat2,lng2){
   const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
+// Distanța de la un punct (lat,lng) până la cea mai apropiată stație a unei curse.
+// Geocodează stațiile fără coordonate salvate (rezultatul rămâne în geocache — o
+// singură dată per stație, niciodată la infinit). Folosită atât de lista completă
+// din Curse Regulate, cât și de wizard-ul de localizare (aceeași logică, un loc).
+async function nearestStopDistanceKm(cursa, lat, lng){
+  let minDist = Infinity;
+  for (const st of (cursa.statii||[])) {
+    let sLat = st.lat, sLng = st.lng;
+    if (sLat==null || sLng==null) {
+      const nume = st.nome||st.name||st.nume;
+      if (!nume) continue;
+      const ll = await geocodeCached(nume);
+      if (!ll) continue;
+      sLat = ll[0]; sLng = ll[1];
+    }
+    const d = haversineKm(lat, lng, sLat, sLng);
+    if (d < minDist) minDist = d;
+  }
+  return minDist;
+}
+window.nearestStopDistanceKm = nearestStopDistanceKm;
+// Filtrează + sortează un array de curse după distanța până la un punct dat,
+// atașând `_locDistance` pe fiecare cursă păstrată. Mutează array-ul primit.
+async function filterSortByDistance(curse, lat, lng, radiusKm){
+  for (const c of curse) c._locDistance = await nearestStopDistanceKm(c, lat, lng);
+  const near = curse.filter(c => c._locDistance <= radiusKm).sort((a,b)=>a._locDistance-b._locDistance);
+  curse.splice(0, curse.length, ...near);
+  return curse;
+}
+window.filterSortByDistance = filterSortByDistance;
 async function fetchNearbyAttractions(lat,lng){
   // 0) Obiective curate manual de admin (biserici/muzee/etc. cu poza si descriere puse de tine) —
   // au PRIORITATE maxima: text si poza garantat corecte, nu depind de Overpass/Wikipedia.
@@ -5007,8 +5157,237 @@ window.updateDateBtns = () => {
   document.getElementById('btn-maine')?.classList.toggle('btn-primary',val===tomorrow);
   document.getElementById('btn-maine')?.classList.toggle('btn-secondary',val!==tomorrow);
 };
+
+// ── "RUTE LÂNGĂ MINE" — wizard de localizare (GPS sau pin pe hartă), stil
+// Bolt/Uber: ceri voie → hartă cu pin ajustabil (+ autobuze live/garaj) →
+// listă de curse din apropiere → tap pe o plecare → direct la alegerea locului.
+window._LOC_FILTER = null; // {lat, lng} sau null — folosit și de lista completă din #reg-list
+
+function toggleLocateCardUI(active, label){
+  const def = document.getElementById('locate-card-default');
+  const act = document.getElementById('locate-card-active');
+  if (!def || !act) return;
+  def.style.display = active ? 'none' : 'flex';
+  act.style.display = active ? 'flex' : 'none';
+  if (active && label) document.getElementById('locate-active-text').textContent = label;
+}
+
+async function applyLocationFilter(lat, lng, label){
+  window._LOC_FILTER = {lat, lng};
+  toggleLocateCardUI(true, label);
+  await loadRegulate();
+}
+window.applyLocationFilter = applyLocationFilter;
+
+window.clearLocationFilter = async () => {
+  window._LOC_FILTER = null;
+  toggleLocateCardUI(false);
+  await loadRegulate();
+};
+
+// ── WIZARD: deschidere + navigare între ecrane ──────────────────────────
+window._wizlocPinLL = null;     // {lat,lng} ales curent pe hartă (ecran B)
+window._wizlocDateOffset = 0;   // 0=azi, 1=mâine, 2=poimâine (ecran C)
+window._wizlocMap = null;
+window._wizlocPinMarker = null;
+window._wizlocLeafletLoaded = false;
+
+function wizlocShowScreen(letter){
+  ['a','b','c'].forEach(l => {
+    const el = document.getElementById('wizloc-screen-'+l);
+    if (el) el.style.display = l===letter ? 'block' : 'none';
+  });
+  document.getElementById('wizloc-foot-b').style.display = letter==='b' ? 'flex' : 'none';
+  document.getElementById('wizloc-foot-c').style.display = letter==='c' ? 'flex' : 'none';
+  const subs = {a:'Pasul 1 din 3 — locație', b:'Pasul 2 din 3 — confirmă pinul', c:'Pasul 3 din 3 — alege cursa'};
+  document.getElementById('wizloc-step-sub').textContent = subs[letter]||'';
+  if (letter==='b' && window._wizlocMap) setTimeout(()=>window._wizlocMap.invalidateSize(), 60);
+}
+
+// Se deschide de fiecare dată când cineva intră pe Curse Regulate (vezi nav()).
+window.openRegulateLocationWizard = () => {
+  wizlocShowScreen('a');
+  openModal('locate-map');
+};
+
+window.wizlocAskGps = () => {
+  if (!navigator.geolocation) { toast('Geolocația nu e suportată de acest browser — pune pinul manual','wr'); wizlocGoScreenB(null); return; }
+  toast('📍 Se cere accesul la locație...','in');
+  navigator.geolocation.getCurrentPosition(
+    pos => wizlocGoScreenB({lat:pos.coords.latitude, lng:pos.coords.longitude}),
+    err => {
+      const msg = err.code===1 ? 'Ai blocat accesul la locație — pune pinul manual pe hartă.' : 'Nu am putut obține locația — pune pinul manual.';
+      toast(msg,'wr');
+      wizlocGoScreenB(null);
+    },
+    { enableHighAccuracy:true, timeout:10000 }
+  );
+};
+
+window.wizlocBackToA = () => wizlocShowScreen('a');
+window.wizlocBackToB = () => wizlocShowScreen('b');
+
+window.wizlocSkipAll = () => {
+  closeModal('locate-map');
+  clearLocationFilter();
+};
+
+// Ecran B: harta cu pin ajustabil + autobuze pe traseu / la garaj (context vizual,
+// ca omul să vadă și flota, nu doar să aleagă un punct pe o hartă goală).
+async function wizlocGoScreenB(presetLL){
+  wizlocShowScreen('b');
+  window._wizlocPinLL = presetLL;
+  const infoEl = document.getElementById('wizloc-pin-info');
+  const confirmBtn = document.getElementById('btn-wizloc-confirm');
+  infoEl.textContent = presetLL ? 'Locația ta a fost detectată — poți trage pinul dacă vrei să-l ajustezi.' : 'Apasă pe hartă pentru a pune pinul cu locația ta.';
+  confirmBtn.disabled = !presetLL;
+  const mapEl = document.getElementById('wizloc-map');
+  mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)"><div class="spin"></div></div>';
+  if (!window._wizlocLeafletLoaded) {
+    try {
+      await new Promise((res,rej)=>{
+        if (window.L) { res(); return; }
+        const link=document.createElement('link');link.rel='stylesheet';link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(link);
+        const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+        s.onload=res; s.onerror=()=>rej(new Error('Harta nu s-a putut încărca'));
+        document.head.appendChild(s);
+        setTimeout(()=>rej(new Error('Timeout la încărcarea hărții')), 10000);
+      });
+      window._wizlocLeafletLoaded = true;
+    } catch(e) { mapEl.innerHTML = `<div style="text-align:center;color:var(--stone);padding:24px">⚠️ ${e.message}</div>`; return; }
+  }
+  if (window._wizlocMap) { try{window._wizlocMap.remove();}catch(e){} window._wizlocMap=null; }
+  mapEl.innerHTML = '';
+  const map = L.map(mapEl, {center: presetLL?[presetLL.lat,presetLL.lng]:[45.9,24.9], zoom: presetLL?13:7, maxBounds:window.ROMANIA_BOUNDS, maxBoundsViscosity:0.85, minZoom:6});
+  window._wizlocMap = map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap', maxZoom:18}).addTo(map);
+
+  function placePin(lat,lng){
+    if (window._wizlocPinMarker) map.removeLayer(window._wizlocPinMarker);
+    const pinIcon = L.divIcon({html:'<div style="width:22px;height:22px;border-radius:50%;background:#1e5fa8;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)"></div>', iconSize:[22,22], iconAnchor:[11,11], className:''});
+    window._wizlocPinMarker = L.marker([lat,lng], {icon:pinIcon, draggable:true, zIndexOffset:2000}).addTo(map);
+    window._wizlocPinMarker.on('dragend', ev => { const ll=ev.target.getLatLng(); window._wizlocPinLL = {lat:ll.lat, lng:ll.lng}; confirmBtn.disabled=false; });
+    window._wizlocPinLL = {lat,lng};
+    confirmBtn.disabled = false;
+  }
+  if (presetLL) placePin(presetLL.lat, presetLL.lng);
+  map.on('click', e => placePin(e.latlng.lat, e.latlng.lng));
+
+  try { await renderPublicFleetMap(map); } catch(e) { console.warn('Fleet map overlay:', e.message); }
+  setTimeout(()=>map.invalidateSize(), 60);
+}
+
+window.wizlocConfirmPin = async () => {
+  if (!window._wizlocPinLL) return;
+  await applyLocationFilter(window._wizlocPinLL.lat, window._wizlocPinLL.lng, 'Curse la mai puțin de 20 km de locația aleasă');
+  window._wizlocDateOffset = 0;
+  wizlocShowScreen('c');
+  wizlocSetDate(0);
+};
+
+// Ecran C: listă simplă — traseu, distanță, plecările disponibile ca butoane;
+// tap pe o plecare → intră direct la alegerea locului (cinema), ca la Bolt/Uber
+// unde alegi opțiunea și treci mai departe fără pași suplimentari.
+window.wizlocSetDate = async (offset) => {
+  window._wizlocDateOffset = offset;
+  ['azi','maine','poimaine'].forEach((k,i)=>{
+    document.getElementById('wizloc-date-'+k)?.classList.toggle('btn-primary', i===offset);
+    document.getElementById('wizloc-date-'+k)?.classList.toggle('btn-secondary', i!==offset);
+  });
+  const listEl = document.getElementById('wizloc-results-list');
+  listEl.innerHTML = '<div class="loading-state"><div class="spin"></div></div>';
+  if (!window._LOC_FILTER) return;
+  const d = new Date(); d.setDate(d.getDate()+offset);
+  const dateStr = d.toISOString().split('T')[0];
+  const dow = d.getDay();
+  const todayStr = new Date().toISOString().split('T')[0];
+  const nowMin = dateStr===todayStr ? (()=>{ const n=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Bucharest'})); return n.getHours()*60+n.getMinutes(); })() : null;
+  const curseZi = (window._R||[]).filter(c=>{
+    if(!c.activa) return false;
+    if(!(c.zile||[]).includes(dow)) return false;
+    if(c.dataStart && dateStr<c.dataStart) return false;
+    if(c.dataEnd && dateStr>c.dataEnd) return false;
+    if(c.dateBlocate?.includes(dateStr)) return false;
+    return true;
+  });
+  await filterSortByDistance(curseZi, window._LOC_FILTER.lat, window._LOC_FILTER.lng, 20);
+  if (!curseZi.length) { listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">📍</div><h3>Nicio cursă în apropiere</h3><p>Nu am găsit nicio stație la mai puțin de 20 km, pentru ziua aleasă.</p></div>'; return; }
+  const cards = curseZi.map(c => {
+    const pl = c.plecari?.length ? c.plecari : [{ora:c.ora}];
+    const chips = pl.map((p,pi) => {
+      const oraInfo = getOraForDate(p, dateStr);
+      const ora = oraInfo.ora || p.ora || '';
+      if (!ora) return '';
+      if (nowMin!=null && timeToMin(ora) <= nowMin) return ''; // deja a plecat azi
+      return `<button class="btn btn-secondary btn-sm" onclick="wizlocPickDeparture('${c.id}','${dateStr}',${pi})">${ora}</button>`;
+    }).filter(Boolean).join('');
+    if (!chips) return ''; // nimic disponibil azi pentru această cursă
+    const distTxt = c._locDistance<1 ? Math.round(c._locDistance*1000)+' m' : c._locDistance.toFixed(1)+' km';
+    return `<div style="background:var(--card);border:1px solid var(--border-l);border-radius:10px;padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
+        <div style="font-weight:700;font-size:14px">${c.ruta}</div>
+        <span class="route-distance-badge" style="margin-top:0">📍 ${distTxt}</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${chips}</div>
+    </div>`;
+  }).filter(Boolean).join('');
+  listEl.innerHTML = cards || '<div class="empty-state"><div class="empty-icon">🕐</div><h3>Nimic disponibil azi</h3><p>Toate plecările din apropiere au trecut deja. Încearcă <a onclick="wizlocSetDate(1)">mâine</a>.</p></div>';
+};
+window.wizlocPickDeparture = (cursaId, dateStr, depIdx) => {
+  closeModal('locate-map');
+  openCinema(cursaId, dateStr, 'one-way', depIdx);
+};
+
+// ── HARTA CU FLOTA (context vizual în wizard) — autobuze pe traseu (poziție
+// estimată din orar, dacă rulează acum) sau la garaj/destinație raportată de
+// șofer. Variantă publică, read-only, a hărții live din admin. ──────────────
+async function renderPublicFleetMap(map){
+  const garajLat=47.157, garajLng=27.590;
+  const garajIcon = L.divIcon({html:'<div style="background:#1a6b3c;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.3);border:2px solid #fff">🏠</div>', iconSize:[28,28], iconAnchor:[14,14], className:''});
+  L.marker([garajLat,garajLng], {icon:garajIcon}).addTo(map).bindPopup('<strong>🏠 Garaj LSD Group</strong>');
+
+  const colors = ['#a97c3f','#1e5fa8','#c46520','#1a6b3c','#b52d2d','#7c3aed'];
+  let colorIdx = 0;
+  const activeRoutes = (window._R||[]).filter(c=>c.activa && (c.statii||[]).length>=2);
+  const runningNow = new Set();
+  for (const c of activeRoutes) {
+    const coords = [];
+    for (const st of (c.statii||[])) {
+      const ll = (st.lat!=null && st.lng!=null) ? [st.lat, st.lng] : await geocodeCached(st.nome||st.name||st.nume||'');
+      if (ll) coords.push(ll);
+    }
+    if (coords.length<2) continue;
+    const col = colors[colorIdx % colors.length]; colorIdx++;
+    const roadRoute = await getRoadRoute(coords);
+    const drawCoords = roadRoute || coords;
+    L.polyline(drawCoords, {color:col, weight:3, opacity:.6}).addTo(map).bindPopup(`<strong>${c.ruta}</strong>`);
+    const now = calcRouteFractionNow(c);
+    if (now) {
+      runningNow.add(c.vehiculId);
+      const veh = (window._F||[]).find(v=>v.id===c.vehiculId);
+      createBusMarkerOnRoute(map, drawCoords, col, veh?.imagini?.[0], now.frac);
+    }
+  }
+
+  // Vehiculele fără cursă activă chiar acum: dacă șoferul a raportat manual o
+  // destinație (nu "garaj"), le arătăm acolo; altfel rămân implicit la garaj
+  // (nu mai punem alt marker, avem deja pe cel general de mai sus).
+  for (const v of (window._F||[])) {
+    if (runningNow.has(v.id)) continue;
+    const loc = v.locatieCurenta || 'garaj';
+    if (loc==='garaj' || !loc) continue;
+    const dest = loc.startsWith('cursa_spre_') ? loc.replace('cursa_spre_','') : loc;
+    const ll = await geocodeCached(dest);
+    if (!ll) continue;
+    const icon = L.divIcon({html:`<div style="background:#c46520;color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.3);border:2px solid #fff">${v.icon||'🚌'}</div>`, iconSize:[30,30], iconAnchor:[15,15], className:''});
+    L.marker(ll, {icon}).addTo(map).bindPopup(`<strong>${v.icon||'🚌'} ${v.nome||v.name||v.nume||''}</strong><br>📍 ${dest}`);
+  }
+}
+window.renderPublicFleetMap = renderPublicFleetMap;
+
 window.loadRegulate = async () => {
   clearInterval(window._routeCountdownInterval);
+  toggleLocateCardUI(!!window._LOC_FILTER, window._LOC_FILTER ? document.getElementById('locate-active-text')?.textContent : null);
   const di=document.getElementById('rdate');
   if (!di.value) { di.value=new Date().toISOString().split('T')[0]; }
   const date=di.value, dow=new Date(date+'T12:00:00').getDay();
@@ -5025,7 +5404,23 @@ window.loadRegulate = async () => {
     if(c.dateBlocate?.includes(date))return false;
     return true;
   });
-  if (!curse.length) { list.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><h3>Nicio cursă ${['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'][dow]}</h3><p>Încearcă altă dată sau <a onclick="nav('organizate')">solicită o cursă organizată</a>.</p></div>`; window._REG_CARDS=[]; return; }
+
+  // ── FILTRU "RUTE LÂNGĂ MINE" ────────────────────────────────────────
+  // Dacă e activ un filtru de localizare (GPS sau pin pus pe hartă), păstrăm
+  // doar cursele cu cel puțin o stație în raza aleasă și le sortăm după
+  // distanța cea mai mică (vezi filterSortByDistance — folosită și de wizard).
+  if (window._LOC_FILTER) {
+    await filterSortByDistance(curse, window._LOC_FILTER.lat, window._LOC_FILTER.lng, 20);
+  } else {
+    curse.forEach(c => { delete c._locDistance; });
+  }
+
+  if (!curse.length) {
+    list.innerHTML = window._LOC_FILTER
+      ? `<div class="empty-state"><div class="empty-icon">📍</div><h3>Nicio cursă în apropiere</h3><p>Nu am găsit nicio stație la mai puțin de 20 km de locația aleasă, pentru data selectată. <a onclick="clearLocationFilter()">Șterge filtrul de locație</a> sau <a onclick="nav('organizate')">solicită o cursă organizată</a>.</p></div>`
+      : `<div class="empty-state"><div class="empty-icon">🔍</div><h3>Nicio cursă ${['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'][dow]}</h3><p>Încearcă altă dată sau <a onclick="nav('organizate')">solicită o cursă organizată</a>.</p></div>`;
+    window._REG_CARDS=[]; return;
+  }
 
   // Preincarcam ocuparea pentru toate cursele zilei (pentru bara de progres)
   // FIX: cheia include și ora plecării, ca o cursă cu 2 plecări/zi (08:00 și 16:00)
@@ -5222,6 +5617,7 @@ window.loadRegulate = async () => {
             ${vehThumb}
             <div style="min-width:0">
               <div class="sch-route">${activeRuta}</div>
+              ${c._locDistance!=null?`<div class="route-distance-badge">📍 la ${c._locDistance<1?Math.round(c._locDistance*1000)+' m':c._locDistance.toFixed(1)+' km'} de tine</div>`:''}
               <div style="font-size:12.5px;color:var(--stone);margin-top:3px">${showReturnAsPrimary?'↩':'🕐'} <strong style="color:var(--ink)">${activeOra}</strong>${oraSosire?' → ≈'+oraSosire:''}</div>
               ${countdownHtml}
               ${passedNote}
@@ -5596,6 +5992,8 @@ window.openCinema = async (routeId, date, direction='one-way', depIdx=0) => {
   document.getElementById('cinema-summary').style.display='none';
   document.getElementById('btn-cinema-confirm').disabled=true;
   document.getElementById('cinema-payment').style.display='none';
+  document.getElementById('cinema-group-transfer').style.display='none';
+  const cgtCb = document.getElementById('cgt-confirm'); if (cgtCb) cgtCb.checked=false;
   await loadOccupancy(routeId,date);
   renderCinemaStops();
   renderCinemaSeats();
@@ -5660,6 +6058,7 @@ window.selectFrom = idx => {
   document.getElementById('cinema-summary').style.display='none';
   document.getElementById('btn-cinema-confirm').disabled=true;
   document.getElementById('cinema-payment').style.display='none';
+  document.getElementById('cinema-group-transfer').style.display='none';
   renderCinemaSeats();
 };
 window.selectTo = idx => {
@@ -5714,21 +6113,57 @@ window.toggleSeat = n => {
     window._CINEMA_SEL.push(n); const el=document.getElementById('cs-'+n);if(el)el.className='seat selected';
   }
   updateCinemaSummary();
-  document.getElementById('btn-cinema-confirm').disabled=window._CINEMA_SEL.length===0;
 };
 function updateCinemaSummary(){
   const st=window._CINEMA_ROUTE?.statii||[];
   const sF=window._CINEMA_FROM_IDX!==null?st[window._CINEMA_FROM_IDX]?.nome||st[window._CINEMA_FROM_IDX]?.name||st[window._CINEMA_FROM_IDX]?.nume||'-':'-';
   const sT=window._CINEMA_TO_IDX!==null?st[window._CINEMA_TO_IDX]?.nome||st[window._CINEMA_TO_IDX]?.name||st[window._CINEMA_TO_IDX]?.nume||'-':'-';
   const sumEl=document.getElementById('cinema-summary');
-  if(!window._CINEMA_SEL.length){sumEl.style.display='none'; document.getElementById('cinema-price-total-wrap').style.display='none'; return;}
+  if(!window._CINEMA_SEL.length){sumEl.style.display='none'; document.getElementById('cinema-price-total-wrap').style.display='none'; updateCinemaGroupTransferUI(); return;}
   document.getElementById('cinema-seats-nr').textContent=window._CINEMA_SEL.length;
   document.getElementById('cinema-price-total').textContent=window._CINEMA_PRICE*window._CINEMA_SEL.length;
   document.getElementById('cinema-price-total-wrap').style.display=window._CINEMA_SEL.length>1?'inline':'none';
   sumEl.innerHTML=`<div style="font-size:13px;font-weight:600;margin-bottom:8px">Locuri selectate:</div>`+
     [...window._CINEMA_SEL].sort((a,b)=>a-b).map(n=>`<div style="display:flex;justify-content:space-between;align-items:center;background:var(--cream);border-radius:8px;padding:8px 12px;margin-bottom:5px;font-size:13px"><span style="background:linear-gradient(135deg,var(--amber),var(--amber-d));color:#fff;font-weight:700;padding:2px 10px;border-radius:6px">Loc ${n}</span><span style="color:var(--stone)">${sF} → ${sT}</span><span style="font-weight:700;color:var(--amber-d)">${window._CINEMA_PRICE} RON</span></div>`).join('');
   sumEl.style.display='block';
+  updateCinemaGroupTransferUI();
 }
+// La rezervări de 4+ locuri, cel puțin 2 trebuie achitate în avans prin transfer
+// bancar (fără procesator de plăți real — doar instrucțiuni + o bifă de confirmare
+// pe care admin o verifică manual, la fel ca la "Am plătit online").
+function updateCinemaGroupTransferUI(){
+  const block = document.getElementById('cinema-group-transfer');
+  if (!block) return;
+  const total = window._CINEMA_SEL.length;
+  const needsTransfer = total >= 4;
+  block.style.display = needsTransfer ? 'block' : 'none';
+  const payLabel = document.getElementById('cinema-payment-label');
+  if (needsTransfer) {
+    const nrOnline = Math.min(2, total);
+    const suma = nrOnline * window._CINEMA_PRICE;
+    document.getElementById('cgt-nr-locuri').textContent = nrOnline;
+    document.getElementById('cgt-suma').textContent = suma + ' RON';
+    document.getElementById('cgt-iban').textContent = window._FIRMA?.iban || 'IBAN nesetat — contactează-ne';
+    document.getElementById('cgt-banca').textContent = window._FIRMA?.banca || '-';
+    document.getElementById('cgt-titular').textContent = window._FIRMA?.name || 'LSD Group SRL';
+    const restLocuri = total - nrOnline;
+    const subEl = document.getElementById('pay-driver-sub');
+    if (subEl) subEl.textContent = restLocuri>0 ? `Pentru restul de ${restLocuri} loc${restLocuri>1?'uri':''} — cash sau card la îmbarcare` : 'Toate locurile sunt achitate prin transfer';
+    if (!document.getElementById('cgt-confirm').checked) document.getElementById('cgt-confirm').checked = false;
+  }
+  updateCinemaConfirmState();
+}
+// Butonul de confirmare rămâne dezactivat până sunt îndeplinite toate condițiile:
+// cel puțin un loc ales, și — dacă rezervarea are 4+ locuri — bifa de transfer confirmată.
+function updateCinemaConfirmState(){
+  const btn = document.getElementById('btn-cinema-confirm');
+  if (!btn) return;
+  const hasSeats = window._CINEMA_SEL.length > 0;
+  const needsTransfer = window._CINEMA_SEL.length >= 4;
+  const transferOk = !needsTransfer || document.getElementById('cgt-confirm')?.checked;
+  btn.disabled = !(hasSeats && transferOk);
+}
+window.updateCinemaConfirmState = updateCinemaConfirmState;
 window.updatePayStyle = () => {
   const val=document.querySelector('input[name="cin-pay"]:checked')?.value;
   document.getElementById('pay-driver-lbl').style.borderColor=val==='sofer'?'var(--amber)':'var(--border-l)';
@@ -5812,6 +6247,7 @@ window.confirmSeats = async () => {
   if(!window._CINEMA_SEL.length||window._CINEMA_FROM_IDX===null||window._CINEMA_TO_IDX===null){toast('Selectați stațiile și cel puțin un loc','wr');return;}
   const u=window._U;
   if(!u&&window._CINEMA_SEL.length>1){toast('Fără cont maxim 1 loc!','wr');return;}
+  if(window._CINEMA_SEL.length>=4 && !document.getElementById('cgt-confirm')?.checked){toast('Bifează că ai efectuat transferul pentru locurile de avans','wr');return;}
   let nc,em,tel;
   if(u){
     nc=u.displayName||'';
@@ -5832,11 +6268,16 @@ window.confirmSeats = async () => {
   const sF=st[window._CINEMA_FROM_IDX]?.nome||st[window._CINEMA_FROM_IDX]?.name||st[window._CINEMA_FROM_IDX]?.nume;
   const sT=st[window._CINEMA_TO_IDX]?.nome||st[window._CINEMA_TO_IDX]?.name||st[window._CINEMA_TO_IDX]?.nume;
   const payVal=document.querySelector('input[name="cin-pay"]:checked')?.value||'sofer';
+  // La 4+ locuri, primele (cel puțin) 2 locuri se marchează plătite prin transfer,
+  // indiferent de radio-ul ales — restul urmează alegerea normală a clientului.
+  const seatsSorted = [...window._CINEMA_SEL].sort((a,b)=>a-b);
+  const nrOnlineRequired = seatsSorted.length>=4 ? Math.min(2, seatsSorted.length) : 0;
   const bilete=[];
-  for(const locNr of window._CINEMA_SEL){
+  seatsSorted.forEach((locNr,idx)=>{
     const bid='LSD-'+Math.random().toString(36).slice(2,8).toUpperCase();
-    bilete.push({uid:u?u.uid:null,numeClient:nc,email:em,telefon:tel,tipRezervare:'regulata',cursaId:window._CINEMA_ID,ruta:window._CINEMA_ROUTE?.ruta||'',data:window._CINEMA_DATE,ora:window._CINEMA_ROUTE?.ora||'',vehiculId:window._CINEMA_ROUTE?.vehiculId||'',vehiculNume:window._CINEMA_ROUTE?.vehiculNume||'',locuriRezervate:[{locNr,statieUrcare:sF,statieCoborare:sT,pretLoc:window._CINEMA_PRICE,scanat:false}],nrLocuri:1,biletId:bid,pretTotal:window._CINEMA_PRICE,traseu:window._CINEMA_ROUTE?.ruta||'',status:'confirmata',statusPlata:payVal==='online'?'platit_online':'de_platit_sofer',mesaje:[],createdAt:serverTimestamp()});
-  }
+    const statusPlata = idx<nrOnlineRequired ? 'platit_online' : (payVal==='online'?'platit_online':'de_platit_sofer');
+    bilete.push({uid:u?u.uid:null,numeClient:nc,email:em,telefon:tel,tipRezervare:'regulata',cursaId:window._CINEMA_ID,ruta:window._CINEMA_ROUTE?.ruta||'',data:window._CINEMA_DATE,ora:window._CINEMA_ROUTE?.ora||'',vehiculId:window._CINEMA_ROUTE?.vehiculId||'',vehiculNume:window._CINEMA_ROUTE?.vehiculNume||'',locuriRezervate:[{locNr,statieUrcare:sF,statieCoborare:sT,pretLoc:window._CINEMA_PRICE,scanat:false}],nrLocuri:1,biletId:bid,pretTotal:window._CINEMA_PRICE,traseu:window._CINEMA_ROUTE?.ruta||'',status:'confirmata',statusPlata,mesaje:[],createdAt:serverTimestamp()});
+  });
   try{
     const refs=await Promise.all(bilete.map(r=>addDoc(collection(db,'rezervari'),r)));
     refs.forEach((ref,i)=>{bilete[i].id=ref.id;});
@@ -7187,6 +7628,11 @@ window.loadContPage = async () => {
     const biletBtn=r.biletId?(r.tipRezervare==='organizata'?`<button class="btn btn-primary btn-sm" onclick="showOrgTicket('${d.id}')">🎟 Vezi biletul (reutilizabil)</button>`:`<button class="btn btn-primary btn-sm" onclick="showTicketById('${d.id}')">🎟 Vezi biletul</button>`):'';
     const anulBtn=r.status==='in_asteptare'?`<button class="btn btn-secondary btn-sm" onclick="anuleazaRez('${d.id}')">❌ Anulează</button>`:'';
     const stergeBtn=`<button class="btn btn-danger btn-sm" onclick="deleteMyBooking('${d.id}')">🗑 Șterge definitiv</button>`;
+    // Buton recenzie — apare doar după ce data cursei a trecut deja, cursa a fost
+    // confirmată, și clientul nu a lăsat deja o recenzie pentru ea (recenzieLasata).
+    const todayStr = new Date().toISOString().split('T')[0];
+    const canReview = r.status==='confirmata' && r.data && r.data<todayStr && !r.recenzieLasata;
+    const recenzieBtn = canReview ? `<button class="btn btn-secondary btn-sm" style="color:var(--amber-d);border-color:var(--amber-b)" onclick="openLasaRecenzie('${d.id}','${(r.traseu||r.ruta||'').replace(/'/g,"\\'")}')">⭐ Lasă o recenzie</button>` : '';
     const msgs=r.mesaje||[];
     const adminMsgs=msgs.filter(m=>m.from==='admin');
     let msgBlock='';
@@ -7233,7 +7679,7 @@ window.loadContPage = async () => {
       </div>
       ${locBadges?`<div style="margin-bottom:8px">${locBadges}</div>`:''}
       ${msgBlock}
-      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${biletBtn}${anulBtn}${stergeBtn}</div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${biletBtn}${recenzieBtn}${anulBtn}${stergeBtn}</div>
     </div>`;
   }).join('');
 };
@@ -7334,6 +7780,50 @@ window.deleteMyBooking = async (rezId) => {
   } catch(e) { toast('Eroare: '+e.message,'er'); }
 };
 window.showTicketById=async rezId=>{const ref=await getDoc(doc(db,'rezervari',rezId));if(ref.exists())showTickets([{id:rezId,...ref.data()}]);else toast('Rezervarea nu a fost găsită','er');};
+
+// ── CLIENT LASĂ O RECENZIE DUPĂ CURSĂ ────────────────────────────────
+// Butonul apare doar în Contul meu, doar pentru curse trecute și confirmate.
+// Recenzia se salvează în aceeași colecție 'testimoniale' folosită de admin, dar
+// pornește cu activ:false (nu apare încă pe homepage) — tu o moderezi din
+// Admin → ⭐ Recenzii și o activezi manual dacă vrei să fie publică.
+window.openLasaRecenzie = (rezId, traseu) => {
+  document.getElementById('lr-rez-id').value = rezId;
+  document.getElementById('lr-traseu').textContent = traseu || '';
+  document.getElementById('lr-text').value = '';
+  setLrStars(5);
+  openModal('lasa-recenzie');
+};
+function setLrStars(n){
+  document.getElementById('lr-rating').value = n;
+  const full = '★'.repeat(n) + '☆'.repeat(5-n);
+  document.getElementById('lr-stars').textContent = full;
+}
+window.setLrStars = setLrStars;
+// Click pe oricare stea setează rating-ul corespunzător poziției (1-5), citind
+// poziția clickului relativ la lățimea elementului — simplu, fără librării externe.
+document.getElementById('lr-stars')?.addEventListener('click', e => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  setLrStars(Math.max(1, Math.min(5, Math.ceil(pct*5))));
+});
+window.submitLasaRecenzie = async () => {
+  const rezId = document.getElementById('lr-rez-id').value;
+  const rating = parseInt(document.getElementById('lr-rating').value) || 5;
+  const text = document.getElementById('lr-text').value.trim();
+  if (!text) { toast('Scrie câteva cuvinte despre călătorie','wr'); return; }
+  const u = window._U; if (!rezId || !u) return;
+  try {
+    const ref = await getDoc(doc(db,'rezervari',rezId));
+    const nume = ref.exists() ? (ref.data().numeClient || u.displayName || 'Client LSD Group') : (u.displayName || 'Client LSD Group');
+    await addDoc(collection(db,'testimoniale'), {
+      nume, text, rating, activ:false, uid:u.uid, rezId, createdAt:serverTimestamp()
+    });
+    await setDoc(doc(db,'rezervari',rezId), {recenzieLasata:true}, {merge:true});
+    closeModal('lasa-recenzie');
+    toast('🙏 Mulțumim pentru recenzie! Va apărea pe site după o scurtă verificare.','ok');
+    loadContPage();
+  } catch(e) { toast('Eroare: '+e.message,'er'); }
+};
 
 // ── BILET CURSĂ ORGANIZATĂ — reutilizabil, scanabil de mai multe ori ─────────
 // Spre deosebire de biletul de la curse regulate (un singur loc, o singură scanare valabilă),
@@ -7816,11 +8306,21 @@ async function loadRecenziiTbl(){
     const snap = await getDocs(collection(db,'testimoniale'));
     const rows = snap.docs.map(d=>({id:d.id,...d.data()}));
     if(!rows.length){ tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--stone)">Nicio recenzie adăugată încă</td></tr>'; return; }
-    rows.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    // Recenziile trimise de clienți (au rezId) și încă neactivate apar primele —
+    // sunt cele care așteaptă moderarea ta.
+    rows.sort((a,b)=>{
+      const aPending = a.rezId && a.activ===false, bPending = b.rezId && b.activ===false;
+      if (aPending !== bPending) return aPending ? -1 : 1;
+      return (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0);
+    });
     tbody.innerHTML = rows.map(t=>{
       const stars='⭐'.repeat(Math.max(1,Math.min(5,t.rating||5)));
+      const pending = t.rezId && t.activ===false;
+      const numeCell = pending
+        ? `<strong>${t.nume||'-'}</strong><br><span style="font-size:10px;color:var(--orange);font-weight:700">🕓 Trimisă de client — în așteptare</span>`
+        : `<strong>${t.nume||'-'}</strong>`;
       return`<tr>
-        <td><strong>${t.nume||'-'}</strong></td>
+        <td>${numeCell}</td>
         <td style="max-width:280px;font-size:12px;color:var(--stone)">${(t.text||'').slice(0,90)}${(t.text||'').length>90?'…':''}</td>
         <td style="white-space:nowrap">${stars}</td>
         <td><label class="toggle"><input type="checkbox" ${t.activ!==false?'checked':''} onchange="toggleRecenzie('${t.id}',this.checked)"/><div class="toggle-track"></div></label></td>
