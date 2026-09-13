@@ -1,4 +1,4 @@
-â<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ro">
 <head>
 <meta charset="UTF-8"/>
@@ -1027,13 +1027,20 @@ input.ok{border-color:var(--green)}
 .rwiz-map-screen{position:relative;width:100%;height:100%;display:none}
 .rwiz-map{position:absolute;inset:0;z-index:1}
 .rwiz-x-float{top:calc(16px + env(safe-area-inset-top,0px));right:16px}
-.rwiz-x-float,.rwiz-back-float{
+.rwiz-x-float,.rwiz-back-float,.rwiz-menu-float{
   background:rgba(255,255,255,.92);color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.18);backdrop-filter:blur(8px);
 }
 .rwiz-back-float{
-  position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;z-index:20;
+  position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:64px;z-index:20;
   width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;font-size:16px;
   display:none;align-items:center;justify-content:center;
+}
+/* Buton "meniu" — singura cale de a ajunge la restul paginilor site-ului cât timp
+   wizard-ul/harta ocupă tot ecranul. Deschide meniul mobil existent al site-ului. */
+.rwiz-menu-float{
+  position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;z-index:21;
+  width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;font-size:15px;
+  display:flex;align-items:center;justify-content:center;
 }
 
 .rwiz-sheet{
@@ -1460,8 +1467,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
   </div>
   <div id="nav-links">
     <button class="nl" data-page="home" onclick="nav('home')">Acasă</button>
-    <button class="nl" data-page="regulate" onclick="nav('regulate')">Regulate</button>
-    <button class="nl" data-page="organizate" onclick="nav('organizate')">Organizate</button>
+    <button class="nl" id="nav-rezerva-btn" onclick="openTripTypeWizard()">🚌 Rezervă</button>
     <button class="nl" data-page="bilet" onclick="nav('bilet')">🎟 Biletul meu</button>
     <button class="nl" data-page="gdpr" onclick="nav('gdpr')">GDPR</button>
   </div>
@@ -1475,8 +1481,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 <!-- ── MOB MENU ── -->
 <div id="mob-menu">
   <button class="nl" onclick="nav('home')">🏠 Acasă</button>
-  <button class="nl" onclick="nav('regulate')">🔄 Regulate</button>
-  <button class="nl" onclick="nav('organizate')">🚌 Organizate</button>
+  <button class="nl" onclick="openTripTypeWizard()">🚌 Rezervă o cursă</button>
   <button class="nl" onclick="nav('bilet')">🎟 Biletul meu</button>
   <button class="nl" onclick="nav('gdpr')">📄 GDPR</button>
   <button class="nl" id="mob-pwa-install-btn" style="display:none" onclick="triggerPwaInstall()">📲 Instalează aplicația</button>
@@ -1487,8 +1492,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 <div id="mob-tabbar">
   <div id="mob-tabbar-inner">
     <button class="mtb-btn" data-tb-page="home" onclick="nav('home')"><span class="mtb-icon">🏠</span><span class="mtb-label">Acasă</span></button>
-    <button class="mtb-btn" data-tb-page="regulate" onclick="nav('regulate')"><span class="mtb-icon">🔄</span><span class="mtb-label">Regulate</span></button>
-    <button class="mtb-btn" data-tb-page="organizate" onclick="nav('organizate')"><span class="mtb-icon">🚌</span><span class="mtb-label">Organizate</span></button>
+    <button class="mtb-btn" data-tb-page="rezerva" onclick="openTripTypeWizard()"><span class="mtb-icon">🚌</span><span class="mtb-label">Rezervă</span></button>
     <button class="mtb-btn" data-tb-page="bilet" onclick="nav('bilet')"><span class="mtb-icon">🎟</span><span class="mtb-label">Bilet</span></button>
     <button class="mtb-btn" id="mtb-account-btn" data-tb-page="auth" onclick="nav('auth')"><span class="mtb-icon">👤</span><span class="mtb-label" id="mtb-account-label">Cont</span><span class="mtb-badge" id="mtb-notif-badge">0</span></button>
   </div>
@@ -1506,8 +1510,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
     <h1><span id="hero-title-1">Călătoriți cu</span> <span class="grad" id="hero-title-grad">confort</span><br><span id="hero-title-2">și siguranță</span></h1>
     <p class="hero-sub" id="hero-sub-text">Curse regulate și organizate în toată România — flotă modernă, șoferi autorizați și bilete electronice, pentru o călătorie fără bătăi de cap.</p>
     <div class="hero-cta">
-      <button class="btn btn-primary btn-lg" onclick="nav('regulate')">🔄 Curse Regulate</button>
-      <button class="btn btn-secondary btn-lg" onclick="nav('organizate')">🚌 Cursă Organizată</button>
+      <button class="btn btn-primary btn-lg" onclick="openTripTypeWizard()">🚌 Rezervă o cursă →</button>
     </div>
     <!-- Linia de traseu — semnatura vizuala: drum real cu autobuz -->
     <div class="route-line-wrap" id="hero-route-line">
@@ -1691,6 +1694,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
   <!-- Ecran A: fundal foto, minimalist, doar întrebarea de locație -->
   <div id="wizloc-screen-a" class="rwiz-screen-a">
     <div class="wiz-modal-bg" id="wizloc-a-bg"></div>
+    <button class="rwiz-menu-float" onclick="wizlocOpenSiteMenu()">☰</button>
     <button class="rwiz-x" onclick="wizlocSkipAll()">✕</button>
     <div class="rwiz-a-content">
       <div class="rwiz-a-icon">📍</div>
@@ -1705,6 +1709,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
   <!-- Ecran B/C: harta pe tot ecranul + bottom sheet -->
   <div id="wizloc-screen-map" class="rwiz-map-screen">
     <div id="wizloc-map" class="rwiz-map"></div>
+    <button class="rwiz-menu-float" onclick="wizlocOpenSiteMenu()">☰</button>
     <button class="rwiz-x rwiz-x-float" onclick="wizlocSkipAll()">✕</button>
     <button class="rwiz-back-float" id="wizloc-back-float" onclick="wizlocBackToA()">←</button>
 
@@ -2490,6 +2495,33 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 
 </div><!-- /#app -->
 
+<!-- WIZARD: Ce fel de călătorie cauți? (înlocuiește accesul direct la Regulate/Organizate) -->
+<div id="trip-type-overlay" class="rwiz-overlay" style="background:rgba(15,13,10,.92)">
+  <button class="rwiz-x" onclick="closeTripTypeWizard()">✕</button>
+  <div style="position:relative;z-index:2;height:100%;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto">
+    <div style="max-width:680px;width:100%;text-align:center">
+      <div style="font-family:var(--font-display);font-weight:600;font-size:clamp(22px,4vw,28px);color:#fff;margin-bottom:8px">Ce fel de călătorie cauți?</div>
+      <p style="color:rgba(255,255,255,.7);font-size:13.5px;margin-bottom:26px">Alege ce ți se potrivește, restul e simplu</p>
+      <div class="org-mode-choice" style="margin:0 auto;max-width:600px">
+        <div class="org-mode-card has-photo" onclick="chooseTripType('regulate')">
+          <div class="org-mode-bg" id="trip-type-bg-1"></div>
+          <div class="org-mode-icon">🎫</div>
+          <div class="org-mode-title">Un loc, pe o cursă programată</div>
+          <div class="org-mode-desc">Curse zilnice, cu plecări fixe — alegi locul și mergi</div>
+          <div class="org-mode-cta">Găsește o cursă →</div>
+        </div>
+        <div class="org-mode-card has-photo" onclick="chooseTripType('organizate')">
+          <div class="org-mode-bg" id="trip-type-bg-2"></div>
+          <div class="org-mode-icon">🚌</div>
+          <div class="org-mode-title">Tot autobuzul, pentru grup</div>
+          <div class="org-mode-desc">Excursii, nunți, transferuri, transport elevi — la cerere</div>
+          <div class="org-mode-cta">Cere o ofertă →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ════════════════ MODALS ════════════════ -->
 
 <!-- MODAL: Selectare Șofer (cont comun) -->
@@ -3137,8 +3169,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
       </div>
       <div class="footer-col">
         <div class="footer-col-title">Servicii</div>
-        <a onclick="nav('regulate')">🔄 Curse Regulate</a>
-        <a onclick="nav('organizate')">🚌 Curse Organizate</a>
+        <a onclick="openTripTypeWizard()">🚌 Rezervă o cursă</a>
         <a onclick="nav('bilet')">🎟 Verificare Bilet</a>
       </div>
       <div class="footer-col">
@@ -3226,15 +3257,19 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
     if ((window._ROLE === 'driver') && !['sofer','gdpr','auth','alege-loc'].includes(page)) { nav('sofer'); return; }
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nl[data-page]').forEach(n => n.classList.remove('active'));
+    document.getElementById('nav-rezerva-btn')?.classList.remove('active');
     document.querySelectorAll('.mtb-btn').forEach(n => n.classList.remove('active'));
     const el = document.getElementById('pg-' + page);
     if (!el) { console.warn('Page not found: pg-' + page); return; }
     el.classList.add('active');
     const lnk = document.querySelector('.nl[data-page="' + page + '"]');
     if (lnk) lnk.classList.add('active');
+    if (['regulate','organizate'].includes(page)) document.getElementById('nav-rezerva-btn')?.classList.add('active');
     // Bara de jos: paginile de cont/admin/șofer se mapează pe tab-ul "Cont", ca acesta
     // să rămână evidențiat chiar și când ești pe o pagină fără tab propriu (ex. admin).
-    const tbPage = ['cont','admin','sofer','auth'].includes(page) ? 'auth' : page;
+    const tbPage = ['cont','admin','sofer','auth'].includes(page) ? 'auth'
+      : ['regulate','organizate'].includes(page) ? 'rezerva'
+      : page;
     document.querySelector('.mtb-btn[data-tb-page="'+tbPage+'"]')?.classList.add('active');
     document.getElementById('mob-menu')?.classList.remove('open');
     window.scrollTo({top: 0, behavior: 'auto'});
@@ -4978,6 +5013,25 @@ function fillModeBg(elId, idx){
 }
 window.fillModeBg = fillModeBg;
 
+// ── WIZARD "CE FEL DE CĂLĂTORIE CAUȚI?" — punctul unic de intrare care
+// înlocuiește navigarea directă spre Regulate/Organizate. Rutează spre fluxul
+// potrivit, care rămâne neschimbat dedesubt (risc mic, reutilizăm ce există).
+window.openTripTypeWizard = () => {
+  const ov = document.getElementById('trip-type-overlay');
+  if (!ov) return;
+  ov.style.display = 'block';
+  fillModeBg('trip-type-bg-1', 0);
+  fillModeBg('trip-type-bg-2', 1);
+};
+window.closeTripTypeWizard = () => {
+  const ov = document.getElementById('trip-type-overlay');
+  if (ov) ov.style.display = 'none';
+};
+window.chooseTripType = (type) => {
+  closeTripTypeWizard();
+  nav(type === 'regulate' ? 'regulate' : 'organizate');
+};
+
 function renderHeroRouteLine(){
   const wrap = document.getElementById('hero-route-stops');
   if (!wrap) return;
@@ -5307,6 +5361,14 @@ window.wizlocBackToA = () => { window.stopImgSlideshow?.('wizloc-a-bg'); wizlocS
 window.wizlocSkipAll = () => {
   closeRegulateWizardOverlay();
   clearLocationFilter();
+};
+
+// Singura cale de a ajunge la restul site-ului cât timp wizard-ul/harta ocupă
+// tot ecranul — închide wizard-ul și deschide meniul obișnuit al site-ului
+// (Acasă, Regulate, Organizate, Bilet, GDPR, Cont), la fel ca de pe orice pagină.
+window.wizlocOpenSiteMenu = () => {
+  closeRegulateWizardOverlay();
+  toggleMob();
 };
 
 // Harta pe tot ecranul: pin ajustabil (draggable, ca la Bolt) + context vizual —
