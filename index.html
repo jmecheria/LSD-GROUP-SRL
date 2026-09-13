@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+â<!DOCTYPE html>
 <html lang="ro">
 <head>
 <meta charset="UTF-8"/>
@@ -995,6 +995,78 @@ input.ok{border-color:var(--green)}
   border-radius:6px;padding:2px 8px;margin-top:6px;
 }
 
+/* ── WIZARD LOCALIZARE — FULLSCREEN, stil Bolt/Uber ───────────────────────
+   Ecran A: fundal foto (reutilizează .wiz-modal-bg deja existent), minimalist.
+   Ecran B/C: hartă pe tot ecranul, cu un "bottom sheet" plutitor deasupra,
+   fără carduri/gradient-uri — doar text, un buton solid, o listă simplă. ── */
+.rwiz-overlay{position:fixed;inset:0;z-index:6000;display:none;background:#0f0d0a}
+.rwiz-screen-a{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.rwiz-x{
+  position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:16px;z-index:20;
+  width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(255,255,255,.16);color:#fff;font-size:15px;
+  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);
+}
+.rwiz-x:hover{background:rgba(255,255,255,.28)}
+.rwiz-a-content{position:relative;z-index:2;text-align:center;color:#fff;padding:0 28px;max-width:380px}
+.rwiz-a-icon{font-size:42px;margin-bottom:16px}
+.rwiz-a-title{font-family:var(--font-display);font-weight:600;font-size:24px;margin-bottom:10px;letter-spacing:-.01em}
+.rwiz-a-sub{font-size:14px;color:rgba(255,255,255,.78);line-height:1.6;margin-bottom:30px}
+.rwiz-btn{
+  display:block;width:100%;padding:14px 20px;border-radius:12px;font-size:14.5px;font-weight:700;
+  border:none;cursor:pointer;font-family:"Inter",sans-serif;margin-bottom:10px;transition:opacity .15s ease;
+}
+.rwiz-btn:hover{opacity:.88}
+.rwiz-btn-primary{background:#fff;color:#0f0d0a}
+.rwiz-btn-ghost{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3)}
+.rwiz-btn-full{margin-bottom:0}
+.rwiz-btn:disabled{opacity:.4;cursor:not-allowed}
+.rwiz-skip{display:inline-block;margin-top:16px;font-size:13px;color:rgba(255,255,255,.65)}
+.rwiz-skip:hover{color:#fff}
+
+.rwiz-map-screen{position:relative;width:100%;height:100%;display:none}
+.rwiz-map{position:absolute;inset:0;z-index:1}
+.rwiz-x-float{top:calc(16px + env(safe-area-inset-top,0px));right:16px}
+.rwiz-x-float,.rwiz-back-float{
+  background:rgba(255,255,255,.92);color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.18);backdrop-filter:blur(8px);
+}
+.rwiz-back-float{
+  position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;z-index:20;
+  width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;font-size:16px;
+  display:none;align-items:center;justify-content:center;
+}
+
+.rwiz-sheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:15;
+  background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.16);
+  padding:10px 20px calc(18px + env(safe-area-inset-bottom,0px));
+}
+.rwiz-sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 16px}
+.rwiz-sheet-text{font-size:13.5px;color:var(--ink-soft);margin-bottom:14px;text-align:center}
+.rwiz-sheet-tall{max-height:62vh;display:flex;flex-direction:column}
+.rwiz-dest-input{
+  width:100%;border:1px solid var(--border);border-radius:10px;padding:11px 14px;
+  font-size:13.5px;margin-bottom:10px;background:var(--cream);
+}
+.rwiz-date-chips{display:flex;gap:6px;margin-bottom:12px;flex-shrink:0}
+.rwiz-chip{
+  padding:6px 14px;border-radius:20px;font-size:12.5px;font-weight:600;border:1px solid var(--border);
+  background:var(--card);color:var(--ink-soft);cursor:pointer;
+}
+.rwiz-chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.rwiz-results{overflow-y:auto;flex:1}
+.rwiz-card{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 4px;border-bottom:1px solid var(--border-l);cursor:pointer;
+}
+.rwiz-card:last-child{border-bottom:none}
+.rwiz-card:hover{background:var(--cream)}
+.rwiz-card-route{font-weight:700;font-size:14px;color:var(--ink)}
+.rwiz-card-meta{font-size:12px;color:var(--stone);margin-top:3px}
+.rwiz-card-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.rwiz-card-price{font-weight:800;font-size:15.5px;color:var(--ink)}
+.rwiz-card-arrow{color:var(--stone);font-size:18px}
+
 /* ── PROFIL ── */
 .profile-avatar{
   width:64px;height:64px;border-radius:50%;
@@ -1613,56 +1685,49 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
   <div id="reg-list"></div>
 </div>
 
-<!-- MODAL: Alege locația pe hartă (Curse Regulate — rute din apropiere) -->
-<div class="modal-overlay" id="mo-locate-map">
-  <div class="modal modal-lg">
-    <div class="modal-head">
-      <div><div class="modal-title">📍 Curse din apropierea ta</div><div class="modal-sub" id="wizloc-step-sub">Pasul 1 din 3</div></div>
-      <button class="modal-close" onclick="closeModal('locate-map')">✕</button>
-    </div>
-    <div class="modal-body">
+<!-- WIZARD FULLSCREEN: locație → hartă pe tot ecranul → rezultate stil Bolt -->
+<div id="regulate-wizard-overlay" class="rwiz-overlay">
 
-      <!-- Ecran A: cerem voie pentru locație -->
-      <div id="wizloc-screen-a" style="text-align:center;padding:16px 8px">
-        <div style="font-size:40px;margin-bottom:14px">📍</div>
-        <div style="font-family:var(--font-display);font-weight:600;font-size:19px;margin-bottom:8px">Ne dai voie să-ți folosim locația?</div>
-        <p style="color:var(--stone);font-size:13.5px;max-width:380px;margin:0 auto 22px;line-height:1.6">Așa îți arătăm direct cursele care trec pe lângă tine — poți ajusta oricând pinul pe hartă, chiar și după ce ne dai voie.</p>
-        <div style="display:flex;flex-direction:column;gap:10px;max-width:280px;margin:0 auto">
-          <button class="btn-locate" onclick="wizlocAskGps()">📍 Da, folosește locația mea</button>
-          <button class="btn-locate btn-locate-outline" onclick="wizlocGoScreenB(null)">Nu, pun eu pinul pe hartă</button>
-        </div>
-        <div style="margin-top:18px"><a onclick="wizlocSkipAll()" style="font-size:12.5px">Arată-mi toate cursele, fără locație →</a></div>
-      </div>
-
-      <!-- Ecran B: harta cu pin (+ autobuze live / garaj) -->
-      <div id="wizloc-screen-b" style="display:none">
-        <div id="wizloc-map" style="height:360px;border-radius:var(--r);overflow:hidden;background:var(--cream)"></div>
-        <div id="wizloc-pin-info" style="font-size:12.5px;color:var(--stone);margin-top:10px;min-height:18px">Apasă pe hartă pentru a pune pinul cu locația ta — îl poți muta oricând, trăgându-l.</div>
-        <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--stone);margin-top:8px">
-          <span>🔵 Locația ta</span><span>🚌 Autobuz pe traseu</span><span>🏠 La garaj</span><span>📍 La destinație</span>
-        </div>
-      </div>
-
-      <!-- Ecran C: rezultate — curse din apropiere -->
-      <div id="wizloc-screen-c" style="display:none">
-        <div style="display:flex;gap:6px;margin-bottom:14px">
-          <button class="btn btn-secondary btn-sm" id="wizloc-date-azi" onclick="wizlocSetDate(0)">Azi</button>
-          <button class="btn btn-secondary btn-sm" id="wizloc-date-maine" onclick="wizlocSetDate(1)">Mâine</button>
-          <button class="btn btn-secondary btn-sm" id="wizloc-date-poimaine" onclick="wizlocSetDate(2)">Poimâine</button>
-        </div>
-        <div id="wizloc-results-list"><div class="loading-state"><div class="spin"></div></div></div>
-      </div>
-
-    </div>
-    <div class="modal-foot" id="wizloc-foot-b" style="display:none">
-      <button class="btn btn-secondary" onclick="wizlocBackToA()">← Înapoi</button>
-      <button class="btn btn-primary" id="btn-wizloc-confirm" disabled onclick="wizlocConfirmPin()">Caută curse din apropiere →</button>
-    </div>
-    <div class="modal-foot" id="wizloc-foot-c" style="display:none;justify-content:space-between">
-      <button class="btn btn-secondary" onclick="wizlocBackToB()">← Schimbă locația</button>
-      <button class="btn btn-ghost" onclick="wizlocSkipAll()">Arată toate cursele</button>
+  <!-- Ecran A: fundal foto, minimalist, doar întrebarea de locație -->
+  <div id="wizloc-screen-a" class="rwiz-screen-a">
+    <div class="wiz-modal-bg" id="wizloc-a-bg"></div>
+    <button class="rwiz-x" onclick="wizlocSkipAll()">✕</button>
+    <div class="rwiz-a-content">
+      <div class="rwiz-a-icon">📍</div>
+      <div class="rwiz-a-title">Ne dai voie să-ți folosim locația?</div>
+      <p class="rwiz-a-sub">Îți arătăm direct cursele din apropiere.</p>
+      <button class="rwiz-btn rwiz-btn-primary" onclick="wizlocAskGps()">Folosește locația mea</button>
+      <button class="rwiz-btn rwiz-btn-ghost" onclick="wizlocGoScreenB(null)">Pun eu pinul pe hartă</button>
+      <a class="rwiz-skip" onclick="wizlocSkipAll()">Arată-mi toate cursele →</a>
     </div>
   </div>
+
+  <!-- Ecran B/C: harta pe tot ecranul + bottom sheet -->
+  <div id="wizloc-screen-map" class="rwiz-map-screen">
+    <div id="wizloc-map" class="rwiz-map"></div>
+    <button class="rwiz-x rwiz-x-float" onclick="wizlocSkipAll()">✕</button>
+    <button class="rwiz-back-float" id="wizloc-back-float" onclick="wizlocBackToA()">←</button>
+
+    <!-- Sheet B: confirmă pinul -->
+    <div id="wizloc-sheet-b" class="rwiz-sheet">
+      <div class="rwiz-sheet-handle"></div>
+      <div class="rwiz-sheet-text" id="wizloc-pin-info">Apasă pe hartă pentru a pune pinul.</div>
+      <button class="rwiz-btn rwiz-btn-primary rwiz-btn-full" id="btn-wizloc-confirm" disabled onclick="wizlocConfirmPin()">Caută curse din apropiere</button>
+    </div>
+
+    <!-- Sheet C: rezultate — carduri cu preț, stil Bolt -->
+    <div id="wizloc-sheet-c" class="rwiz-sheet rwiz-sheet-tall" style="display:none">
+      <div class="rwiz-sheet-handle"></div>
+      <input type="text" id="wizloc-dest-input" class="rwiz-dest-input" placeholder="🔍 Unde vrei să ajungi? (opțional)" oninput="wizlocFilterByDestination()"/>
+      <div class="rwiz-date-chips">
+        <button class="rwiz-chip active" id="wizloc-date-azi" onclick="wizlocSetDate(0)">Azi</button>
+        <button class="rwiz-chip" id="wizloc-date-maine" onclick="wizlocSetDate(1)">Mâine</button>
+        <button class="rwiz-chip" id="wizloc-date-poimaine" onclick="wizlocSetDate(2)">Poimâine</button>
+      </div>
+      <div id="wizloc-results-list" class="rwiz-results"></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ────────────────── ORGANIZATE ────────────────── -->
@@ -5185,34 +5250,47 @@ window.clearLocationFilter = async () => {
   await loadRegulate();
 };
 
-// ── WIZARD: deschidere + navigare între ecrane ──────────────────────────
-window._wizlocPinLL = null;     // {lat,lng} ales curent pe hartă (ecran B)
-window._wizlocDateOffset = 0;   // 0=azi, 1=mâine, 2=poimâine (ecran C)
+// ── WIZARD: deschidere + navigare între ecrane (fullscreen, gen Bolt/Uber) ──
+window._wizlocPinLL = null;     // {lat,lng} ales curent pe hartă
+window._wizlocDateOffset = 0;   // 0=azi, 1=mâine, 2=poimâine
+window._wizlocResults = [];     // curse din apropiere, calculate pentru ziua curentă (reutilizate la filtrul de destinație)
 window._wizlocMap = null;
 window._wizlocPinMarker = null;
 window._wizlocLeafletLoaded = false;
 
-function wizlocShowScreen(letter){
-  ['a','b','c'].forEach(l => {
-    const el = document.getElementById('wizloc-screen-'+l);
-    if (el) el.style.display = l===letter ? 'block' : 'none';
-  });
-  document.getElementById('wizloc-foot-b').style.display = letter==='b' ? 'flex' : 'none';
-  document.getElementById('wizloc-foot-c').style.display = letter==='c' ? 'flex' : 'none';
-  const subs = {a:'Pasul 1 din 3 — locație', b:'Pasul 2 din 3 — confirmă pinul', c:'Pasul 3 din 3 — alege cursa'};
-  document.getElementById('wizloc-step-sub').textContent = subs[letter]||'';
-  if (letter==='b' && window._wizlocMap) setTimeout(()=>window._wizlocMap.invalidateSize(), 60);
+function closeRegulateWizardOverlay(){
+  const ov = document.getElementById('regulate-wizard-overlay');
+  if (ov) ov.style.display = 'none';
+  window.stopImgSlideshow?.('wizloc-a-bg');
+}
+window.closeRegulateWizardOverlay = closeRegulateWizardOverlay;
+
+// step: 'a' (întrebare locație) | 'map-b' (hartă + confirmă pin) | 'map-c' (hartă + rezultate)
+function wizlocShowStep(step){
+  const a = document.getElementById('wizloc-screen-a');
+  const mapScreen = document.getElementById('wizloc-screen-map');
+  if (step==='a') {
+    a.style.display = 'flex';
+    mapScreen.style.display = 'none';
+    return;
+  }
+  a.style.display = 'none';
+  mapScreen.style.display = 'block';
+  document.getElementById('wizloc-sheet-b').style.display = step==='map-b' ? 'block' : 'none';
+  document.getElementById('wizloc-sheet-c').style.display = step==='map-c' ? 'block' : 'none';
+  document.getElementById('wizloc-back-float').style.display = step==='map-b' ? 'flex' : 'none';
+  if (window._wizlocMap) setTimeout(()=>window._wizlocMap.invalidateSize(), 60);
 }
 
 // Se deschide de fiecare dată când cineva intră pe Curse Regulate (vezi nav()).
 window.openRegulateLocationWizard = () => {
-  wizlocShowScreen('a');
-  openModal('locate-map');
+  document.getElementById('regulate-wizard-overlay').style.display = 'block';
+  wizlocShowStep('a');
+  window.startImgSlideshow?.('wizloc-a-bg', (window._F||[]).flatMap(v=>v.imagini||[]));
 };
 
 window.wizlocAskGps = () => {
   if (!navigator.geolocation) { toast('Geolocația nu e suportată de acest browser — pune pinul manual','wr'); wizlocGoScreenB(null); return; }
-  toast('📍 Se cere accesul la locație...','in');
   navigator.geolocation.getCurrentPosition(
     pos => wizlocGoScreenB({lat:pos.coords.latitude, lng:pos.coords.longitude}),
     err => {
@@ -5224,22 +5302,22 @@ window.wizlocAskGps = () => {
   );
 };
 
-window.wizlocBackToA = () => wizlocShowScreen('a');
-window.wizlocBackToB = () => wizlocShowScreen('b');
+window.wizlocBackToA = () => { window.stopImgSlideshow?.('wizloc-a-bg'); wizlocShowStep('a'); window.startImgSlideshow?.('wizloc-a-bg', (window._F||[]).flatMap(v=>v.imagini||[])); };
 
 window.wizlocSkipAll = () => {
-  closeModal('locate-map');
+  closeRegulateWizardOverlay();
   clearLocationFilter();
 };
 
-// Ecran B: harta cu pin ajustabil + autobuze pe traseu / la garaj (context vizual,
-// ca omul să vadă și flota, nu doar să aleagă un punct pe o hartă goală).
+// Harta pe tot ecranul: pin ajustabil (draggable, ca la Bolt) + context vizual —
+// autobuzele pe traseu sau la garaj — ca omul să vadă și flota, nu doar un punct gol.
 async function wizlocGoScreenB(presetLL){
-  wizlocShowScreen('b');
+  window.stopImgSlideshow?.('wizloc-a-bg');
+  wizlocShowStep('map-b');
   window._wizlocPinLL = presetLL;
   const infoEl = document.getElementById('wizloc-pin-info');
   const confirmBtn = document.getElementById('btn-wizloc-confirm');
-  infoEl.textContent = presetLL ? 'Locația ta a fost detectată — poți trage pinul dacă vrei să-l ajustezi.' : 'Apasă pe hartă pentru a pune pinul cu locația ta.';
+  infoEl.textContent = presetLL ? 'Locația ta a fost detectată — trage pinul dacă vrei să-l ajustezi.' : 'Apasă pe hartă pentru a pune pinul cu locația ta.';
   confirmBtn.disabled = !presetLL;
   const mapEl = document.getElementById('wizloc-map');
   mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--stone)"><div class="spin"></div></div>';
@@ -5258,13 +5336,14 @@ async function wizlocGoScreenB(presetLL){
   }
   if (window._wizlocMap) { try{window._wizlocMap.remove();}catch(e){} window._wizlocMap=null; }
   mapEl.innerHTML = '';
-  const map = L.map(mapEl, {center: presetLL?[presetLL.lat,presetLL.lng]:[45.9,24.9], zoom: presetLL?13:7, maxBounds:window.ROMANIA_BOUNDS, maxBoundsViscosity:0.85, minZoom:6});
+  const map = L.map(mapEl, {center: presetLL?[presetLL.lat,presetLL.lng]:[45.9,24.9], zoom: presetLL?14:7, maxBounds:window.ROMANIA_BOUNDS, maxBoundsViscosity:0.85, minZoom:6, zoomControl:false});
   window._wizlocMap = map;
+  L.control.zoom({position:'bottomright'}).addTo(map);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap', maxZoom:18}).addTo(map);
 
   function placePin(lat,lng){
     if (window._wizlocPinMarker) map.removeLayer(window._wizlocPinMarker);
-    const pinIcon = L.divIcon({html:'<div style="width:22px;height:22px;border-radius:50%;background:#1e5fa8;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)"></div>', iconSize:[22,22], iconAnchor:[11,11], className:''});
+    const pinIcon = L.divIcon({html:'<div style="width:22px;height:22px;border-radius:50%;background:#1e5fa8;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.4)"></div>', iconSize:[22,22], iconAnchor:[11,11], className:''});
     window._wizlocPinMarker = L.marker([lat,lng], {icon:pinIcon, draggable:true, zIndexOffset:2000}).addTo(map);
     window._wizlocPinMarker.on('dragend', ev => { const ll=ev.target.getLatLng(); window._wizlocPinLL = {lat:ll.lat, lng:ll.lng}; confirmBtn.disabled=false; });
     window._wizlocPinLL = {lat,lng};
@@ -5281,27 +5360,46 @@ window.wizlocConfirmPin = async () => {
   if (!window._wizlocPinLL) return;
   await applyLocationFilter(window._wizlocPinLL.lat, window._wizlocPinLL.lng, 'Curse la mai puțin de 20 km de locația aleasă');
   window._wizlocDateOffset = 0;
-  wizlocShowScreen('c');
+  wizlocShowStep('map-c');
   wizlocSetDate(0);
 };
 
-// Ecran C: listă simplă — traseu, distanță, plecările disponibile ca butoane;
-// tap pe o plecare → intră direct la alegerea locului (cinema), ca la Bolt/Uber
-// unde alegi opțiunea și treci mai departe fără pași suplimentari.
+// ── REZULTATE, stil Bolt: card cu traseu, ora următoare, distanță și preț ──
+// Fără destinație aleasă, prețul arătat e tariful complet de la stația cea mai
+// apropiată de tine până la capătul liniei (util ca reper). Odată ce tastezi o
+// destinație, recalculăm exact pentru acea pereche de stații și filtrăm restul.
+async function nearestStopInfo(cursa, lat, lng){
+  let minDist = Infinity, minIdx = -1;
+  const statii = cursa.statii||[];
+  for (let i=0;i<statii.length;i++){
+    const st = statii[i];
+    let sLat = st.lat, sLng = st.lng;
+    if (sLat==null || sLng==null) {
+      const nume = st.nome||st.name||st.nume;
+      if (!nume) continue;
+      const ll = await geocodeCached(nume);
+      if (!ll) continue;
+      sLat = ll[0]; sLng = ll[1];
+    }
+    const d = haversineKm(lat, lng, sLat, sLng);
+    if (d < minDist) { minDist = d; minIdx = i; }
+  }
+  return {idx:minIdx, dist:minDist};
+}
+window.nearestStopInfo = nearestStopInfo;
+
 window.wizlocSetDate = async (offset) => {
   window._wizlocDateOffset = offset;
   ['azi','maine','poimaine'].forEach((k,i)=>{
-    document.getElementById('wizloc-date-'+k)?.classList.toggle('btn-primary', i===offset);
-    document.getElementById('wizloc-date-'+k)?.classList.toggle('btn-secondary', i!==offset);
+    document.getElementById('wizloc-date-'+k)?.classList.toggle('active', i===offset);
   });
+  document.getElementById('wizloc-dest-input').value = '';
   const listEl = document.getElementById('wizloc-results-list');
   listEl.innerHTML = '<div class="loading-state"><div class="spin"></div></div>';
-  if (!window._LOC_FILTER) return;
+  if (!window._LOC_FILTER) { window._wizlocResults=[]; return; }
   const d = new Date(); d.setDate(d.getDate()+offset);
   const dateStr = d.toISOString().split('T')[0];
   const dow = d.getDay();
-  const todayStr = new Date().toISOString().split('T')[0];
-  const nowMin = dateStr===todayStr ? (()=>{ const n=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Bucharest'})); return n.getHours()*60+n.getMinutes(); })() : null;
   const curseZi = (window._R||[]).filter(c=>{
     if(!c.activa) return false;
     if(!(c.zile||[]).includes(dow)) return false;
@@ -5310,31 +5408,70 @@ window.wizlocSetDate = async (offset) => {
     if(c.dateBlocate?.includes(dateStr)) return false;
     return true;
   });
-  await filterSortByDistance(curseZi, window._LOC_FILTER.lat, window._LOC_FILTER.lng, 20);
-  if (!curseZi.length) { listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">📍</div><h3>Nicio cursă în apropiere</h3><p>Nu am găsit nicio stație la mai puțin de 20 km, pentru ziua aleasă.</p></div>'; return; }
-  const cards = curseZi.map(c => {
+  const enriched = [];
+  for (const c of curseZi) {
+    const info = await nearestStopInfo(c, window._LOC_FILTER.lat, window._LOC_FILTER.lng);
+    if (info.idx===-1 || info.dist>20) continue;
+    enriched.push({c, idx:info.idx, dist:info.dist});
+  }
+  enriched.sort((a,b)=>a.dist-b.dist);
+  window._wizlocResults = enriched;
+  renderWizlocResultsList(enriched, dateStr, '');
+};
+
+function renderWizlocResultsList(list, dateStr, destQuery){
+  const listEl = document.getElementById('wizloc-results-list');
+  const todayStr = new Date().toISOString().split('T')[0];
+  const nowMin = dateStr===todayStr ? (()=>{ const n=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Bucharest'})); return n.getHours()*60+n.getMinutes(); })() : null;
+  const q = (destQuery||'').trim().toLowerCase();
+
+  const cards = list.map(({c, idx, dist}) => {
+    const statii = c.statii||[];
+    let destIdx = statii.length-1, destMatched = false;
+    if (q) {
+      const found = statii.findIndex((s,i)=> i>idx && (s.nome||s.name||s.nume||'').toLowerCase().includes(q));
+      if (found===-1) return '';
+      destIdx = found; destMatched = true;
+    }
+    if (destIdx<=idx) return '';
+    const price = (statii[destIdx].pretDeLaStart||0) - (statii[idx].pretDeLaStart||0);
+    const destName = statii[destIdx].nome||statii[destIdx].name||statii[destIdx].nume||'';
+
     const pl = c.plecari?.length ? c.plecari : [{ora:c.ora}];
-    const chips = pl.map((p,pi) => {
+    let nextOra=null, depIdx=-1;
+    pl.forEach((p,pi) => {
       const oraInfo = getOraForDate(p, dateStr);
-      const ora = oraInfo.ora || p.ora || '';
-      if (!ora) return '';
-      if (nowMin!=null && timeToMin(ora) <= nowMin) return ''; // deja a plecat azi
-      return `<button class="btn btn-secondary btn-sm" onclick="wizlocPickDeparture('${c.id}','${dateStr}',${pi})">${ora}</button>`;
-    }).filter(Boolean).join('');
-    if (!chips) return ''; // nimic disponibil azi pentru această cursă
-    const distTxt = c._locDistance<1 ? Math.round(c._locDistance*1000)+' m' : c._locDistance.toFixed(1)+' km';
-    return `<div style="background:var(--card);border:1px solid var(--border-l);border-radius:10px;padding:14px 16px;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
-        <div style="font-weight:700;font-size:14px">${c.ruta}</div>
-        <span class="route-distance-badge" style="margin-top:0">📍 ${distTxt}</span>
+      const ora = oraInfo.ora || p.ora;
+      if (!ora) return;
+      if (nowMin!=null && timeToMin(ora)<=nowMin) return;
+      if (nextOra===null || ora<nextOra) { nextOra=ora; depIdx=pi; }
+    });
+    if (!nextOra) return '';
+
+    const distTxt = dist<1 ? Math.round(dist*1000)+' m' : dist.toFixed(1)+' km';
+    return `<div class="rwiz-card" onclick="wizlocPickDeparture('${c.id}','${dateStr}',${depIdx})">
+      <div class="rwiz-card-left">
+        <div class="rwiz-card-route">${c.ruta}</div>
+        <div class="rwiz-card-meta">🕐 ${nextOra} · 📍 ${distTxt}${destMatched?' · → '+destName:''}</div>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">${chips}</div>
+      <div class="rwiz-card-right">
+        <div class="rwiz-card-price">${price>0?price+' RON':'—'}</div>
+        <div class="rwiz-card-arrow">›</div>
+      </div>
     </div>`;
   }).filter(Boolean).join('');
-  listEl.innerHTML = cards || '<div class="empty-state"><div class="empty-icon">🕐</div><h3>Nimic disponibil azi</h3><p>Toate plecările din apropiere au trecut deja. Încearcă <a onclick="wizlocSetDate(1)">mâine</a>.</p></div>';
+
+  listEl.innerHTML = cards || `<div class="empty-state" style="padding:32px 16px"><div class="empty-icon">${q?'🔍':'🕐'}</div><h3>${q?'Nicio cursă spre această destinație':'Nimic disponibil'}</h3><p>${q?'Încearcă altă destinație sau șterge căutarea.':'Toate plecările din apropiere au trecut deja azi.'}</p></div>`;
+}
+
+window.wizlocFilterByDestination = () => {
+  const q = document.getElementById('wizloc-dest-input').value;
+  const d = new Date(); d.setDate(d.getDate()+window._wizlocDateOffset);
+  renderWizlocResultsList(window._wizlocResults, d.toISOString().split('T')[0], q);
 };
+
 window.wizlocPickDeparture = (cursaId, dateStr, depIdx) => {
-  closeModal('locate-map');
+  closeRegulateWizardOverlay();
   openCinema(cursaId, dateStr, 'one-way', depIdx);
 };
 
