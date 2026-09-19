@@ -1001,70 +1001,87 @@ input.ok{border-color:var(--green)}
    (cere locația → confirmă pinul → rezultate) — fără ecrane separate. ── */
 .rwiz-overlay{position:fixed;inset:0;z-index:6000;display:none;background:#e8e2d3}
 .rwiz-map{position:absolute;inset:0;z-index:1}
+/* Scrim subtil sus, ca la hărțile premium — butoanele plutitoare rămân
+   lizibile chiar și peste zone deschise/luminoase ale hărții. */
+.rwiz-map-scrim{
+  position:absolute;top:0;left:0;right:0;height:110px;z-index:5;pointer-events:none;
+  background:linear-gradient(180deg,rgba(15,13,10,.16),transparent);
+}
 .rwiz-x{
   position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:16px;z-index:20;
   width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;font-size:15px;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:center;justify-content:center;transition:transform .15s ease,background .15s ease;
 }
 .rwiz-x-float,.rwiz-back-float,.rwiz-menu-float,.rwiz-x{
   background:rgba(255,255,255,.92);color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.18);backdrop-filter:blur(8px);
 }
 .rwiz-x:hover,.rwiz-back-float:hover,.rwiz-menu-float:hover{background:#fff}
+.rwiz-x:active,.rwiz-back-float:active,.rwiz-menu-float:active{transform:scale(.92)}
 .rwiz-btn{
   display:block;width:100%;padding:14px 20px;border-radius:12px;font-size:14.5px;font-weight:700;
-  border:none;cursor:pointer;font-family:"Inter",sans-serif;margin-bottom:10px;transition:opacity .15s ease;
+  border:none;cursor:pointer;font-family:"Inter",sans-serif;margin-bottom:10px;
+  transition:opacity .15s ease,transform .12s ease;
 }
 .rwiz-btn:hover{opacity:.88}
-.rwiz-btn-dark{background:var(--ink);color:#fff}
+.rwiz-btn:active:not(:disabled){transform:scale(.985)}
+.rwiz-btn-dark{background:var(--ink);color:#fff;box-shadow:0 4px 14px -4px rgba(15,13,10,.35)}
 .rwiz-btn-outline{background:#fff;color:var(--ink);border:1.5px solid var(--border)}
 .rwiz-btn-full{margin-bottom:0}
 .rwiz-btn:disabled{opacity:.4;cursor:not-allowed}
-.rwiz-skip-dark{display:inline-block;font-size:13px;color:var(--stone)}
+.rwiz-skip-dark{display:inline-block;font-size:13px;color:var(--stone);transition:color .15s ease}
 .rwiz-skip-dark:hover{color:var(--ink)}
 
 .rwiz-back-float{
   position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:64px;z-index:20;
   width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;font-size:16px;
-  display:none;align-items:center;justify-content:center;
+  display:none;align-items:center;justify-content:center;transition:transform .15s ease,background .15s ease;
 }
 /* Buton "meniu" — singura cale de a ajunge la restul paginilor site-ului cât timp
    wizard-ul/harta ocupă tot ecranul. Deschide meniul mobil existent al site-ului. */
 .rwiz-menu-float{
   position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;z-index:21;
   width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;font-size:15px;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:center;justify-content:center;transition:transform .15s ease,background .15s ease;
 }
 
 .rwiz-sheet{
   position:absolute;left:0;right:0;bottom:0;z-index:15;
-  background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.16);
+  background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -10px 32px rgba(0,0,0,.14);
   padding:10px 20px calc(18px + env(safe-area-inset-bottom,0px));
+  animation:rwizSheetUp .32s cubic-bezier(.19,1,.22,1);
 }
+@keyframes rwizSheetUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){.rwiz-sheet{animation:none}}
 .rwiz-sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 16px}
 .rwiz-sheet-text{font-size:13.5px;color:var(--ink-soft);margin-bottom:14px;text-align:center}
 .rwiz-sheet-tall{max-height:62vh;display:flex;flex-direction:column}
 .rwiz-dest-input{
   width:100%;border:1px solid var(--border);border-radius:10px;padding:11px 14px;
-  font-size:13.5px;margin-bottom:10px;background:var(--cream);
+  font-size:13.5px;margin-bottom:10px;background:var(--cream);transition:border-color .15s ease,background .15s ease;
 }
+.rwiz-dest-input:focus{outline:none;border-color:var(--ink);background:#fff}
 .rwiz-date-chips{display:flex;gap:6px;margin-bottom:12px;flex-shrink:0}
 .rwiz-chip{
   padding:6px 14px;border-radius:20px;font-size:12.5px;font-weight:600;border:1px solid var(--border);
-  background:var(--card);color:var(--ink-soft);cursor:pointer;
+  background:var(--card);color:var(--ink-soft);cursor:pointer;transition:all .15s ease;
 }
 .rwiz-chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
 .rwiz-results{overflow-y:auto;flex:1}
 .rwiz-card{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:14px 4px;border-bottom:1px solid var(--border-l);cursor:pointer;
+  padding:14px 4px;border-bottom:1px solid var(--border-l);cursor:pointer;transition:background .12s ease;
 }
 .rwiz-card:last-child{border-bottom:none}
 .rwiz-card:hover{background:var(--cream)}
+.rwiz-card:active{background:var(--border-l)}
 .rwiz-card-route{font-weight:700;font-size:14px;color:var(--ink)}
 .rwiz-card-meta{font-size:12px;color:var(--stone);margin-top:3px}
 .rwiz-card-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .rwiz-card-price{font-weight:800;font-size:15.5px;color:var(--ink)}
 .rwiz-card-arrow{color:var(--stone);font-size:18px}
+.rwiz-pin-dot{animation:rwizPinDrop .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes rwizPinDrop{0%{transform:scale(0) translateY(-14px)}60%{transform:scale(1.15) translateY(0)}100%{transform:scale(1) translateY(0)}}
+@media(prefers-reduced-motion:reduce){.rwiz-pin-dot{animation:none}}
 
 /* ── PROFIL ── */
 .profile-avatar{
@@ -1683,6 +1700,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 <!-- WIZARD FULLSCREEN: locație → hartă pe tot ecranul → rezultate stil Bolt -->
 <div id="regulate-wizard-overlay" class="rwiz-overlay">
   <div id="wizloc-map" class="rwiz-map"></div>
+  <div class="rwiz-map-scrim"></div>
   <button class="rwiz-menu-float" onclick="wizlocOpenSiteMenu()">☰</button>
   <button class="rwiz-x rwiz-x-float" onclick="wizlocSkipAll()">✕</button>
   <button class="rwiz-back-float" id="wizloc-back-float" onclick="wizlocBackToA()">←</button>
@@ -5319,6 +5337,13 @@ window.openRegulateLocationWizard = () => {
   window._wizlocPinLL = null;
   wizlocShowStep('a');
   wizlocInitMap();
+  // Dacă browserul știe deja că i-am dat voie înainte pe acest site, sărim
+  // direct peste întrebare — luăm locația și punem pinul, fără un tap în plus.
+  if (navigator.permissions?.query) {
+    navigator.permissions.query({name:'geolocation'}).then(status => {
+      if (status.state === 'granted') wizlocAskGps();
+    }).catch(()=>{});
+  }
 };
 
 window.wizlocAskGps = () => {
@@ -5386,7 +5411,7 @@ function wizlocPlacePin(lat, lng){
   const map = window._wizlocMap;
   if (!map) return;
   if (window._wizlocPinMarker) map.removeLayer(window._wizlocPinMarker);
-  const pinIcon = L.divIcon({html:'<div style="width:22px;height:22px;border-radius:50%;background:#1e5fa8;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.4)"></div>', iconSize:[22,22], iconAnchor:[11,11], className:''});
+  const pinIcon = L.divIcon({html:'<div class="rwiz-pin-dot" style="width:22px;height:22px;border-radius:50%;background:#1e5fa8;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.4)"></div>', iconSize:[22,22], iconAnchor:[11,11], className:''});
   window._wizlocPinMarker = L.marker([lat,lng], {icon:pinIcon, draggable:true, zIndexOffset:2000}).addTo(map);
   window._wizlocPinMarker.on('dragend', ev => { const ll=ev.target.getLatLng(); window._wizlocPinLL={lat:ll.lat,lng:ll.lng}; document.getElementById('btn-wizloc-confirm').disabled=false; });
   window._wizlocPinLL = {lat,lng};
