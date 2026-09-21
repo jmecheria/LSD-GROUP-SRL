@@ -1702,7 +1702,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
   <div id="wizloc-map" class="rwiz-map"></div>
   <div class="rwiz-map-scrim"></div>
   <button class="rwiz-menu-float" onclick="wizlocOpenSiteMenu()">☰</button>
-  <button class="rwiz-x rwiz-x-float" onclick="wizlocSkipAll()">✕</button>
+  <button class="rwiz-x rwiz-x-float" onclick="wizlocExitHome()">✕</button>
   <button class="rwiz-back-float" id="wizloc-back-float" onclick="wizlocBackToA()">←</button>
 
   <!-- Sheet A: cerem voie pentru locație — harta e deja vizibilă dedesubt -->
@@ -3080,7 +3080,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
         <div class="modal-title">🧭 Cursă Organizată — Ghidat</div>
         <div class="modal-sub" id="wiz-step-counter">Pasul 1</div>
       </div>
-      <button class="modal-close" onclick="closeOrgWizard()">✕</button>
+      <button class="modal-close" onclick="closeOrgWizardToHome()">✕</button>
     </div>
     <div class="wiz-progress-bar"><div class="wiz-progress-fill" id="wiz-progress-fill"></div></div>
     <div class="modal-body" id="wiz-body" style="min-height:280px" onkeydown="orgWizKeydown(event)"></div>
@@ -4561,7 +4561,7 @@ async function fetchNearbyAttractions(lat,lng){
   );out center 80;`;
   let osmItems=[];
   try{
-    const r=await fetchWithTimeout('https://overpass-api.de/api/interpreter',{method:'POST',body:q}, 25000);
+    const r=await fetchWithTimeout('https://overpass-api.de/api/interpreter',{method:'POST',body:q}, 12000);
     if(r.ok){
       const d=await r.json();
       const seen=new Set();
@@ -4687,11 +4687,12 @@ async function fetchAttractionsAlongRoute(stopsWithCoords){
   const samplePts = sampleRoutePoints(routeCoords, 25, 5);
   const destPt = coords[coords.length-1];
   const allPts = [...samplePts, destPt];
+  // Interogăm TOATE punctele deodată, nu unul câte unul — cu Overpass uneori lent,
+  // varianta secvențială putea duce căutarea la câteva minute pe un traseu lung.
+  const perPointResults = await Promise.all(allPts.map(pt => fetchNearbyAttractions(pt[0], pt[1]).catch(()=>[])));
   const merged = [];
   const seen = new Set();
-  for (const pt of allPts) {
-    let items = [];
-    try { items = await fetchNearbyAttractions(pt[0], pt[1]); } catch(e){ continue; }
+  for (const items of perPointResults) {
     for (const it of items) {
       const key = (it.name||'?') + '|' + it.lat.toFixed(3) + '|' + it.lng.toFixed(3);
       if (seen.has(key)) continue;
@@ -4734,9 +4735,11 @@ window.showAttractionsForPoint = async (target, name, lat, lng) => {
 };
 
 let _orgAttractionsTimer=null;
+let _attrSearchGen=0; // generație de căutare — anulează rezultatele unei căutări vechi dacă a pornit deja una nouă
 window.checkDestinationAttractions = (target) => {
   clearTimeout(_orgAttractionsTimer);
   _orgAttractionsTimer=setTimeout(async () => {
+    const myGen = ++_attrSearchGen;
     const stopsArr = target==='wiz' ? (window._WIZ_DATA?.stops||[]) : window._ORG_STOPS;
     const coordsArr = target==='wiz' ? (window._WIZ_DATA?.stopCoords||[]) : window._ORG_STOP_COORDS;
     const dest = stopsArr.filter(Boolean).slice(-1)[0];
@@ -4751,23 +4754,40 @@ window.checkDestinationAttractions = (target) => {
     // destinație înseamnă că acel loc nu există în România.
     const stopsWithCoords=[];
     for(let i=0;i<stopsArr.length;i++){
+      if (myGen !== _attrSearchGen) return; // a pornit deja o căutare mai nouă — renunțăm aici
       const nume=stopsArr[i]; if(!nume) continue;
       let c=coordsArr?.[i];
       if(!c||c.lat==null){ const ll=await geocodeCached(nume); if(!ll) continue; c={lat:ll[0],lng:ll[1]}; }
       stopsWithCoords.push({name:nume, lat:c.lat, lng:c.lng});
     }
+    if (myGen !== _attrSearchGen) return;
     if(!stopsWithCoords.length || stopsWithCoords[stopsWithCoords.length-1].name!==dest){
       boxEl.innerHTML=`<div style="background:var(--red-g);border:1px solid rgba(181,45,45,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--red)">⚠️ Nu am găsit "${dest}" în România. Verificați ortografia — lucrăm doar cu destinații din România.</div>`;
       return;
     }
-    if(stopsWithCoords.length===1){
-      // Doar destinația e cunoscută (fără plecare/opriri încă) — căutare simplă în jurul ei
-      const attractions = await fetchNearbyAttractions(stopsWithCoords[0].lat, stopsWithCoords[0].lng);
-      renderAttractionsBox(boxEl, dest, attractions, target, false);
-      return;
+    // Plasă de siguranță: dacă din orice motiv căutarea durează prea mult (Overpass
+    // supraîncărcat etc.), renunțăm politicos după 20s, în loc să lăsăm spinner-ul
+    // la nesfârșit — completarea cererii poate continua oricum, nu e blocantă.
+    const withOverallTimeout = (promise, ms) => Promise.race([
+      promise,
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout cautare')), ms))
+    ]);
+    try {
+      let attractions, alongRoute;
+      if(stopsWithCoords.length===1){
+        // Doar destinația e cunoscută (fără plecare/opriri încă) — căutare simplă în jurul ei
+        attractions = await withOverallTimeout(fetchNearbyAttractions(stopsWithCoords[0].lat, stopsWithCoords[0].lng), 20000);
+        alongRoute = false;
+      } else {
+        attractions = await withOverallTimeout(fetchAttractionsAlongRoute(stopsWithCoords), 20000);
+        alongRoute = true;
+      }
+      if (myGen !== _attrSearchGen) return;
+      renderAttractionsBox(boxEl, dest, attractions, target, alongRoute);
+    } catch(e) {
+      if (myGen !== _attrSearchGen) return;
+      boxEl.innerHTML = `<div style="font-size:11.5px;color:var(--stone);padding:6px 2px">Căutarea de obiective durează prea mult acum — poți continua completarea, nu e obligatorie.</div>`;
     }
-    const attractions = await fetchAttractionsAlongRoute(stopsWithCoords);
-    renderAttractionsBox(boxEl, dest, attractions, target, true);
   }, 500);
 };
 window.addAttractionStop = (target, name, lat, lng) => {
@@ -5361,9 +5381,19 @@ window.wizlocAskGps = () => {
 
 window.wizlocBackToA = () => wizlocShowStep('a');
 
+// "Arată-mi toate cursele" — rămâne pe Regulate, doar renunță la filtrul de locație.
 window.wizlocSkipAll = () => {
   closeRegulateWizardOverlay();
   clearLocationFilter();
+};
+
+// ✕ (ieșire din wizard) — spre deosebire de linkul de mai sus, aici omul chiar
+// vrea să plece din tot fluxul de căutare, nu doar să renunțe la locație —
+// îl ducem pe Acasă, nu înapoi pe lista veche de curse.
+window.wizlocExitHome = () => {
+  closeRegulateWizardOverlay();
+  window._LOC_FILTER = null;
+  nav('home');
 };
 
 // Singura cale de a ajunge la restul site-ului cât timp wizard-ul/harta ocupă
@@ -7329,6 +7359,14 @@ window.closeOrgWizard = () => {
   closeModal('org-wizard');
   window.stopImgSlideshow('wiz-modal-bg');
   document.getElementById('org-form-wrap').style.display='block';
+};
+
+// ✕ din wizard — omul vrea să plece din tot fluxul de cerere, nu doar să treacă
+// pe formularul complet — îl ducem pe Acasă, nu pe formularul vechi/gol.
+window.closeOrgWizardToHome = () => {
+  closeModal('org-wizard');
+  window.stopImgSlideshow('wiz-modal-bg');
+  nav('home');
 };
 
 window.wizSwitchToForm = async () => {
