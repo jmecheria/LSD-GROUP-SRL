@@ -11226,6 +11226,8 @@ window.logOrgScan = async (rezId) => {
   // Programam reset-ul automat de la miezul noptii (ora Romaniei) — avertisment cu 1 minut
   // inainte, apoi numaratoare 3-2-1, apoi deconectare + reincarcare pagina
   try{ scheduleMidnightReset(); }catch(e){ console.warn('scheduleMidnightReset failed:', e.message); }
+    try{ handleHashRoute(); }catch(e){}
+  hideAppLoader();
   // Ascultam semnalul de reset manual (declansat de admin) — activ pentru orice vizitator,
   // logat sau nu, ca sa functioneze exact ca la reset-ul automat de la miezul noptii.
   try{
@@ -11238,6 +11240,33 @@ window.logOrgScan = async (rezId) => {
   // Ascunde loader-ul de incarcare
   hideAppLoader();
 })();
+  // ── LINKURI DIRECTE (#rezerva, #bilet, #gdpr etc.) ──
+const HASH_ROUTES = {
+  'acasa':'home', 'home':'home',
+  'regulate':'regulate',
+  'organizate':'organizate',
+  'bilet':'bilet',
+  'gdpr':'gdpr',
+  'cont':'cont',
+  'conectare':'auth'
+};
+function handleHashRoute(){
+  const raw = (window.location.hash||'').replace('#','').trim();
+  if (!raw) return;
+  const [key, param] = raw.split('/');   // ex: bilet/LSD-A1B2C3
+  const k = key.toLowerCase();
+  if (k === 'rezerva') { nav('home'); openTripTypeWizard(); return; }
+  const page = HASH_ROUTES[k];
+  if (!page) return;
+  nav(page);
+  if (page === 'bilet' && param) {
+    setTimeout(()=>{
+      const inp = document.getElementById('bilet-input');
+      if (inp) { inp.value = param.toUpperCase(); cautaBilet(); }
+    }, 300);
+  }
+}
+window.addEventListener('hashchange', handleHashRoute);
 
 function hideAppLoader(){
   const loader = document.getElementById('app-loader');
