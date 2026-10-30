@@ -6,6 +6,9 @@
 <title>LSD Group SRL — Transport Persoane | Curse Regulate & Organizate</title>
 <meta name="description" content="Rezervă locuri online pentru curse regulate și organizate în România. Flotă modernă, șoferi autorizați. LSD Group SRL — transport persoane autorizat ARR."/>
 <!-- ── PWA: manifest, iconițe, culoare temă — permit instalarea site-ului ca aplicație ── -->
+<meta property="og:title" content="LSD Group SRL — Transport Persoane"/>
+<meta property="og:description" content="Rezervă locuri online pe curse regulate și organizate în România."/>
+<meta property="og:type" content="website"/>
 <link rel="manifest" href="./manifest.json"/>
 <meta name="theme-color" content="#a97c3f"/>
 <link rel="icon" href="./favicon-32.png" sizes="32x32" type="image/png"/>
@@ -1436,6 +1439,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 </style>
 </head>
 <body>
+<noscript><div style="padding:20px;text-align:center;font-family:sans-serif">Acest site are nevoie de JavaScript pentru a funcționa. Te rugăm să îl activezi în browser.</div></noscript>
 <!-- ── LOADING SCREEN ── -->
 <div id="app-loader">
   <div class="loader-inner">
@@ -1478,6 +1482,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
     <button class="nl" data-page="home" onclick="nav('home')">Acasă</button>
     <button class="nl" id="nav-rezerva-btn" onclick="openTripTypeWizard()">🚌 Rezervă</button>
     <button class="nl" data-page="bilet" onclick="nav('bilet')">🎟 Biletul meu</button>
+    <button class="nl" data-page="contact" onclick="nav('contact')">Contact</button>
     <button class="nl" data-page="gdpr" onclick="nav('gdpr')">GDPR</button>
   </div>
   <div id="nav-actions">
@@ -1492,6 +1497,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
   <button class="nl" onclick="nav('home')">🏠 Acasă</button>
   <button class="nl" onclick="openTripTypeWizard()">🚌 Rezervă o cursă</button>
   <button class="nl" onclick="nav('bilet')">🎟 Biletul meu</button>
+  <button class="nl" onclick="nav('contact')">✉️ Contact</button>
   <button class="nl" onclick="nav('gdpr')">📄 GDPR</button>
   <button class="nl" id="mob-pwa-install-btn" style="display:none" onclick="triggerPwaInstall()">📲 Instalează aplicația</button>
   <button class="nl" id="mob-auth-btn" onclick="nav('auth')">🔐 Conectare</button>
@@ -1956,6 +1962,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
         <div class="fg"><div class="fl">Email</div><input type="email" id="l-email" onkeydown="if(event.key==='Enter')doLogin()"/></div>
         <div class="fg"><div class="fl">Parolă</div><input type="password" id="l-pass" onkeydown="if(event.key==='Enter')doLogin()"/></div>
         <button class="btn btn-primary btn-full" onclick="doLogin()">Conectare</button>
+        <div style="text-align:center;margin-top:10px;font-size:13px"><a onclick="doResetPassword()">Ai uitat parola?</a></div>
         <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--stone)">Nu ai cont? <a onclick="authTab('reg')">Înregistrează-te</a></div>
       </div>
       <div id="reg-form" style="display:none">
@@ -1980,7 +1987,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 <div id="pg-gdpr" class="page">
   <div style="max-width:800px;margin:0 auto">
     <h1 style="font-size:28px;font-weight:800;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">Politica de Confidențialitate</h1>
-    <p style="color:var(--stone);margin-bottom:24px" id="gdpr-updated-text">LSD Group SRL — Actualizat: Ianuarie 2025</p>
+    <p style="color:var(--stone);margin-bottom:24px" id="gdpr-updated-text">LSD Group SRL — Actualizat: Octombrie 2026</p>
     <div class="info-box" style="margin-bottom:28px">Această politică se aplică tuturor utilizatorilor platformei LSD Group SRL (site web, aplicație, portal șofer) și descrie modul în care colectăm, folosim, stocăm și protejăm datele personale, în conformitate cu Regulamentul (UE) 2016/679 (GDPR) și legislația română aplicabilă (Legea 190/2018).</div>
     <div id="gdpr-content" style="line-height:1.75;color:var(--stone)">
 
@@ -2075,6 +2082,55 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 </div>
 
 <!-- ────────────────── PORTAL ȘOFER ────────────────── -->
+<!-- ────────────────── TERMENI ────────────────── -->
+<div id="pg-termeni" class="page">
+  <div style="max-width:800px;margin:0 auto">
+    <h1 style="font-size:28px;font-weight:800;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">Termeni și Condiții</h1>
+    <p style="color:var(--stone);margin-bottom:24px">LSD Group SRL — Actualizat: Octombrie 2026</p>
+    <div style="line-height:1.75;color:var(--stone)">
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">1. Servicii</h2>
+      <p>LSD Group SRL oferă transport rutier de persoane prin curse regulate (loc individual, plecări fixe) și curse organizate (autobuz închiriat pentru grup, pe bază de ofertă).</p>
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">2. Rezervări și bilete</h2>
+      <p>Biletele sunt electronice, nominale și netransferabile. Codul QR se scanează la îmbarcare; la curse regulate este valabil o singură dată. Fără cont poți rezerva maximum 1 loc; rezervările de 4 sau mai multe locuri cer avans prin transfer bancar pentru cel puțin 2 locuri.</p>
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">3. Anulare</h2>
+      <ul style="margin-left:20px">
+        <li><strong style="color:var(--ink)">Curse regulate:</strong> anulare cu mai mult de 24 de ore înainte = rambursare integrală; sub 24 de ore = fără rambursare.</li>
+        <li><strong style="color:var(--ink)">Curse organizate:</strong> peste 72 de ore = integral; între 24 și 72 de ore = 50%; sub 24 de ore = fără rambursare.</li>
+      </ul>
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">4. Îmbarcare</h2>
+      <p>Te rugăm să fii în stația de urcare cu minimum 10 minute înainte de ora plecării. Orele de sosire afișate sunt estimative.</p>
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">5. Prețuri și plată</h2>
+      <p>Prețurile includ TVA 21%. Plata se poate face la șofer (numerar sau card), online sau prin transfer bancar, conform opțiunilor afișate la rezervare. Pentru curse organizate se emite factură proformă (avans 30%, rest 70%).</p>
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">6. Reclamații și litigii</h2>
+      <p>Ne poți scrie oricând prin pagina <a onclick="nav('contact')">Contact</a>. Pentru soluționarea alternativă a litigiilor poți apela la <a href="https://anpc.ro/ce-este-sal/" target="_blank">ANPC – SAL</a> sau la platforma europeană <a href="https://ec.europa.eu/consumers/odr" target="_blank">SOL</a>.</p>
+      <h2 style="color:var(--amber-d);font-size:17px;margin:24px 0 10px">7. Date personale</h2>
+      <p>Prelucrarea datelor este descrisă în <a onclick="nav('gdpr')">Politica de Confidențialitate</a>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────── CONTACT ────────────────── -->
+<div id="pg-contact" class="page">
+  <div style="max-width:560px;margin:0 auto">
+    <h1 style="font-size:28px;font-weight:800;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">Contact</h1>
+    <p style="color:var(--stone);margin-bottom:20px">Ai o întrebare sau o reclamație? Scrie-ne și îți răspundem pe email.</p>
+    <div style="background:var(--card);border:1px solid var(--border-l);border-radius:var(--r-lg);padding:22px;box-shadow:var(--sh)">
+      <div class="fg"><div class="fl">Nume *</div><input type="text" id="ct-name" autocomplete="name"/></div>
+      <div class="f-row">
+        <div class="fg"><div class="fl">Email *</div><input type="email" id="ct-email" autocomplete="email"/></div>
+        <div class="fg"><div class="fl">Telefon (opțional)</div><input type="tel" id="ct-phone" autocomplete="tel"/></div>
+      </div>
+      <div class="fg"><div class="fl">Mesaj *</div><textarea id="ct-msg" rows="5"></textarea></div>
+      <div class="fg" style="display:flex;align-items:flex-start;gap:10px">
+        <input type="checkbox" id="ct-gdpr" style="width:auto;margin-top:3px;flex-shrink:0"/>
+        <label for="ct-gdpr" style="font-size:13px;color:var(--stone);cursor:pointer">Sunt de acord cu <a onclick="nav('gdpr')">Politica GDPR</a> *</label>
+      </div>
+      <button class="btn btn-primary btn-full" id="ct-btn" onclick="sendContactForm()">Trimite mesajul 📨</button>
+    </div>
+    <p style="margin-top:16px;font-size:13px;color:var(--stone);text-align:center">sau direct la <a href="mailto:lsd.group.srl@gmail.com">lsd.group.srl@gmail.com</a></p>
+  </div>
+</div>
+
 <div id="pg-sofer" class="page">
   <div style="background:linear-gradient(135deg,var(--blue-g),rgba(30,95,168,.03));border:1.5px solid rgba(30,95,168,.25);border-radius:var(--r-xl);padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;box-shadow:var(--sh)">
     <div>
@@ -2836,7 +2892,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
         <div style="font-size:11px;font-weight:700;color:var(--amber-d);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">🔑 Parolă portal comun</div>
         <div style="font-size:12px;color:var(--stone);margin-bottom:12px">Cu această parolă șoferul se identifică în portalul comun. Lasă gol pentru a nu schimba.</div>
         <div class="f-row">
-          <div class="fg"><div class="fl">Parolă nouă (minim 4 caractere)</div><input type="password" id="dm-pin" placeholder="minim 4 caractere"/></div>
+          <div class="fg"><div class="fl">Parolă nouă (minim 6 caractere)</div><input type="password" id="dm-pin" placeholder="minim 6 caractere"/></div>
           <div class="fg"><div class="fl">Confirmă parola</div><input type="password" id="dm-pin2" placeholder="repetă parola"/></div>
         </div>
       </div>
@@ -3172,6 +3228,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
         <div class="footer-col-title">Servicii</div>
         <a onclick="openTripTypeWizard()">🚌 Rezervă o cursă</a>
         <a onclick="nav('bilet')">🎟 Verificare Bilet</a>
+        <a onclick="nav('contact')">✉️ Contact</a>
       </div>
       <div class="footer-col">
         <div class="footer-col-title">Legal</div>
@@ -3254,6 +3311,17 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
   window.DAYS_RO = ['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
   window.MONTHS_RO = ['Ianuarie','Februarie','Martie','Aprilie','Mai','Iunie','Iulie','August','Septembrie','Octombrie','Noiembrie','Decembrie'];
 
+  // Link direct către pagini: site + #pagina (ex: #regulate, #bilet/LSD-A1B2C3). nav() scrie hash-ul în URL.
+  window.PAGE_TO_HASH = {home:'acasa',regulate:'regulate',organizate:'organizate',bilet:'bilet',gdpr:'gdpr',termeni:'termeni',contact:'contact',cont:'cont',auth:'conectare',sofer:'sofer',admin:'admin'};
+  window.syncHash = function(page){
+    const h = window.PAGE_TO_HASH[page]; if(!h) return;
+    const want = '#'+h;
+    if (location.hash.split('/')[0].toLowerCase() === want) return;
+    try{ history.pushState(null,'',location.pathname+location.search+want); }catch(e){}
+  };
+  // Data de azi / peste N zile în fusul Europe/Bucharest (toISOString() folosea UTC și dădea ziua greșită noaptea)
+  window.todayRO = function(){ return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Bucharest'}).format(new Date()); };
+  window.addDaysRO = function(n){ const d=new Date(window.todayRO()+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+(n||0)); return d.toISOString().slice(0,10); };
   window.nav = function(page, ctx) {
     if ((window._ROLE === 'driver') && !['sofer','gdpr','auth','alege-loc'].includes(page)) { nav('sofer'); return; }
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -3263,6 +3331,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
     const el = document.getElementById('pg-' + page);
     if (!el) { console.warn('Page not found: pg-' + page); return; }
     el.classList.add('active');
+    window.syncHash(page);
     const lnk = document.querySelector('.nl[data-page="' + page + '"]');
     if (lnk) lnk.classList.add('active');
     if (['regulate','organizate'].includes(page)) document.getElementById('nav-rezerva-btn')?.classList.add('active');
@@ -3274,6 +3343,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
     document.querySelector('.mtb-btn[data-tb-page="'+tbPage+'"]')?.classList.add('active');
     document.getElementById('mob-menu')?.classList.remove('open');
     window.scrollTo({top: 0, behavior: 'auto'});
+    if (page === 'auth' && !ctx) { const e0=document.getElementById('auth-ctx-msg'); if (e0) e0.style.display='none'; }
     if (page === 'auth' && ctx) {
       const el2 = document.getElementById('auth-ctx-msg');
       if (el2) { el2.style.display = 'block'; el2.textContent = ctx; }
@@ -3437,7 +3507,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,.seat:focus-visi
 
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,updateProfile,updatePassword} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,updateProfile,updatePassword,sendPasswordResetEmail} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import {getFirestore,initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,addDoc,getDocs,getDoc,setDoc,deleteDoc,query,where,onSnapshot,Timestamp,serverTimestamp,orderBy,limit,writeBatch} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const FB_CFG = {
@@ -3561,7 +3631,7 @@ async function doMidnightReset(resetIdToMark){
 // lumea, nu doar pentru cei prezenti live la momentul reset-ului.
 async function hardReloadBypassingCache(){
   await clearAppCaches();
-  const url = window.location.origin + window.location.pathname + '?_r=' + Date.now();
+  const url = window.location.origin + window.location.pathname + '?_r=' + Date.now() + window.location.hash;
   window.location.replace(url);
 }
 function scheduleMidnightReset(){
@@ -4015,8 +4085,22 @@ window.loadSeatPickerByCode = async (code) => {
   } catch(e) { body.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p>${e.message}</p></div>`; }
 };
 
-window.showTermeni = () => {
-  alert('Termeni și Condiții LSD Group SRL\n\n1. Anulare curse regulate: >24h = rambursare integrală; <24h = fără rambursare\n2. Anulare curse organizate: >72h = integral; 24-72h = 50%; <24h = fără rambursare\n3. Prezentare la îmbarcare cu min 10 min înainte\n4. Biletele sunt nominale și netransferabile\n5. Prețuri includ TVA 21%\n\nContact: lsd.group.srl@gmail.com');
+window.showTermeni = () => nav('termeni');
+window.sendContactForm = async () => {
+  const g = id => (document.getElementById(id)?.value||'').trim();
+  const nume=g('ct-name'), email=g('ct-email'), tel=g('ct-phone'), msg=g('ct-msg');
+  if (!nume) { toast('Introdu numele','wr'); return; }
+  if (!validEmail(email)) { toast('Email invalid','wr'); return; }
+  if (tel && !validPhone(tel)) { toast('Telefon invalid (ex: 0740123456)','wr'); return; }
+  if (msg.length<10) { toast('Scrie un mesaj de cel puțin 10 caractere','wr'); return; }
+  if (!document.getElementById('ct-gdpr')?.checked) { toast('Acceptă politica GDPR','wr'); return; }
+  const btn=document.getElementById('ct-btn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Se trimite...';
+  const ok = await sendUnifiedEmail({ to_email:'', nume, subiect:'Mesaj de contact — '+nume,
+    mesaj:['De la: '+nume,'Email: '+email,tel?'Telefon: '+tel:'','',msg].filter((x,i)=>x||i===3).join('\n'),
+    traseu:'', data:todayRO(), ora:'', status:'Mesaj contact', pret:'' });
+  btn.disabled=false; btn.innerHTML='Trimite mesajul 📨';
+  if (ok) { toast('✅ Mesaj trimis! Îți răspundem cât de curând.','ok'); ['ct-name','ct-email','ct-phone','ct-msg'].forEach(i=>{document.getElementById(i).value='';}); document.getElementById('ct-gdpr').checked=false; }
+  else toast('Nu am putut trimite mesajul. Scrie-ne direct la lsd.group.srl@gmail.com','er');
 };
 window.acceptCookies = () => { localStorage.setItem('cookies_ok','1'); document.getElementById('cookie-banner').classList.add('hidden'); };
 if (localStorage.getItem('cookies_ok')) document.getElementById('cookie-banner').classList.add('hidden');
@@ -4040,7 +4124,7 @@ async function renderTicker(manualMsgs) {
   const ticker = document.getElementById('ticker');
   const inner = document.getElementById('tick-inner');
   // Curse regulate de azi
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayRO();
   const dow = new Date().getDay();
   let curseMsgs = [];
   try {
@@ -4106,6 +4190,7 @@ onAuthStateChanged(auth, async u => {
     logUserLogin(u.uid, u.email, 'admin', u.displayName||'Admin');
     try { const sfSnap = await getDocs(collection(db,'soferi')); buildDriversCache(sfSnap); } catch(e) {}
     buildNav('admin');
+    if (window._WANT_PAGE==='admin') { window._WANT_PAGE=null; nav('admin'); return; }
     const active = document.querySelector('.page.active');
     if (active) { const pg = active.id.replace('pg-',''); if (pg !== 'home') nav(pg); }
     return;
@@ -4135,6 +4220,7 @@ onAuthStateChanged(auth, async u => {
   buildNav('client');
   startNotifListener();
   window._FB_READY = true;
+  if (document.getElementById('pg-cont')?.classList.contains('active')) loadContPage();
   if (window._PENDING_PAGE) { const pp = window._PENDING_PAGE; window._PENDING_PAGE = null; nav(pp); }
 });
 
@@ -4164,6 +4250,7 @@ function buildNav(role) {
   // ca să nu se dubleze când se schimbă rolul (login/logout/schimbare cont)
   document.getElementById('mob-cont-btn')?.remove();
   document.getElementById('mob-admin-btn')?.remove();
+  document.getElementById('nav-cont-btn')?.remove();
 
   if (role === 'driver') {
     if (authBtn) { authBtn.textContent = (window._DRIVER_DOC?.prenume||'Șofer') + ' ↗'; authBtn.onclick = doSignOut; }
@@ -4195,9 +4282,9 @@ function buildNav(role) {
   }
   if (role === 'client' && u) {
     if (authBtn) { authBtn.textContent = (u.displayName||'Cont') + ' ↗'; authBtn.onclick = () => { if (confirm('Ieși din cont?')) doSignOut(); }; }
-    const contBtn = document.createElement('button'); contBtn.className = 'nb nb-outline'; contBtn.textContent = '👤 Contul meu'; contBtn.onclick = ()=>nav('cont');
+    const contBtn = document.createElement('button'); contBtn.id = 'nav-cont-btn'; contBtn.className = 'nb nb-outline'; contBtn.textContent = '👤 Contul meu'; contBtn.onclick = ()=>nav('cont');
     const navActions = document.getElementById('nav-actions');
-    if (navActions && !navActions.querySelector('.nb-outline')) navActions.insertBefore(contBtn, authBtn);
+    if (navActions && !document.getElementById('nav-cont-btn')) navActions.insertBefore(contBtn, authBtn);
     if (bell) bell.style.display = 'flex';
     // Meniul mobil (hamburger) — trebuia actualizat separat, altfel rămânea blocat pe "Conectare"
     if (mobAuthBtn) {
@@ -4230,6 +4317,12 @@ window.doLogin = async () => {
   try { await signInWithEmailAndPassword(auth,em,pw); toast('Bun venit!','ok'); nav('home'); }
   catch(e) { toast(authErr(e),'er'); }
 };
+window.doResetPassword = async () => {
+  const em = document.getElementById('l-email').value.trim();
+  if (!validEmail(em)) { toast('Scrie mai întâi emailul în câmpul de mai sus','wr'); return; }
+  try { await sendPasswordResetEmail(auth, em); toast('📧 Ți-am trimis un email pentru resetarea parolei (verifică și Spam)','ok'); }
+  catch(e) { toast(authErr(e),'er'); }
+};
 window.doRegister = async () => {
   const fn=document.getElementById('r-fname').value.trim(), ln=document.getElementById('r-lname').value.trim();
   const em=document.getElementById('r-email').value.trim(), tel=document.getElementById('r-phone').value.trim();
@@ -4253,8 +4346,7 @@ window.doSignOut = async () => {
   // Reset nav (desktop)
   const authBtn = document.getElementById('nav-auth-btn');
   if (authBtn) { authBtn.textContent='Conectare'; authBtn.onclick=()=>nav('auth'); }
-  const nb = document.getElementById('nav-actions').querySelector('.nb-outline');
-  if (nb) nb.remove();
+  document.getElementById('nav-cont-btn')?.remove();
   const adminLnk = document.querySelector('.nl[data-page="admin"]');
   if (adminLnk) adminLnk.remove();
   // Reset nav (meniu mobil / hamburger)
@@ -4899,7 +4991,7 @@ window.renderHomeTestimonials = renderHomeTestimonials;
 // Nu blochează randarea cardurilor — se completează asincron, după ce apar deja pe ecran.
 async function computeFleetAvailability(){
   const badges = {};
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayRO();
   const nowRo = new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Bucharest'}));
   const dow = nowRo.getDay();
   const nowMin = nowRo.getHours()*60+nowRo.getMinutes();
@@ -5041,12 +5133,14 @@ window.openTripTypeWizard = () => {
   const ov = document.getElementById('trip-type-overlay');
   if (!ov) return;
   ov.style.display = 'block';
+  try{ history.replaceState(null,'',location.pathname+location.search+'#rezerva'); }catch(e){}
   fillModeBg('trip-type-bg-1', 0);
   fillModeBg('trip-type-bg-2', 1);
 };
 window.closeTripTypeWizard = () => {
   const ov = document.getElementById('trip-type-overlay');
   if (ov) ov.style.display = 'none';
+  try{ const pg=(document.querySelector('.page.active')?.id||'pg-home').replace('pg-',''); const h=window.PAGE_TO_HASH[pg]; if(h && location.hash==='#rezerva') history.replaceState(null,'',location.pathname+location.search+'#'+h); }catch(e){}
 };
 window.chooseTripType = (type) => {
   closeTripTypeWizard();
@@ -5101,7 +5195,7 @@ function renderHeroRouteLine(){
 }
 
 async function renderHomeStats(){
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayRO();
   const dow = new Date().getDay();
   const curseAzi = (window._R||[]).filter(c=>{
     if(!c.activa)return false;
@@ -5284,14 +5378,13 @@ window.vhGoOrg = () => { closeModal('vehicle-home'); nav('organizate'); setTimeo
 
 // ── REGULATE ───────────────────────────────────────────────
 window.setRegDate = days => {
-  const d=new Date(); d.setDate(d.getDate()+days);
-  document.getElementById('rdate').value = d.toISOString().split('T')[0];
+  document.getElementById('rdate').value = addDaysRO(days);
   updateDateBtns(); loadRegulate();
 };
 window.updateDateBtns = () => {
   const val=document.getElementById('rdate')?.value||'';
-  const today=new Date().toISOString().split('T')[0];
-  const tomorrow=new Date(Date.now()+86400000).toISOString().split('T')[0];
+  const today=todayRO();
+  const tomorrow=addDaysRO(1);
   document.getElementById('btn-azi')?.classList.toggle('btn-primary',val===today);
   document.getElementById('btn-azi')?.classList.toggle('btn-secondary',val!==today);
   document.getElementById('btn-maine')?.classList.toggle('btn-primary',val===tomorrow);
@@ -5504,9 +5597,8 @@ window.wizlocSetDate = async (offset) => {
   const listEl = document.getElementById('wizloc-results-list');
   listEl.innerHTML = '<div class="loading-state"><div class="spin"></div></div>';
   if (!window._LOC_FILTER) { window._wizlocResults=[]; return; }
-  const d = new Date(); d.setDate(d.getDate()+offset);
-  const dateStr = d.toISOString().split('T')[0];
-  const dow = d.getDay();
+  const dateStr = addDaysRO(offset);
+  const dow = new Date(dateStr+'T12:00:00').getDay();
   const curseZi = (window._R||[]).filter(c=>{
     if(!c.activa) return false;
     if(!(c.zile||[]).includes(dow)) return false;
@@ -5528,7 +5620,7 @@ window.wizlocSetDate = async (offset) => {
 
 function renderWizlocResultsList(list, dateStr, destQuery){
   const listEl = document.getElementById('wizloc-results-list');
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = todayRO();
   const nowMin = dateStr===todayStr ? (()=>{ const n=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Bucharest'})); return n.getHours()*60+n.getMinutes(); })() : null;
   const q = (destQuery||'').trim().toLowerCase();
 
@@ -5573,8 +5665,7 @@ function renderWizlocResultsList(list, dateStr, destQuery){
 
 window.wizlocFilterByDestination = () => {
   const q = document.getElementById('wizloc-dest-input').value;
-  const d = new Date(); d.setDate(d.getDate()+window._wizlocDateOffset);
-  renderWizlocResultsList(window._wizlocResults, d.toISOString().split('T')[0], q);
+  renderWizlocResultsList(window._wizlocResults, addDaysRO(window._wizlocDateOffset), q);
 };
 
 window.wizlocPickDeparture = (cursaId, dateStr, depIdx) => {
@@ -5633,7 +5724,7 @@ window.loadRegulate = async () => {
   clearInterval(window._routeCountdownInterval);
   toggleLocateCardUI(!!window._LOC_FILTER, window._LOC_FILTER ? document.getElementById('locate-active-text')?.textContent : null);
   const di=document.getElementById('rdate');
-  if (!di.value) { di.value=new Date().toISOString().split('T')[0]; }
+  if (!di.value) { di.value=todayRO(); }
   const date=di.value, dow=new Date(date+'T12:00:00').getDay();
   const list=document.getElementById('reg-list');
   list.innerHTML=`<div style="display:flex;flex-direction:column">${window.skeletonRouteCards(3)}</div>`;
@@ -5695,7 +5786,7 @@ window.loadRegulate = async () => {
   }));
 
   const cards=[];
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = todayRO();
   const isTodayDate = date === todayStr;
   // Ora curenta, ora Romaniei (orele de plecare sunt fixate in ora Romaniei, indiferent
   // de fusul orar al vizitatorului) — folosita ca sa ascundem plecarile deja trecute azi.
@@ -5930,13 +6021,13 @@ function updateRouteCountdowns(){
   if (!nodes.length) return;
   const nowD = new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Bucharest'}));
   const nowMin = nowD.getHours()*60+nowD.getMinutes();
-  const todayStr = nowD.toISOString ? new Date().toISOString().split('T')[0] : '';
+  const todayStr = todayRO();
   nodes.forEach(el => {
     const depMin = parseInt(el.dataset.countdownMin);
     const depDate = el.dataset.countdownDate;
     if (isNaN(depMin) || !depDate) return;
     const minsLeft = depMin - nowMin;
-    if (depDate !== new Date().toISOString().split('T')[0] || minsLeft <= 0) { el.remove(); return; }
+    if (depDate !== todayRO() || minsLeft <= 0) { el.remove(); return; }
     el.classList.toggle('rc-soon', minsLeft<=45);
     el.classList.toggle('rc-normal', minsLeft>45);
     el.textContent = `⏰ Pleacă în ${minsLeft>=60?Math.floor(minsLeft/60)+'h '+(minsLeft%60)+'min':minsLeft+' min'}`;
@@ -5958,7 +6049,7 @@ function calcBusProgressPct(oraPlecare, statii, dateStr) {
   // cu cea din modalul de rezervare loc (care deja calcula corect ora României), dând impresia
   // că "nu se potrivesc" harta/mini-traseul cu disponibilitatea reală de îmbarcare.
   const now = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Bucharest'}));
-  const todayRo = now.toISOString().split('T')[0];
+  const todayRo = todayRO();
   if (dateStr && dateStr !== todayRo) return null;
   const [h,m] = oraPlecare.split(':').map(Number);
   if (isNaN(h)||isNaN(m)) return null;
@@ -5989,7 +6080,7 @@ function calcRouteFractionNow(c) {
   // alt fus orar, estimarea de aici (folosită pe hartă) ar putea ieși dintr-o zi diferită
   // decât cea folosită la rezervarea locului, dând impresia că "nu se potrivesc" cele două.
   const nowRo = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Bucharest'}));
-  const today = nowRo.toISOString().split('T')[0];
+  const today = todayRO();
   const dow = nowRo.getDay();
   if (!(c.zile||[]).includes(dow)) return null;
   if (c.dataStart && today < c.dataStart) return null;
@@ -6223,7 +6314,7 @@ window.openCinema = async (routeId, date, direction='one-way', depIdx=0) => {
   // Cat de mult a "inaintat" deja autobuzul pe acest traseu (minute de la plecare) —
   // folosit ca sa nu mai oferim ca optiune de urcare o statie deja depasita azi.
   window._CINEMA_MIN_BOARDABLE_MIN = 0;
-  if (date === new Date().toISOString().split('T')[0] && route.ora) {
+  if (date === todayRO() && route.ora) {
     const nowD = new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Bucharest'}));
     const nowMin = nowD.getHours()*60+nowD.getMinutes();
     const depMin = timeToMin(route.ora);
@@ -6631,7 +6722,7 @@ window.cautaBilet = async () => {
     const snap=await getDocs(query(collection(db,'rezervari'),where('biletId','==',cod)));
     if(snap.empty){el.innerHTML=`<div style="background:var(--card);border:1.5px solid var(--red);border-radius:var(--r-lg);padding:24px;text-align:center;box-shadow:var(--sh)"><div style="font-size:40px;margin-bottom:12px">❌</div><div style="font-weight:700;font-size:16px;margin-bottom:6px">Bilet negăsit</div><div style="color:var(--stone)">Codul <strong>${cod}</strong> nu există. Verificați că l-ați introdus corect.</div></div>`;return;}
     const r={id:snap.docs[0].id,...snap.docs[0].data()};
-    const isValid=r.status==='confirmata'&&(r.tipRezervare==='organizata'||r.data>=new Date().toISOString().split('T')[0]);
+    const isValid=r.status==='confirmata'&&(r.tipRezervare==='organizata'||r.data>=todayRO());
     const statusText={'confirmata':'✅ Confirmată','in_asteptare':'⏳ În așteptare','anulata':'❌ Anulată','oferta_trimisa':'📩 Ofertă'};
     if(r.tipRezervare==='organizata'){
       const qrUrlOrg=buildQrUrl('LSD-ORG:'+r.biletId);
@@ -6763,7 +6854,7 @@ window.loadOrgPage = async function() {
     buildDriversCache(sfSnap);
   }catch(e){}
 
-  const today=new Date().toISOString().split('T')[0];
+  const today=todayRO();
   const dateEl=document.getElementById('org-date');
   if(dateEl){dateEl.min=today;}
 
@@ -7507,7 +7598,7 @@ function renderWizStep(){
     html = `<div class="wiz-fade-in">
       <div class="wiz-question">${T('wiz-q3','Când vrei să plece cursa?')}</div>
       <div class="wiz-hint">${T('wiz-h3','Ora poate fi flexibilă dacă nu știi exact încă')}</div>
-      <div class="fg"><div class="fl">Data dorită *</div><input type="date" id="wiz-date" value="${d.date}" min="${new Date().toISOString().split('T')[0]}" onchange="window._WIZ_DATA.date=this.value"/></div>
+      <div class="fg"><div class="fl">Data dorită *</div><input type="date" id="wiz-date" value="${d.date}" min="${todayRO()}" onchange="window._WIZ_DATA.date=this.value"/></div>
       <div class="fg"><div class="fl">Ora de plecare</div>
         <select id="wiz-time" onchange="window._WIZ_DATA.time=this.value">
           <option value="flexibil" ${d.time==='flexibil'?'selected':''}>Flexibil / nu știu încă</option>
@@ -7879,7 +7970,7 @@ window.loadContPage = async () => {
     const stergeBtn=`<button class="btn btn-danger btn-sm" onclick="deleteMyBooking('${d.id}')">🗑 Șterge definitiv</button>`;
     // Buton recenzie — apare doar după ce data cursei a trecut deja, cursa a fost
     // confirmată, și clientul nu a lăsat deja o recenzie pentru ea (recenzieLasata).
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = todayRO();
     const canReview = r.status==='confirmata' && r.data && r.data<todayStr && !r.recenzieLasata;
     const recenzieBtn = canReview ? `<button class="btn btn-secondary btn-sm" style="color:var(--amber-d);border-color:var(--amber-b)" onclick="openLasaRecenzie('${d.id}','${(r.traseu||r.ruta||'').replace(/'/g,"\\'")}')">⭐ Lasă o recenzie</button>` : '';
     const msgs=r.mesaje||[];
@@ -7979,9 +8070,8 @@ async function renderContSuggestion(bookingsDocs){
   if (!c || !c.activa) return;
   const today = new Date();
   for (let i=0;i<7;i++){
-    const d = new Date(today); d.setDate(d.getDate()+i);
-    const dateStr = d.toISOString().split('T')[0];
-    const dow = d.getDay();
+    const dateStr = addDaysRO(i);
+    const dow = new Date(dateStr+'T12:00:00').getDay();
     if (!(c.zile||[]).includes(dow)) continue;
     if (c.dataStart && dateStr < c.dataStart) continue;
     if (c.dataEnd && dateStr > c.dataEnd) continue;
@@ -8359,7 +8449,7 @@ window.adminTab=tab=>{
   document.querySelectorAll('#pg-admin .tab-btn').forEach((b,i)=>{
     b.classList.toggle('active',['vehicles','routes','bookings','drivers','program','harta','ticker','obiective','recenzii','conectari','continut','settings'][i]===tab);
   });
-  if(tab==='program'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=new Date().toISOString().split('T')[0];progSetMode(window._PROG_MODE||'day');}
+  if(tab==='program'){if(!document.getElementById('prog-date').value)document.getElementById('prog-date').value=todayRO();progSetMode(window._PROG_MODE||'day');}
   if(tab==='harta'){loadHartaAdmin();}
   if(tab==='obiective'){loadObiectiveTbl();}
   if(tab==='recenzii'){loadRecenziiTbl();}
@@ -9109,6 +9199,7 @@ window.renderRmStops = function renderRmStops(){
   }).join('')
   + (n>2 ? '<div style="font-size:11px;color:var(--stone);margin-top:2px">💡 Trage ⠿ pentru a reordona stațiile intermediare, ca la opririle unui tren. Butonul <strong>+</strong> adaugă o stație nouă chiar după cea curentă.</div>' : '');
 }
+window.updateVehicleSeats=()=>{}; // handler apelat la schimbarea vehiculului (capacitatea se citește din vehicul la salvare)
 window.addRouteStop=()=>{window._RM_STOPS.splice(window._RM_STOPS.length-1,0,{n:'',p:0,m:0});renderRmStops();};
 
 // ── HARTĂ INTERACTIVĂ PENTRU PLASARE STAȚII (admin curse regulate) ──
@@ -9919,7 +10010,7 @@ async function loadDriversTbl(){
 }
 window.toggleDriver=async(id,val)=>{await setDoc(doc(db,'soferi',id),{activ:val},{merge:true});};
 window.deleteDriver=async id=>{if(!confirm('Ștergeți șoferul?'))return;await deleteDoc(doc(db,'soferi',id));await loadDriversTbl();toast('Șofer șters','ok');};
-window.resetDriverPin=async(id,name)=>{const pin=prompt(`Parolă nouă de portal pentru ${name}:\n(minim 4 caractere)`);if(!pin)return;if(pin.length<4){toast('Min 4 caractere','wr');return;}const hashed=await sha256Hex(pin);await setDoc(doc(db,'soferi',id),{parolaPortal:hashed},{merge:true});toast('✅ Parolă resetată pentru '+name,'ok');await loadDriversTbl();};
+window.resetDriverPin=async(id,name)=>{const pin=prompt(`Parolă nouă de portal pentru ${name}:\n(minim 6 caractere)`);if(!pin)return;if(pin.length<6){toast('Min 6 caractere','wr');return;}const hashed=await sha256Hex(pin);await setDoc(doc(db,'soferi',id),{parolaPortal:hashed},{merge:true});toast('✅ Parolă resetată pentru '+name,'ok');await loadDriversTbl();};
 window.openDriverModal=async(id=null)=>{
   document.getElementById('driver-modal-title').textContent=id?'Editează șofer':'Adaugă șofer nou';
   document.getElementById('dm-id').value=id||'';
@@ -9959,7 +10050,7 @@ window.saveDriver=async()=>{
   if(!ln){toast('Introduceți numele','wr');return;}
   if(!tel||!validPhone(tel)){toast('Telefon invalid','wr');return;}
   const pin=document.getElementById('dm-pin')?.value||'',pin2=document.getElementById('dm-pin2')?.value||'';
-  if(pin){if(pin.length<4){toast('Parola min 4 caractere','wr');return;}if(pin!==pin2){toast('Parolele nu coincid','wr');return;}}
+  if(pin){if(pin.length<6){toast('Parola min 6 caractere','wr');return;}if(pin!==pin2){toast('Parolele nu coincid','wr');return;}}
   const data={prenume:fn,nume:ln,email:document.getElementById('dm-email').value.trim()||'',telefon:tel,adresa:document.getElementById('dm-addr')?.value?.trim()||'',expPermis:document.getElementById('dm-exp').value||null,dataAngajarii:document.getElementById('dm-hired').value||null,activ:document.getElementById('dm-active').checked};
   if(pin)data.parolaPortal=await sha256Hex(pin);
   try{if(id)await setDoc(doc(db,'soferi',id),data,{merge:true});else{data.createdAt=serverTimestamp();await addDoc(collection(db,'soferi'),data);}closeModal('driver');await loadDriversTbl();toast('Șofer salvat!','ok');}catch(e){toast('Eroare: '+e.message,'er');}
@@ -9969,9 +10060,9 @@ window.saveDriver=async()=>{
 window._PROG_MODE = 'day';
 window._PROG_WEEK_START = null; // luni din săptămâna afișată (weekly mode)
 
-window.progToday = () => { document.getElementById('prog-date').value=new Date().toISOString().split('T')[0]; loadProgram(); };
-window.progPrevDay = () => { const el=document.getElementById('prog-date'); if(!el.value)el.value=new Date().toISOString().split('T')[0]; const d=new Date(el.value+'T12:00:00');d.setDate(d.getDate()-1);el.value=d.toISOString().split('T')[0];loadProgram(); };
-window.progNextDay = () => { const el=document.getElementById('prog-date'); if(!el.value)el.value=new Date().toISOString().split('T')[0]; const d=new Date(el.value+'T12:00:00');d.setDate(d.getDate()+1);el.value=d.toISOString().split('T')[0];loadProgram(); };
+window.progToday = () => { document.getElementById('prog-date').value=todayRO(); loadProgram(); };
+window.progPrevDay = () => { const el=document.getElementById('prog-date'); if(!el.value)el.value=todayRO(); const d=new Date(el.value+'T12:00:00');d.setDate(d.getDate()-1);el.value=d.toISOString().split('T')[0];loadProgram(); };
+window.progNextDay = () => { const el=document.getElementById('prog-date'); if(!el.value)el.value=todayRO(); const d=new Date(el.value+'T12:00:00');d.setDate(d.getDate()+1);el.value=d.toISOString().split('T')[0];loadProgram(); };
 
 window.progSetMode = (mode) => {
   window._PROG_MODE = mode;
@@ -9986,9 +10077,9 @@ function progGetWeekStart(dateStr){
   const d=new Date(dateStr+'T12:00:00'); const dow=d.getDay(); const diff=(dow===0?-6:1-dow);
   d.setDate(d.getDate()+diff); return d.toISOString().split('T')[0];
 }
-window.progWeekToday = () => { window._PROG_WEEK_START=progGetWeekStart(new Date().toISOString().split('T')[0]); loadProgramWeek(); };
-window.progWeekPrev = () => { if(!window._PROG_WEEK_START)window._PROG_WEEK_START=progGetWeekStart(new Date().toISOString().split('T')[0]); const d=new Date(window._PROG_WEEK_START+'T12:00:00');d.setDate(d.getDate()-7);window._PROG_WEEK_START=d.toISOString().split('T')[0];loadProgramWeek(); };
-window.progWeekNext = () => { if(!window._PROG_WEEK_START)window._PROG_WEEK_START=progGetWeekStart(new Date().toISOString().split('T')[0]); const d=new Date(window._PROG_WEEK_START+'T12:00:00');d.setDate(d.getDate()+7);window._PROG_WEEK_START=d.toISOString().split('T')[0];loadProgramWeek(); };
+window.progWeekToday = () => { window._PROG_WEEK_START=progGetWeekStart(todayRO()); loadProgramWeek(); };
+window.progWeekPrev = () => { if(!window._PROG_WEEK_START)window._PROG_WEEK_START=progGetWeekStart(todayRO()); const d=new Date(window._PROG_WEEK_START+'T12:00:00');d.setDate(d.getDate()-7);window._PROG_WEEK_START=d.toISOString().split('T')[0];loadProgramWeek(); };
+window.progWeekNext = () => { if(!window._PROG_WEEK_START)window._PROG_WEEK_START=progGetWeekStart(todayRO()); const d=new Date(window._PROG_WEEK_START+'T12:00:00');d.setDate(d.getDate()+7);window._PROG_WEEK_START=d.toISOString().split('T')[0];loadProgramWeek(); };
 
 // Adună rândurile (curse regulate + organizate) pentru o singură zi. Nu atinge DOM.
 async function gatherProgramRows(date){
@@ -10045,7 +10136,7 @@ function progRenderRow(r, showDay){
 
 window.loadProgram = async () => {
   const dateEl=document.getElementById('prog-date');
-  if(!dateEl.value) dateEl.value=new Date().toISOString().split('T')[0];
+  if(!dateEl.value) dateEl.value=todayRO();
   const date=dateEl.value;
   const listEl=document.getElementById('program-list');
   listEl.innerHTML='<div class="loading-state"><div class="spin"></div></div>';
@@ -10061,7 +10152,7 @@ window.loadProgram = async () => {
 };
 
 window.loadProgramWeek = async () => {
-  if(!window._PROG_WEEK_START) window._PROG_WEEK_START=progGetWeekStart(new Date().toISOString().split('T')[0]);
+  if(!window._PROG_WEEK_START) window._PROG_WEEK_START=progGetWeekStart(todayRO());
   const listEl=document.getElementById('program-list');
   listEl.innerHTML='<div class="loading-state"><div class="spin"></div></div>';
   try{
@@ -10354,7 +10445,7 @@ window.testEmail=async()=>{
   const ok=await sendUnifiedEmail({
     to_email:window._EJS.adminEmail||window.ADMIN_EMAIL, nume:'Test',
     subiect:'Test email — LSD Group', mesaj:'Acesta este un email de test pentru șablonul unificat.',
-    traseu:'Iași → Test', data:new Date().toISOString().split('T')[0], ora:'08:00',
+    traseu:'Iași → Test', data:todayRO(), ora:'08:00',
     status:'Confirmată', pret:'100 RON',
     qr_url:buildQrUrl('LSD:TEST'),
     bilet_id:'LSD-TEST123',
@@ -10455,10 +10546,10 @@ window.exportCSV=async()=>{
   const headers=['ID','Bilet','Client','Email','Telefon','Tip','Traseu','Data','Ora','Vehicul','Status','Plata','Pret Total','Discount','Locuri','Creat'];
   const rows=docs.map(r=>[r.id,r.biletId||'',r.numeClient||'',r.email||'',r.telefon||'',r.tipRezervare||'',(r.traseu||r.ruta||'').replace(/,/g,' '),r.data||'',r.ora||'',r.vehiculNume||'',r.status||'',r.statusPlata||'',r.pretTotal||r.pretFinal||'',r.discount||'0',(r.locuriRezervate||[]).map(l=>l.locNr).join(';'),r.createdAt?new Date(r.createdAt.seconds*1000).toLocaleDateString('ro'):'']);
   const csv=[headers,...rows].map(row=>row.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='rezervari_lsd_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(url);toast('✅ CSV exportat!','ok');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='rezervari_lsd_'+todayRO()+'.csv';a.click();URL.revokeObjectURL(url);toast('✅ CSV exportat!','ok');
 };
 window.dailyReport=async()=>{
-  const date=document.getElementById('booking-date-filter')?.value||new Date().toISOString().split('T')[0];
+  const date=document.getElementById('booking-date-filter')?.value||todayRO();
   const snap=await getDocs(query(collection(db,'rezervari'),where('data','==',date)));
   const rez=snap.docs.map(d=>({id:d.id,...d.data()})).filter(r=>r.status!=='anulata');
   if(!rez.length){toast('Nu există rezervări pentru '+date,'wr');return;}
@@ -10483,7 +10574,7 @@ window.loadDriverPortal = async () => {
   const sfName = window._DRIVER_DOC ? ((window._DRIVER_DOC.prenume||'')+' '+(window._DRIVER_DOC.nume||'')).trim() : (u.displayName||u.email);
   document.getElementById('sf-greet').textContent = 'Bună ziua, ' + sfName + '! 🚌';
   const di = document.getElementById('sf-date');
-  if (!di.value) di.value = new Date().toISOString().split('T')[0];
+  if (!di.value) di.value = todayRO();
   if (!window._DRIVERS || !Object.keys(window._DRIVERS).length) {
     try { const sfSnap = await getDocs(collection(db,'soferi')); buildDriversCache(sfSnap); } catch(e) {}
   }
@@ -10516,7 +10607,7 @@ function isMyDriver(val) {
 
 window.loadDriverToday = async () => {
   const di = document.getElementById('sf-date');
-  if (!di.value) di.value = new Date().toISOString().split('T')[0];
+  if (!di.value) di.value = todayRO();
   const date = di.value;
   const dow = new Date(date+'T12:00:00').getDay();
   const el = document.getElementById('sf-today-list');
@@ -10743,7 +10834,7 @@ window.sfSetLocatie = async (locatie) => {
 
 window.sfSetLocatieCursa = async () => {
   // Gaseste cursa de azi si seteaza destinatia ca locatie "in transit"
-  const date = new Date().toISOString().split('T')[0];
+  const date = todayRO();
   const curse = (window._R||[]).filter(c=>{
     const dow=new Date().getDay();
     if(!c.activa||(!(c.zile||[]).includes(dow)))return false;
@@ -10755,7 +10846,7 @@ window.sfSetLocatieCursa = async () => {
 };
 
 window.sfSetLocatieDestinatie = async () => {
-  const date = new Date().toISOString().split('T')[0];
+  const date = todayRO();
   const curse = (window._R||[]).filter(c=>{
     const dow=new Date().getDay();
     if(!c.activa||(!(c.zile||[]).includes(dow)))return false;
@@ -10774,7 +10865,7 @@ window.sfSetLocatieCustom = async () => {
 };
 
 async function getMyVehicleId(){
-  const date=new Date().toISOString().split('T')[0];
+  const date=todayRO();
   const snap=await getDocs(collection(db,'curse_regulate'));
   const mine=snap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>{
     if(!c.activa)return false;
@@ -10849,7 +10940,7 @@ window.loadHartaAdmin = async () => {
     });
   }catch(e){}
 
-  const today=new Date().toISOString().split('T')[0];
+  const today=todayRO();
 
   // Gasim soferul care e asociat fiecarui vehicul
   function getSoferiPentruVehicul(vehId){
@@ -10984,7 +11075,7 @@ async function initLeafletHarta(){
       const soferiAzi=[];
       (window._R||[]).filter(c=>c.activa&&c.vehiculId===v.id).forEach(c=>{
         const pl=c.plecari||[{driverId:c.driverId}];
-        pl.forEach(p=>{const oi=getOraForDate(p,new Date().toISOString().split('T')[0]);if(oi.driverId){const sf=window._DRIVERS[oi.driverId];if(sf)soferiAzi.push(sf.numeFull);}});
+        pl.forEach(p=>{const oi=getOraForDate(p,todayRO());if(oi.driverId){const sf=window._DRIVERS[oi.driverId];if(sf)soferiAzi.push(sf.numeFull);}});
       });
       L.marker([lat,lng],{icon:vIcon}).addTo(map).bindPopup(
         `<strong>${v.icon||'🚌'} ${v.nome||v.name||v.nume||''}</strong><br>` +
@@ -11012,7 +11103,7 @@ window.loadCalendar = async () => {
     const mine = snap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>{if(!c.activa)return false;const pl=c.plecari||[{driverId:c.driverId}];return pl.some(p=>isMyDriver(p.driverId)||isMyDriver(p.soferEmail));});
     let orgRez = [];
     try { const myEmail=getMyEmail(),myId=getMyId(); const os=await getDocs(query(collection(db,'rezervari'),where('driverId','==',myId)));orgRez=os.docs.map(d=>d.data()).filter(r=>r.status!=='anulata'&&r.data); } catch(e){}
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayRO();
     const firstDay = new Date(window._CAL_YEAR, window._CAL_MONTH, 1);
     const lastDay = new Date(window._CAL_YEAR, window._CAL_MONTH+1, 0);
     let startDow = firstDay.getDay()-1; if(startDow<0) startDow=6;
@@ -11120,7 +11211,7 @@ window.verifyScanCode = async codBrut => {
     const locTarget = locNrTarget ? locs.find(l=>l.locNr===locNrTarget) : locs[0];
     if (locNrTarget && !locTarget) { el.innerHTML=`<div style="background:var(--card);border:2px solid var(--orange);border-radius:var(--r-lg);padding:20px;text-align:center"><div style="font-size:36px;margin-bottom:10px">⚠️</div><div style="font-weight:700">Loc ${locNrTarget} nu există în bilet</div><button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="startQRScan()">📷 Alt bilet</button></div>`; return; }
     if (locTarget?.scanat) { el.innerHTML=`<div style="background:var(--card);border:2px solid var(--red);border-radius:var(--r-lg);padding:20px;text-align:center;box-shadow:var(--sh)"><div style="font-size:40px;margin-bottom:10px">🚫</div><div style="font-weight:700;font-size:16px;color:var(--red);margin-bottom:4px">Bilet deja scanat!</div><div style="color:var(--stone);font-size:13px">Locul ${locNrTarget||''} a fost deja scanat${locTarget.scanatLa?' la '+new Date(locTarget.scanatLa.seconds*1000).toLocaleString('ro'):''}.</div><div style="background:var(--red-g);border:1px solid rgba(181,45,45,.2);border-radius:8px;padding:10px;margin-top:10px;font-size:12px">⚠️ Nu permiteți îmbarcarea cu acest cod.</div><button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="startQRScan()">📷 Scanează alt bilet</button></div>`; return; }
-    const isValid = r.status==='confirmata' && r.data >= new Date().toISOString().split('T')[0];
+    const isValid = r.status==='confirmata' && r.data >= todayRO();
     if (!isValid) { el.innerHTML=`<div style="background:var(--card);border:2px solid var(--orange);border-radius:var(--r-lg);padding:20px;text-align:center;box-shadow:var(--sh)"><div style="font-size:40px;margin-bottom:10px">⚠️</div><div style="font-weight:700;font-size:16px;color:var(--orange)">Bilet ${r.status==='confirmata'?'expirat':'neconfirmat'}</div><div style="color:var(--stone);font-size:13px;margin-top:6px">Status: <strong>${r.status}</strong> · Data: <strong>${r.data}</strong></div><button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="startQRScan()">📷 Scanează alt bilet</button></div>`; return; }
     el.innerHTML = `<div style="background:var(--card);border:2px solid var(--green);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-lg)">
       <div style="background:linear-gradient(135deg,var(--green),#16a34a);padding:16px 20px;text-align:center">
@@ -11175,6 +11266,7 @@ window.logOrgScan = async (rezId) => {
 
 // ── INIT ───────────────────────────────────────────────────
 (async()=>{
+  try{ handleHashRoute(); }catch(e){ console.warn('hash route:',e.message); }
   try{const sr=await getDoc(doc(db,'setari','global'));if(sr.exists()){window._EJS=sr.data().emailjs||{};window._FIRMA=sr.data().firma||{};if(sr.data().soferContEmail)window.SOFER_EMAIL=sr.data().soferContEmail;}}catch(e){}
   renderFooter();
   try{await loadSavedContent();}catch(e){}
@@ -11188,7 +11280,7 @@ window.logOrgScan = async (rezId) => {
   try{const sfSnap=await getDocs(collection(db,'soferi'));buildDriversCache(sfSnap);}catch(e){}
   renderHomeGallery();
   try{const rs=await getDocs(collection(db,'curse_regulate'));window._R=rs.docs.map(d=>({id:d.id,...d.data()}));}catch(e){}
-  const today=new Date().toISOString().split('T')[0];
+  const today=todayRO();
   const di=document.getElementById('rdate');if(di){di.value=today;di.min=today;}
   updateDateBtns();
   renderOrgStops();
@@ -11226,7 +11318,6 @@ window.logOrgScan = async (rezId) => {
   // Programam reset-ul automat de la miezul noptii (ora Romaniei) — avertisment cu 1 minut
   // inainte, apoi numaratoare 3-2-1, apoi deconectare + reincarcare pagina
   try{ scheduleMidnightReset(); }catch(e){ console.warn('scheduleMidnightReset failed:', e.message); }
-    try{ handleHashRoute(); }catch(e){}
   hideAppLoader();
   // Ascultam semnalul de reset manual (declansat de admin) — activ pentru orice vizitator,
   // logat sau nu, ca sa functioneze exact ca la reset-ul automat de la miezul noptii.
@@ -11241,23 +11332,23 @@ window.logOrgScan = async (rezId) => {
   hideAppLoader();
 })();
   // ── LINKURI DIRECTE (#rezerva, #bilet, #gdpr etc.) ──
-const HASH_ROUTES = {
-  'acasa':'home', 'home':'home',
-  'regulate':'regulate',
-  'organizate':'organizate',
-  'bilet':'bilet',
-  'gdpr':'gdpr',
-  'cont':'cont',
-  'conectare':'auth'
-};
-function handleHashRoute(){
-  const raw = (window.location.hash||'').replace('#','').trim();
-  if (!raw) return;
+function handleHashRoute(fromEvent){
+  const HASH_ROUTES = {
+    'acasa':'home','home':'home','regulate':'regulate','organizate':'organizate',
+    'bilet':'bilet','gdpr':'gdpr','termeni':'termeni','contact':'contact','cont':'cont','conectare':'auth','auth':'auth',
+    'sofer':'sofer','admin':'admin'
+  };
+  const raw = decodeURIComponent((window.location.hash||'').replace('#','')).trim();
+  if (!raw) { if (fromEvent===true) nav('home'); return; }
   const [key, param] = raw.split('/');   // ex: bilet/LSD-A1B2C3
   const k = key.toLowerCase();
   if (k === 'rezerva') { nav('home'); openTripTypeWizard(); return; }
   const page = HASH_ROUTES[k];
   if (!page) return;
+  if (page==='admin' || page==='sofer') {
+    // pagini protejate: cerem conectarea, apoi revenim aici (vezi onAuthStateChanged)
+    if (window._ROLE!==(page==='admin'?'admin':'driver')) { window._WANT_PAGE = page; nav('auth','Conectează-te pentru a continua.'); return; }
+  }
   nav(page);
   if (page === 'bilet' && param) {
     setTimeout(()=>{
@@ -11266,7 +11357,7 @@ function handleHashRoute(){
     }, 300);
   }
 }
-window.addEventListener('hashchange', handleHashRoute);
+window.addEventListener('hashchange', ()=>handleHashRoute(true));
 
 function hideAppLoader(){
   const loader = document.getElementById('app-loader');
